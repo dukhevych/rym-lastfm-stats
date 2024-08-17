@@ -1,3 +1,13 @@
+function formatNumber(num) {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k';
+  } else {
+    return num.toString();
+  }
+}
+
 const extractData = () => {
   const entries = document.querySelectorAll('#user_list .main_entry');
   const title = document.querySelector('h1').textContent.trim();
@@ -61,6 +71,29 @@ const attachButton = () => {
 
 attachButton();
 
+function parseArtistAndAlbum(metaContent) {
+  const cleanContent = metaContent.replace(' - RYM/Sonemic', '');
+  const parts = cleanContent.split(' by ');
+
+  if (parts.length === 2) {
+    return {
+      releaseTitle: parts[0].trim(),
+      artist: parts[1].trim()
+    };
+  } else {
+    return {
+      releaseTitle: null,
+      artist: null
+    };
+  }
+}
+
+function getArtistAndAlbum() {
+  const metaTag = document.querySelector('meta[property="og:title"]');
+  if (metaTag) return parseArtistAndAlbum(metaTag.content);
+  return { releaseTitle: null, artist: null };
+}
+
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'extractData') {
     const { data, title } = extractData();
@@ -68,8 +101,96 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-browser.storage.sync.get('lastfmApiKey').then((result) => {
-  if (result.lastfmApiKey) {
-      console.log('Last.fm API Key:', result.lastfmApiKey);
+chrome.storage.sync.get(['lastfmUsername', 'lastfmApiKey'], function(items) {
+  if (items.lastfmUsername && items.lastfmApiKey) {
+    const { artist, releaseTitle } = getArtistAndAlbum();
+    console.log(artist, releaseTitle);
+
+    fetchReleaseStats(items.lastfmUsername, items.lastfmApiKey, {
+      artist,
+      releaseTitle,
+    })
+      .then(() => {
+        setTimeout(() => {
+          fetchArtistStats(items.lastfmUsername, items.lastfmApiKey, {
+            artist,
+          })
+        }, 5000);
+      });
+
+
+  } else {
+    console.log('Last.fm credentials not set. Please set them in the extension options.');
   }
 });
+
+function insertAlbumStats(playcount, listeners, userplaycount) {
+  const infoTable = document.querySelector('.album_info tbody');
+
+  if (infoTable) {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    const td = document.createElement('td');
+
+    th.classList.add('info_hdr');
+    th.textContent = 'Last.fm Stats';
+    td.classList.add('release_pri_descriptors');
+    td.colspan = "2";
+    td.innerHTML = `
+      Total: <span title="${playcount}">${formatNumber(parseInt(playcount))}</span> | Listeners: <span title="${listeners}">${formatNumber(parseInt(listeners))}</span> | My stats: <span title="${userplaycount}">${formatNumber(parseInt(userplaycount))}</span>
+    `;
+
+    tr.appendChild(th);
+    tr.appendChild(td);
+
+    infoTable.appendChild(tr);
+  }
+}
+
+function fetchReleaseStats(username, apiKey, {
+  artist,
+  releaseTitle,
+}) {
+  const baseUrl = 'http://ws.audioscrobbler.com/2.0/';
+  const params = new URLSearchParams({
+      method: 'album.getInfo',
+      user: username,
+      artist: encodeURIComponent(artist),
+      album: releaseTitle,
+      api_key: apiKey,
+      format: 'json'
+  });
+  const url = `${baseUrl}?${params.toString()}`;
+
+  console.log('url', url);
+
+  return fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      console.log(data);
+      const { playcount, listeners, userplaycount } = data.album;
+      insertAlbumStats(playcount, listeners, userplaycount);
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function fetchArtistStats(username, apiKey, {
+  artist,
+}) {
+  const baseUrl = 'http://ws.audioscrobbler.com/2.0/';
+  const params = new URLSearchParams({
+      method: 'artist.getInfo',
+      user: username,
+      artist: encodeURIComponent(artist),
+      api_key: apiKey,
+      format: 'json'
+  });
+  const url = `${baseUrl}?${params.toString()}`;
+  return fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      const { playcount, listeners, userplaycount } = data.artist.stats;
+      insertAlbumStats(playcount, listeners, userplaycount);
+    })
+    .catch(error => console.error('Error:', error));
+}

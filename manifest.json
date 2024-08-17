@@ -6,7 +6,9 @@
     "permissions": [
         "activeTab",
         "downloads",
-        "storage"
+        "storage",
+        "https://rateyourmusic.com/release/*",
+        "http://ws.audioscrobbler.com/"
     ],
     "background": {
         "scripts": ["background.js"],
