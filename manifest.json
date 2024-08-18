@@ -16,7 +16,7 @@
     },
     "content_scripts": [
         {
-            "matches": ["*://rateyourmusic.com/*"],
+            "matches": ["*://rateyourmusic.com/release/*"],
             "js": ["content.js"],
             "run_at": "document_end"
         }

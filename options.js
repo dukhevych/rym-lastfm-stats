@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Save API key
   saveButton.addEventListener('click', () => {
     try {
-      // const apiKey = apiKeyInput.value.trim();
+      const apiKey = apiKeyInput.value.trim();
       const username = usernameInput.value.trim();
   
       // console.log(!!apiKey);
@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (username) {
         browser.storage.sync.set({ lastfmUsername: username }).then(() => {
           alert('Username saved successfully!');
+        });
+      }
+      if (apiKey) {
+        browser.storage.sync.set({ lastfmApiKey: apiKey }).then(() => {
+          alert('API key saved successfully!');
         });
       }
       // if (apiKey) {

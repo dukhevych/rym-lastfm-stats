@@ -69,7 +69,7 @@ const attachButton = () => {
   viewsEl.parentNode.insertBefore(button, viewsEl);
 }
 
-attachButton();
+// attachButton();
 
 function parseArtistAndAlbum(metaContent) {
   const cleanContent = metaContent.replace(' - RYM/Sonemic', '');
@@ -102,6 +102,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.storage.sync.get(['lastfmUsername', 'lastfmApiKey'], function(items) {
+  console.log('items', items);
   if (items.lastfmUsername && items.lastfmApiKey) {
     const { artist, releaseTitle } = getArtistAndAlbum();
     console.log(artist, releaseTitle);
@@ -124,7 +125,7 @@ chrome.storage.sync.get(['lastfmUsername', 'lastfmApiKey'], function(items) {
   }
 });
 
-function insertAlbumStats(playcount, listeners, userplaycount) {
+function insertArtistStats({ playcount, listeners, userplaycount }, label = 'Last.fm Stats') {
   const infoTable = document.querySelector('.album_info tbody');
 
   if (infoTable) {
@@ -133,12 +134,10 @@ function insertAlbumStats(playcount, listeners, userplaycount) {
     const td = document.createElement('td');
 
     th.classList.add('info_hdr');
-    th.textContent = 'Last.fm Stats';
+    th.textContent = label;
     td.classList.add('release_pri_descriptors');
     td.colspan = "2";
-    td.innerHTML = `
-      Total: <span title="${playcount}">${formatNumber(parseInt(playcount))}</span> | Listeners: <span title="${listeners}">${formatNumber(parseInt(listeners))}</span> | My stats: <span title="${userplaycount}">${formatNumber(parseInt(userplaycount))}</span>
-    `;
+    td.innerHTML = [playcount, listeners, userplaycount].map((stat) => formatNumber(parseInt(stat))).join(' | ');
 
     tr.appendChild(th);
     tr.appendChild(td);
@@ -155,7 +154,7 @@ function fetchReleaseStats(username, apiKey, {
   const params = new URLSearchParams({
       method: 'album.getInfo',
       user: username,
-      artist: encodeURIComponent(artist),
+      artist: artist,
       album: releaseTitle,
       api_key: apiKey,
       format: 'json'
@@ -169,7 +168,11 @@ function fetchReleaseStats(username, apiKey, {
     .then(data => {
       console.log(data);
       const { playcount, listeners, userplaycount } = data.album;
-      insertAlbumStats(playcount, listeners, userplaycount);
+      insertArtistStats({
+        playcount,
+        listeners,
+        userplaycount,
+      }, 'Last.fm Album');
     })
     .catch(error => console.error('Error:', error));
 }
@@ -181,7 +184,7 @@ function fetchArtistStats(username, apiKey, {
   const params = new URLSearchParams({
       method: 'artist.getInfo',
       user: username,
-      artist: encodeURIComponent(artist),
+      artist: artist,
       api_key: apiKey,
       format: 'json'
   });
@@ -190,7 +193,11 @@ function fetchArtistStats(username, apiKey, {
     .then(response => response.json())
     .then(data => {
       const { playcount, listeners, userplaycount } = data.artist.stats;
-      insertAlbumStats(playcount, listeners, userplaycount);
+      insertArtistStats({
+        playcount,
+        listeners,
+        userplaycount,
+      }, 'Last.fm Artist');
     })
     .catch(error => console.error('Error:', error));
 }
