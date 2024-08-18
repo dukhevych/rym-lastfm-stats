@@ -1,0 +1,20 @@
+# EditorConfig helps maintain consistent coding styles for multiple developers
+# working on the same project across various editors and IDEs.
+
+root = true
+
+[*]
+# Unix-style newlines with a newline ending every file
+end_of_line = lf
+insert_final_newline = true
+
+# 4 space indentation
+indent_style = space
+indent_size = 4
+
+# Remove any trailing whitespace characters
+trim_trailing_whitespace = true
+
+[*.js]
+# Specific settings for JavaScript files
+indent_size = 2

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Options</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Extension Options</h1>
+
+    <div class="form-group">
+        <label for="lastfmApiKey">Last.fm API Key:</label>
+        <input type="text" id="lastfmApiKey">
+    </div>
+
+    <div class="form-group">
+        <label for="lastfmUsername">Last.fm Username</label>
+        <input type="text" id="lastfmUsername">
+    </div>
+
+    <button id="saveButton">Save</button>
+
+    <script src="options.js"></script>
+</body>
+</html>
