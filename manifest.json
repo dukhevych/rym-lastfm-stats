@@ -1,8 +1,8 @@
 {
     "manifest_version": 2,
-    "name": "RYM Data Extractor",
+    "name": "RYM Last.fm Stats",
     "version": "1.0",
-    "description": "Extract artist names, release titles, and genres from Rate Your Music page.",
+    "description": "Display Last.fm stats on RYM pages",
     "permissions": [
         "activeTab",
         "downloads",
@@ -29,8 +29,6 @@
     "browser_action": {
         "default_popup": "popup.html",
         "default_icon": {
-            "16": "icons/icon16.png",
-            "48": "icons/icon48.png",
             "128": "icons/icon128.png"
         }
     },
@@ -40,8 +38,8 @@
     },
     "applications": {
         "gecko": {
-            "id": "landenmetal@gmail.com",
-            "strict_min_version": "42.0"
+            "id": "rymlastfmstats@rateyourmusic.com",
+            "strict_min_version": "58.0"
         }
     }
 }
