@@ -1,11 +1,10 @@
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "saveData") {
-      const blob = new Blob([JSON.stringify(message.data, null, 4)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      browser.downloads.download({
-          url: url,
-          filename: `${message.title}.json`,
-          saveAs: true
-      });
+browser.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    console.log("RYM Last.fm extension installed");
+    browser.runtime.openOptionsPage();
   }
+});
+
+browser.browserAction.onClicked.addListener(() => {
+  browser.runtime.openOptionsPage();
 });

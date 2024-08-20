@@ -1,8 +1,11 @@
-import * as utils from './utils.js';
+import * as utils from './helpers/utils.js';
 
 function parseArtistAndAlbum(metaContent) {
   const cleanContent = metaContent.replace(' - RYM/Sonemic', '');
   const parts = cleanContent.split(' by ');
+
+  console.log(cleanContent);
+  console.log(parts);
 
   if (parts.length === 2) {
     return {
@@ -23,18 +26,51 @@ function getArtistAndAlbum() {
   return { releaseTitle: null, artist: null };
 }
 
-chrome.storage.sync.get(['lastfmUsername', 'lastfmApiKey'], function(items) {
-  if (items.lastfmUsername && items.lastfmApiKey) {
+browser.storage.sync.get(['lastfmUsername', 'lastfmApiKey'])
+  .then(function(items) {
     const { artist, releaseTitle } = getArtistAndAlbum();
+    console.log('artist', artist);
+    console.log('releaseTitle', releaseTitle);
 
-    fetchReleaseStats(items.lastfmUsername, items.lastfmApiKey, {
-      artist,
-      releaseTitle,
-    });
-  } else {
-    console.log('Last.fm credentials not set. Please set them in the extension options.');
+    if (items.lastfmApiKey) {
+      fetchReleaseStats(items.lastfmUsername, items.lastfmApiKey, {
+        artist,
+        releaseTitle,
+      });
+    } else {
+      insertDummyLink(artist, releaseTitle);
+      console.log('Last.fm credentials not set. Please set them in the extension options.');
+    }
+  });
+
+function insertDummyLink(artist, releaseTitle) {
+  const infoTable = document.querySelector('.album_info tbody');
+
+  if (infoTable) {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    const td = document.createElement('td');
+
+    th.classList.add('info_hdr');
+    th.textContent = 'Last.fm';
+    td.classList.add('release_pri_descriptors');
+    td.colspan = "2";
+
+    const url = 'https://www.last.fm/music/' + encodeURIComponent(artist) + '/' + encodeURIComponent(releaseTitle);
+
+    console.log(artist, releaseTitle);
+    console.log('url', url);
+
+    const link = `<a href=${url} target="_blank">View on Last.fm</a>`;
+
+    td.innerHTML = link;
+
+    tr.appendChild(th);
+    tr.appendChild(td);
+
+    infoTable.appendChild(tr);
   }
-});
+}
 
 function insertReleaseStats({ playcount, listeners, userplaycount, url }, label = 'Last.fm') {
   const infoTable = document.querySelector('.album_info tbody');
@@ -49,13 +85,15 @@ function insertReleaseStats({ playcount, listeners, userplaycount, url }, label 
     td.classList.add('release_pri_descriptors');
     td.colspan = "2";
 
-    const playcountSpan = `<span title="${playcount}">${utils.formatNumber(parseInt(playcount))} plays</span>`;
-    const listenersSpan = `<span title="${listeners}">${utils.formatNumber(parseInt(listeners))} listeners</span>`;
-    const userplaycountSpan = `<strong title="${userplaycount} times">My scrobbles: ${utils.formatNumber(parseInt(userplaycount))}</strong>`;
+    const playcountSpan = playcount !== undefined ? `<span title="${playcount}">${utils.formatNumber(parseInt(playcount))} plays</span>` : null;
+    const listenersSpan = listeners !== undefined ? `<span title="${listeners}">${utils.formatNumber(parseInt(listeners))} listeners</span>` : null;
+    const userplaycountSpan = userplaycount !== undefined ? `<strong title="${userplaycount} times">My scrobbles: ${utils.formatNumber(parseInt(userplaycount))}</strong>` : null;
 
     const link = `<a href=${url} target="_blank">View on Last.fm</a>`;
 
-    td.innerHTML = [listenersSpan, playcountSpan, userplaycountSpan, link].join('&nbsp;&nbsp;|&nbsp;&nbsp;');
+    td.innerHTML = [listenersSpan, playcountSpan, userplaycountSpan, link]
+      .filter((x) => x)
+      .join('&nbsp;&nbsp;|&nbsp;&nbsp;');
 
     tr.appendChild(th);
     tr.appendChild(td);
@@ -68,15 +106,21 @@ function fetchReleaseStats(username, apiKey, {
   artist,
   releaseTitle,
 }) {
-  const baseUrl = 'http://ws.audioscrobbler.com/2.0/';
-  const params = new URLSearchParams({
-      method: 'album.getInfo',
-      user: username,
-      artist: artist,
-      album: releaseTitle,
-      api_key: apiKey,
-      format: 'json'
-  });
+  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
+  const _params = {
+    method: 'album.getInfo',
+    artist: artist,
+    album: releaseTitle,
+    api_key: apiKey,
+    format: 'json'
+  };
+
+  if (username) {
+    _params.user = username;
+  }
+
+  const params = new URLSearchParams(_params);
+
   const url = `${baseUrl}?${params.toString()}`;
 
   return fetch(url)

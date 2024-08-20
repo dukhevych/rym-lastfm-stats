@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const apiKeyInput = document.getElementById('lastfmApiKey');
   const usernameInput = document.getElementById('lastfmUsername');
-  const saveButton = document.getElementById('saveButton');
+  const form = document.getElementById('form');
+  const resultDiv = document.getElementById('result');
 
   // Load saved API key
   browser.storage.sync.get(['lastfmApiKey', 'lastfmUsername']).then((result) => {
@@ -13,36 +14,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  apiKeyInput.addEventListener('input', () => {
+    console.log(111);
+    resultDiv.textContent = '';
+  });
+
+  usernameInput.addEventListener('input', () => {
+    console.log(222);
+    resultDiv.textContent = '';
+  });
+
   // Save API key
-  saveButton.addEventListener('click', () => {
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
     try {
+      resultDiv.textContent = 'Saving...';
+
       const apiKey = apiKeyInput.value.trim();
       const username = usernameInput.value.trim();
-  
-      // console.log(!!apiKey);
-      console.log(!!username);
 
-      if (username) {
-        browser.storage.sync.set({ lastfmUsername: username }).then(() => {
-          alert('Username saved successfully!');
+      Promise.all([
+        browser.storage.sync.set({ lastfmUsername: username }),
+        browser.storage.sync.set({ lastfmApiKey: apiKey }),
+      ])
+        .then(() => {
+          resultDiv.textContent = 'Saved!';
         });
-      }
-      if (apiKey) {
-        browser.storage.sync.set({ lastfmApiKey: apiKey }).then(() => {
-          alert('API key saved successfully!');
-        });
-      }
-      // if (apiKey) {
-      //   alert('done');
-      //   // browser.storage.sync.set({ lastfmApiKey: apiKey }).then(() => {
-      //   //   alert('API key saved successfully!');
-      //   // });
-      //   // browser.storage.sync.set({ lastfmUsername: username }).then(() => {
-      //   //   alert('Username saved successfully!');
-      //   // });
-      // } else {
-      //   alert('Please enter a valid data.');
-      // }
     } catch (error) {
       console.log(error);
     }

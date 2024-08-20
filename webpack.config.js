@@ -4,11 +4,9 @@ const glob = require('glob');
 
 const entries = glob.sync('./src/*.js').reduce((acc, file) => {
   const name = path.basename(file, path.extname(file));
-  acc[name] = path.resolve(__dirname, file); // Use path.resolve to generate absolute paths
+  acc[name] = path.resolve(__dirname, file);
   return acc;
 }, {});
-
-console.log('entries', entries);
 
 module.exports = {
   entry: entries,
@@ -31,6 +29,7 @@ module.exports = {
             }))
           }
         },
+        { from: 'node_modules/webextension-polyfill/dist/browser-polyfill.js', }
       ],
     }),
   ],
