@@ -61,9 +61,9 @@ function insertDummyLink(artist, releaseTitle) {
     console.log(artist, releaseTitle);
     console.log('url', url);
 
-    const link = `<a href=${url} target="_blank">View on Last.fm</a>`;
+    const link = utils.createLink(url, 'View on Last.fm');
 
-    td.innerHTML = link;
+    td.appendChild(link);
 
     tr.appendChild(th);
     tr.appendChild(td);
@@ -85,15 +85,21 @@ function insertReleaseStats({ playcount, listeners, userplaycount, url }, label 
     td.classList.add('release_pri_descriptors');
     td.colspan = "2";
 
-    const playcountSpan = playcount !== undefined ? `<span title="${playcount}">${utils.formatNumber(parseInt(playcount))} plays</span>` : null;
-    const listenersSpan = listeners !== undefined ? `<span title="${listeners}">${utils.formatNumber(parseInt(listeners))} listeners</span>` : null;
-    const userplaycountSpan = userplaycount !== undefined ? `<strong title="${userplaycount} times">My scrobbles: ${utils.formatNumber(parseInt(userplaycount))}</strong>` : null;
+    const listenersSpan = listeners !== undefined ? utils.createSpan(`${listeners} listeners`, `${utils.formatNumber(parseInt(listeners))} listeners`) : null;
+    const playcountSpan = playcount !== undefined ? utils.createSpan(`${playcount}, ${parseInt(playcount / listeners)} per listener`, `${utils.formatNumber(parseInt(playcount))} plays`) : null;
+    const userplaycountSpan = userplaycount !== undefined ? utils.createStrong(`${userplaycount} scrobbles`, `My scrobbles: ${utils.formatNumber(parseInt(userplaycount))}`) : null;
+    const link = utils.createLink(url, 'View on Last.fm');
 
-    const link = `<a href=${url} target="_blank">View on Last.fm</a>`;
+    const elements = [listenersSpan, playcountSpan, userplaycountSpan, link].filter(x => x);
 
-    td.innerHTML = [listenersSpan, playcountSpan, userplaycountSpan, link]
-      .filter((x) => x)
-      .join('&nbsp;&nbsp;|&nbsp;&nbsp;');
+    elements.forEach((element, index) => {
+      if (index > 0) {
+        const separator = document.createElement('span');
+        separator.textContent = '\u00A0\u00A0|\u00A0\u00A0';
+        td.appendChild(separator);
+      }
+      td.appendChild(element);
+    });
 
     tr.appendChild(th);
     tr.appendChild(td);

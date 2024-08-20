@@ -38,9 +38,9 @@ function insertDummyLink(artist) {
 
     const url = 'https://www.last.fm/music/' + encodeURIComponent(artist);
 
-    const link = `<a href=${url} target="_blank">View on Last.fm</a>`;
+    const link = utils.createLink(url, 'View on Last.fm');
 
-    content.innerHTML = link;
+    content.appendChild(link);
 
     infoBlock.appendChild(heading);
     infoBlock.appendChild(content);
@@ -63,26 +63,21 @@ function insertArtistStats(
     const content = document.createElement("div");
     content.classList.add("info_content");
 
-    const playcountSpan = playcount !== undefined ? `<span title="${playcount} plays">${utils.formatNumber(
-      parseInt(playcount)
-    )} plays</span>` : null;
-    const listenersSpan = listeners !== undefined ? `<span title="${listeners} listeners">${utils.formatNumber(
-      parseInt(listeners)
-    )} listeners</span>` : null;
-    const userplaycountSpan = userplaycount !== undefined ? `<strong title="I listened ${userplaycount} times">My scrobbles: ${utils.formatNumber(
-      parseInt(userplaycount)
-    )}</strong>` : null;
+    const listenersSpan = listeners !== undefined ? utils.createSpan(`${listeners} listeners`, `${utils.formatNumber(parseInt(listeners))} listeners`) : null;
+    const playcountSpan = playcount !== undefined ? utils.createSpan(`${playcount}, ${parseInt(playcount / listeners)} per listener`, `${utils.formatNumber(parseInt(playcount))} plays`) : null;
+    const userplaycountSpan = userplaycount !== undefined ? utils.createStrong(`${userplaycount} scrobbles`, `My scrobbles: ${utils.formatNumber(parseInt(userplaycount))}`) : null;
+    const link = utils.createLink(url, 'View on Last.fm');
 
-    const link = `<a href=${url} target="_blank">View on Last.fm</a>`;
+    const elements = [listenersSpan, playcountSpan, userplaycountSpan, link].filter(x => x);
 
-    content.innerHTML = [
-      listenersSpan,
-      playcountSpan,
-      userplaycountSpan,
-      link,
-    ]
-      .filter((x) => x)
-      .join("&nbsp;&nbsp;|&nbsp;&nbsp;");
+    elements.forEach((element, index) => {
+      if (index > 0) {
+        const separator = document.createElement('span');
+        separator.textContent = '\u00A0\u00A0|\u00A0\u00A0';
+        content.appendChild(separator);
+      }
+      content.appendChild(element);
+    });
 
     infoBlock.appendChild(heading);
     infoBlock.appendChild(content);
