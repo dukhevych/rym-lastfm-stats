@@ -1,11 +1,12 @@
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 document.addEventListener('DOMContentLoaded', () => {
   const apiKeyInput = document.getElementById('lastfmApiKey');
   const usernameInput = document.getElementById('lastfmUsername');
   const form = document.getElementById('form');
   const resultDiv = document.getElementById('result');
 
-  // Load saved API key
-  browser.storage.sync.get(['lastfmApiKey', 'lastfmUsername']).then((result) => {
+  browserAPI.storage.sync.get(['lastfmApiKey', 'lastfmUsername']).then((result) => {
     if (result.lastfmApiKey) {
       apiKeyInput.value = result.lastfmApiKey;
     }
@@ -15,16 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   apiKeyInput.addEventListener('input', () => {
-    console.log(111);
     resultDiv.textContent = '';
   });
 
   usernameInput.addEventListener('input', () => {
-    console.log(222);
     resultDiv.textContent = '';
   });
 
-  // Save API key
   form.addEventListener('submit', (event) => {
     event.preventDefault();
 
@@ -35,11 +33,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const username = usernameInput.value.trim();
 
       Promise.all([
-        browser.storage.sync.set({ lastfmUsername: username }),
-        browser.storage.sync.set({ lastfmApiKey: apiKey }),
+        browserAPI.storage.sync.set({ lastfmUsername: username }),
+        browserAPI.storage.sync.set({ lastfmApiKey: apiKey }),
       ])
         .then(() => {
           resultDiv.textContent = 'Saved!';
+        })
+        .catch((error) => {
+          console.error('Error saving settings:', error);
+          resultDiv.textContent = 'Error saving settings';
         });
     } catch (error) {
       console.log(error);

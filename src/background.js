@@ -1,10 +1,12 @@
-browser.runtime.onInstalled.addListener((details) => {
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
+browserAPI.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     console.log("RYM Last.fm extension installed");
-    browser.runtime.openOptionsPage();
+    browserAPI.runtime.openOptionsPage();
   }
 });
 
-browser.browserAction.onClicked.addListener(() => {
-  browser.runtime.openOptionsPage();
+browserAPI.action.onClicked.addListener(() => {
+  browserAPI.runtime.openOptionsPage();
 });

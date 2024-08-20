@@ -1,57 +1,39 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
     "name": "RYM Last.fm Stats",
     "version": "1.0",
     "description": "Display Last.fm stats on RYM pages",
     "permissions": [
-        "activeTab",
-        "storage",
-        "https://rateyourmusic.com/release/*",
-        "https://ws.audioscrobbler.com/"
+      "activeTab",
+      "storage"
+    ],
+    "host_permissions": [
+      "https://rateyourmusic.com/artist/*",
+      "https://rateyourmusic.com/release/*",
+      "https://ws.audioscrobbler.com/"
     ],
     "background": {
-        "scripts": [
-            "browser-polyfill.js",
-            "background.js"
-        ],
-        "persistent": false
+      "service_worker": "background.js"
     },
     "content_scripts": [
-        {
-            "matches": ["*://rateyourmusic.com/release/*"],
-            "js": [
-                "browser-polyfill.js",
-                "content_release.js"
-            ],
-            "run_at": "document_end"
-        },
-        {
-            "matches": ["*://rateyourmusic.com/artist/*"],
-            "js": [
-                "browser-polyfill.js",
-                "content_artist.js"
-            ],
-            "run_at": "document_end"
-        }
+      {
+        "matches": ["*://rateyourmusic.com/release/*"],
+        "js": ["content_release.js"]
+      },
+      {
+        "matches": ["*://rateyourmusic.com/artist/*"],
+        "js": ["content_artist.js"]
+      }
     ],
-    "browser_action": {
-        "default_icon": {
-            "128": "icons/icon128.png"
-        }
-    },
-    "options_ui": {
-        "page": "options.html",
-        "browser_style": true
-    },
-    "applications": {
-        "gecko": {
-            "id": "rymlastfmstats@rateyourmusic.com",
-            "strict_min_version": "58.0"
-        }
-    },
-    "icons": {
-        "16": "icons/icon16.png",
-        "48": "icons/icon48.png",
+    "action": {
+      "default_icon": {
         "128": "icons/icon128.png"
+      }
+    },
+    "options_page": "options.html",
+    "icons": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     }
-}
+  }

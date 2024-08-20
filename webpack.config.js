@@ -29,7 +29,7 @@ module.exports = {
             }))
           }
         },
-        { from: 'node_modules/webextension-polyfill/dist/browser-polyfill.js', }
+        // { from: 'node_modules/webextension-polyfill/dist/browser-polyfill.js', }
       ],
     }),
   ],

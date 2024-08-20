@@ -1,11 +1,10 @@
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 import * as utils from './helpers/utils.js';
 
 function parseArtistAndAlbum(metaContent) {
   const cleanContent = metaContent.replace(' - RYM/Sonemic', '');
   const parts = cleanContent.split(' by ');
-
-  console.log(cleanContent);
-  console.log(parts);
 
   if (parts.length === 2) {
     return {
@@ -26,11 +25,9 @@ function getArtistAndAlbum() {
   return { releaseTitle: null, artist: null };
 }
 
-browser.storage.sync.get(['lastfmUsername', 'lastfmApiKey'])
+browserAPI.storage.sync.get(['lastfmUsername', 'lastfmApiKey'])
   .then(function(items) {
     const { artist, releaseTitle } = getArtistAndAlbum();
-    console.log('artist', artist);
-    console.log('releaseTitle', releaseTitle);
 
     if (items.lastfmApiKey) {
       fetchReleaseStats(items.lastfmUsername, items.lastfmApiKey, {
@@ -57,9 +54,6 @@ function insertDummyLink(artist, releaseTitle) {
     td.colspan = "2";
 
     const url = 'https://www.last.fm/music/' + encodeURIComponent(artist) + '/' + encodeURIComponent(releaseTitle);
-
-    console.log(artist, releaseTitle);
-    console.log('url', url);
 
     const link = utils.createLink(url, 'View on Last.fm');
 

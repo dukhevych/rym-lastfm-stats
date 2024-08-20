@@ -1,3 +1,5 @@
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 import * as utils from "./helpers/utils.js";
 
 function parseArtist(metaContent) {
@@ -11,7 +13,7 @@ function getArtist() {
   return null;
 }
 
-chrome.storage.sync.get(["lastfmUsername", "lastfmApiKey"], function (items) {
+browserAPI.storage.sync.get(["lastfmUsername", "lastfmApiKey"], function (items) {
   const artist = getArtist();
   if (items.lastfmApiKey) {
     fetchArtistStats(items.lastfmUsername, items.lastfmApiKey, {
@@ -52,8 +54,6 @@ function insertArtistStats(
   label = "Last.fm"
 ) {
   const infoBlock = document.querySelector(".artist_info_main");
-
-  console.log(playcount, listeners, userplaycount, url);
 
   if (infoBlock) {
     const heading = document.createElement("div");
