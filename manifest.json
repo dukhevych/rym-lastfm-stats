@@ -9,10 +9,12 @@
     "host_permissions": [
       "https://rateyourmusic.com/artist/*",
       "https://rateyourmusic.com/release/*",
+      "https://rateyourmusic.com/~*",
       "https://ws.audioscrobbler.com/"
     ],
     "background": {
-      "service_worker": "background.js"
+      "service_worker": "background.js",
+      "scripts": ["background.js"]
     },
     "content_scripts": [
       {
@@ -22,6 +24,10 @@
       {
         "matches": ["*://rateyourmusic.com/artist/*"],
         "js": ["content_artist.js"]
+      },
+      {
+        "matches": ["*://rateyourmusic.com/~*"],
+        "js": ["content_profile.js"]
       }
     ],
     "action": {
@@ -34,5 +40,10 @@
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
+    },
+    "browser_specific_settings": {
+        "gecko": {
+          "id": "your-extension-id@example.com"
+        }
     }
   }

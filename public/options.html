@@ -1,81 +1,190 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Options</title>
-    <meta charset="UTF-8">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        h1 {
-            margin: 0;
-            margin-bottom: 15px;
-        }
-        .note {
-            margin-bottom: 15px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group > * + * {
-            margin-top: 0.5em;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-        p {
-            margin: 0;
-        }
-        p + p {
-            margin-top: 0.5em;
-        }
-        button {
-            padding: 10px 15px;
-            font-size: 16px;
-        }
+    <head>
+        <title>RYM Last.fm Stats: Options</title>
+        <meta charset="UTF-8" />
+        <style>
+            :root {
+                color-scheme: light dark;
+            }
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+            }
+            body {
+                font-family: Arial, sans-serif;
+                padding: 20px;
+                display: grid;
+                place-items: center;
+                font-size: 16px;
+            }
+            :where(input[type="text"]) {
+                width: 100%;
+                padding: 8px;
+            }
+            .form-range {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .form-range-value {
+                padding: 8px;
+                width: 50px;
+                text-align: center;
+                cursor: default;
+            }
+            h1 {
+                margin: 0;
+                margin-bottom: 15px;
+            }
+            .form-note {
+                font-size: 14px;
+                line-height: 1.2;
+            }
+            .form-note + * { margin-top: 20px; }
+            .form-group + .form-group {
+                margin-top: 20px;
+            }
+            .form-group + .form-actions {
+                margin-top: 35px;
+            }
+            .form-group > * + * {
+                margin-top: 0.5em;
+            }
+            .form-item > * + * {
+                margin-top: 10px;
+            }
+            p {
+                margin: 0;
+            }
+            p + p {
+                margin-top: 0.5em;
+            }
+            button {
+                padding: 10px 15px;
+                font-size: 16px;
+            }
 
-        #result:not(:empty) {
-            margin-top: 20px;
-            color: green;
-        }
-    </style>
-</head>
-<body>
-    <h1>Extension Options</h1>
+            #result:not(:empty) {
+                margin-top: 20px;
+                color: green;
+            }
 
-    <div class="note">
-        <p><i>If no Username provided, you'll see general Last.fm stats with no personal Scrobbling stats.</i></p>
-        <p><i>If no Last.fm API Key provided, you'll see just an external link to the entity on Last.fm (Artist or Release)</i></p>
-    </div>
+            .page {
+                max-width: 700px;
+                width: 100%;
+            }
 
-    <form id="form">
-        <div class="form-group">
-            <div class="form-item">
-                <label for="lastfmApiKey">Last.fm API Key:</label>
-                <input type="text" id="lastfmApiKey">
-            </div>
-            <p>You can create Last.fm API Key <a href="https://www.last.fm/api/account/create" target="_blank">here</a>.</p>
+            .btn {
+                background-color: #f71414;
+                color: white;
+                font-size: 14px;
+                border-radius: 3px;
+                padding: 0.7em 0.8em;
+                min-width: 100px;
+                font-weight: bold;
+                cursor: pointer;
+                line-height: 1.5;
+                border: 1px solid transparent;
+                position: relative;
+            }
+
+            .btn:hover {
+                background-color: color-mix(in srgb, #f71414 80%, white 20%);
+            }
+
+            .btn:active {
+                background-color: color-mix(in srgb, #f71414 80%, black 20%);
+                top: 2px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page">
+            <h1>RYM Last.fm Stats</h1>
+
+            <form id="form" class="form">
+                <h2 class="form-title">Extension Options</h2>
+
+                <div class="form-note">
+                    <p>If no Username provided, you'll see general Last.fm stats with no personal Scrobbling stats.</p>
+                    <p>If no Last.fm API Key provided, you'll see just an external link to the entity on Last.fm (Artist or Release).</p>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-item">
+                        <div class="form-label">
+                            <label for="lastfmApiKey">Last.fm API Key</label>
+                        </div>
+                        <div class="form-input">
+                            <input type="text" id="lastfmApiKey" />
+                        </div>
+                        <div class="form-hint">
+                            <div>
+                                You can create Last.fm API Key
+                                <a
+                                    href="https://www.last.fm/api/account/create"
+                                    target="_blank"
+                                    >here</a
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-item">
+                        <div class="form-label">
+                            <label for="lastfmUsername">Last.fm Username</label>
+                        </div>
+                        <div class="form-input">
+                            <input type="text" id="lastfmUsername" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-item">
+                        <div class="form-label">
+                            <label for="lastfmLimit"
+                                >Recent tracks limit (0-20)</label
+                            >
+                        </div>
+                        <div class="form-input">
+                            <div class="form-range">
+                                <input
+                                    type="text"
+                                    readonly
+                                    id="lastfmLimitValue"
+                                    class="form-range-value"
+                                />
+                                <input
+                                    type="range"
+                                    id="lastfmLimit"
+                                    name="lastfmLimit"
+                                    min="0"
+                                    max="20"
+                                />
+                            </div>
+                        </div>
+                        <div class="form-hint">
+                            <div>
+                                0 disables
+                                <strong>Last.fm Recent tracks</strong>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
+
+            <div id="result"></div>
         </div>
 
-        <div class="form-group">
-            <div class="form-item">
-                <label for="lastfmUsername">Last.fm Username</label>
-                <input type="text" id="lastfmUsername">
-            </div>
-        </div>
-
-        <button type="submit">Save</button>
-
-    </form>
-    <div id="result"></div>
-
-    <script type="application/javascript" src="options.js"></script>
-</body>
+        <script type="application/javascript" src="options.js"></script>
+    </body>
 </html>

@@ -14,6 +14,7 @@ module.exports = {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
   },
+  // devtool: 'source-map', // Add this line to enable source maps
   mode: 'production',
   plugins: [
     new CopyPlugin({
@@ -29,6 +30,7 @@ module.exports = {
             }))
           }
         },
+        // { from: 'src/libs', to: 'libs' }
         // { from: 'node_modules/webextension-polyfill/dist/browser-polyfill.js', }
       ],
     }),

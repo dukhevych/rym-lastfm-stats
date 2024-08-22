@@ -1,4 +1,4 @@
-export function formatNumber(num) {
+export function shortenNumber(num) {
   if (num >= 1000000) {
     return parseFloat((num / 1000000).toFixed(1)) + 'M';
   } else if (num >= 1000) {
@@ -29,3 +29,13 @@ export const createLink = (href, text) => {
   link.textContent = text;
   return link;
 };
+
+
+export const formatNumber = (number) => {
+  const formatter = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 20
+  });
+
+  return formatter.format(number);
+}

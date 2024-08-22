@@ -79,9 +79,9 @@ function insertReleaseStats({ playcount, listeners, userplaycount, url }, label 
     td.classList.add('release_pri_descriptors');
     td.colspan = "2";
 
-    const listenersSpan = listeners !== undefined ? utils.createSpan(`${listeners} listeners`, `${utils.formatNumber(parseInt(listeners))} listeners`) : null;
-    const playcountSpan = playcount !== undefined ? utils.createSpan(`${playcount}, ${parseInt(playcount / listeners)} per listener`, `${utils.formatNumber(parseInt(playcount))} plays`) : null;
-    const userplaycountSpan = userplaycount !== undefined ? utils.createStrong(`${userplaycount} scrobbles`, `My scrobbles: ${utils.formatNumber(parseInt(userplaycount))}`) : null;
+    const listenersSpan = listeners !== undefined ? utils.createSpan(`${listeners} listeners`, `${utils.shortenNumber(parseInt(listeners))} listeners`) : null;
+    const playcountSpan = playcount !== undefined ? utils.createSpan(`${playcount}, ${parseInt(playcount / listeners)} per listener`, `${utils.shortenNumber(parseInt(playcount))} plays`) : null;
+    const userplaycountSpan = userplaycount !== undefined ? utils.createStrong(`${userplaycount} scrobbles`, `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`) : null;
     const link = utils.createLink(url, 'View on Last.fm');
 
     const elements = [listenersSpan, playcountSpan, userplaycountSpan, link].filter(x => x);
