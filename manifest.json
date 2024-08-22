@@ -4,7 +4,6 @@
     "version": "1.0",
     "description": "Display Last.fm stats on RYM pages",
     "permissions": [
-      "activeTab",
       "storage"
     ],
     "host_permissions": [
