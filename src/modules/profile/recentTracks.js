@@ -31,9 +31,11 @@ function createLastfmButton() {
   const playHistoryClasses = Array.from(playHistoryButton.classList);
   button.classList.add(...playHistoryClasses);
   button.textContent = 'Last.fm Recent Tracks';
-  button.style.backgroundColor = '#f71414';
-  button.style.color = 'white';
-  button.style.marginRight = '2rem';
+
+  const gif = document.createElement('img');
+  gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+  button.prepend(gif);
+
   return button;
 }
 
@@ -61,19 +63,26 @@ function createTrackItem(track) {
 }
 
 function createTrackCover(track) {
-  const cover = document.createElement('a');
-  cover.classList.add('track-image');
-  cover.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'])} ${encodeURIComponent(track.album['#text'])}&searchtype=`;
-  cover.title = `Search for "${track.artist['#text']} - ${track.album['#text']}" on Rate Your Music`;
-  const img = document.createElement('img');
-  img.src = track.image[0]['#text'];
-  cover.appendChild(img);
-  return cover;
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('track-image');
+  const link = document.createElement('a');
+  link.classList.add('track-image');
+  link.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'])} ${encodeURIComponent(track.album['#text'] || track.name)}&searchtype=`;
+  link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
+  wrapper.appendChild(link);
+  if (track.image[0]['#text']) {
+    const img = document.createElement('img');
+    img.src = track.image[0]['#text'];
+    link.appendChild(img);
+  }
+  return wrapper;
 }
 
 function createTrackTitle(track) {
-  const title = document.createElement('strong');
+  const title = document.createElement('a');
   title.classList.add('track-title');
+  title.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'])} ${encodeURIComponent(track.album['#text'] || track.name)}&searchtype=`;
+  title.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
   title.textContent = track.name;
   return title;
 }
@@ -83,7 +92,7 @@ function createTrackArtist(track) {
   artist.classList.add('track-artist');
   const artistLink = document.createElement('a');
   artistLink.textContent = track.artist['#text'];
-  artistLink.title = `Search for "${track.artist['#text']}" on Rate Your Music`;
+  artistLink.title = `Search for "${track.artist['#text']}" on RateYourMusic`;
   artistLink.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'].toLowerCase())}&searchtype=a`;
   artist.appendChild(artistLink);
   return artist;
@@ -124,12 +133,31 @@ function insertRecentTracksButtonIntoDOM(button) {
 function addRecentTracksStyles() {
   const style = document.createElement('style');
   style.textContent = `
-    /* Common styles */
-    .btn-lastfm img {
+    :root {
+      --clr-lastfm: ${constants.LASTFM_COLOR};
+      --clr-lastfm-darker: color-mix(in lab, var(--clr-lastfm) 80%, black);
+      --clr-lastfm-lighter: color-mix(in lab, var(--clr-lastfm) 80%, white);
+    }
+
+    .btn.btn-lastfm {
+      background-color: var(--clr-lastfm);
+      color: white;
+      margin-right: 2rem;
+    }
+
+    .btn.btn-lastfm:hover {
+      background-color: var(--clr-lastfm-darker);
+    }
+
+    .btn.btn-lastfm img {
+      display: none;
       margin-right: 0.5em;
     }
 
-    /* Recent Tracks styles */
+    .btn.btn-lastfm.is-now-playing img {
+      display: inline;
+    }
+
     .lastfm-tracks-wrapper {
       display: block;
       position: absolute;
@@ -171,13 +199,30 @@ function addRecentTracksStyles() {
       white-space: nowrap;
     }
 
-    .lastfm-tracks-wrapper .track-image img {
+    .lastfm-tracks-wrapper .track-image a {
       display: block;
+      position: relative;
       width: 34px;
       height: 34px;
+      ${utils.isDarkMode() ? 'background: rgba(255, 255, 255, 0.1);' : 'background: rgba(0, 0, 0, 0.1);'}
+    }
+
+    .lastfm-tracks-wrapper .track-image a:empty::after {
+      content: '?';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .lastfm-tracks-wrapper .track-image img {
+      display: block;
+      width: 100%;
+      height: 100%;
     }
 
     .lastfm-tracks-wrapper .track-title {
+      font-weight: bold;
       width: 60%;
     }
 
@@ -196,10 +241,6 @@ function addRecentTracksStyles() {
 
     .lastfm-tracks-wrapper li + li {
       border-top: 1px solid;
-    }
-
-    .lastfm-tracks-wrapper li.is-now-playing {
-      background: rgba(0, 0, 0, 0.1);
     }
 
     /* Theme-specific styles */
@@ -235,6 +276,8 @@ async function render(config) {
     return;
   }
 
+  addRecentTracksStyles();
+
   const { button, tracksWrapper } = createRecentTracksUI();
 
   insertRecentTracksButtonIntoDOM(button);
@@ -244,11 +287,17 @@ async function render(config) {
     config.lastfmApiKey,
     { limit: config.recentTracksLimit },
   );
+
+  console.log(recentTracks);
+
+  if (recentTracks[0]['@attr']?.nowplaying) {
+    button.classList.add('is-now-playing');
+  }
+
   const tracksList = createTracksList(recentTracks, userName);
 
   tracksWrapper.appendChild(tracksList);
   insertRecentTracksWrapperIntoDOM(tracksWrapper);
-  addRecentTracksStyles();
 }
 
 export default {

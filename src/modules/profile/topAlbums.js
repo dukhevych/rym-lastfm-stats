@@ -22,6 +22,8 @@ export async function render(config) {
     return;
   }
 
+  addTopAlbumsStyles();
+
   const topAlbums = await api.fetchUserTopAlbums(
     userName,
     config.lastfmApiKey,
@@ -35,8 +37,6 @@ export async function render(config) {
   populateTopAlbums(topAlbumsContainer, topAlbums, userName);
 
   insertTopAlbumsIntoDOM(topAlbumsHeader, topAlbumsContainer);
-
-  addTopAlbumsStyles();
 }
 
 function addTopAlbumsStyles() {
@@ -60,6 +60,7 @@ function addTopAlbumsStyles() {
 
     .top-albums .album-image {
       position: relative;
+      aspect-ratio: 1 / 1;
     }
 
     .top-albums a { color: white; }

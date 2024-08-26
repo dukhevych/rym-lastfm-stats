@@ -1,3 +1,5 @@
+export const LASTFM_COLOR = '#f71414';
+
 export const LIGHT_THEME_CLASSES = [
   'theme_light',
   'theme_lightgray',
