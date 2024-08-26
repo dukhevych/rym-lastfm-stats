@@ -13,7 +13,8 @@
   "content_scripts": [
     {
       "matches": ["*://rateyourmusic.com/release/*"],
-      "js": ["content_release.js"]
+      "js": ["content_release.js"],
+      "run_at": "document_start"
     },
     {
       "matches": ["*://rateyourmusic.com/artist/*"],
