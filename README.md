@@ -1,5 +1,9 @@
 # RYM Last.fm Stats
 
+## Install
+
+[Mozilla Firefox](https://addons.mozilla.org/en-US/firefox/addon/rym-last-fm-stats/) | [Google Chrome](https://chromewebstore.google.com/detail/rym-lastfm-stats/bckjjmcflcmmcnlogmgogofcmldpcgpk)
+
 ## Description
 
 RYM Last.fm Stats is a browser extension that enhances your experience on RateYourMusic by integrating Last.fm statistics. This extension allows you to:
@@ -8,10 +12,6 @@ RYM Last.fm Stats is a browser extension that enhances your experience on RateYo
 - See your top albums from Last.fm on your RateYourMusic profile
 - View your recent tracks on your RateYourMusic profile
 - View recent tracks of other users on their RateYourMusic profile (requires Last.fm user link to be added into profile)
-
-## Installation
-
-*[Instructions for installing the extension in Chrome and Firefox]*
 
 ## Development
 
