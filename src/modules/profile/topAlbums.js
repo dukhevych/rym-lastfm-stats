@@ -2,13 +2,16 @@ import * as api from '@/helpers/api';
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 
-const PROFILE_CONTAINER_SELECTOR = '.bubble_header.profile_header + .bubble_content';
+const PROFILE_CONTAINER_SELECTOR =
+  '.bubble_header.profile_header + .bubble_content';
 
 export async function render(config) {
   if (!config) return;
 
   if (!config.lastfmApiKey) {
-    console.error("Last.fm credentials not set. Please set Last.fm API Key in the extension options.");
+    console.error(
+      'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
+    );
     return;
   }
 
@@ -19,10 +22,14 @@ export async function render(config) {
     return;
   }
 
-  const topAlbums = await api.fetchUserTopAlbums(userName, config.lastfmApiKey, {
-    limit: config.topAlbumsLimit,
-    period: config.topAlbumsPeriod,
-  });
+  const topAlbums = await api.fetchUserTopAlbums(
+    userName,
+    config.lastfmApiKey,
+    {
+      limit: config.topAlbumsLimit,
+      period: config.topAlbumsPeriod,
+    },
+  );
 
   const { topAlbumsHeader, topAlbumsContainer } = createTopAlbumsUI(config);
   populateTopAlbums(topAlbumsContainer, topAlbums, userName);
@@ -126,7 +133,9 @@ function addTopAlbumsStyles() {
 }
 
 function createTopAlbumsUI(config) {
-  const periodLabel = constants.TOP_ALBUMS_PERIOD_OPTIONS.find((option) => option.value === config.topAlbumsPeriod)?.label;
+  const periodLabel = constants.TOP_ALBUMS_PERIOD_OPTIONS.find(
+    (option) => option.value === config.topAlbumsPeriod,
+  )?.label;
   const topAlbumsHeader = document.createElement('div');
   topAlbumsHeader.classList.add('bubble_header');
 

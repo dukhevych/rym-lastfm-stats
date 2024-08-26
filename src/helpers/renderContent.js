@@ -1,4 +1,4 @@
-import * as utils from "@/helpers/utils.js";
+import * as utils from '@/helpers/utils.js';
 
 export async function renderContent(module) {
   const config = await utils.getStorageItems();
@@ -19,7 +19,9 @@ export async function renderContent(module) {
   });
 
   async function main() {
-    const targetElementsExist = renderTargets.every((selector) => !!document.querySelector(selector));
+    const targetElementsExist = renderTargets.every(
+      (selector) => !!document.querySelector(selector),
+    );
 
     if (document.body && targetElementsExist) {
       Promise.all(renderPromises.map((render) => render(config)));

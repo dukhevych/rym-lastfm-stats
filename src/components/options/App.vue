@@ -1,21 +1,15 @@
 <template>
   <header class="flex justify-between items-center py-6 max-w-[700px] mx-auto">
     <div class="flex gap-3 items-center">
-      <img
-        src="/icons/icon48.png"
-        alt=""
-      >
-      <h1
-        class="text-2xl font-bold cursor-default select-none text-red-600"
-      >
+      <img src="/icons/icon48.png" alt="" />
+      <h1 class="text-2xl font-bold cursor-default select-none text-red-600">
         RYM Last.fm Stats
       </h1>
     </div>
     <div>
-      <a
-        href="mailto:landenmetal@gmail.com"
-        class="font-bold hover:underline"
-      >Contact</a>
+      <a href="mailto:landenmetal@gmail.com" class="font-bold hover:underline"
+        >Contact</a
+      >
     </div>
   </header>
 
@@ -90,7 +84,7 @@
                   max="32"
                   class="w-full bg-gray-200 dark:bg-gray-800 p-2 rounded"
                   @focus="(e) => e.target.select()"
-                >
+                />
               </div>
               <div class="form-hint text-sm">
                 <p>
@@ -99,7 +93,8 @@
                     href="https://www.last.fm/api/account/create"
                     class="text-blue-600 font-bold hover:underline"
                     target="_blank"
-                  >here</a>
+                    >here</a
+                  >
                   to create a Last.fm API Key.
                   <code><strong>"Application name"</strong></code> field is
                   enough.
@@ -119,7 +114,7 @@
                   type="text"
                   class="w-full bg-gray-200 dark:bg-gray-800 p-2 rounded"
                   name="lastfmUsername"
-                >
+                />
               </div>
             </div>
           </div>
@@ -156,7 +151,7 @@
                         v-model="options.artistStats"
                         type="checkbox"
                         class="sr-only peer"
-                      >
+                      />
                       <div
                         class="w-11 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-focus-visible:ring-4 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-800 peer-checked:bg-blue-600"
                         :title="`Click to ${options.artistStats ? 'disable' : 'enable'}`"
@@ -182,7 +177,7 @@
                         v-model="options.releaseStats"
                         type="checkbox"
                         class="sr-only peer"
-                      >
+                      />
                       <div
                         class="w-11 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-focus-visible:ring-4 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-800 peer-checked:bg-blue-600"
                       />
@@ -217,8 +212,8 @@
                 class="absolute right-0 transform mt-2 w-max p-3 bg-gray-700 text-white text-sm rounded hidden group-hover:flex flex-col gap-2 max-w-[250px]"
               >
                 <p>
-                  If you want to display this on your profile, add your
-                  Last.fm username to the Main settings.
+                  If you want to display this on your profile, add your Last.fm
+                  username to the Main settings.
                 </p>
                 <p>
                   As a fallback, extension scans every User Profile for any
@@ -245,7 +240,7 @@
                         v-model="options.recentTracks"
                         type="checkbox"
                         class="sr-only peer"
-                      >
+                      />
                       <div
                         class="w-11 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-focus-visible:ring-4 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-800 peer-checked:bg-blue-600"
                       />
@@ -259,7 +254,11 @@
             <!-- RECENT TRACKS LIMIT -->
             <div class="form-item flex flex-col gap-1">
               <div class="form-label font-bold">
-                <label for="recentTracksLimit">Recent tracks limit ({{ constants.RECENT_TRACKS_LIMIT_MIN }}-{{ constants.RECENT_TRACKS_LIMIT_MAX }})</label>
+                <label for="recentTracksLimit"
+                  >Recent tracks limit ({{
+                    constants.RECENT_TRACKS_LIMIT_MIN
+                  }}-{{ constants.RECENT_TRACKS_LIMIT_MAX }})</label
+                >
               </div>
               <div class="form-input">
                 <div class="form-range flex items-center gap-2">
@@ -272,10 +271,11 @@
                     :min="constants.RECENT_TRACKS_LIMIT_MIN"
                     :max="constants.RECENT_TRACKS_LIMIT_MAX"
                     :disabled="options.recentTracks === false"
+                  />
+                  <span
+                    class="bg-gray-200 dark:bg-gray-800 py-2 px-4 rounded"
+                    >{{ options.recentTracksLimit }}</span
                   >
-                  <span class="bg-gray-200 dark:bg-gray-800 py-2 px-4 rounded">{{
-                    options.recentTracksLimit
-                  }}</span>
                 </div>
               </div>
             </div>
@@ -294,7 +294,7 @@
                         v-model="options.topAlbums"
                         type="checkbox"
                         class="sr-only peer"
-                      >
+                      />
                       <div
                         class="w-11 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-focus-visible:ring-4 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-800 peer-checked:bg-blue-600"
                       />
@@ -308,7 +308,11 @@
             <!-- TOP ALBUMS LIMIT -->
             <div class="form-item flex flex-col gap-1">
               <div class="form-label font-bold">
-                <label for="topAlbumsLimit">Top albums limit ({{ constants.TOP_ALBUMS_LIMIT_MIN }}-{{ constants.TOP_ALBUMS_LIMIT_MAX }})</label>
+                <label for="topAlbumsLimit"
+                  >Top albums limit ({{ constants.TOP_ALBUMS_LIMIT_MIN }}-{{
+                    constants.TOP_ALBUMS_LIMIT_MAX
+                  }})</label
+                >
               </div>
               <div class="form-input">
                 <div class="form-range flex items-center gap-2">
@@ -321,10 +325,11 @@
                     :min="constants.TOP_ALBUMS_LIMIT_MIN"
                     :max="constants.TOP_ALBUMS_LIMIT_MAX"
                     :disabled="options.topAlbums === false"
+                  />
+                  <span
+                    class="bg-gray-200 dark:bg-gray-800 py-2 px-4 rounded"
+                    >{{ options.topAlbumsLimit }}</span
                   >
-                  <span class="bg-gray-200 dark:bg-gray-800 py-2 px-4 rounded">{{
-                    options.topAlbumsLimit
-                  }}</span>
                 </div>
               </div>
             </div>
@@ -387,67 +392,72 @@
     </div>
   </main>
 
-  <footer class="flex flex-col items-center bg-gray-200 dark:bg-gray-800 py-6 gap-2">
+  <footer
+    class="flex flex-col items-center bg-gray-200 dark:bg-gray-800 py-6 gap-2"
+  >
     <div class="flex gap-8">
       <a
         href="https://open.spotify.com/user/11139279910/playlists"
         class="text-blue-500 font-bold hover:underline"
         target="_blank"
-      >Impressive Sound</a>
+        >Impressive Sound</a
+      >
       <a
         href="https://rateyourmusic.com/~Landen"
         class="text-blue-500 font-bold hover:underline"
         target="_blank"
-      >My RYM Profile</a>
+        >My RYM Profile</a
+      >
       <a
         href="https://www.linkedin.com/in/dukhevych/"
         class="text-blue-500 font-bold hover:underline"
         target="_blank"
-      >LinkedIn</a>
+        >LinkedIn</a
+      >
     </div>
     <div>{{ new Date().getFullYear() }} &copy; Landen</div>
   </footer>
 </template>
 
 <script setup>
-import { ref, reactive, watch } from "vue";
-import * as utils from "@/helpers/utils.js";
-import * as constants from "@/helpers/constants.js";
+  import { ref, reactive, watch } from 'vue';
+  import * as utils from '@/helpers/utils.js';
+  import * as constants from '@/helpers/constants.js';
 
-const browserAPI = typeof browser !== "undefined" ? browser : chrome;
-const loading = ref(true);
-const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
+  const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+  const loading = ref(true);
+  const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
 
-const config = ref(null);
-const saved = ref(false);
-const dirty = ref(false);
+  const config = ref(null);
+  const saved = ref(false);
+  const dirty = ref(false);
 
-const submit = async () => {
-  await browserAPI.storage.sync.set(JSON.parse(JSON.stringify(options)));
-  saved.value = true;
-  dirty.value = false;
-};
+  const submit = async () => {
+    await browserAPI.storage.sync.set(JSON.parse(JSON.stringify(options)));
+    saved.value = true;
+    dirty.value = false;
+  };
 
-const reset = async () => {
-  const doConfirm = confirm("Are you sure you want to reset all settings?");
-  if (!doConfirm) return;
-  Object.assign(options, constants.OPTIONS_DEFAULT);
-  await submit();
-};
+  const reset = async () => {
+    const doConfirm = confirm('Are you sure you want to reset all settings?');
+    if (!doConfirm) return;
+    Object.assign(options, constants.OPTIONS_DEFAULT);
+    await submit();
+  };
 
-utils.getStorageItems().then((items) => {
-  config.value = items;
-  Object.assign(options, config.value);
+  utils.getStorageItems().then((items) => {
+    config.value = items;
+    Object.assign(options, config.value);
 
-  watch(
-    () => options,
-    () => {
-      saved.value = false;
-      dirty.value = true;
-    },
-    { deep: true },
-  );
+    watch(
+      () => options,
+      () => {
+        saved.value = false;
+        dirty.value = true;
+      },
+      { deep: true },
+    );
 
-  loading.value = false;
-});
+    loading.value = false;
+  });
 </script>

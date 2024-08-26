@@ -11,7 +11,6 @@ export const DARK_THEME_CLASSES = [
   'theme_darkgray',
 ];
 
-
 export const TOP_ALBUMS_PERIOD_OPTIONS = [
   {
     value: 'overall',
@@ -49,8 +48,8 @@ export const RECENT_TRACKS_LIMIT_MAX = 20;
 export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
 export const OPTIONS_DEFAULT = {
-  lastfmApiKey: "",
-  lastfmUsername: "",
+  lastfmApiKey: '',
+  lastfmUsername: '',
 
   // ARTIST PAGE
   artistStats: true,

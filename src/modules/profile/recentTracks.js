@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 
-import * as utils from "@/helpers/utils.js";
+import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
 
@@ -10,7 +10,10 @@ const PLAY_HISTORY_BUTTON_SELECTOR = 'a[href^="/play-history/"]';
 function createRecentTracksUI() {
   const button = createLastfmButton();
   const tracksWrapper = document.createElement('div');
-  tracksWrapper.classList.add('profile_listening_container', 'lastfm-tracks-wrapper');
+  tracksWrapper.classList.add(
+    'profile_listening_container',
+    'lastfm-tracks-wrapper',
+  );
 
   button.addEventListener('click', () => {
     tracksWrapper.classList.toggle('is-active');
@@ -22,7 +25,9 @@ function createRecentTracksUI() {
 function createLastfmButton() {
   const button = document.createElement('button');
   button.classList.add('btn-lastfm');
-  const playHistoryButton = document.querySelector(PLAY_HISTORY_BUTTON_SELECTOR);
+  const playHistoryButton = document.querySelector(
+    PLAY_HISTORY_BUTTON_SELECTOR,
+  );
   const playHistoryClasses = Array.from(playHistoryButton.classList);
   button.classList.add(...playHistoryClasses);
   button.textContent = 'Last.fm Recent Tracks';
@@ -40,7 +45,6 @@ function createTracksList(recentTracks, userName) {
   });
   return tracksList;
 }
-
 
 function createTrackItem(track) {
   const line = document.createElement('li');
@@ -91,22 +95,29 @@ function createTrackDate(track) {
   if (track['@attr']?.nowplaying) {
     date.textContent = 'Scrobbling now';
     const icon = document.createElement('img');
-    icon.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+    icon.src =
+      'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
     date.prepend(icon);
   } else {
-    date.textContent = formatDistanceToNow(new Date(track.date.uts * 1000), { addSuffix: true });
+    date.textContent = formatDistanceToNow(new Date(track.date.uts * 1000), {
+      addSuffix: true,
+    });
     date.title = new Date(track.date.uts * 1000).toLocaleString();
   }
   return date;
 }
 
 function insertRecentTracksWrapperIntoDOM(tracksWrapper) {
-  const listeningContainer = document.querySelector(PROFILE_LISTENING_CONTAINER_SELECTOR);
+  const listeningContainer = document.querySelector(
+    PROFILE_LISTENING_CONTAINER_SELECTOR,
+  );
   listeningContainer.insertAdjacentElement('afterend', tracksWrapper);
 }
 
 function insertRecentTracksButtonIntoDOM(button) {
-  const playHistoryButton = document.querySelector(PLAY_HISTORY_BUTTON_SELECTOR);
+  const playHistoryButton = document.querySelector(
+    PLAY_HISTORY_BUTTON_SELECTOR,
+  );
   playHistoryButton.parentNode.insertBefore(button, playHistoryButton);
 }
 
@@ -211,7 +222,9 @@ async function render(config) {
   if (!config) return;
 
   if (!config.lastfmApiKey) {
-    console.error("Last.fm credentials not set. Please set Last.fm API Key in the extension options.");
+    console.error(
+      'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
+    );
     return;
   }
 
@@ -226,7 +239,11 @@ async function render(config) {
 
   insertRecentTracksButtonIntoDOM(button);
 
-  const recentTracks = await api.fetchUserRecentTracks(userName, config.lastfmApiKey, { limit: config.recentTracksLimit });
+  const recentTracks = await api.fetchUserRecentTracks(
+    userName,
+    config.lastfmApiKey,
+    { limit: config.recentTracksLimit },
+  );
   const tracksList = createTracksList(recentTracks, userName);
 
   tracksWrapper.appendChild(tracksList);

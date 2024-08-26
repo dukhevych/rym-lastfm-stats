@@ -1,11 +1,11 @@
 export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}) {
-  const baseUrl = "https://ws.audioscrobbler.com/2.0/";
+  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
 
   const _params = {
-    method: "user.getrecenttracks",
+    method: 'user.getrecenttracks',
     user: username,
     api_key: apiKey,
-    format: "json",
+    format: 'json',
     limit,
     nowplaying: true,
   };
@@ -19,20 +19,21 @@ export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}) {
     .then((data) => {
       return data.recenttracks.track;
     })
-    .catch((error) => console.error("Error:", error));
+    .catch((error) => console.error('Error:', error));
 }
 
-export function fetchUserTopAlbums(username, apiKey, {
-  limit = 8,
-  period = '1month'
-} = {}) {
-  const baseUrl = "https://ws.audioscrobbler.com/2.0/";
+export function fetchUserTopAlbums(
+  username,
+  apiKey,
+  { limit = 8, period = '1month' } = {},
+) {
+  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
 
   const _params = {
-    method: "user.gettopalbums",
+    method: 'user.gettopalbums',
     user: username,
     api_key: apiKey,
-    format: "json",
+    format: 'json',
     period,
     limit,
   };
@@ -46,17 +47,17 @@ export function fetchUserTopAlbums(username, apiKey, {
     .then((data) => {
       return data.topalbums.album;
     })
-    .catch((error) => console.error("Error:", error));
+    .catch((error) => console.error('Error:', error));
 }
 
 export function fetchArtistStats(username, apiKey, { artist }) {
-  const baseUrl = "https://ws.audioscrobbler.com/2.0/";
+  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
 
   const _params = {
-    method: "artist.getInfo",
+    method: 'artist.getInfo',
     artist: artist,
     api_key: apiKey,
-    format: "json",
+    format: 'json',
   };
 
   if (username) {
@@ -69,20 +70,17 @@ export function fetchArtistStats(username, apiKey, { artist }) {
 
   return fetch(url)
     .then((response) => response.json())
-    .catch((error) => console.error("Error:", error));
+    .catch((error) => console.error('Error:', error));
 }
 
-export function fetchReleaseStats(username, apiKey, {
-  artist,
-  releaseTitle,
-}) {
+export function fetchReleaseStats(username, apiKey, { artist, releaseTitle }) {
   const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
   const _params = {
     method: 'album.getInfo',
     artist: artist,
     album: releaseTitle,
     api_key: apiKey,
-    format: 'json'
+    format: 'json',
   };
 
   if (username) {
@@ -94,6 +92,6 @@ export function fetchReleaseStats(username, apiKey, {
   const url = `${baseUrl}?${params.toString()}`;
 
   return fetch(url)
-    .then(response => response.json())
-    .catch(error => console.error('Error:', error));
+    .then((response) => response.json())
+    .catch((error) => console.error('Error:', error));
 }

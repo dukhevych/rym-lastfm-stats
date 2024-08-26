@@ -11,12 +11,12 @@ function parseArtistAndAlbum(metaContent) {
   if (parts.length === 2) {
     return {
       releaseTitle: parts[0].trim(),
-      artist: parts[1].trim()
+      artist: parts[1].trim(),
     };
   } else {
     return {
       releaseTitle: null,
-      artist: null
+      artist: null,
     };
   }
 }
@@ -38,9 +38,13 @@ function insertDummyLink(artist, releaseTitle) {
     th.classList.add('info_hdr');
     th.textContent = 'Last.fm';
     td.classList.add('release_pri_descriptors');
-    td.colspan = "2";
+    td.colspan = '2';
 
-    const url = 'https://www.last.fm/music/' + encodeURIComponent(artist) + '/' + encodeURIComponent(releaseTitle);
+    const url =
+      'https://www.last.fm/music/' +
+      encodeURIComponent(artist) +
+      '/' +
+      encodeURIComponent(releaseTitle);
 
     const link = utils.createLink(url, 'View on Last.fm');
 
@@ -53,7 +57,10 @@ function insertDummyLink(artist, releaseTitle) {
   }
 }
 
-function insertReleaseStats({ playcount, listeners, userplaycount, url }, label = 'Last.fm') {
+function insertReleaseStats(
+  { playcount, listeners, userplaycount, url },
+  label = 'Last.fm',
+) {
   const infoTable = document.querySelector(ALBUM_CONTAINER_SELECTOR);
 
   if (infoTable) {
@@ -64,14 +71,37 @@ function insertReleaseStats({ playcount, listeners, userplaycount, url }, label 
     th.classList.add('info_hdr');
     th.textContent = label;
     td.classList.add('release_pri_descriptors');
-    td.colspan = "2";
+    td.colspan = '2';
 
-    const listenersSpan = listeners !== undefined ? utils.createSpan(`${listeners} listeners`, `${utils.shortenNumber(parseInt(listeners))} listeners`) : null;
-    const playcountSpan = playcount !== undefined ? utils.createSpan(`${playcount}, ${parseInt(playcount / listeners)} per listener`, `${utils.shortenNumber(parseInt(playcount))} plays`) : null;
-    const userplaycountSpan = userplaycount !== undefined ? utils.createStrong(`${userplaycount} scrobbles`, `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`) : null;
+    const listenersSpan =
+      listeners !== undefined
+        ? utils.createSpan(
+            `${listeners} listeners`,
+            `${utils.shortenNumber(parseInt(listeners))} listeners`,
+          )
+        : null;
+    const playcountSpan =
+      playcount !== undefined
+        ? utils.createSpan(
+            `${playcount}, ${parseInt(playcount / listeners)} per listener`,
+            `${utils.shortenNumber(parseInt(playcount))} plays`,
+          )
+        : null;
+    const userplaycountSpan =
+      userplaycount !== undefined
+        ? utils.createStrong(
+            `${userplaycount} scrobbles`,
+            `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`,
+          )
+        : null;
     const link = utils.createLink(url, 'View on Last.fm');
 
-    const elements = [listenersSpan, playcountSpan, userplaycountSpan, link].filter(x => x);
+    const elements = [
+      listenersSpan,
+      playcountSpan,
+      userplaycountSpan,
+      link,
+    ].filter((x) => x);
 
     elements.forEach((element, index) => {
       if (index > 0) {
@@ -95,13 +125,15 @@ async function render(config) {
   const { artist, releaseTitle } = getArtistAndAlbum();
 
   if (!artist || !releaseTitle) {
-    console.error("No artist or release title found.");
+    console.error('No artist or release title found.');
     return;
   }
 
   if (!config.lastfmApiKey) {
     insertDummyLink(artist, releaseTitle);
-    console.log("Last.fm credentials not set. Please set Last.fm API Key in the extension options.");
+    console.log(
+      'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
+    );
     return;
   }
 
@@ -112,12 +144,7 @@ async function render(config) {
     releaseTitle,
   });
 
-  const {
-    playcount,
-    listeners,
-    userplaycount,
-    url,
-  } = data.album;
+  const { playcount, listeners, userplaycount, url } = data.album;
 
   insertReleaseStats({
     playcount,
@@ -129,8 +156,5 @@ async function render(config) {
 
 export default {
   render,
-  targetSelectors: [
-    META_TITLE_SELECTOR,
-    ALBUM_CONTAINER_SELECTOR,
-  ],
+  targetSelectors: [META_TITLE_SELECTOR, ALBUM_CONTAINER_SELECTOR],
 };
