@@ -2,7 +2,7 @@
 
 ## Install
 
-[Mozilla Firefox](https://addons.mozilla.org/en-US/firefox/addon/rym-last-fm-stats/) | [Google Chrome](https://chromewebstore.google.com/detail/rym-lastfm-stats/bckjjmcflcmmcnlogmgogofcmldpcgpk)
+<a href="https://addons.mozilla.org/en-US/firefox/addon/rym-last-fm-stats/" target="_blank">Mozilla Firefox</a> | <a href="https://chromewebstore.google.com/detail/rym-lastfm-stats/bckjjmcflcmmcnlogmgogofcmldpcgpk" target="_blank">Google Chrome</a>
 
 ## Description
 
