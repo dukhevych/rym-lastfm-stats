@@ -6,9 +6,10 @@
   "scripts": {
     "build:chrome": "webpack --env browser=chrome",
     "build:firefox": "webpack --env browser=firefox",
+    "build": "npm run build:firefox && npm run build:chrome",
     "dev:chrome": "webpack --env browser=chrome --watch",
     "dev:firefox": "webpack --env browser=firefox --watch",
-    "dev": "npm run dev:firefox",
+    "dev": "npm run dev:firefox && npm run dev:chrome",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{js,vue,json,css,scss}\""
