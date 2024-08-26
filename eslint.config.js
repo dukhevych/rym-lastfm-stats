@@ -1,0 +1,39 @@
+const js = require('@eslint/js');
+const eslintPluginVue = require('eslint-plugin-vue');
+const globals = require('globals');
+
+module.exports = [
+  js.configs.recommended,
+  ...eslintPluginVue.configs['flat/recommended'],
+  {
+    files: ['src/**/*.{js,vue}'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.webextensions,
+        chrome: 'readonly',
+      },
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+      'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+    },
+  },
+  {
+    ignores: ['**/dist/**', '**/node_modules/**'],
+  },
+  {
+    files: ['*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'commonjs',
+    },
+    rules: {
+      'no-undef': 'off',
+    },
+  },
+];
