@@ -49,7 +49,3 @@ RYM Last.fm Stats is a browser extension that enhances your experience on RateYo
 - Tailwind CSS
 - ESLint
 - Prettier
-
-## Version
-
-Current version: 1.3.0
