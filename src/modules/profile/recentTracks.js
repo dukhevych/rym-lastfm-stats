@@ -288,8 +288,6 @@ async function render(config) {
     { limit: config.recentTracksLimit },
   );
 
-  console.log(recentTracks);
-
   if (recentTracks[0]['@attr']?.nowplaying) {
     button.classList.add('is-now-playing');
   }
@@ -298,6 +296,18 @@ async function render(config) {
 
   tracksWrapper.appendChild(tracksList);
   insertRecentTracksWrapperIntoDOM(tracksWrapper);
+
+  setInterval(async () => {
+    const data = await api.fetchUserRecentTracks(
+      userName,
+      config.lastfmApiKey,
+      { limit: config.recentTracksLimit },
+    );
+
+    const tracksList = createTracksList(data, userName);
+
+    tracksWrapper.replaceChildren(tracksList);
+  }, 60000);
 }
 
 export default {
