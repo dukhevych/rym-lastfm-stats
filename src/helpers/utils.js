@@ -18,6 +18,24 @@ export const createSpan = (title, text) => {
   return span;
 };
 
+export const createSelect = (options, selectedValue) => {
+  const select = document.createElement('select');
+
+  options.forEach(({ value, label }) => {
+    const selectOption = document.createElement('option');
+    selectOption.value = value;
+    selectOption.textContent = label;
+
+    if (value === selectedValue) {
+      selectOption.selected = true;
+    }
+
+    select.appendChild(selectOption);
+  });
+
+  return select;
+};
+
 export const createStrong = (title, text) => {
   const strong = document.createElement('strong');
   strong.title = title;

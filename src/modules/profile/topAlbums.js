@@ -33,7 +33,30 @@ export async function render(config) {
     },
   );
 
-  const { topAlbumsHeader, topAlbumsContainer } = createTopAlbumsUI(config);
+  const { topAlbumsHeader, topAlbumsContainer, topAlbumsPeriodSwitcher, topAlbumsPeriodLabel } = createTopAlbumsUI(config);
+
+  topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
+    const period = event.target.value;
+
+    topAlbumsContainer.classList.add('is-loading');
+
+    const data = await api.fetchUserTopAlbums(
+      userName,
+      config.lastfmApiKey,
+      {
+        limit: config.topAlbumsLimit,
+        period: period,
+      },
+    );
+
+    topAlbumsPeriodLabel.textContent = constants.TOP_ALBUMS_PERIOD_LABELS_MAP[period];
+    topAlbumsPeriodLabel.title = constants.TOP_ALBUMS_PERIOD_LABELS_MAP[period];
+
+    populateTopAlbums(topAlbumsContainer, data, userName);
+
+    topAlbumsContainer.classList.remove('is-loading');
+  });
+
   populateTopAlbums(topAlbumsContainer, topAlbums, userName);
 
   insertTopAlbumsIntoDOM(topAlbumsHeader, topAlbumsContainer);
@@ -45,7 +68,29 @@ function addTopAlbumsStyles() {
     .top-albums {
       display: flex;
       flex-wrap: wrap;
+      position: relative;
     }
+
+    .top-albums::after {
+      content: '';
+      inset: 0;
+      display: none;
+      background: rgba(0,0,0,.5);
+      position: absolute;
+    }
+
+    .top-albums.is-loading::after { display: block; }
+
+    .top-albums-header {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .top-albums-header select { margin-left: auto; }
+
+    #top-albums-period-label::before { content: '('; }
+    #top-albums-period-label::after { content: ')'; }
 
     .top-albums .album-wrapper {
       position: relative;
@@ -139,23 +184,30 @@ function createTopAlbumsUI(config) {
   )?.label;
   const topAlbumsHeader = document.createElement('div');
   topAlbumsHeader.classList.add('bubble_header');
+  topAlbumsHeader.classList.add('top-albums-header');
 
   let headerText = 'Top Albums';
 
-  if (periodLabel) {
-    headerText += ` (${periodLabel})`;
-  }
+  const topAlbumsPeriodLabel = utils.createSpan(periodLabel, periodLabel);
+  topAlbumsPeriodLabel.id = 'top-albums-period-label';
 
   topAlbumsHeader.textContent = headerText;
+
+  topAlbumsHeader.appendChild(topAlbumsPeriodLabel);
+
+  const topAlbumsPeriodSwitcher = utils.createSelect(constants.TOP_ALBUMS_PERIOD_OPTIONS, config.topAlbumsPeriod);
+
+  topAlbumsHeader.appendChild(topAlbumsPeriodSwitcher);
 
   const topAlbumsContainer = document.createElement('div');
   topAlbumsContainer.classList.add('bubble_content', 'top-albums');
   topAlbumsContainer.style.padding = '14px';
 
-  return { topAlbumsHeader, topAlbumsContainer };
+  return { topAlbumsHeader, topAlbumsContainer, topAlbumsPeriodSwitcher, topAlbumsPeriodLabel };
 }
 
 function populateTopAlbums(container, topAlbums, userName) {
+  container.replaceChildren();
   topAlbums.forEach((album) => {
     const albumWrapper = createAlbumWrapper(album, userName);
     container.appendChild(albumWrapper);

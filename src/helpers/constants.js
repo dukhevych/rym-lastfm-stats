@@ -40,6 +40,14 @@ export const TOP_ALBUMS_PERIOD_OPTIONS = [
   },
 ];
 
+export const TOP_ALBUMS_PERIOD_LABELS_MAP = TOP_ALBUMS_PERIOD_OPTIONS.reduce(
+  (acc, { value, label }) => {
+    acc[value] = label;
+    return acc;
+  },
+  {},
+);
+
 export const TOP_ALBUMS_PERIOD_DEFAULT = '1month';
 export const TOP_ALBUMS_LIMIT_MIN = 4;
 export const TOP_ALBUMS_LIMIT_MAX = 8;

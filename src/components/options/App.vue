@@ -334,7 +334,7 @@
             <!-- TOP ALBUMS PERIOD -->
             <div class="form-item flex flex-col gap-1">
               <div class="form-label font-bold">
-                <label for="topAlbumsPeriod">Top albums period</label>
+                <label for="topAlbumsPeriod">Top albums default period</label>
               </div>
               <div class="form-input">
                 <div class="form-select">
