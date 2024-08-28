@@ -33,23 +33,25 @@ export async function render(config) {
     },
   );
 
-  const { topAlbumsHeader, topAlbumsContainer, topAlbumsPeriodSwitcher, topAlbumsPeriodLabel } = createTopAlbumsUI(config);
+  const {
+    topAlbumsHeader,
+    topAlbumsContainer,
+    topAlbumsPeriodSwitcher,
+    topAlbumsPeriodLabel,
+  } = createTopAlbumsUI(config);
 
   topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
     const period = event.target.value;
 
     topAlbumsContainer.classList.add('is-loading');
 
-    const data = await api.fetchUserTopAlbums(
-      userName,
-      config.lastfmApiKey,
-      {
-        limit: config.topAlbumsLimit,
-        period: period,
-      },
-    );
+    const data = await api.fetchUserTopAlbums(userName, config.lastfmApiKey, {
+      limit: config.topAlbumsLimit,
+      period: period,
+    });
 
-    topAlbumsPeriodLabel.textContent = constants.TOP_ALBUMS_PERIOD_LABELS_MAP[period];
+    topAlbumsPeriodLabel.textContent =
+      constants.TOP_ALBUMS_PERIOD_LABELS_MAP[period];
     topAlbumsPeriodLabel.title = constants.TOP_ALBUMS_PERIOD_LABELS_MAP[period];
 
     populateTopAlbums(topAlbumsContainer, data, userName);
@@ -195,7 +197,10 @@ function createTopAlbumsUI(config) {
 
   topAlbumsHeader.appendChild(topAlbumsPeriodLabel);
 
-  const topAlbumsPeriodSwitcher = utils.createSelect(constants.TOP_ALBUMS_PERIOD_OPTIONS, config.topAlbumsPeriod);
+  const topAlbumsPeriodSwitcher = utils.createSelect(
+    constants.TOP_ALBUMS_PERIOD_OPTIONS,
+    config.topAlbumsPeriod,
+  );
 
   topAlbumsHeader.appendChild(topAlbumsPeriodSwitcher);
 
@@ -203,7 +208,12 @@ function createTopAlbumsUI(config) {
   topAlbumsContainer.classList.add('bubble_content', 'top-albums');
   topAlbumsContainer.style.padding = '14px';
 
-  return { topAlbumsHeader, topAlbumsContainer, topAlbumsPeriodSwitcher, topAlbumsPeriodLabel };
+  return {
+    topAlbumsHeader,
+    topAlbumsContainer,
+    topAlbumsPeriodSwitcher,
+    topAlbumsPeriodLabel,
+  };
 }
 
 function populateTopAlbums(container, topAlbums, userName) {

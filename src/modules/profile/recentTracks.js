@@ -33,7 +33,8 @@ function createLastfmButton() {
   button.textContent = 'Last.fm Recent Tracks';
 
   const gif = document.createElement('img');
-  gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+  gif.src =
+    'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
   button.prepend(gif);
 
   return button;

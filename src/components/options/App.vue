@@ -3,14 +3,17 @@
     id="app"
     class="flex flex-col h-full"
   >
-    <header class="flex justify-between items-center py-6 max-w-[700px] w-full mx-auto">
+    <header
+      class="flex justify-between items-center py-6 max-w-[700px] w-full mx-auto"
+    >
       <div class="flex gap-3 items-center">
         <img
           src="/icons/icon48.png"
           alt=""
         >
-        <h1 class="text-2xl font-bold cursor-default select-none text-red-600">
-          RYM Last.fm Stats
+        <h1 class="text-2xl font-bold cursor-default select-none relative">
+          <span class="absolute text-[10px] top-0 right-0 -translate-y-1/2 font-bold">{{ appVersion }}</span>
+          <span class="text-red-600">RYM Last.fm Stats</span>
         </h1>
       </div>
       <div>
@@ -23,7 +26,9 @@
 
     <main class="flex flex-col">
       <div class="max-w-[700px] mx-auto">
-        <div class="bg-gray-200 dark:bg-gray-800 p-4 rounded flex flex-col gap-2">
+        <div
+          class="bg-gray-200 dark:bg-gray-800 p-4 rounded flex flex-col gap-2"
+        >
           <p>
             This extension allows you to display Last.fm stats on RateYourMusic
             artist and release pages, see your recent tracks and top albums on
@@ -219,8 +224,8 @@
                   class="absolute right-0 transform mt-2 w-max p-3 bg-gray-700 text-white text-sm rounded hidden group-hover:flex flex-col gap-2 max-w-[250px]"
                 >
                   <p>
-                    If you want to display this on your profile, add your Last.fm
-                    username to the Main settings.
+                    If you want to display this on your profile, add your
+                    Last.fm username to the Main settings.
                   </p>
                   <p>
                     As a fallback, extension scans every User Profile for any
@@ -413,7 +418,10 @@
           target="_blank"
         >LinkedIn</a>
       </div>
-      <div>{{ new Date().getFullYear() }} &copy; Landen</div>
+      <div>
+        {{ new Date().getFullYear() }} &copy;
+        Landen
+      </div>
     </footer>
   </div>
 </template>
@@ -422,6 +430,8 @@
   import { ref, reactive, watch } from 'vue';
   import * as utils from '@/helpers/utils.js';
   import * as constants from '@/helpers/constants.js';
+
+  const appVersion = process.env.APP_VERSION;
 
   const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
   const loading = ref(true);
@@ -432,7 +442,9 @@
   const dirty = ref(false);
 
   const submit = async () => {
-    await browserAPI.storage.sync.set(JSON.parse(JSON.stringify(options)));
+    const newConfig = JSON.parse(JSON.stringify(options));
+    await browserAPI.storage.sync.set(newConfig);
+    config.value = newConfig;
     saved.value = true;
     dirty.value = false;
   };

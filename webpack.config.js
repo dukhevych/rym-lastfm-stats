@@ -5,7 +5,12 @@ const { VueLoaderPlugin } = require("vue-loader");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ESLintPlugin = require('eslint-webpack-plugin');
+const { DefinePlugin } = require('webpack');
+
 const generateManifest = require("./manifest.config.js");
+const packageJson = require('./package.json');
+
+const appVersion = packageJson.version;
 
 const entries = glob.sync("./src/*.js").reduce((acc, file) => {
   const name = path.basename(file, path.extname(file));
@@ -87,6 +92,9 @@ module.exports = (env) => {
         configType: 'flat',
         fix: true,
         failOnError: true,
+      }),
+      new DefinePlugin({
+        'process.env.APP_VERSION': JSON.stringify(appVersion),
       }),
     ],
   };
