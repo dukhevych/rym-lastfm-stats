@@ -30,7 +30,26 @@
             your profile.
           </p>
           <p>More to come!</p>
+          <p>
+            <button
+              class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 text-center rounded min-w-[120px] mr-4"
+              @click="downloadScrobbles"
+            >
+              Download scrobbles
+            </button>
+
+            <button
+              class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 text-center rounded min-w-[120px]"
+              @click="getScrobbles"
+            >
+              Get scrobbles
+            </button>
+
+            {{ scrobbles.length }} scrobbles
+          </p>
         </div>
+
+        <pre class="max-h-[300px] overflow-auto">{{ scrobbles }}</pre>
 
         <form
           v-if="!loading"
@@ -422,6 +441,7 @@
   import { ref, reactive, watch } from 'vue';
   import * as utils from '@/helpers/utils.js';
   import * as constants from '@/helpers/constants.js';
+  import { getSavedScrobbles } from '@/modules/scrobblesHistory';
 
   const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
   const loading = ref(true);
@@ -432,7 +452,9 @@
   const dirty = ref(false);
 
   const submit = async () => {
-    await browserAPI.storage.sync.set(JSON.parse(JSON.stringify(options)));
+    const newConfig = JSON.parse(JSON.stringify(options));
+    await browserAPI.storage.sync.set(newConfig);
+    config.value = newConfig;
     saved.value = true;
     dirty.value = false;
   };
@@ -459,4 +481,28 @@
 
     loading.value = false;
   });
+
+  const scrobbles = ref([]);
+
+  const getScrobbles = async () => {
+    scrobbles.value = await getSavedScrobbles(
+      'indexedDB',
+      config.value.lastfmUsername,
+    );
+  };
+
+  const downloadScrobbles = async () => {
+    console.log('Start downloading...');
+
+    await browserAPI.runtime.sendMessage({
+      action: 'downloadScrobbles',
+      apiKey: config.value.lastfmApiKey,
+      username: config.value.lastfmUsername,
+      storageType: 'indexedDB', // or 'fileSystem'
+      requestDelay: 1000,
+      targetPages: 10,
+    });
+
+    console.log('Download complete!');
+  };
 </script>

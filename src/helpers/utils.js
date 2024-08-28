@@ -120,3 +120,5 @@ export function getStorageItems(fields = constants.OPTIONS_DEFAULT_KEYS) {
     });
   });
 }
+
+export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
