@@ -11,6 +11,7 @@ module.exports = [
       globals: {
         ...globals.browser,
         ...globals.webextensions,
+        ...globals.node,
         chrome: 'readonly',
       },
       parserOptions: {
@@ -36,4 +37,9 @@ module.exports = [
       'no-undef': 'off',
     },
   },
+  {
+    rules: {
+      'no-unused-vars': 'warn',
+    },
+  }
 ];
