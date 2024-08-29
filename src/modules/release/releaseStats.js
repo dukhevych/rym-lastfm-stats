@@ -3,6 +3,7 @@ import * as api from '@/helpers/api.js';
 
 const META_TITLE_SELECTOR = 'meta[property="og:title"]';
 const ALBUM_CONTAINER_SELECTOR = '.album_info tbody';
+const RELEASE_RATING_SELECTOR = '.my_catalog_rating';
 
 function parseArtistAndAlbum(metaContent) {
   const cleanContent = metaContent.replace(' - RYM/Sonemic', '');
@@ -152,9 +153,23 @@ async function render(config) {
     userplaycount,
     url,
   });
+
+  if (userName && userplaycount === 0) {
+    const ratingElement = document.querySelector(RELEASE_RATING_SELECTOR);
+
+    if (ratingElement) {
+      ratingElement.style.pointerEvents = 'none';
+      ratingElement.style.opacity = '0.2';
+      ratingElement.title = 'You need to scrobble this release to rate';
+    }
+  }
 }
 
 export default {
   render,
-  targetSelectors: [META_TITLE_SELECTOR, ALBUM_CONTAINER_SELECTOR],
+  targetSelectors: [
+    META_TITLE_SELECTOR,
+    ALBUM_CONTAINER_SELECTOR,
+    RELEASE_RATING_SELECTOR,
+  ],
 };
