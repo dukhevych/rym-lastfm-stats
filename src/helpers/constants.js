@@ -73,6 +73,10 @@ export const OPTIONS_DEFAULT = {
   topAlbums: true,
   topAlbumsLimit: TOP_ALBUMS_LIMIT_DEFAULT,
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
+
+  // SEARCH PAGE
+  searchArtist: true,
+  searchArtistStrict: true,
 };
 
 export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);

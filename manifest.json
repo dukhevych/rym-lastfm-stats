@@ -25,6 +25,11 @@
       "matches": ["*://rateyourmusic.com/~*"],
       "js": ["content_profile.js"],
       "run_at": "document_start"
+    },
+    {
+      "matches": ["*://rateyourmusic.com/search?*"],
+      "js": ["content_search.js"],
+      "run_at": "document_start"
     }
   ],
   "action": {

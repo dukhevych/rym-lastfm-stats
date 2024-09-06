@@ -94,7 +94,7 @@ function createTrackArtist(track) {
   const artistLink = document.createElement('a');
   artistLink.textContent = track.artist['#text'];
   artistLink.title = `Search for "${track.artist['#text']}" on RateYourMusic`;
-  artistLink.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'].toLowerCase())}&searchtype=a`;
+  artistLink.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'].toLowerCase())}&searchtype=a&strict=true`; // strict param is a custom one for addon
   artist.appendChild(artistLink);
   return artist;
 }
