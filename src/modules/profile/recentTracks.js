@@ -68,7 +68,7 @@ function createTrackCover(track) {
   wrapper.classList.add('track-image');
   const link = document.createElement('a');
   link.classList.add('track-image');
-  link.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'])} ${encodeURIComponent(track.album['#text'] || track.name)}&searchtype=`;
+  link.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'])} ${encodeURIComponent(track.album['#text'] || track.name)}&searchtype=${track.album['#text'] ? 'l' : 'z'}&strict=true`;
   link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
   wrapper.appendChild(link);
   if (track.image[0]['#text']) {
@@ -82,7 +82,7 @@ function createTrackCover(track) {
 function createTrackTitle(track) {
   const title = document.createElement('a');
   title.classList.add('track-title');
-  title.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'])} ${encodeURIComponent(track.album['#text'] || track.name)}&searchtype=`;
+  title.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'])} ${encodeURIComponent(track.name)}&searchtype=z&strict=true`;
   title.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
   title.textContent = track.name;
   return title;

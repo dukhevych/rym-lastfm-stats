@@ -367,6 +367,50 @@
             </div>
           </fieldset>
 
+          <!-- SEARCH -->
+          <fieldset
+            class="form-group focus-within:shadow-lg"
+            :class="{
+              'pointer-events-none opacity-50':
+                options.lastfmApiKey.length !== 32,
+            }"
+          >
+            <div
+              class="form-group-header text-xl font-bold bg-rym-gradient text-white p-3 flex justify-between items-center"
+            >
+              Search
+            </div>
+
+            <div
+              class="form-group-body border-x-2 border-b-2 p-3 flex flex-col gap-3 border-gray-300 dark:border-gray-700"
+            >
+              <!-- STRICT SEARCH -->
+              <div class="form-item flex flex-col gap-1">
+                <div class="form-input">
+                  <div class="flex items-center space-x-2">
+                    <label
+                      for="searchStrict"
+                      class="flex items-center cursor-pointer gap-2"
+                    >
+                      <div class="relative">
+                        <input
+                          id="searchStrict"
+                          v-model="options.searchStrict"
+                          type="checkbox"
+                          class="sr-only peer"
+                        >
+                        <div
+                          class="w-11 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-focus-visible:ring-4 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-800 peer-checked:bg-blue-600"
+                        />
+                      </div>
+                      <span class="text-lg font-bold">Strict search</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+
           <div class="form-actions flex justify-between gap-5">
             <div
               v-if="saved"

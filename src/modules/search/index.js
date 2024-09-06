@@ -1,5 +1,5 @@
-import searchArtist from './searchArtist';
+import searchStrict from './searchStrict';
 
 export default {
-  searchArtist,
+  searchStrict,
 };
