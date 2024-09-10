@@ -28,7 +28,7 @@ module.exports = (env) => {
       filename: "[name].js",
       path: outputPath,
     },
-    // devtool: 'source-map',
+    devtool: 'source-map',
     mode: "production",
     resolve: {
       alias: {

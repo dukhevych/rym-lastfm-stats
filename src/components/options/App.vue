@@ -12,7 +12,9 @@
           alt=""
         >
         <h1 class="text-2xl font-bold cursor-default select-none relative">
-          <span class="absolute text-[10px] top-0 right-0 -translate-y-1/2 font-bold">{{ appVersion }}</span>
+          <span
+            class="absolute text-[10px] top-0 right-0 -translate-y-1/2 font-bold"
+          >{{ appVersion }}</span>
           <span class="text-red-600">RYM Last.fm Stats</span>
         </h1>
       </div>
@@ -35,6 +37,28 @@
             your profile.
           </p>
           <p>More to come!</p>
+        </div>
+        <form novalidate>
+          <input
+            id="musicExportCsv"
+            ref="musicExportCsvRef"
+            type="file"
+            name="musicExportCsv"
+            accept=".csv"
+            class="w-full bg-gray-200 dark:bg-gray-800 p-2 rounded"
+            @change="handleFileChange"
+          >
+        </form>
+
+        <div>
+          Trophy Scars:
+          <pre>{{ albumsByArtist.map(item => `${item.name} (${item.releaseDate}) - Rating: ${item.rating}`) }}</pre>
+
+          14956193:
+          <pre>{{ specificAlbum }}</pre>
+
+          Rating: 10:
+          <pre>{{ albumsWithRating8.map(item => `${item.artistLocalized || item.artist} - ${item.name} (${item.releaseDate})`).join('\n') }}</pre>
         </div>
 
         <form
@@ -367,6 +391,7 @@
             </div>
           </fieldset>
 
+          <!-- BUTTONS -->
           <div class="form-actions flex justify-between gap-5">
             <div
               v-if="saved"
@@ -418,18 +443,16 @@
           target="_blank"
         >LinkedIn</a>
       </div>
-      <div>
-        {{ new Date().getFullYear() }} &copy;
-        Landen
-      </div>
+      <div>{{ new Date().getFullYear() }} &copy; Landen</div>
     </footer>
   </div>
 </template>
 
 <script setup>
-  import { ref, reactive, watch } from 'vue';
+  import { ref, reactive, watch, onMounted } from 'vue';
   import * as utils from '@/helpers/utils.js';
   import * as constants from '@/helpers/constants.js';
+  import Papa from 'papaparse';
 
   const appVersion = process.env.APP_VERSION;
 
@@ -440,6 +463,8 @@
   const config = ref(null);
   const saved = ref(false);
   const dirty = ref(false);
+
+  const musicExportCsvRef = ref(null);
 
   const submit = async () => {
     const newConfig = JSON.parse(JSON.stringify(options));
@@ -456,7 +481,199 @@
     await submit();
   };
 
-  utils.getStorageItems().then((items) => {
+  const dbName = 'RYMLastfmStatsDB';
+  const version = 1;
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const csvContent = e.target.result;
+        const parsedData = Papa.parse(csvContent, {
+          header: true,
+          transformHeader: (value) => value.trim(),
+        });
+        await saveToIndexedDB(parsedData.data);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const populateDatabase = async (data) => {
+    const db = await openDB();
+    const tx = db.transaction(['albums'], 'readwrite');
+    const albumStore = tx.objectStore('albums');
+
+    // Clear existing data
+    await albumStore.clear();
+
+    // Add new data
+    for (const item of data) {
+      const firstName = (item['First Name'] || '').trim();
+      const lastName = (item['Last Name'] || '').trim();
+      const firstNameLocalized = (item['First Name localized'] || '').trim();
+      const lastNameLocalized = (item['Last Name localized'] || '').trim();
+
+      let artistName = [firstName, lastName]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || 'Unknown Artist';
+
+      let artistNameLocalized = [firstNameLocalized, lastNameLocalized]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || '';
+
+      await albumStore.add({
+        id: item['RYM Album'],
+        name: item['Title'],
+        artist: artistName,
+        artistLocalized: artistNameLocalized,
+        releaseDate: item['Release_Date'],
+        rating: Number(item['Rating']),
+        ownership: item['Ownership'],
+        purchaseDate: item['Purchase Date'],
+        mediaType: item['Media Type'],
+      });
+    }
+
+    return new Promise((resolve) => {
+      tx.oncomplete = () => {
+        console.log('Transaction completed');
+        resolve();
+      };
+    });
+  };
+
+  const saveToIndexedDB = async (data) => {
+    try {
+      await populateDatabase(data);
+      console.log('Data saved successfully');
+    } catch (error) {
+      console.error('Error saving data:', error);
+      throw error;
+    }
+  };
+
+  // Function to query albums by artist
+  const getAlbumsByArtist = async (artistName) => {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['albums'], 'readonly');
+      const store = tx.objectStore('albums');
+
+      // First, search using the 'byArtist' index
+      const indexArtist = store.index('byArtist');
+      const requestArtist = indexArtist.getAll(artistName);
+
+      requestArtist.onsuccess = (event) => {
+        const result = event.target.result;
+        if (result.length > 0) {
+          // If results found, resolve with these results
+          resolve(result);
+        } else {
+          // If no results, search using 'byArtistLocalized' index
+          const indexArtistLocalized = store.index('byArtistLocalized');
+          const requestArtistLocalized = indexArtistLocalized.getAll(artistName);
+
+          requestArtistLocalized.onsuccess = (event) => {
+            resolve(event.target.result);
+          };
+
+          requestArtistLocalized.onerror = (event) => {
+            reject('Error fetching albums by artist localized: ' + event.target.error);
+          };
+        }
+      };
+
+      requestArtist.onerror = (event) => {
+        reject('Error fetching albums by artist: ' + event.target.error);
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching albums by artist:', error);
+    return [];
+  }
+};
+
+  // Function to get an album by ID
+  const getAlbumById = async (albumId) => {
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(['albums'], 'readonly');
+        const store = tx.objectStore('albums');
+        const request = store.get(albumId);
+
+        request.onsuccess = (event) => {
+          resolve(event.target.result || null);
+        };
+
+        request.onerror = (event) => {
+          reject('Error fetching album by ID: ' + event.target.error);
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching album by ID:', error);
+      return null;
+    }
+  };
+
+  // Function to get albums by rating
+  const getAlbumsByRating = async (rating) => {
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(['albums'], 'readonly');
+        const store = tx.objectStore('albums');
+        const index = store.index('byRating');
+        const request = index.getAll(rating);
+
+        request.onsuccess = (event) => {
+          resolve(event.target.result);
+        };
+
+        request.onerror = (event) => {
+          reject('Error fetching albums by rating: ' + event.target.error);
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching albums by rating:', error);
+      return [];
+    }
+  };
+
+  // Helper function to open the database
+  const openDB = () => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName, version);
+
+      request.onerror = (event) =>
+        reject('IndexedDB error: ' + event.target.error);
+
+      request.onsuccess = (event) => resolve(event.target.result);
+
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('albums')) {
+          const albumStore = db.createObjectStore('albums', { keyPath: 'id' });
+          albumStore.createIndex('byArtist', 'artist', { unique: false });
+          albumStore.createIndex('byArtistLocalized', 'artistLocalized', { unique: false });
+          albumStore.createIndex('byRating', 'rating', { unique: false });
+        }
+      };
+    });
+  };
+
+  const albumsByArtist = ref([]);
+  const specificAlbum = ref(null);
+  const albumsWithRating8 = ref([]);
+
+  onMounted(async () => {
+    const items = await utils.getStorageItems();
+
     config.value = items;
     Object.assign(options, config.value);
 
@@ -468,6 +685,10 @@
       },
       { deep: true },
     );
+
+    albumsByArtist.value = await getAlbumsByArtist('Trophy Scars');
+    specificAlbum.value = await getAlbumById('14956193');
+    albumsWithRating8.value = await getAlbumsByRating(10);
 
     loading.value = false;
   });
