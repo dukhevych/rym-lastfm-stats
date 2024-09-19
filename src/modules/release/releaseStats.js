@@ -1,136 +1,133 @@
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 
-const META_TITLE_SELECTOR = 'meta[property="og:title"]';
 const ALBUM_CONTAINER_SELECTOR = '.album_info tbody';
+const ARTIST_NAME_SELECTOR = ALBUM_CONTAINER_SELECTOR + ' [itemprop="byArtist"] .artist';
+const RELEASE_TITLE_SELECTOR = '.section_main_info .album_title';
 
-function parseArtistAndAlbum(metaContent) {
-  const cleanContent = metaContent.replace(' - RYM/Sonemic', '');
-  const parts = cleanContent.split(' by ');
+const LASTFM_LINK_ID = 'lastfm-link';
+const LOCALIZED_NAME_SELECTOR = '.subtext';
 
-  if (parts.length === 2) {
-    return {
-      releaseTitle: parts[0].trim(),
-      artist: parts[1].trim(),
-    };
-  } else {
-    return {
-      releaseTitle: null,
-      artist: null,
-    };
-  }
-}
+function getArtistsAndAlbum() {
+  let artists = [];
+  let releaseTitle;
 
-function getArtistAndAlbum() {
-  const metaTag = document.querySelector(META_TITLE_SELECTOR);
-  if (metaTag) return parseArtistAndAlbum(metaTag.content);
-  return { releaseTitle: null, artist: null };
-}
+  const artistNameNodes = document.querySelectorAll(ARTIST_NAME_SELECTOR);
 
-function insertDummyLink(artist, releaseTitle) {
-  const infoTable = document.querySelector(ALBUM_CONTAINER_SELECTOR);
+  if (artistNameNodes && artistNameNodes.length > 0) {
+    Array.from(artistNameNodes).forEach((node) => {
+      const localizedNode = node.querySelector(LOCALIZED_NAME_SELECTOR);
+      const localized = localizedNode ? localizedNode.textContent.replace(/^\[|\]$/g, '') : null;
 
-  if (infoTable) {
-    const tr = document.createElement('tr');
-    const th = document.createElement('th');
-    const td = document.createElement('td');
-
-    th.classList.add('info_hdr');
-    th.textContent = 'Last.fm';
-    td.classList.add('release_pri_descriptors');
-    td.colspan = '2';
-
-    const url =
-      'https://www.last.fm/music/' +
-      encodeURIComponent(artist) +
-      '/' +
-      encodeURIComponent(releaseTitle);
-
-    const link = utils.createLink(url, 'View on Last.fm');
-
-    td.appendChild(link);
-
-    tr.appendChild(th);
-    tr.appendChild(td);
-
-    infoTable.appendChild(tr);
-  }
-}
-
-function insertReleaseStats(
-  { playcount, listeners, userplaycount, url },
-  label = 'Last.fm',
-) {
-  const infoTable = document.querySelector(ALBUM_CONTAINER_SELECTOR);
-
-  if (infoTable) {
-    const tr = document.createElement('tr');
-    const th = document.createElement('th');
-    const td = document.createElement('td');
-
-    th.classList.add('info_hdr');
-    th.textContent = label;
-    td.classList.add('release_pri_descriptors');
-    td.colspan = '2';
-
-    const listenersSpan =
-      listeners !== undefined
-        ? utils.createSpan(
-            `${listeners} listeners`,
-            `${utils.shortenNumber(parseInt(listeners))} listeners`,
-          )
-        : null;
-    const playcountSpan =
-      playcount !== undefined
-        ? utils.createSpan(
-            `${playcount}, ${parseInt(playcount / listeners)} per listener`,
-            `${utils.shortenNumber(parseInt(playcount))} plays`,
-          )
-        : null;
-    const userplaycountSpan =
-      userplaycount !== undefined
-        ? utils.createStrong(
-            `${userplaycount} scrobbles`,
-            `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`,
-          )
-        : null;
-    const link = utils.createLink(url, 'View on Last.fm');
-
-    const elements = [
-      listenersSpan,
-      playcountSpan,
-      userplaycountSpan,
-      link,
-    ].filter((x) => x);
-
-    elements.forEach((element, index) => {
-      if (index > 0) {
-        const separator = document.createElement('span');
-        separator.textContent = '\u00A0\u00A0|\u00A0\u00A0';
-        td.appendChild(separator);
-      }
-      td.appendChild(element);
+      artists.push({
+        name: utils.getDirectTextContent(node),
+        get localized() {
+          return localized || this.name;
+        },
+      });
     });
-
-    tr.appendChild(th);
-    tr.appendChild(td);
-
-    infoTable.appendChild(tr);
   }
+
+  const releaseTitleNode = document.querySelector(RELEASE_TITLE_SELECTOR);
+
+  if (releaseTitleNode) {
+    releaseTitle = utils.getDirectTextContent(releaseTitleNode).trim();
+  }
+
+  return { releaseTitle, artists };
+}
+
+function prepareReleaseStatsNodes({ label = 'Last.fm', artist, releaseTitle }) {
+  const infoTable = document.querySelector(ALBUM_CONTAINER_SELECTOR);
+
+  if (!infoTable) { return; }
+
+  const tr = document.createElement('tr');
+  const th = document.createElement('th');
+  const td = document.createElement('td');
+
+  th.classList.add('info_hdr');
+  th.textContent = label;
+  td.classList.add('release_pri_descriptors');
+  td.colspan = '2';
+
+  const url = 'https://www.last.fm/music/' + encodeURIComponent(artist) + '/' + encodeURIComponent(releaseTitle);
+
+  const link = utils.createLink(url, 'View on Last.fm', { id: LASTFM_LINK_ID });
+
+  td.appendChild(link);
+
+  tr.appendChild(th);
+  tr.appendChild(td);
+
+  infoTable.appendChild(tr);
+
+  return td;
+}
+
+function injectReleaseStats(cell, { playcount, listeners, userplaycount, url }) {
+  if (!cell) { return; }
+
+  const listenersSpan =
+    listeners !== undefined
+      ? utils.createSpan(
+          `${listeners} listeners`,
+          `${utils.shortenNumber(parseInt(listeners))} listeners`,
+        )
+      : null;
+  const playcountSpan =
+    playcount !== undefined
+      ? utils.createSpan(
+          `${playcount}, ${parseInt(playcount / listeners)} per listener`,
+          `${utils.shortenNumber(parseInt(playcount))} plays`,
+        )
+      : null;
+  const userplaycountSpan =
+    userplaycount !== undefined
+      ? utils.createStrong(
+          `${userplaycount} scrobbles`,
+          `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`,
+        )
+      : null;
+
+  const linkNode = document.getElementById(LASTFM_LINK_ID);
+  if (linkNode) {
+    linkNode.setAttribute('href', url);
+  } else {
+    const link = utils.createLink(url, 'View on Last.fm');
+    cell.appendChild(link);
+  }
+
+  const elements = [
+    userplaycountSpan,
+    playcountSpan,
+    listenersSpan,
+  ].filter((x) => x);
+
+  elements.forEach((element) => {
+    const separator = document.createElement('span');
+    separator.textContent = '\u00A0\u00A0|\u00A0\u00A0';
+    cell.prepend(separator);
+    cell.prepend(element);
+  });
 }
 
 async function render(config) {
   if (!config) return;
 
-  const { artist, releaseTitle } = getArtistAndAlbum();
+  const { artists, releaseTitle } = getArtistsAndAlbum();
 
-  if (!artist || !releaseTitle) {
+  if (!artists || artists.length === 0 || !releaseTitle) {
     console.error('No artist or release title found.');
     return;
   }
 
+  const cellNode = prepareReleaseStatsNodes({
+    artist: artists[0].localized,
+    releaseTitle,
+  });
+
   if (!config.lastfmApiKey) {
-    insertDummyLink(artist, releaseTitle);
     console.log(
       'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
     );
@@ -140,13 +137,13 @@ async function render(config) {
   const userName = config.lastfmUsername;
 
   const data = await api.fetchReleaseStats(userName, config.lastfmApiKey, {
-    artist,
+    artist: artists[0].localized,
     releaseTitle,
   });
 
   const { playcount, listeners, userplaycount, url } = data.album;
 
-  insertReleaseStats({
+  injectReleaseStats(cellNode, {
     playcount,
     listeners,
     userplaycount,
@@ -156,5 +153,9 @@ async function render(config) {
 
 export default {
   render,
-  targetSelectors: [META_TITLE_SELECTOR, ALBUM_CONTAINER_SELECTOR],
+  targetSelectors: [
+    ALBUM_CONTAINER_SELECTOR,
+    ARTIST_NAME_SELECTOR,
+    RELEASE_TITLE_SELECTOR,
+  ],
 };

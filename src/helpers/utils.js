@@ -43,11 +43,18 @@ export const createStrong = (title, text) => {
   return strong;
 };
 
-export const createLink = (href, text) => {
+export const createLink = (href, text, attrs = {}) => {
   const link = document.createElement('a');
   link.href = href;
   link.target = '_blank';
   link.textContent = text;
+
+  if (attrs) {
+    Object.keys(attrs).forEach(key => {
+      link.setAttribute(key, attrs[key]);
+    });
+  }
+
   return link;
 };
 
@@ -119,4 +126,9 @@ export function getStorageItems(fields = constants.OPTIONS_DEFAULT_KEYS) {
       resolve(items);
     });
   });
+}
+
+export function getDirectTextContent(element) {
+  const directTextNodes = Array.from(element.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
+  return directTextNodes.map(node => node.textContent).join('');
 }
