@@ -174,7 +174,7 @@ function addRecentTracksStyles() {
     }
 
     ${PROFILE_LISTENING_CONTAINER_SELECTOR} {
-      padding: 1rem;
+      padding: 1.25rem;
     }
 
     ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} .play_history_infobox {
