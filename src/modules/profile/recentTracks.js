@@ -394,8 +394,7 @@ async function render(config) {
       const date = formatDistanceToNow(new Date(latestTrack.date.uts * 1000), {
         addSuffix: true,
       });
-
-      label.textContent = `Last scrobble (${date})`;
+      if (label) label.textContent = `Last scrobble (${date})`;
     }
 
     const cover = document.querySelector(LISTENING_COVER_SELECTOR);
