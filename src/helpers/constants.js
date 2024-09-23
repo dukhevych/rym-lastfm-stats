@@ -69,6 +69,7 @@ export const OPTIONS_DEFAULT = {
 
   // PROFILE PAGE
   recentTracks: true,
+  recentTracksReplace: false,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
   topAlbums: true,
   topAlbumsLimit: TOP_ALBUMS_LIMIT_DEFAULT,

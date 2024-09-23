@@ -263,6 +263,30 @@
                 </div>
               </div>
 
+              <div class="form-item flex flex-col gap-1">
+                <div class="form-input">
+                  <div class="flex items-center space-x-2">
+                    <label
+                      for="recentTracksReplace"
+                      class="flex items-center cursor-pointer gap-2"
+                    >
+                      <div class="relative">
+                        <input
+                          id="recentTracksReplace"
+                          v-model="options.recentTracksReplace"
+                          type="checkbox"
+                          class="sr-only peer"
+                        >
+                        <div
+                          class="w-11 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-focus-visible:ring-4 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-800 peer-checked:bg-blue-600"
+                        />
+                      </div>
+                      <span class="text-lg font-bold">Replace default RYM "Listening to"</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               <!-- RECENT TRACKS LIMIT -->
               <div class="form-item flex flex-col gap-1">
                 <div class="form-label font-bold">

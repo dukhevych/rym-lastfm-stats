@@ -5,9 +5,21 @@ import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
 
 const PROFILE_LISTENING_CONTAINER_SELECTOR = '.profile_listening_container';
-const PLAY_HISTORY_BUTTON_SELECTOR = 'a[href^="/play-history/"]';
+const PROFILE_LISTENING_SET_TO_SELECTOR = '.profile_set_listening_box';
+const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_container';
+const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
+const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
 
-function createRecentTracksUI() {
+const LISTENING_LABEL_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_date';
+const LISTENING_ARTIST_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_artist a.artist';
+const LISTENING_TITLE_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_release a.play_history_item_release';
+const LISTENING_COVER_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_artbox a';
+const LISTENING_COVER_IMG_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' img.play_history_item_art';
+
+const gif = document.createElement('img');
+gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+
+function prepareRecentTracksUI(config) {
   const button = createLastfmButton();
   const tracksWrapper = document.createElement('div');
   tracksWrapper.classList.add(
@@ -19,23 +31,41 @@ function createRecentTracksUI() {
     tracksWrapper.classList.toggle('is-active');
   });
 
+  if (config.recentTracksReplace) {
+    const setToBtn = document.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
+    if (setToBtn) setToBtn.remove();
+
+    const playHistoryBtn = document.querySelector(PROFILE_LISTENING_PLAY_HISTORY_BTN);
+    if (playHistoryBtn) playHistoryBtn.remove();
+
+    const label = document.querySelector(LISTENING_LABEL_SELECTOR);
+    if (label) {
+      label.textContent = 'Scrobbling now'; // or "Last scrobbled (+date)"
+      label.append(gif.cloneNode());
+    }
+
+    // Reset
+    const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
+    if (coverImg) coverImg.src = '';
+
+    const artist = document.querySelector(LISTENING_ARTIST_SELECTOR);
+    if (artist) artist.textContent = 'Artist';
+
+    const title = document.querySelector(LISTENING_TITLE_SELECTOR);
+    if (title) title.textContent = 'Title';
+  }
+
   return { button, tracksWrapper };
 }
 
 function createLastfmButton() {
   const button = document.createElement('button');
   button.classList.add('btn-lastfm');
-  const playHistoryButton = document.querySelector(
-    PLAY_HISTORY_BUTTON_SELECTOR,
-  );
-  const playHistoryClasses = Array.from(playHistoryButton.classList);
+  const playHistoryClasses = ['btn', 'blue_btn', 'btn_small'];
   button.classList.add(...playHistoryClasses);
   button.textContent = 'Last.fm Recent Tracks';
 
-  const gif = document.createElement('img');
-  gif.src =
-    'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
-  button.prepend(gif);
+  button.prepend(gif.cloneNode());
 
   return button;
 }
@@ -125,10 +155,13 @@ function insertRecentTracksWrapperIntoDOM(tracksWrapper) {
 }
 
 function insertRecentTracksButtonIntoDOM(button) {
-  const playHistoryButton = document.querySelector(
-    PLAY_HISTORY_BUTTON_SELECTOR,
+  const buttonsContainer = document.querySelector(
+    PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
   );
-  playHistoryButton.parentNode.insertBefore(button, playHistoryButton);
+
+  if (buttonsContainer) {
+    buttonsContainer.prepend(button);
+  }
 }
 
 function addRecentTracksStyles() {
@@ -140,10 +173,61 @@ function addRecentTracksStyles() {
       --clr-lastfm-lighter: color-mix(in lab, var(--clr-lastfm) 80%, white);
     }
 
+    ${PROFILE_LISTENING_CONTAINER_SELECTOR} {
+      padding: 1rem;
+    }
+
+    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} .play_history_infobox {
+      padding: 0;
+    }
+
+    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} .play_history_item {
+      padding-top: 0;
+      align-items: center;
+    }
+
+    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} .play_history_item_art {
+      display: block;
+      width: 45px;
+      height: 45px;
+      max-width: none;
+      background: currentColor;
+    }
+
+    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR}.is-loading {
+      opacity: 0;
+      left: -9999px;
+      right: 9999px;
+      position: absolute;
+    }
+
+    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} {
+      transition: opacity .3s ease-in-out;
+      left: auto;
+      right: auto;
+      position: relative;
+      opacity: 1;
+    }
+
+    ${LISTENING_LABEL_SELECTOR} img {
+      display: none;
+      opacity: 0.5;
+      margin-left: 1rem;
+    }
+
+    ${LISTENING_LABEL_SELECTOR}.is-now-playing img {
+      display: inline;
+    }
+
+    .profile_view_play_history_btn {
+      gap: 2rem;
+      flex: 1 0 auto;
+    }
+
     .btn.btn-lastfm {
       background-color: var(--clr-lastfm);
       color: white;
-      margin-right: 2rem;
+      margin-right: 0;
     }
 
     .btn.btn-lastfm:hover {
@@ -279,7 +363,13 @@ async function render(config) {
 
   addRecentTracksStyles();
 
-  const { button, tracksWrapper } = createRecentTracksUI();
+  const currentTrack = document.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
+
+  if (currentTrack && config.recentTracksReplace) {
+    currentTrack.classList.add('is-loading');
+  }
+
+  const { button, tracksWrapper } = prepareRecentTracksUI(config);
 
   insertRecentTracksButtonIntoDOM(button);
 
@@ -289,14 +379,50 @@ async function render(config) {
     { limit: config.recentTracksLimit },
   );
 
-  if (recentTracks[0]['@attr']?.nowplaying) {
+  const latestTrack = recentTracks[0];
+
+  if (latestTrack['@attr']?.nowplaying) {
     button.classList.add('is-now-playing');
+  }
+
+  if (config.recentTracksReplace) {
+    const label = document.querySelector(LISTENING_LABEL_SELECTOR);
+
+    if (latestTrack['@attr']?.nowplaying) {
+      if (label) label.classList.add('is-now-playing');
+    } else {
+      const date = formatDistanceToNow(new Date(latestTrack.date.uts * 1000), {
+        addSuffix: true,
+      });
+
+      label.textContent = `Last scrobble (${date})`;
+    }
+
+    const cover = document.querySelector(LISTENING_COVER_SELECTOR);
+    if (cover) cover.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(latestTrack.artist['#text'])} ${encodeURIComponent(latestTrack.album['#text'] || latestTrack.name)}&searchtype=${latestTrack.album['#text'] ? 'l' : 'z'}`;
+
+    const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
+    if (coverImg) coverImg.src = latestTrack.image[1]['#text'];
+
+    const artist = document.querySelector(LISTENING_ARTIST_SELECTOR);
+    if (artist) artist.textContent = latestTrack.artist['#text'];
+    if (artist) artist.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(latestTrack.artist['#text'].toLowerCase())}&searchtype=a`;
+    if (artist) artist.title = `Search for "${latestTrack.artist['#text']}" on RateYourMusic`;
+
+    const title = document.querySelector(LISTENING_TITLE_SELECTOR);
+    if (title) title.textContent = latestTrack.name;
+    if (title) title.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(latestTrack.artist['#text'])} ${encodeURIComponent(latestTrack.name)}&searchtype=z`;
+    if (title) title.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.name}" on RateYourMusic`;
   }
 
   const tracksList = createTracksList(recentTracks, userName);
 
   tracksWrapper.appendChild(tracksList);
   insertRecentTracksWrapperIntoDOM(tracksWrapper);
+
+  if (currentTrack && config.recentTracksReplace) {
+    currentTrack.classList.remove('is-loading');
+  }
 
   setInterval(async () => {
     const data = await api.fetchUserRecentTracks(
@@ -315,6 +441,9 @@ export default {
   render,
   targetSelectors: [
     PROFILE_LISTENING_CONTAINER_SELECTOR,
-    PLAY_HISTORY_BUTTON_SELECTOR,
+    // PROFILE_LISTENING_SET_TO_SELECTOR,
+    // PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
+    // PROFILE_LISTENING_PLAY_HISTORY_BTN,
+    // PROFILE_LISTENING_CURRENT_TRACK_SELECTOR,
   ],
 };
