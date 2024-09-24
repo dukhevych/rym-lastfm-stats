@@ -120,3 +120,26 @@ export function getStorageItems(fields = constants.OPTIONS_DEFAULT_KEYS) {
     });
   });
 }
+
+export function generateSearchUrl({ artist = '', releaseTitle = '', trackTitle = '' } = {}) {
+  let url = 'https://rateyourmusic.com';
+
+  const searchterm = [artist, releaseTitle, trackTitle]
+    .filter((part) => ![undefined, null, ''].includes(part))
+    .join(' ');
+
+  if (!searchterm) {
+    return url;
+  } else {
+    url += '/search?';
+    url += `searchterm=${encodeURIComponent(searchterm.toLowerCase())}`;
+  }
+
+  if (trackTitle) url+= `&searchtype=z`;
+  else if (releaseTitle) url+= `&searchtype=l`;
+  else if (artist) url+= `&searchtype=a`;
+
+  url += '&strict=true';
+
+  return url;
+}
