@@ -1,15 +1,18 @@
+import { deburr } from 'lodash';
+
 const SEARCH_TYPES = {
   a: 'artist',
   l: 'release',
   z: 'song',
-  y: 'v/a release',
-  b: 'label',
-  h: 'genre',
-  u: 'user',
-  s: 'list',
+  // y: 'v/a release',
+  // b: 'label',
+  // h: 'genre',
+  // u: 'user',
+  // s: 'list',
 };
 
 let searchItems;
+let searchItemsMore = [];
 
 const SEARCH_ITEMS_SELECTOR = '.page_search_results h3 ~ table';
 const LAST_ITEM_SELECTOR = '.page_search_results h3 ~ table + div';
@@ -29,7 +32,7 @@ function getNodeDirectTextContent(item) {
 
 function injectShowAllButton() {
   const button = document.createElement('button');
-  button.textContent = 'Show all';
+  button.textContent = `Show all results (+ ${searchItemsMore.length} more)`;
   button.classList.add('btn', 'blue_btn', 'btn_small');
   button.style.marginLeft = '10px';
   button.style.fontSize = '0.5em';
@@ -65,11 +68,12 @@ async function render(config) {
     const artistAkaSelector = '.subinfo';
 
     searchItems.forEach(item => {
-      const artistName = item.querySelector(artistNameSelector)?.textContent || '';
+      const artistName = deburr(item.querySelector(artistNameSelector)?.textContent) || '';
       const artistAka = getNodeDirectTextContent(item.querySelector(artistAkaSelector)).trim() || '';
+      const akaValues = artistAka.toLowerCase().trim().replace(/^a\.k\.a:\s*/, '').split(', ');
 
-      if (artistName.toLowerCase().trim() !== searchTerm && !artistAka.toLowerCase().trim().includes(searchTerm)) {
-        item.style.display = 'none';
+      if (artistName.toLowerCase().trim() !== searchTerm && !akaValues.includes(searchTerm)) {
+        searchItemsMore.push(item);
       }
     });
   } else if (searchType === 'l') {
@@ -96,11 +100,10 @@ async function render(config) {
       }
 
       if (!hasArtist || !hasReleaseTitle) {
-        item.style.display = 'none';
+        searchItemsMore.push(item);
       }
     });
   } else if (searchType === 'z') {
-    // const artistNameSelector = 'b .ui_name_locale > .ui_name_locale_original';
     const artistNameSelector = '.infobox td:nth-child(2) > span .ui_name_locale';
     const trackNameSelector = '.infobox td:nth-child(2) > table .ui_name_locale_original';
 
@@ -124,12 +127,17 @@ async function render(config) {
       }
 
       if (!hasArtist || !hasTrackName) {
-        item.style.display = 'none';
+        searchItemsMore.push(item);
       }
     });
   }
 
-  injectShowAllButton();
+  if (searchItemsMore.length && searchItemsMore.length < searchItems.length) {
+    searchItemsMore.forEach(item => {
+      item.style.display = 'none';
+    });
+    injectShowAllButton();
+  }
 }
 
 export default {
