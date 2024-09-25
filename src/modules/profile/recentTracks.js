@@ -19,7 +19,9 @@ const LISTENING_COVER_IMG_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' im
 const gif = document.createElement('img');
 gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
 
-function prepareRecentTracksUI(config) {
+let config = null;
+
+function prepareRecentTracksUI() {
   const button = createLastfmButton();
   const tracksWrapper = document.createElement('div');
   tracksWrapper.classList.add(
@@ -102,7 +104,7 @@ function createTrackCover(track) {
     artist: track.artist['#text'],
     releaseTitle: track.album['#text'] || '',
     trackTitle: track.album['#text'] ? '' : track.name,
-  });
+  }, config);
 
   link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
   wrapper.appendChild(link);
@@ -120,7 +122,7 @@ function createTrackTitle(track) {
   link.href = utils.generateSearchUrl({
     artist: track.artist['#text'],
     trackTitle: track.name,
-  });
+  }, config);
   link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
   link.textContent = track.name;
   return link;
@@ -134,7 +136,7 @@ function createTrackArtist(track) {
   link.title = `Search for "${track.artist['#text']}" on RateYourMusic`;
   link.href = utils.generateSearchUrl({
     artist: track.artist['#text'],
-  });
+  }, config);
   artist.appendChild(link);
   return artist;
 }
@@ -376,7 +378,7 @@ function replaceListeningTo(latestTrack) {
       artist: latestTrack.artist['#text'],
       releaseTitle: latestTrack.album['#text'] || '',
       trackTitle: latestTrack.album['#text'] ? '' : latestTrack.name,
-    });
+    }, config);
   }
 
   const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
@@ -387,7 +389,7 @@ function replaceListeningTo(latestTrack) {
     artist.textContent = latestTrack.artist['#text'];
     artist.href = utils.generateSearchUrl({
       artist: latestTrack.artist['#text'],
-    });
+    }, config);
     artist.title = `Search for "${latestTrack.artist['#text']}" on RateYourMusic`;
   }
 
@@ -397,12 +399,14 @@ function replaceListeningTo(latestTrack) {
     title.href = utils.generateSearchUrl({
       artist: latestTrack.artist['#text'],
       trackTitle: latestTrack.name,
-    });
+    }, config);
     title.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.name}" on RateYourMusic`;
   }
 }
 
-async function render(config) {
+async function render(_config) {
+  config = _config;
+
   if (!config) return;
 
   if (!config.lastfmApiKey) {
@@ -427,7 +431,7 @@ async function render(config) {
     currentTrack.classList.add('is-loading');
   }
 
-  const { button, tracksWrapper } = prepareRecentTracksUI(config);
+  const { button, tracksWrapper } = prepareRecentTracksUI();
 
   insertRecentTracksButtonIntoDOM(button);
 

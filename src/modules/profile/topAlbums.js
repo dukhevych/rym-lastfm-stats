@@ -5,7 +5,11 @@ import * as constants from '@/helpers/constants';
 const PROFILE_CONTAINER_SELECTOR =
   '.bubble_header.profile_header + .bubble_content';
 
-export async function render(config) {
+let config = null;
+
+export async function render(_config) {
+  config = _config;
+
   if (!config) return;
 
   if (!config.lastfmApiKey) {
@@ -38,7 +42,7 @@ export async function render(config) {
     topAlbumsContainer,
     topAlbumsPeriodSwitcher,
     topAlbumsPeriodLabel,
-  } = createTopAlbumsUI(config);
+  } = createTopAlbumsUI();
 
   topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
     const period = event.target.value;
@@ -180,7 +184,7 @@ function addTopAlbumsStyles() {
   document.head.appendChild(style);
 }
 
-function createTopAlbumsUI(config) {
+function createTopAlbumsUI() {
   const periodLabel = constants.TOP_ALBUMS_PERIOD_OPTIONS.find(
     (option) => option.value === config.topAlbumsPeriod,
   )?.label;
@@ -257,8 +261,10 @@ function createAlbumInfo(album, userName) {
 
 function createAlbumTitle(album) {
   const title = document.createElement('a');
-  title.href = album.url;
-  title.target = '_blank';
+  title.href = utils.generateSearchUrl({
+    artist: album.artist.name,
+    releaseTitle: album.name,
+  }, config);
   title.textContent = album.name;
   title.title = album.name;
   title.classList.add('album-title');
@@ -267,26 +273,27 @@ function createAlbumTitle(album) {
 
 function createAlbumArtist(album) {
   const artist = document.createElement('a');
-  artist.href = album.artist.url;
-  artist.target = '_blank';
+  artist.href = utils.generateSearchUrl({
+    artist: album.artist.name,
+  }, config);
   artist.textContent = album.artist.name;
   artist.title = album.artist.name;
   artist.classList.add('album-artist');
   return artist;
 }
 
-function createAlbumPlays(album, userName) {
-  const plays = document.createElement('a');
-  plays.href = `https://www.last.fm/user/${userName}/library/music/${encodeURIComponent(album.artist.name)}/${encodeURIComponent(album.name)}?date_preset=LAST_30_DAYS`;
-  plays.target = '_blank';
+function createAlbumPlays(album) {
+  const plays = document.createElement('span');
   plays.textContent = `${utils.formatNumber(album.playcount)} plays`;
   return plays;
 }
 
 function createAlbumLink(album) {
   const link = document.createElement('a');
-  link.href = album.url;
-  link.target = '_blank';
+  link.href = utils.generateSearchUrl({
+    artist: album.artist.name,
+    releaseTitle: album.name,
+  }, config);
   link.classList.add('album-link');
   return link;
 }
