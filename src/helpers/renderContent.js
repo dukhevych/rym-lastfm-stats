@@ -10,7 +10,7 @@ export async function renderContent(module) {
   const renderTargets = [];
 
   Object.keys(module).forEach((key) => {
-    if (!config[key]) return;
+    if ([null, 0, false].includes(config[key])) return;
     if (module[key].render) {
       renderPromises.push(module[key].render);
     }
