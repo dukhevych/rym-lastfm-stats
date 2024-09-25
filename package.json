@@ -45,6 +45,7 @@
   "license": "ISC",
   "dependencies": {
     "date-fns": "^3.6.0",
+    "lodash": "^4.17.21",
     "vue": "^3.4.38"
   }
 }
