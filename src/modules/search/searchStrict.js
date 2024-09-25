@@ -1,4 +1,5 @@
 import { deburr } from 'lodash';
+import * as utils from '@/helpers/utils.js';
 
 const SEARCH_TYPES = {
   a: 'artist',
@@ -14,8 +15,9 @@ const SEARCH_TYPES = {
 let searchItems;
 let searchItemsMore = [];
 
-const SEARCH_ITEMS_SELECTOR = '.page_search_results h3 ~ table';
-const LAST_ITEM_SELECTOR = '.page_search_results h3 ~ table + div';
+const SEARCH_HEADER_SELECTOR = '.page_search_results h3';
+const SEARCH_ITEMS_SELECTOR = SEARCH_HEADER_SELECTOR + ' ~ table';
+const LAST_ITEM_SELECTOR = SEARCH_HEADER_SELECTOR + ' ~ table + div';
 
 function getNodeDirectTextContent(item) {
   if (!item) return '';
@@ -132,11 +134,48 @@ async function render(config) {
     });
   }
 
-  if (searchItemsMore.length && searchItemsMore.length < searchItems.length) {
-    searchItemsMore.forEach(item => {
-      item.style.display = 'none';
-    });
-    injectShowAllButton();
+  if (searchItemsMore.length) {
+    if (searchItemsMore.length < searchItems.length) {
+      searchItemsMore.forEach(item => {
+        item.style.display = 'none';
+      });
+      injectShowAllButton();
+    } else {
+      const header = document.querySelector(SEARCH_HEADER_SELECTOR);
+
+      if (header) {
+        const warning = document.createElement('div');
+        warning.classList.add('rym-warning');
+        warning.appendChild(utils.createParagraph('No exact matches found.'));
+
+        const style = document.createElement('style');
+        style.textContent = `
+          .rym-warning {
+            padding: 0.5rem 2rem;
+            margin: 1rem 0;
+            font-weight: bold;
+            border-left: 10px solid currentColor;
+          }
+
+          .rym-warning p { margin: 0; }
+
+          .rym-warning p + p { margin-top: 0.5em; }
+        }`;
+        document.head.appendChild(style);
+
+        if (searchType === 'a') {
+          const p = utils.createParagraph('This artist may not be added yet into RYM database. ');
+          p.appendChild(utils.createLink('/artist/profile_ac', 'Add artist', false));
+          warning.appendChild(p);
+        } else if (searchType === 'l') {
+          warning.appendChild(utils.createParagraph('This release may not be added yet into RYM database.'));
+        } else if (searchType === 'z') {
+          warning.appendChild(utils.createParagraph('This song may not be added yet into RYM database.'));
+        }
+
+        header.insertAdjacentElement('afterend', warning);
+      }
+    }
   }
 }
 

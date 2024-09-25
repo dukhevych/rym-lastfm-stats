@@ -18,6 +18,12 @@ export const createSpan = (title, text) => {
   return span;
 };
 
+export const createParagraph = (text) => {
+  const paragraph = document.createElement('p');
+  paragraph.textContent = text;
+  return paragraph;
+}
+
 export const createSelect = (options, selectedValue) => {
   const select = document.createElement('select');
 
@@ -43,10 +49,10 @@ export const createStrong = (title, text) => {
   return strong;
 };
 
-export const createLink = (href, text) => {
+export const createLink = (href, text, target = '_blank') => {
   const link = document.createElement('a');
   link.href = href;
-  link.target = '_blank';
+  if (target) link.target = target;
   link.textContent = text;
   return link;
 };
