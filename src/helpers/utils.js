@@ -18,6 +18,12 @@ export const createSpan = (title, text) => {
   return span;
 };
 
+export const createParagraph = (text) => {
+  const paragraph = document.createElement('p');
+  paragraph.textContent = text;
+  return paragraph;
+}
+
 export const createSelect = (options, selectedValue) => {
   const select = document.createElement('select');
 
@@ -43,10 +49,10 @@ export const createStrong = (title, text) => {
   return strong;
 };
 
-export const createLink = (href, text) => {
+export const createLink = (href, text, target = '_blank') => {
   const link = document.createElement('a');
   link.href = href;
-  link.target = '_blank';
+  if (target) link.target = target;
   link.textContent = text;
   return link;
 };
@@ -119,4 +125,27 @@ export function getStorageItems(fields = constants.OPTIONS_DEFAULT_KEYS) {
       resolve(items);
     });
   });
+}
+
+export function generateSearchUrl({ artist = '', releaseTitle = '', trackTitle = '' } = {}) {
+  let url = 'https://rateyourmusic.com';
+
+  const searchterm = [artist, releaseTitle, trackTitle]
+    .filter((part) => ![undefined, null, ''].includes(part))
+    .join(' ');
+
+  if (!searchterm) {
+    return url;
+  } else {
+    url += '/search?';
+    url += `searchterm=${encodeURIComponent(searchterm.toLowerCase())}`;
+  }
+
+  if (trackTitle) url+= `&searchtype=z`;
+  else if (releaseTitle) url+= `&searchtype=l`;
+  else if (artist) url+= `&searchtype=a`;
+
+  url += '&strict=true';
+
+  return url;
 }

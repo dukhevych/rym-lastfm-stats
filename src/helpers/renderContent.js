@@ -6,8 +6,6 @@ export async function renderContent(module) {
 
   const config = Object.assign({}, constants.OPTIONS_DEFAULT, storageItems);
 
-  console.log('RYM Last.fm Stats config:', config);
-
   const renderPromises = [];
   const renderTargets = [];
 

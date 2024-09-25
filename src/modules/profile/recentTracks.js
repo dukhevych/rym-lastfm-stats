@@ -98,7 +98,13 @@ function createTrackCover(track) {
   wrapper.classList.add('track-image');
   const link = document.createElement('a');
   link.classList.add('track-image');
-  link.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'])} ${encodeURIComponent(track.album['#text'] || track.name)}&searchtype=`;
+
+  link.href = utils.generateSearchUrl({
+    artist: track.artist['#text'],
+    releaseTitle: track.album['#text'] || '',
+    trackTitle: track.album['#text'] ? '' : track.name,
+  });
+
   link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
   wrapper.appendChild(link);
   if (track.image[0]['#text']) {
@@ -110,22 +116,27 @@ function createTrackCover(track) {
 }
 
 function createTrackTitle(track) {
-  const title = document.createElement('a');
-  title.classList.add('track-title');
-  title.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'])} ${encodeURIComponent(track.album['#text'] || track.name)}&searchtype=`;
-  title.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
-  title.textContent = track.name;
-  return title;
+  const link = document.createElement('a');
+  link.classList.add('track-title');
+  link.href = utils.generateSearchUrl({
+    artist: track.artist['#text'],
+    trackTitle: track.name,
+  });
+  link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
+  link.textContent = track.name;
+  return link;
 }
 
 function createTrackArtist(track) {
   const artist = document.createElement('div');
   artist.classList.add('track-artist');
-  const artistLink = document.createElement('a');
-  artistLink.textContent = track.artist['#text'];
-  artistLink.title = `Search for "${track.artist['#text']}" on RateYourMusic`;
-  artistLink.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(track.artist['#text'].toLowerCase())}&searchtype=a`;
-  artist.appendChild(artistLink);
+  const link = document.createElement('a');
+  link.textContent = track.artist['#text'];
+  link.title = `Search for "${track.artist['#text']}" on RateYourMusic`;
+  link.href = utils.generateSearchUrl({
+    artist: track.artist['#text'],
+  });
+  artist.appendChild(link);
   return artist;
 }
 
