@@ -40,7 +40,7 @@ function prepareRecentTracksUI(config) {
 
     const label = document.querySelector(LISTENING_LABEL_SELECTOR);
     if (label) {
-      label.textContent = 'Scrobbling now'; // or "Last scrobbled (+date)"
+      label.textContent = 'Scrobbling now';
       label.append(gif.cloneNode());
     }
 
@@ -409,20 +409,35 @@ async function render(config) {
     }
 
     const cover = document.querySelector(LISTENING_COVER_SELECTOR);
-    if (cover) cover.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(latestTrack.artist['#text'])} ${encodeURIComponent(latestTrack.album['#text'] || latestTrack.name)}&searchtype=${latestTrack.album['#text'] ? 'l' : 'z'}`;
+    if (cover) {
+      cover.href = utils.generateSearchUrl({
+        artist: latestTrack.artist['#text'],
+        releaseTitle: latestTrack.album['#text'] || '',
+        trackTitle: latestTrack.album['#text'] ? '' : latestTrack.name,
+      });
+    }
 
     const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
     if (coverImg) coverImg.src = latestTrack.image[1]['#text'];
 
     const artist = document.querySelector(LISTENING_ARTIST_SELECTOR);
-    if (artist) artist.textContent = latestTrack.artist['#text'];
-    if (artist) artist.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(latestTrack.artist['#text'].toLowerCase())}&searchtype=a`;
-    if (artist) artist.title = `Search for "${latestTrack.artist['#text']}" on RateYourMusic`;
+    if (artist) {
+      artist.textContent = latestTrack.artist['#text'];
+      artist.href = utils.generateSearchUrl({
+        artist: latestTrack.artist['#text'],
+      });
+      artist.title = `Search for "${latestTrack.artist['#text']}" on RateYourMusic`;
+    }
 
     const title = document.querySelector(LISTENING_TITLE_SELECTOR);
-    if (title) title.textContent = latestTrack.name;
-    if (title) title.href = `https://rateyourmusic.com/search?searchterm=${encodeURIComponent(latestTrack.artist['#text'])} ${encodeURIComponent(latestTrack.name)}&searchtype=z`;
-    if (title) title.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.name}" on RateYourMusic`;
+    if (title) {
+      title.textContent = latestTrack.name;
+      title.href = utils.generateSearchUrl({
+        artist: latestTrack.artist['#text'],
+        trackTitle: latestTrack.name,
+      });
+      title.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.name}" on RateYourMusic`;
+    }
   }
 
   const tracksList = createTracksList(recentTracks, userName);
