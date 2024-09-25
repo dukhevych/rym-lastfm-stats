@@ -44,7 +44,6 @@ function prepareRecentTracksUI(config) {
       label.append(gif.cloneNode());
     }
 
-    // Reset
     const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
     if (coverImg) coverImg.src = '';
 
@@ -202,7 +201,6 @@ function addRecentTracksStyles() {
       width: 45px;
       height: 45px;
       max-width: none;
-      background: currentColor;
     }
 
     ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR}.is-loading {
@@ -236,8 +234,8 @@ function addRecentTracksStyles() {
     }
 
     .btn.btn-lastfm {
-      background-color: var(--clr-lastfm);
-      color: white;
+      background-color: var(--clr-lastfm) !important;
+      color: white !important;
       margin-right: 0;
     }
 
@@ -355,6 +353,55 @@ function addRecentTracksStyles() {
   document.head.appendChild(style);
 }
 
+function replaceListeningTo(latestTrack) {
+  const label = document.querySelector(LISTENING_LABEL_SELECTOR);
+
+  if (label) {
+    if (latestTrack['@attr']?.nowplaying) {
+      label.classList.add('is-now-playing');
+      label.textContent = 'Scrobbling now';
+      label.append(gif.cloneNode());
+    } else {
+      const date = formatDistanceToNow(new Date(latestTrack.date.uts * 1000), {
+        addSuffix: true,
+      });
+      label.classList.remove('is-now-playing');
+      label.textContent = `Last scrobble (${date})`;
+    }
+  }
+
+  const cover = document.querySelector(LISTENING_COVER_SELECTOR);
+  if (cover) {
+    cover.href = utils.generateSearchUrl({
+      artist: latestTrack.artist['#text'],
+      releaseTitle: latestTrack.album['#text'] || '',
+      trackTitle: latestTrack.album['#text'] ? '' : latestTrack.name,
+    });
+  }
+
+  const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
+  if (coverImg) coverImg.src = latestTrack.image[1]['#text'];
+
+  const artist = document.querySelector(LISTENING_ARTIST_SELECTOR);
+  if (artist) {
+    artist.textContent = latestTrack.artist['#text'];
+    artist.href = utils.generateSearchUrl({
+      artist: latestTrack.artist['#text'],
+    });
+    artist.title = `Search for "${latestTrack.artist['#text']}" on RateYourMusic`;
+  }
+
+  const title = document.querySelector(LISTENING_TITLE_SELECTOR);
+  if (title) {
+    title.textContent = latestTrack.name;
+    title.href = utils.generateSearchUrl({
+      artist: latestTrack.artist['#text'],
+      trackTitle: latestTrack.name,
+    });
+    title.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.name}" on RateYourMusic`;
+  }
+}
+
 async function render(config) {
   if (!config) return;
 
@@ -390,54 +437,14 @@ async function render(config) {
     { limit: config.recentTracksLimit },
   );
 
-  const latestTrack = recentTracks[0];
-
-  if (latestTrack['@attr']?.nowplaying) {
+  if (recentTracks[0]['@attr']?.nowplaying) {
     button.classList.add('is-now-playing');
+  } else {
+    button.classList.remove('is-now-playing');
   }
 
   if (config.recentTracksReplace) {
-    const label = document.querySelector(LISTENING_LABEL_SELECTOR);
-
-    if (latestTrack['@attr']?.nowplaying) {
-      if (label) label.classList.add('is-now-playing');
-    } else {
-      const date = formatDistanceToNow(new Date(latestTrack.date.uts * 1000), {
-        addSuffix: true,
-      });
-      if (label) label.textContent = `Last scrobble (${date})`;
-    }
-
-    const cover = document.querySelector(LISTENING_COVER_SELECTOR);
-    if (cover) {
-      cover.href = utils.generateSearchUrl({
-        artist: latestTrack.artist['#text'],
-        releaseTitle: latestTrack.album['#text'] || '',
-        trackTitle: latestTrack.album['#text'] ? '' : latestTrack.name,
-      });
-    }
-
-    const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
-    if (coverImg) coverImg.src = latestTrack.image[1]['#text'];
-
-    const artist = document.querySelector(LISTENING_ARTIST_SELECTOR);
-    if (artist) {
-      artist.textContent = latestTrack.artist['#text'];
-      artist.href = utils.generateSearchUrl({
-        artist: latestTrack.artist['#text'],
-      });
-      artist.title = `Search for "${latestTrack.artist['#text']}" on RateYourMusic`;
-    }
-
-    const title = document.querySelector(LISTENING_TITLE_SELECTOR);
-    if (title) {
-      title.textContent = latestTrack.name;
-      title.href = utils.generateSearchUrl({
-        artist: latestTrack.artist['#text'],
-        trackTitle: latestTrack.name,
-      });
-      title.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.name}" on RateYourMusic`;
-    }
+    replaceListeningTo(recentTracks[0]);
   }
 
   const tracksList = createTracksList(recentTracks, userName);
@@ -450,13 +457,23 @@ async function render(config) {
   }
 
   setInterval(async () => {
-    const data = await api.fetchUserRecentTracks(
+    const recentTracks = await api.fetchUserRecentTracks(
       userName,
       config.lastfmApiKey,
       { limit: config.recentTracksLimit },
     );
 
-    const tracksList = createTracksList(data, userName);
+    if (recentTracks[0]['@attr']?.nowplaying) {
+      button.classList.add('is-now-playing');
+    } else {
+      button.classList.remove('is-now-playing');
+    }
+
+    if (config.recentTracksReplace) {
+      replaceListeningTo(recentTracks[0]);
+    }
+
+    const tracksList = createTracksList(recentTracks, userName);
 
     tracksWrapper.replaceChildren(tracksList);
   }, 60000);
