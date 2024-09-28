@@ -53,8 +53,6 @@ function injectShowAllButton() {
 async function render(config) {
   if (!config) return;
 
-  if (!config.searchStrict) return;
-
   const urlParams = new URLSearchParams(window.location.search);
   const strict = urlParams.get('strict');
   const searchType = urlParams.get('searchtype');

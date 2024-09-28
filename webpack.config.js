@@ -1,5 +1,6 @@
 const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
+const TerserPlugin = require('terser-webpack-plugin');
 const glob = require("glob");
 const { VueLoaderPlugin } = require("vue-loader");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -28,6 +29,9 @@ module.exports = (env) => {
       filename: "[name].js",
       path: outputPath,
     },
+    cache: {
+      type: 'filesystem', // Enable filesystem caching
+    },
     // devtool: 'source-map',
     mode: "production",
     resolve: {
@@ -45,8 +49,13 @@ module.exports = (env) => {
         },
         {
           test: /\.js$/,
-          loader: "babel-loader",
           exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              cacheDirectory: true,
+            },
+          },
         },
         {
           test: /\.css$/,
@@ -97,5 +106,11 @@ module.exports = (env) => {
         'process.env.APP_VERSION': JSON.stringify(appVersion),
       }),
     ],
+    optimization: {
+      minimize: true,
+      minimizer: [new TerserPlugin({
+        parallel: true, // Enable parallelization
+      })],
+    },
   };
 };
