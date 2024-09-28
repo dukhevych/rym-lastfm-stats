@@ -369,7 +369,7 @@
 
           <!-- SEARCH -->
           <fieldset
-            class="form-group focus-within:shadow-lg"
+            class="form-group focus-within:shadow-lg hidden"
             :class="{
               'pointer-events-none opacity-50':
                 options.lastfmApiKey.length !== 32,

@@ -75,7 +75,7 @@ export const OPTIONS_DEFAULT = {
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
 
   // SEARCH PAGE
-  searchStrict: true,
+  // searchStrict: true,
 };
 
 export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);
