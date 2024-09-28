@@ -127,7 +127,7 @@ export function getStorageItems(fields = constants.OPTIONS_DEFAULT_KEYS) {
   });
 }
 
-export function generateSearchUrl({ artist = '', releaseTitle = '', trackTitle = '' } = {}) {
+export function generateSearchUrl({ artist = '', releaseTitle = '', trackTitle = '' } = {}, config = {}) {
   let url = 'https://rateyourmusic.com';
 
   const searchterm = [artist, releaseTitle, trackTitle]
@@ -145,7 +145,7 @@ export function generateSearchUrl({ artist = '', releaseTitle = '', trackTitle =
   else if (releaseTitle) url+= `&searchtype=l`;
   else if (artist) url+= `&searchtype=a`;
 
-  url += '&strict=true';
+  if (config.searchStrict) url += '&strict=true';
 
   return url;
 }

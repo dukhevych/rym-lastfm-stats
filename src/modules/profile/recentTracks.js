@@ -19,7 +19,9 @@ const LISTENING_COVER_IMG_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' im
 const gif = document.createElement('img');
 gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
 
-function prepareRecentTracksUI(config) {
+let config = null;
+
+function prepareRecentTracksUI() {
   const button = createLastfmButton();
   const tracksWrapper = document.createElement('div');
   tracksWrapper.classList.add(
@@ -44,7 +46,6 @@ function prepareRecentTracksUI(config) {
       label.append(gif.cloneNode());
     }
 
-    // Reset
     const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
     if (coverImg) coverImg.src = '';
 
@@ -103,7 +104,7 @@ function createTrackCover(track) {
     artist: track.artist['#text'],
     releaseTitle: track.album['#text'] || '',
     trackTitle: track.album['#text'] ? '' : track.name,
-  });
+  }, config);
 
   link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
   wrapper.appendChild(link);
@@ -121,7 +122,7 @@ function createTrackTitle(track) {
   link.href = utils.generateSearchUrl({
     artist: track.artist['#text'],
     trackTitle: track.name,
-  });
+  }, config);
   link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
   link.textContent = track.name;
   return link;
@@ -135,7 +136,7 @@ function createTrackArtist(track) {
   link.title = `Search for "${track.artist['#text']}" on RateYourMusic`;
   link.href = utils.generateSearchUrl({
     artist: track.artist['#text'],
-  });
+  }, config);
   artist.appendChild(link);
   return artist;
 }
@@ -202,7 +203,6 @@ function addRecentTracksStyles() {
       width: 45px;
       height: 45px;
       max-width: none;
-      background: currentColor;
     }
 
     ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR}.is-loading {
@@ -236,8 +236,8 @@ function addRecentTracksStyles() {
     }
 
     .btn.btn-lastfm {
-      background-color: var(--clr-lastfm);
-      color: white;
+      background-color: var(--clr-lastfm) !important;
+      color: white !important;
       margin-right: 0;
     }
 
@@ -355,7 +355,58 @@ function addRecentTracksStyles() {
   document.head.appendChild(style);
 }
 
-async function render(config) {
+function replaceListeningTo(latestTrack) {
+  const label = document.querySelector(LISTENING_LABEL_SELECTOR);
+
+  if (label) {
+    if (latestTrack['@attr']?.nowplaying) {
+      label.classList.add('is-now-playing');
+      label.textContent = 'Scrobbling now';
+      label.append(gif.cloneNode());
+    } else {
+      const date = formatDistanceToNow(new Date(latestTrack.date.uts * 1000), {
+        addSuffix: true,
+      });
+      label.classList.remove('is-now-playing');
+      label.textContent = `Last scrobble (${date})`;
+    }
+  }
+
+  const cover = document.querySelector(LISTENING_COVER_SELECTOR);
+  if (cover) {
+    cover.href = utils.generateSearchUrl({
+      artist: latestTrack.artist['#text'],
+      releaseTitle: latestTrack.album['#text'] || '',
+      trackTitle: latestTrack.album['#text'] ? '' : latestTrack.name,
+    }, config);
+  }
+
+  const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
+  if (coverImg) coverImg.src = latestTrack.image[1]['#text'];
+
+  const artist = document.querySelector(LISTENING_ARTIST_SELECTOR);
+  if (artist) {
+    artist.textContent = latestTrack.artist['#text'];
+    artist.href = utils.generateSearchUrl({
+      artist: latestTrack.artist['#text'],
+    }, config);
+    artist.title = `Search for "${latestTrack.artist['#text']}" on RateYourMusic`;
+  }
+
+  const title = document.querySelector(LISTENING_TITLE_SELECTOR);
+  if (title) {
+    title.textContent = latestTrack.name;
+    title.href = utils.generateSearchUrl({
+      artist: latestTrack.artist['#text'],
+      trackTitle: latestTrack.name,
+    }, config);
+    title.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.name}" on RateYourMusic`;
+  }
+}
+
+async function render(_config) {
+  config = _config;
+
   if (!config) return;
 
   if (!config.lastfmApiKey) {
@@ -380,7 +431,7 @@ async function render(config) {
     currentTrack.classList.add('is-loading');
   }
 
-  const { button, tracksWrapper } = prepareRecentTracksUI(config);
+  const { button, tracksWrapper } = prepareRecentTracksUI();
 
   insertRecentTracksButtonIntoDOM(button);
 
@@ -390,54 +441,14 @@ async function render(config) {
     { limit: config.recentTracksLimit },
   );
 
-  const latestTrack = recentTracks[0];
-
-  if (latestTrack['@attr']?.nowplaying) {
+  if (recentTracks[0]['@attr']?.nowplaying) {
     button.classList.add('is-now-playing');
+  } else {
+    button.classList.remove('is-now-playing');
   }
 
   if (config.recentTracksReplace) {
-    const label = document.querySelector(LISTENING_LABEL_SELECTOR);
-
-    if (latestTrack['@attr']?.nowplaying) {
-      if (label) label.classList.add('is-now-playing');
-    } else {
-      const date = formatDistanceToNow(new Date(latestTrack.date.uts * 1000), {
-        addSuffix: true,
-      });
-      if (label) label.textContent = `Last scrobble (${date})`;
-    }
-
-    const cover = document.querySelector(LISTENING_COVER_SELECTOR);
-    if (cover) {
-      cover.href = utils.generateSearchUrl({
-        artist: latestTrack.artist['#text'],
-        releaseTitle: latestTrack.album['#text'] || '',
-        trackTitle: latestTrack.album['#text'] ? '' : latestTrack.name,
-      });
-    }
-
-    const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
-    if (coverImg) coverImg.src = latestTrack.image[1]['#text'];
-
-    const artist = document.querySelector(LISTENING_ARTIST_SELECTOR);
-    if (artist) {
-      artist.textContent = latestTrack.artist['#text'];
-      artist.href = utils.generateSearchUrl({
-        artist: latestTrack.artist['#text'],
-      });
-      artist.title = `Search for "${latestTrack.artist['#text']}" on RateYourMusic`;
-    }
-
-    const title = document.querySelector(LISTENING_TITLE_SELECTOR);
-    if (title) {
-      title.textContent = latestTrack.name;
-      title.href = utils.generateSearchUrl({
-        artist: latestTrack.artist['#text'],
-        trackTitle: latestTrack.name,
-      });
-      title.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.name}" on RateYourMusic`;
-    }
+    replaceListeningTo(recentTracks[0]);
   }
 
   const tracksList = createTracksList(recentTracks, userName);
@@ -450,13 +461,23 @@ async function render(config) {
   }
 
   setInterval(async () => {
-    const data = await api.fetchUserRecentTracks(
+    const recentTracks = await api.fetchUserRecentTracks(
       userName,
       config.lastfmApiKey,
       { limit: config.recentTracksLimit },
     );
 
-    const tracksList = createTracksList(data, userName);
+    if (recentTracks[0]['@attr']?.nowplaying) {
+      button.classList.add('is-now-playing');
+    } else {
+      button.classList.remove('is-now-playing');
+    }
+
+    if (config.recentTracksReplace) {
+      replaceListeningTo(recentTracks[0]);
+    }
+
+    const tracksList = createTracksList(recentTracks, userName);
 
     tracksWrapper.replaceChildren(tracksList);
   }, 60000);
