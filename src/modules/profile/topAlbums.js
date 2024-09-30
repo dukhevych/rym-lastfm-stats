@@ -12,7 +12,9 @@ export async function render(_config) {
 
   if (!config) return;
 
-  if (!config.lastfmApiKey) {
+  const apiKey = config.lastfmApiKey || window.LASTFM_API_KEY;
+
+  if (!apiKey) {
     console.error(
       'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
     );
@@ -30,7 +32,7 @@ export async function render(_config) {
 
   const topAlbums = await api.fetchUserTopAlbums(
     userName,
-    config.lastfmApiKey,
+    apiKey,
     {
       limit: config.topAlbumsLimit,
       period: config.topAlbumsPeriod,
@@ -49,10 +51,14 @@ export async function render(_config) {
 
     topAlbumsContainer.classList.add('is-loading');
 
-    const data = await api.fetchUserTopAlbums(userName, config.lastfmApiKey, {
-      limit: config.topAlbumsLimit,
-      period: period,
-    });
+    const data = await api.fetchUserTopAlbums(
+      userName,
+      apiKey,
+      {
+        limit: config.topAlbumsLimit,
+        period: period,
+      },
+    );
 
     topAlbumsPeriodLabel.textContent =
       constants.TOP_ALBUMS_PERIOD_LABELS_MAP[period];

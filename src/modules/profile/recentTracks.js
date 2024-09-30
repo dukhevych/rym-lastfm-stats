@@ -409,7 +409,9 @@ async function render(_config) {
 
   if (!config) return;
 
-  if (!config.lastfmApiKey) {
+  const apiKey = config.lastfmApiKey || window.LASTFM_API_KEY;
+
+  if (!apiKey) {
     console.error(
       'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
     );
@@ -437,7 +439,7 @@ async function render(_config) {
 
   const recentTracks = await api.fetchUserRecentTracks(
     userName,
-    config.lastfmApiKey,
+    apiKey,
     { limit: config.recentTracksLimit },
   );
 
@@ -463,7 +465,7 @@ async function render(_config) {
   setInterval(async () => {
     const recentTracks = await api.fetchUserRecentTracks(
       userName,
-      config.lastfmApiKey,
+      apiKey,
       { limit: config.recentTracksLimit },
     );
 

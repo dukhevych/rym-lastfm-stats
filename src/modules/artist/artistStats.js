@@ -105,9 +105,11 @@ async function render(config) {
     return;
   }
 
-  if (!config.lastfmApiKey) {
+  const apiKey = config.lastfmApiKey || window.LASTFM_API_KEY;
+
+  if (!apiKey) {
     insertDummyLink(artist);
-    console.log(
+    alert(
       'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
     );
     return;
@@ -115,7 +117,7 @@ async function render(config) {
 
   const userName = config.lastfmUsername;
 
-  const data = await api.fetchArtistStats(userName, config.lastfmApiKey, {
+  const data = await api.fetchArtistStats(userName, apiKey, {
     artist,
   });
 
