@@ -1,3 +1,5 @@
+const CACHE_LIFETIME = 86400000;
+
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}) {
@@ -116,8 +118,7 @@ export function fetchArtistStats(username, apiKey, { artist }) {
         const parsedData = JSON.parse(cachedData);
         const cacheAge = now - parsedData.lastDate;
 
-        // if (cacheAge < 86400000) {
-        if (cacheAge < 300000) {
+        if (cacheAge < CACHE_LIFETIME) {
           return resolve(parsedData.data);
         }
       }
@@ -194,8 +195,7 @@ export function fetchReleaseStats(username, apiKey, { artist, releaseTitle }) {
         const parsedData = JSON.parse(cachedData);
         const cacheAge = now - parsedData.lastDate;
 
-        // Check if cached data is older than 24 hours (86400000 milliseconds)
-        if (cacheAge < 86400000) {
+        if (cacheAge < CACHE_LIFETIME) {
           return resolve(parsedData.data);
         }
       }
