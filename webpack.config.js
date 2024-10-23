@@ -34,7 +34,7 @@ module.exports = (env) => {
       path: outputPath,
     },
     cache: {
-      type: 'filesystem', // Enable filesystem caching
+      type: 'filesystem',
     },
     // devtool: 'source-map',
     mode: "production",
@@ -115,7 +115,7 @@ module.exports = (env) => {
     optimization: {
       minimize: true,
       minimizer: [new TerserPlugin({
-        parallel: true, // Enable parallelization
+        parallel: true,
       })],
     },
   };

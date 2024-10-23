@@ -60,6 +60,7 @@ export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 export const OPTIONS_DEFAULT = {
   lastfmApiKey: '',
   lastfmUsername: '',
+  lastfmUsernameAutoDetect: true,
 
   // ARTIST PAGE
   artistStats: true,
