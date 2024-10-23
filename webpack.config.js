@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 const CopyPlugin = require("copy-webpack-plugin");
 const TerserPlugin = require('terser-webpack-plugin');
 const glob = require("glob");
@@ -7,6 +8,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ESLintPlugin = require('eslint-webpack-plugin');
 const { DefinePlugin } = require('webpack');
+const dotenv = require('dotenv');
 
 const generateManifest = require("./manifest.config.js");
 const packageJson = require('./package.json');
@@ -23,6 +25,8 @@ module.exports = (env) => {
   const browserTarget = env.browser;
   const outputPath = path.resolve(__dirname, `dist/${browserTarget}`);
 
+  dotenv.config({ path: [`.env.${env.browser}.local`, '.env.local', `.env.${env.browser}`, '.env'] });
+
   return {
     entry: entries,
     output: {
@@ -30,7 +34,7 @@ module.exports = (env) => {
       path: outputPath,
     },
     cache: {
-      type: 'filesystem', // Enable filesystem caching
+      type: 'filesystem',
     },
     // devtool: 'source-map',
     mode: "production",
@@ -70,6 +74,11 @@ module.exports = (env) => {
         dangerouslyAllowCleanPatternsOutsideProject: true,
         verbose: true
       }),
+      new DefinePlugin({
+        'process.env': JSON.stringify(process.env),
+        'process.env.APP_VERSION': JSON.stringify(appVersion),
+        'window.LASTFM_API_KEY': JSON.stringify(process.env.LASTFM_API_KEY)
+      }),
       new VueLoaderPlugin(),
       new MiniCssExtractPlugin({
         filename: "[name].css",
@@ -102,14 +111,11 @@ module.exports = (env) => {
         fix: true,
         failOnError: true,
       }),
-      new DefinePlugin({
-        'process.env.APP_VERSION': JSON.stringify(appVersion),
-      }),
     ],
     optimization: {
       minimize: true,
       minimizer: [new TerserPlugin({
-        parallel: true, // Enable parallelization
+        parallel: true,
       })],
     },
   };
