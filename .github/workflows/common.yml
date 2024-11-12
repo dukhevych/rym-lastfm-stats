@@ -1,0 +1,35 @@
+name: Common Build and Package
+
+on:
+  workflow_call:
+    inputs:
+      build_command:
+        description: 'The command to build the extension'
+        required: true
+      dist_folder:
+        description: 'The folder to package'
+        required: true
+      zip_name:
+        description: 'The name of the ZIP file'
+        required: true
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build the extension
+      run: ${{ inputs.build_command }}
+
+    - name: Get package version
+      id: version
+      run: echo "::set-output name=VERSION::$(node -p \"require('./package.json').version\")"
+
+    - name: Package the extension
+      run: zip -r ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip ${{ inputs.dist_folder }}
