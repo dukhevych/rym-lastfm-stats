@@ -7,81 +7,74 @@ const PROFILE_CONTAINER_SELECTOR =
 
 let config = null;
 
-function getApiKey(config) {
+export async function render(_config) {
+  config = _config;
+
+  if (!config) return;
+
   const apiKey = config.lastfmApiKey || window.LASTFM_API_KEY;
+
   if (!apiKey) {
     console.error(
       'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
     );
-  }
-  return apiKey;
-}
-
-async function handlePeriodChange(period, userName, apiKey, container, label) {
-  container.classList.add('is-loading');
-
-  const data = await api.fetchUserTopAlbums(
-    userName,
-    apiKey,
-    {
-      limit: config.topAlbumsLimit,
-      period: period,
-    },
-  );
-
-  label.textContent = constants.PERIOD_LABELS_MAP[period];
-  label.title = constants.PERIOD_LABELS_MAP[period];
-
-  populateTopAlbums(container, data, userName);
-  container.classList.remove('is-loading');
-}
-
-export async function render(_config) {
-  config = _config;
-  if (!config) return;
-
-  const apiKey = getApiKey(config);
-  if (!apiKey) return;
-
-  const userName = utils.getUserName(config);
-  if (!userName) {
-    console.log("No Last.fm username found. Top Albums can't be displayed.");
     return;
   }
 
-  addTopAlbumsStyles();
+  const userName = utils.getUserName(config);
 
-  const topAlbums = await api.fetchUserTopAlbums(
+  if (!userName) {
+    console.log("No Last.fm username found. Top Artists can't be displayed.");
+    return;
+  }
+
+  addTopArtistsStyles();
+
+  const topArtists = await api.fetchUserTopArtists(
     userName,
     apiKey,
     {
-      limit: config.topAlbumsLimit,
-      period: config.topAlbumsPeriod,
+      limit: config.topArtistsLimit,
+      period: config.topArtistsPeriod,
     },
   );
 
   const {
-    topAlbumsHeader,
-    topAlbumsContainer,
-    topAlbumsPeriodSwitcher,
-    topAlbumsPeriodLabel,
-  } = createTopAlbumsUI();
+    topArtistsHeader,
+    topArtistsContainer,
+    topArtistsPeriodSwitcher,
+    topArtistsPeriodLabel,
+  } = createTopArtistsUI();
 
-  topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
-    await handlePeriodChange(
-      event.target.value,
+  topArtistsPeriodSwitcher.addEventListener('change', async (event) => {
+    const period = event.target.value;
+
+    topArtistsContainer.classList.add('is-loading');
+
+    const data = await api.fetchUserTopArtists(
       userName,
       apiKey,
-      topAlbumsContainer,
-      topAlbumsPeriodLabel,
+      {
+        limit: config.topArtistsLimit,
+        period: period,
+      },
     );
+
+    topArtistsPeriodLabel.textContent =
+      constants.PERIOD_LABELS_MAP[period];
+    topArtistsPeriodLabel.title = constants.PERIOD_LABELS_MAP[period];
+
+    populateTopArtists(topArtistsContainer, data, userName);
+
+    topArtistsContainer.classList.remove('is-loading');
   });
 
-  populateTopAlbums(topAlbumsContainer, topAlbums, userName);
-  insertTopAlbumsIntoDOM(topAlbumsHeader, topAlbumsContainer);
+  populateTopArtists(topArtistsContainer, topArtists, userName);
+
+  insertTopArtistsIntoDOM(topArtistsHeader, topArtistsContainer);
 }
 
-function addTopAlbumsStyles() {
+function addTopArtistsStyles() {
   const style = document.createElement('style');
   style.textContent = `
     .top-albums {
@@ -197,62 +190,62 @@ function addTopAlbumsStyles() {
   document.head.appendChild(style);
 }
 
-function createTopAlbumsUI() {
+function createTopArtistsUI() {
   const periodLabel = constants.PERIOD_OPTIONS.find(
-    (option) => option.value === config.topAlbumsPeriod,
+    (option) => option.value === config.topArtistsPeriod,
   )?.label;
-  const topAlbumsHeader = document.createElement('div');
-  topAlbumsHeader.classList.add('bubble_header');
-  topAlbumsHeader.classList.add('top-albums-header');
+  const topArtistsHeader = document.createElement('div');
+  topArtistsHeader.classList.add('bubble_header');
+  topArtistsHeader.classList.add('top-artists-header');
 
-  let headerText = 'Top Albums';
+  let headerText = 'Top Artists';
 
-  const topAlbumsPeriodLabel = utils.createSpan(periodLabel, periodLabel);
-  topAlbumsPeriodLabel.id = 'top-albums-period-label';
+  const topArtistsPeriodLabel = utils.createSpan(periodLabel, periodLabel);
+  topArtistsPeriodLabel.id = 'top-artists-period-label';
 
-  topAlbumsHeader.textContent = headerText;
+  topArtistsHeader.textContent = headerText;
 
-  topAlbumsHeader.appendChild(topAlbumsPeriodLabel);
+  topArtistsHeader.appendChild(topArtistsPeriodLabel);
 
-  const topAlbumsPeriodSwitcher = utils.createSelect(
-    constants.PERIOD_OPTIONS,
-    config.topAlbumsPeriod,
+  const topArtistsPeriodSwitcher = utils.createSelect(
+    constants.TOP_ARTISTS_PERIOD_OPTIONS,
+    config.topArtistsPeriod,
   );
 
-  topAlbumsHeader.appendChild(topAlbumsPeriodSwitcher);
+  topArtistsHeader.appendChild(topArtistsPeriodSwitcher);
 
-  const topAlbumsContainer = document.createElement('div');
-  topAlbumsContainer.classList.add('bubble_content', 'top-albums');
-  topAlbumsContainer.style.padding = '14px';
+  const topArtistsContainer = document.createElement('div');
+  topArtistsContainer.classList.add('bubble_content', 'top-artists');
+  topArtistsContainer.style.padding = '14px';
 
   return {
-    topAlbumsHeader,
-    topAlbumsContainer,
-    topAlbumsPeriodSwitcher,
-    topAlbumsPeriodLabel,
+    topArtistsHeader,
+    topArtistsContainer,
+    topArtistsPeriodSwitcher,
+    topArtistsPeriodLabel,
   };
 }
 
-function populateTopAlbums(container, topAlbums, userName) {
+function populateTopArtists(container, topArtists, userName) {
   container.replaceChildren();
-  topAlbums.forEach((album) => {
-    const albumWrapper = createAlbumWrapper(album, userName);
+  topArtists.forEach((album) => {
+    const albumWrapper = createArtistWrapper(album, userName);
     container.appendChild(albumWrapper);
   });
 }
 
-function createAlbumWrapper(album, userName) {
+function createArtistWrapper(album, userName) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('album-wrapper');
 
-  wrapper.appendChild(createAlbumCover(album));
-  wrapper.appendChild(createAlbumInfo(album, userName));
-  wrapper.appendChild(createAlbumLink(album));
+  wrapper.appendChild(createArtistCover(album));
+  wrapper.appendChild(createArtistInfo(album, userName));
+  wrapper.appendChild(createArtistLink(album));
 
   return wrapper;
 }
 
-function createAlbumCover(album) {
+function createArtistCover(album) {
   const cover = document.createElement('div');
   cover.classList.add('album-image');
   const img = document.createElement('img');
@@ -261,18 +254,18 @@ function createAlbumCover(album) {
   return cover;
 }
 
-function createAlbumInfo(album, userName) {
+function createArtistInfo(album, userName) {
   const infoWrapper = document.createElement('div');
   infoWrapper.classList.add('album-details');
 
-  infoWrapper.appendChild(createAlbumTitle(album));
-  infoWrapper.appendChild(createAlbumArtist(album));
-  infoWrapper.appendChild(createAlbumPlays(album, userName));
+  infoWrapper.appendChild(createArtistTitle(album));
+  infoWrapper.appendChild(createArtistArtist(album));
+  infoWrapper.appendChild(createArtistPlays(album, userName));
 
   return infoWrapper;
 }
 
-function createAlbumTitle(album) {
+function createArtistTitle(album) {
   const title = document.createElement('a');
   title.href = utils.generateSearchUrl({
     artist: album.artist.name,
@@ -284,7 +277,7 @@ function createAlbumTitle(album) {
   return title;
 }
 
-function createAlbumArtist(album) {
+function createArtistArtist(album) {
   const artist = document.createElement('a');
   artist.href = utils.generateSearchUrl({
     artist: album.artist.name,
@@ -295,13 +288,13 @@ function createAlbumArtist(album) {
   return artist;
 }
 
-function createAlbumPlays(album) {
+function createArtistPlays(album) {
   const plays = document.createElement('span');
   plays.textContent = `${utils.formatNumber(album.playcount)} plays`;
   return plays;
 }
 
-function createAlbumLink(album) {
+function createArtistLink(album) {
   const link = document.createElement('a');
   link.href = utils.generateSearchUrl({
     artist: album.artist.name,
@@ -311,10 +304,10 @@ function createAlbumLink(album) {
   return link;
 }
 
-function insertTopAlbumsIntoDOM(topAlbumsHeader, topAlbumsContainer) {
+function insertTopArtistsIntoDOM(topArtistsHeader, topArtistsContainer) {
   const profileContainer = document.querySelector(PROFILE_CONTAINER_SELECTOR);
-  profileContainer.insertAdjacentElement('afterend', topAlbumsContainer);
-  topAlbumsContainer.insertAdjacentElement('beforebegin', topAlbumsHeader);
+  profileContainer.insertAdjacentElement('afterend', topArtistsContainer);
+  topArtistsContainer.insertAdjacentElement('beforebegin', topArtistsHeader);
 }
 
 export default {

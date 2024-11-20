@@ -1,5 +1,5 @@
 <template>
-  <div class="form-item flex flex-col gap-1">
+  <div class="form-item flex flex-col gap-2">
     <div
       v-if="props.label"
       class="form-label font-bold"
@@ -9,7 +9,10 @@
     <div class="form-input">
       <input
         :id="props.name"
-        class="w-full bg-gray-200 dark:bg-gray-800 p-2 rounded"
+        class="
+          w-full bg-gray-200 dark:bg-gray-800 p-2 rounded
+          disabled:opacity-50 disabled:cursor-not-allowed
+        "
         :value="props.modelValue"
         type="text"
         :name="props.name"
@@ -19,10 +22,28 @@
       >
     </div>
     <div
-      v-if="$slots.hint"
+      v-if="$slots.error || props.error"
       class="form-hint text-sm"
     >
-      <slot name="hint" />
+      <slot name="error">
+        {{ props.error }}
+      </slot>
+    </div>
+    <div
+      v-if="$slots.hint || props.hint"
+      class="form-hint text-sm py-2 px-4 bg-gray-50 dark:bg-gray-900 rounded border-l-4 border-blue-500"
+    >
+      <div v-if="$slots.hint">
+        <template
+          v-for="(child, i) in $slots.hint()"
+          :key="i"
+        >
+          <component :is="child" />
+        </template>
+      </div>
+      <!-- <slot name="hint">
+        {{ props.hint }}
+      </slot> -->
     </div>
   </div>
 </template>
@@ -39,13 +60,21 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  hint: {
+    type: String,
+    default: ''
+  },
+  error: {
+    type: String,
+    default: ''
+  },
   modelValue: {
     type: [String, Number],
     required: true,
   }
 });
 
-const emit = defineEmits(['update:modelValue']);
+defineEmits(['update:modelValue']);
 
 defineOptions({
   name: 'FormInput',

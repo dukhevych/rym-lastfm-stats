@@ -1,3 +1,4 @@
+import { deburr } from 'lodash';
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 
@@ -10,8 +11,8 @@ function parseArtistAndAlbum(metaContent) {
 
   if (parts.length === 2) {
     return {
-      releaseTitle: parts[0].trim(),
-      artist: parts[1].trim(),
+      releaseTitle: deburr(parts[0].trim()),
+      artist: deburr(parts[1].trim()),
     };
   } else {
     return {
@@ -129,6 +130,8 @@ async function render(config) {
     return;
   }
 
+  console.log(config.lastfmApiKey, window.LASTFM_API_KEY);
+
   const apiKey = config.lastfmApiKey || window.LASTFM_API_KEY;
 
   if (!apiKey) {
@@ -141,7 +144,7 @@ async function render(config) {
 
   const userName = config.lastfmUsername;
 
-  const data = await api.fetchReleaseStats(userName, apiKey, {
+  const data = await api.fetchReleaseStats(config.lastfmApiKey ? userName : null, apiKey, {
     artist,
     releaseTitle,
   });

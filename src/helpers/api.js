@@ -70,6 +70,42 @@ export function fetchUserTopAlbums(
     .catch((error) => console.error('Error:', error));
 }
 
+export function fetchUserTopArtists(
+  username,
+  apiKey,
+  { limit = 8, period = '1month' } = {},
+) {
+  if (!username) {
+    return Promise.reject(new Error('No username provided.'));
+  }
+
+  if (!apiKey) {
+    return Promise.reject(new Error('No API key provided.'));
+  }
+
+  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
+
+  const _params = {
+    method: 'user.gettopartists',
+    user: username,
+    api_key: apiKey,
+    format: 'json',
+    period,
+    limit,
+  };
+
+  const params = new URLSearchParams(_params);
+
+  const url = `${baseUrl}?${params.toString()}`;
+
+  return fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      return data.topartists.artist;
+    })
+    .catch((error) => console.error('Error:', error));
+}
+
 export function fetchArtistStats(username, apiKey, { artist }) {
   if (!apiKey) {
     return Promise.reject(new Error('No API key provided.'));

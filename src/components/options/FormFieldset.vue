@@ -2,7 +2,7 @@
   <fieldset
     class="form-group focus-within:shadow-lg"
     :class="{
-      'pointer-events-none opacity-50': disabled,
+      'pointer-events-none opacity-30 filter grayscale select-none': disabled,
     }"
   >
     <div
@@ -32,7 +32,12 @@
     <div
       class="form-group-body border-x-2 border-b-2 p-3 flex flex-col gap-3 border-gray-300 dark:border-gray-700"
     >
-      <slot />
+      <component
+        :is="child"
+        v-for="(child, i) in $slots.default()"
+        :key="i"
+        :disabled="(child?.props?.disabled ?? false) || (props.inheritDisabled && props.disabled)"
+      />
     </div>
   </fieldset>
 </template>
@@ -45,6 +50,10 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     default: false,
+  },
+  inheritDisabled: {
+    type: Boolean,
+    default: true,
   },
 });
 </script>

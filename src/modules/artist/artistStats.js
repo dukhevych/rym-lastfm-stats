@@ -1,3 +1,4 @@
+import { deburr } from 'lodash';
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 
@@ -6,7 +7,7 @@ const ARTIST_CONTAINER_SELECTOR = '.artist_info_main';
 
 function parseArtist(metaContent) {
   const artist = metaContent.replace(' discography - RYM/Sonemic', '');
-  return artist;
+  return deburr(artist);
 }
 
 function getArtist() {

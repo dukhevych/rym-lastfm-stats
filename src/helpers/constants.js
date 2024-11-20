@@ -1,3 +1,5 @@
+import topArtists from "../modules/profile/topArtists";
+
 export const LASTFM_COLOR = '#f71414';
 
 export const LIGHT_THEME_CLASSES = [
@@ -13,7 +15,7 @@ export const DARK_THEME_CLASSES = [
   'theme_darkgray',
 ];
 
-export const TOP_ALBUMS_PERIOD_OPTIONS = [
+export const PERIOD_OPTIONS = [
   {
     value: 'overall',
     label: 'Overall',
@@ -40,7 +42,7 @@ export const TOP_ALBUMS_PERIOD_OPTIONS = [
   },
 ];
 
-export const TOP_ALBUMS_PERIOD_LABELS_MAP = TOP_ALBUMS_PERIOD_OPTIONS.reduce(
+export const PERIOD_LABELS_MAP = PERIOD_OPTIONS.reduce(
   (acc, { value, label }) => {
     acc[value] = label;
     return acc;
@@ -53,6 +55,11 @@ export const TOP_ALBUMS_LIMIT_MIN = 4;
 export const TOP_ALBUMS_LIMIT_MAX = 8;
 export const TOP_ALBUMS_LIMIT_DEFAULT = 8;
 
+export const TOP_ARTISTS_PERIOD_DEFAULT = '12month';
+export const TOP_ARTISTS_LIMIT_MIN = 1;
+export const TOP_ARTISTS_LIMIT_MAX = 8;
+export const TOP_ARTISTS_LIMIT_DEFAULT = 8;
+
 export const RECENT_TRACKS_LIMIT_MIN = 1;
 export const RECENT_TRACKS_LIMIT_MAX = 20;
 export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
@@ -60,7 +67,7 @@ export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 export const OPTIONS_DEFAULT = {
   lastfmApiKey: '',
   lastfmUsername: '',
-  lastfmUsernameAutoDetect: true,
+  lastfmUsernameAutoDetect: false,
 
   // ARTIST PAGE
   artistStats: true,
@@ -72,12 +79,15 @@ export const OPTIONS_DEFAULT = {
   recentTracks: true,
   recentTracksReplace: false,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
+  topArtists: true,
+  topArtistsLimit: TOP_ARTISTS_LIMIT_DEFAULT,
+  topArtistsPeriod: TOP_ARTISTS_PERIOD_DEFAULT,
   topAlbums: true,
   topAlbumsLimit: TOP_ALBUMS_LIMIT_DEFAULT,
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
 
   // SEARCH PAGE
-  // searchStrict: true,
+  // searchStrict: true, // Implemented, though works automatically, there's no point to make it configurable
 };
 
 export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);

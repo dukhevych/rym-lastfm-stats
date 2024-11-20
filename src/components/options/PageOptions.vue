@@ -94,6 +94,13 @@
                   <code><strong>"Application name"</strong></code> field is
                   enough.
                 </p>
+                <p>
+                  If you <strong>already have</strong> Last.fm API Keys, you can find them <a
+                    href="https://www.last.fm/api/accounts"
+                    target="_blank"
+                    class="text-blue-600 font-bold hover:underline"
+                  >here</a>.
+                </p>
               </template>
             </FormInput>
 
@@ -102,21 +109,27 @@
               v-model="options.lastfmUsername"
               name="lastfmUsername"
               label="Last.fm Username"
-            />
+              :disabled="!hasApiKey"
+            >
+              <template #hint>
+                <p>
+                  Enables personal statistics for <strong>Release</strong> and <strong>Artist</strong> pages and additional features for your <strong>Profile</strong> page.
+                </p>
+              </template>
+            </FormInput>
 
             <!-- LAST.FM USERNAME AUTO DETECT -->
             <FormCheckbox
               v-model="options.lastfmUsernameAutoDetect"
               name="lastfmUsernameAutoDetect"
               label="Automatic username detection"
-              :disabled="!options.lastfmApiKey || options.lastfmApiKey.length !== 32"
+              :disabled="!hasApiKey"
             />
           </FormFieldset>
 
           <!-- STATS -->
           <FormFieldset
             title="Last.fm Stats"
-            :disabled="options.lastfmApiKey.length !== 32"
           >
             <!-- ARTIST STATS -->
             <FormCheckbox
@@ -136,7 +149,7 @@
           <!-- PROFILE -->
           <FormFieldset
             title="Profile"
-            :disabled="options.lastfmApiKey.length !== 32"
+            :disabled="!hasApiKey"
           >
             <template #helper>
               <p>
@@ -161,6 +174,7 @@
               v-model="options.recentTracksReplace"
               name="recentTracksReplace"
               label="Replace default RYM 'Listening to'"
+              :disabled="options.recentTracks === false"
             />
 
             <!-- RECENT TRACKS LIMIT -->
@@ -202,9 +216,10 @@
                     v-model="options.topAlbumsPeriod"
                     name="topAlbumsPeriod"
                     class="w-full bg-gray-200 dark:bg-gray-800 p-2 h-10 rounded"
+                    :disabled="options.topAlbums === false"
                   >
                     <option
-                      v-for="item in constants.TOP_ALBUMS_PERIOD_OPTIONS"
+                      v-for="item in constants.PERIOD_OPTIONS"
                       :key="item.value"
                       :value="item.value"
                     >
@@ -320,7 +335,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, computed } from 'vue';
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import FormInput from '@/components/options/FormInput.vue';
@@ -367,5 +382,9 @@ utils.getStorageItems().then((items) => {
   );
 
   loading.value = false;
+});
+
+const hasApiKey = computed(() => {
+  return options.lastfmApiKey && options.lastfmApiKey.length === 32;
 });
 </script>
