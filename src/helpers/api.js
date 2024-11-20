@@ -73,15 +73,30 @@ export function fetchArtistStats(username, apiKey, { artist }) {
     .catch((error) => console.error('Error:', error));
 }
 
-export function fetchReleaseStats(username, apiKey, { artist, releaseTitle }) {
+export function fetchReleaseStats(username, apiKey, { artist, releaseTitle, releaseType }) {
   const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
+
+  const methods = {
+    album: 'album.getInfo',
+    single: 'track.getInfo',
+  };
+
+  const method = methods[releaseType] || methods.album;
+
   const _params = {
-    method: 'album.getInfo',
+    method,
     artist: artist,
-    album: releaseTitle,
     api_key: apiKey,
     format: 'json',
   };
+
+  if (releaseType === 'album') {
+    _params.album = releaseTitle;
+  } else if (releaseType === 'single') {
+    _params.track = releaseTitle;
+  } else {
+    _params.album = releaseTitle;
+  }
 
   if (username) {
     _params.user = username;
