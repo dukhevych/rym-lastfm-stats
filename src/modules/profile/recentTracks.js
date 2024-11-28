@@ -294,32 +294,60 @@ async function render(config) {
 
   insertRecentTracksButtonIntoDOM(button);
 
-  const recentTracks = await api.fetchUserRecentTracks(
+  const data = await api.fetchUserRecentTracks(
     userName,
     config.lastfmApiKey,
     { limit: config.recentTracksLimit },
   );
 
-  if (recentTracks[0]['@attr']?.nowplaying) {
+  if (data[0]['@attr']?.nowplaying) {
     button.classList.add('is-now-playing');
   }
 
-  const tracksList = createTracksList(recentTracks, userName);
+  const tracksList = createTracksList(data, userName);
 
   tracksWrapper.appendChild(tracksList);
   insertRecentTracksWrapperIntoDOM(tracksWrapper);
 
-  setInterval(async () => {
-    const data = await api.fetchUserRecentTracks(
-      userName,
-      config.lastfmApiKey,
-      { limit: config.recentTracksLimit },
-    );
+  let intervalId;
 
-    const tracksList = createTracksList(data, userName);
+  const startInterval = () => {
+    if (!intervalId) {
+      intervalId = setInterval(async () => {
+        const data = await api.fetchUserRecentTracks(
+          userName,
+          config.lastfmApiKey,
+          { limit: config.recentTracksLimit },
+        );
 
-    tracksWrapper.replaceChildren(tracksList);
-  }, 60000);
+        const tracksList = createTracksList(data, userName);
+
+        tracksWrapper.replaceChildren(tracksList);
+      }, 60000);
+    }
+  };
+
+  const stopInterval = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      startInterval();
+    } else {
+      stopInterval();
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  // Start the interval if the tab is already active when the script runs
+  if (document.visibilityState === 'visible') {
+    startInterval();
+  }
 }
 
 export default {
