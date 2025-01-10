@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
+import { throttle } from 'lodash';
 
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
@@ -311,20 +312,20 @@ async function render(config) {
 
   let intervalId;
 
+  const updateAction = async () => {
+    const data = await api.fetchUserRecentTracks(
+      userName,
+      config.lastfmApiKey,
+      { limit: config.recentTracksLimit },
+    );
+
+    const tracksList = createTracksList(data, userName);
+
+    tracksWrapper.replaceChildren(tracksList);
+  }
+
   const startInterval = () => {
-    if (!intervalId) {
-      intervalId = setInterval(async () => {
-        const data = await api.fetchUserRecentTracks(
-          userName,
-          config.lastfmApiKey,
-          { limit: config.recentTracksLimit },
-        );
-
-        const tracksList = createTracksList(data, userName);
-
-        tracksWrapper.replaceChildren(tracksList);
-      }, 60000);
-    }
+    if (!intervalId) intervalId = setInterval(updateAction, constants.RECENT_TRACKS_INTERVAL_MS);
   };
 
   const stopInterval = () => {
@@ -334,18 +335,22 @@ async function render(config) {
     }
   };
 
-  const handleVisibilityChange = () => {
+  const handleVisibilityChange = async () => {
     if (document.visibilityState === 'visible') {
+      await updateAction();
       startInterval();
     } else {
       stopInterval();
     }
   };
 
-  document.addEventListener('visibilitychange', handleVisibilityChange);
+  const throttledHandleVisibilityChange = throttle(handleVisibilityChange, constants.RECENT_TRACKS_INTERVAL_MS_THROTTLED);
+
+  document.addEventListener('visibilitychange', throttledHandleVisibilityChange);
 
   // Start the interval if the tab is already active when the script runs
   if (document.visibilityState === 'visible') {
+    await updateAction();
     startInterval();
   }
 }
