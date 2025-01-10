@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
+import { throttle } from 'lodash';
 
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
@@ -294,22 +295,24 @@ async function render(config) {
 
   insertRecentTracksButtonIntoDOM(button);
 
-  const recentTracks = await api.fetchUserRecentTracks(
+  const data = await api.fetchUserRecentTracks(
     userName,
     config.lastfmApiKey,
     { limit: config.recentTracksLimit },
   );
 
-  if (recentTracks[0]['@attr']?.nowplaying) {
+  if (data[0]['@attr']?.nowplaying) {
     button.classList.add('is-now-playing');
   }
 
-  const tracksList = createTracksList(recentTracks, userName);
+  const tracksList = createTracksList(data, userName);
 
   tracksWrapper.appendChild(tracksList);
   insertRecentTracksWrapperIntoDOM(tracksWrapper);
 
-  setInterval(async () => {
+  let intervalId;
+
+  const updateAction = async () => {
     const data = await api.fetchUserRecentTracks(
       userName,
       config.lastfmApiKey,
@@ -319,7 +322,37 @@ async function render(config) {
     const tracksList = createTracksList(data, userName);
 
     tracksWrapper.replaceChildren(tracksList);
-  }, 60000);
+  }
+
+  const startInterval = () => {
+    if (!intervalId) intervalId = setInterval(updateAction, constants.RECENT_TRACKS_INTERVAL_MS);
+  };
+
+  const stopInterval = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+
+  const handleVisibilityChange = async () => {
+    if (document.visibilityState === 'visible') {
+      await updateAction();
+      startInterval();
+    } else {
+      stopInterval();
+    }
+  };
+
+  const throttledHandleVisibilityChange = throttle(handleVisibilityChange, constants.RECENT_TRACKS_INTERVAL_MS_THROTTLED);
+
+  document.addEventListener('visibilitychange', throttledHandleVisibilityChange);
+
+  // Start the interval if the tab is already active when the script runs
+  if (document.visibilityState === 'visible') {
+    await updateAction();
+    startInterval();
+  }
 }
 
 export default {

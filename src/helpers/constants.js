@@ -79,3 +79,6 @@ export const OPTIONS_DEFAULT = {
 };
 
 export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);
+
+export const RECENT_TRACKS_INTERVAL_MS = 120000;
+export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = 30000;
