@@ -12,7 +12,9 @@
           alt=""
         >
         <h1 class="text-2xl font-bold cursor-default select-none relative">
-          <span class="absolute text-[10px] top-0 right-0 -translate-y-1/2 font-bold">{{ appVersion }}</span>
+          <span
+            class="absolute text-[10px] top-0 right-0 -translate-y-1/2 font-bold"
+          >{{ appVersion }}</span>
           <span class="text-red-600">RYM Last.fm Stats</span>
         </h1>
       </div>
@@ -36,6 +38,48 @@
           </p>
           <p>More to come!</p>
         </div>
+
+        <!-- <div style="background-color: #fff; padding: 100px;">
+          <button
+            class="btn-skeumorphic"
+            :class="{
+              'cursor-not-allowed': signinInProgress,
+              'active:scale-[0.9]': !signinInProgress,
+            }"
+            :disabled="signinInProgress"
+            @click.prevent="openAuthPage"
+          >
+            <span>
+              <template v-if="signinInProgress">
+                Loading...
+              </template>
+              <template v-else>
+                Sign in with Lastfm2
+              </template>
+            </span>
+          </button>
+        </div> -->
+
+        <div v-if="userData">
+          Logged in as {{ userData.name }}
+        </div>
+        <button
+          v-if="!userData"
+          class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 text-center rounded min-w-[120px]"
+          :class="{
+            'cursor-not-allowed': signinInProgress,
+            'active:scale-[0.9]': !signinInProgress,
+          }"
+          :disabled="signinInProgress"
+          @click.prevent="openAuthPage"
+        >
+          <template v-if="signinInProgress">
+            Loading...
+          </template>
+          <template v-else>
+            Sign in with Lastfm
+          </template>
+        </button>
 
         <form
           v-if="!loading"
@@ -72,16 +116,20 @@
           </div>
 
           <!-- MAIN SETTINGS -->
-          <fieldset class="form-group focus-within:shadow-lg">
+          <fieldset
+            class="
+              form-group focus-within:shadow-lg
+              h-full w-full bg-gray-400 rounded-md bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-40
+            "
+          >
             <div
-              class="form-group-header text-xl font-bold bg-rym-gradient text-white p-3"
+              class="form-group-body border-2 rounded p-3 flex flex-col gap-3 border-white-300 dark:border-white-700"
             >
-              Main settings
-            </div>
-
-            <div
-              class="form-group-body border-x-2 border-b-2 p-3 flex flex-col gap-3 border-gray-300 dark:border-gray-700"
-            >
+              <div
+                class="form-group-header text-xl font-bold text-white border-b-2 border-white-300 dark:border-white-700 pb-3"
+              >
+                Main settings
+              </div>
               <!-- LAST.FM API KEY -->
               <div class="form-item flex flex-col gap-1">
                 <div class="form-label font-bold">
@@ -91,6 +139,7 @@
                   <input
                     id="lastfmApiKey"
                     v-model="options.lastfmApiKey"
+                    placeholder="Add your lastfm API key here"
                     type="text"
                     name="lastfmApiKey"
                     min="32"
@@ -115,7 +164,10 @@
               </div>
 
               <!-- LAST.FM USERNAME -->
-              <div class="form-item flex flex-col gap-1">
+              <div
+                v-if="options.lastfmUsername !== undefined"
+                class="form-item flex flex-col gap-1"
+              >
                 <div class="form-label font-bold">
                   <label for="lastfmUsername">Last.fm Username</label>
                 </div>
@@ -134,6 +186,7 @@
 
           <!-- STATS -->
           <fieldset
+            v-if="options.artistStats !== undefined || options.releaseStats !== undefined"
             class="form-group"
             :class="{
               'pointer-events-none opacity-50':
@@ -150,7 +203,10 @@
               class="form-group-body border-x-2 border-b-2 p-3 flex flex-col gap-3 border-gray-300 dark:border-gray-700"
             >
               <!-- ARTIST STATS -->
-              <div class="form-item flex flex-col gap-1">
+              <div
+                v-if="options.artistStats !== undefined"
+                class="form-item flex flex-col gap-1"
+              >
                 <div class="form-input">
                   <div class="flex items-center space-x-2">
                     <label
@@ -176,7 +232,10 @@
               </div>
 
               <!-- RELEASE STATS -->
-              <div class="form-item flex flex-col gap-1">
+              <div
+                v-if="options.releaseStats !== undefined"
+                class="form-item flex flex-col gap-1"
+              >
                 <div class="form-input">
                   <div class="flex items-center space-x-2">
                     <label
@@ -462,47 +521,89 @@
           target="_blank"
         >LinkedIn</a>
       </div>
-      <div>
-        {{ new Date().getFullYear() }} &copy;
-        Landen
-      </div>
+      <div>{{ new Date().getFullYear() }} &copy; Landen</div>
     </footer>
   </div>
 </template>
 
 <script setup>
-  import { ref, reactive, watch } from 'vue';
-  import * as utils from '@/helpers/utils.js';
-  import * as constants from '@/helpers/constants.js';
+import { ref, reactive, watch } from 'vue';
+import * as utils from '@/helpers/utils.js';
+import * as constants from '@/helpers/constants.js';
+import * as api from '@/helpers/api.js';
 
-  const appVersion = process.env.APP_VERSION;
+const appVersion = process.env.APP_VERSION;
+const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 
-  const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-  const loading = ref(true);
-  const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+const loading = ref(true);
+const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
 
-  const config = ref(null);
-  const saved = ref(false);
-  const dirty = ref(false);
+const config = ref(null);
+const userData = ref(null);
+const saved = ref(false);
+const dirty = ref(false);
+const signinInProgress = ref(false);
 
-  const submit = async () => {
-    const newConfig = JSON.parse(JSON.stringify(options));
-    await browserAPI.storage.sync.set(newConfig);
-    config.value = newConfig;
-    saved.value = true;
-    dirty.value = false;
-  };
+const submit = async () => {
+  const newConfig = JSON.parse(JSON.stringify(options));
 
-  const reset = async () => {
-    const doConfirm = confirm('Are you sure you want to reset all settings?');
-    if (!doConfirm) return;
-    Object.assign(options, constants.OPTIONS_DEFAULT);
-    await submit();
-  };
+  Object.keys(newConfig).forEach((key) => {
+    if (newConfig[key] === constants.OPTIONS_DEFAULT[key]) {
+      delete newConfig[key];
+    }
+  });
 
-  utils.getStorageItems().then((items) => {
-    config.value = items;
+  await browserAPI.storage.sync.set(newConfig);
+  config.value = newConfig;
+  saved.value = true;
+  dirty.value = false;
+};
+
+// browserAPI.storage.local.get('lastfmSession').then(async (data) => {
+//   if (data.lastfmSession) {
+//     const userData = await api.fetchUserData(data.lastfmSession, SYSTEM_API_KEY);
+//     browserAPI.storage.sync.set({ userData });
+//   }
+// });
+
+const reset = async () => {
+  const doConfirm = confirm('Are you sure you want to reset all settings?');
+  if (!doConfirm) return;
+  Object.assign(options, constants.OPTIONS_DEFAULT);
+  await submit();
+};
+
+const openAuthPage = () => {
+  signinInProgress.value = true;
+
+  browserAPI.windows.create({
+    url: `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}`,
+    type: 'popup',
+    width: 500,
+    height: 600,
+  });
+
+  browserAPI.runtime.onMessage.addListener((message) => {
+    if (message.type === 'lastfm_auth') {
+      api.fetchUserData(message.value, SYSTEM_API_KEY).then((data) => {
+        userData.value = data;
+        browserAPI.storage.sync.set({ userData: data });
+        signinInProgress.value = false;
+      });
+    }
+  });
+};
+
+const init = async () => {
+  try {
+    const syncedOptions = await utils.getSyncedOptions();
+
+    config.value = syncedOptions;
     Object.assign(options, config.value);
+
+    const syncedUserData = await utils.getSyncedUserData();
+    userData.value = syncedUserData;
 
     watch(
       () => options,
@@ -514,5 +615,41 @@
     );
 
     loading.value = false;
-  });
+  } catch (error) {
+    console.error(error);
+  }
+
+}
+
+init();
 </script>
+<style lang="css">
+body {
+  background: url('https://florianjensen.com/content/images/size/w2000/2018/03/cristian-georgescu-69324-unsplash.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+.btn-skeumorphic {
+  height: 50px;
+  border-radius: 50px;
+  background: linear-gradient(0deg, rgb(168, 168, 168), #fdfdfd, rgb(168, 168, 168));
+  padding: 4px;
+  box-shadow: 0 15px 15px rgba(0, 0, 0, .2);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 42px;
+    background: linear-gradient(0deg, #ebebeb, #fff, #fff);
+    padding: 0 20px;
+    color: grey;
+    text-shadow: 0 2px 2px rgba(0, 0, 0, .2);
+    line-height: 41px;
+    font-weight: bold;
+    box-shadow:
+    inset 0 0 1px 1px rgba(255,255,255,.1),
+      inset 0 -4px 4px rgba(0, 0, 0, .1),
+      inset 0 8px 8px rgba(0, 0, 0, .08)
+    ;
+  }
+}
+</style>

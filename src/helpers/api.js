@@ -1,3 +1,23 @@
+export function fetchUserData(lastfmSession, apiKey) {
+  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
+
+  const _params = {
+    method: 'user.getinfo',
+    api_key: apiKey,
+    format: 'json',
+    sk: lastfmSession,
+  };
+
+  const params = new URLSearchParams(_params);
+
+  const url = `${baseUrl}?${params.toString()}`;
+
+  return fetch(url)
+    .then((response) => response.json())
+    .then((data) => data.user)
+    .catch((error) => console.error('Error:', error));
+}
+
 export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}) {
   const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
 
@@ -73,7 +93,11 @@ export function fetchArtistStats(username, apiKey, { artist }) {
     .catch((error) => console.error('Error:', error));
 }
 
-export function fetchReleaseStats(username, apiKey, { artist, releaseTitle, releaseType }) {
+export function fetchReleaseStats(
+  username,
+  apiKey,
+  { artist, releaseTitle, releaseType },
+) {
   const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
 
   const methods = {

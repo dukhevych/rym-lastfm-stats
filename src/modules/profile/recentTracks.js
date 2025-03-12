@@ -295,11 +295,9 @@ async function render(config) {
 
   insertRecentTracksButtonIntoDOM(button);
 
-  const data = await api.fetchUserRecentTracks(
-    userName,
-    config.lastfmApiKey,
-    { limit: config.recentTracksLimit },
-  );
+  const data = await api.fetchUserRecentTracks(userName, config.lastfmApiKey, {
+    limit: config.recentTracksLimit,
+  });
 
   if (data[0]['@attr']?.nowplaying) {
     button.classList.add('is-now-playing');
@@ -322,10 +320,14 @@ async function render(config) {
     const tracksList = createTracksList(data, userName);
 
     tracksWrapper.replaceChildren(tracksList);
-  }
+  };
 
   const startInterval = () => {
-    if (!intervalId) intervalId = setInterval(updateAction, constants.RECENT_TRACKS_INTERVAL_MS);
+    if (!intervalId)
+      intervalId = setInterval(
+        updateAction,
+        constants.RECENT_TRACKS_INTERVAL_MS,
+      );
   };
 
   const stopInterval = () => {
@@ -344,9 +346,15 @@ async function render(config) {
     }
   };
 
-  const throttledHandleVisibilityChange = throttle(handleVisibilityChange, constants.RECENT_TRACKS_INTERVAL_MS_THROTTLED);
+  const throttledHandleVisibilityChange = throttle(
+    handleVisibilityChange,
+    constants.RECENT_TRACKS_INTERVAL_MS_THROTTLED,
+  );
 
-  document.addEventListener('visibilitychange', throttledHandleVisibilityChange);
+  document.addEventListener(
+    'visibilitychange',
+    throttledHandleVisibilityChange,
+  );
 
   // Start the interval if the tab is already active when the script runs
   if (document.visibilityState === 'visible') {

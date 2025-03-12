@@ -13,8 +13,8 @@ export function shortenNumber(num) {
 
 export const createSpan = (title, text) => {
   const span = document.createElement('span');
-  span.title = title;
-  span.textContent = text;
+  span.title = title.trim();
+  span.textContent = text.trim();
   return span;
 };
 
@@ -22,7 +22,7 @@ export const createParagraph = (text) => {
   const paragraph = document.createElement('p');
   paragraph.textContent = text;
   return paragraph;
-}
+};
 
 export const createSelect = (options, selectedValue) => {
   const select = document.createElement('select');
@@ -119,7 +119,7 @@ export function getUserName(config) {
   return userName;
 }
 
-export function getStorageItems(fields = constants.OPTIONS_DEFAULT_KEYS) {
+export function getSyncedOptions(fields = constants.OPTIONS_DEFAULT_KEYS) {
   return new Promise((resolve) => {
     browserAPI.storage.sync.get(fields, (items) => {
       resolve(items);
@@ -127,7 +127,19 @@ export function getStorageItems(fields = constants.OPTIONS_DEFAULT_KEYS) {
   });
 }
 
-export function generateSearchUrl({ artist = '', releaseTitle = '', trackTitle = '' } = {}) {
+export function getSyncedUserData() {
+  return new Promise((resolve) => {
+    browserAPI.storage.sync.get('userData', (items) => {
+      resolve(items.userData);
+    });
+  })
+}
+
+export function generateSearchUrl({
+  artist = '',
+  releaseTitle = '',
+  trackTitle = '',
+} = {}) {
   let url = 'https://rateyourmusic.com';
 
   const searchterm = [artist, releaseTitle, trackTitle]
@@ -141,9 +153,9 @@ export function generateSearchUrl({ artist = '', releaseTitle = '', trackTitle =
     url += `searchterm=${encodeURIComponent(searchterm.toLowerCase())}`;
   }
 
-  if (trackTitle) url+= `&searchtype=z`;
-  else if (releaseTitle) url+= `&searchtype=l`;
-  else if (artist) url+= `&searchtype=a`;
+  if (trackTitle) url += `&searchtype=z`;
+  else if (releaseTitle) url += `&searchtype=l`;
+  else if (artist) url += `&searchtype=a`;
 
   url += '&strict=true';
 

@@ -22,10 +22,11 @@ module.exports = [
     rules: {
       'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+      // 'max-len': ['warn', { 'code': 80 }],
     },
   },
   {
-    ignores: ['**/dist/**', '**/node_modules/**'],
+    ignores: ['**/dist/**', '**/node_modules/**', '**/src/libs/**'],
   },
   {
     files: ['*.js'],

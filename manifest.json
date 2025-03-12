@@ -3,12 +3,18 @@
   "name": "RYM Last.fm Stats",
   "version": "1.0",
   "description": "Display Last.fm stats on RYM pages",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage",
+    "tabs",
+    "webNavigation",
+    "https://www.last.fm/*"
+  ],
   "host_permissions": [
     "https://rateyourmusic.com/artist/*",
     "https://rateyourmusic.com/release/*",
     "https://rateyourmusic.com/~*",
-    "https://ws.audioscrobbler.com/"
+    "https://ws.audioscrobbler.com/",
+    "https://www.last.fm/*"
   ],
   "content_scripts": [
     {

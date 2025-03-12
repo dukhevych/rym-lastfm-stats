@@ -7,6 +7,9 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ESLintPlugin = require('eslint-webpack-plugin');
 const { DefinePlugin } = require('webpack');
+const dotenv = require('dotenv');
+const dotenvExpand = require('dotenv-expand');
+const fs = require('fs');
 
 const generateManifest = require("./manifest.config.js");
 const packageJson = require('./package.json');
@@ -22,6 +25,41 @@ const entries = glob.sync("./src/*.js").reduce((acc, file) => {
 module.exports = (env) => {
   const browserTarget = env.browser;
   const outputPath = path.resolve(__dirname, `dist/${browserTarget}`);
+
+  // Load environment variables from .env files
+  const loadEnv = (envPath) => {
+    if (fs.existsSync(envPath)) {
+      const envConfig = dotenv.config({ path: envPath });
+      dotenvExpand.expand(envConfig);
+      return envConfig.parsed || {};
+    }
+    return {};
+  };
+
+  // Load environment variables in order of precedence
+  // 1. .env.[browser].local (local development overrides for specific browser)
+  // 2. .env.[browser] (CI/CD environment variables for specific browser)
+  // 3. .env.local (local development overrides)
+  // 4. .env (default environment variables)
+  const envRoot = loadEnv('.env');
+  const envLocal = loadEnv(`.env.local`);
+  const envBrowser = loadEnv(`.env.${browserTarget}`);
+  const envBrowserLocal = loadEnv(`.env.${browserTarget}.local`);
+
+  // Combine all environment variables with proper precedence
+  const combinedEnv = {
+    ...process.env,  // System environment variables
+    ...envRoot,          // .env variables
+    ...envLocal,     // .env.local variables
+    ...envBrowser,   // .env.[browser] variables
+    ...envBrowserLocal, // .env.[browser].local variables
+  };
+
+  // Convert environment variables to format suitable for DefinePlugin
+  const envKeys = Object.keys(combinedEnv).reduce((prev, next) => {
+    prev[`process.env.${next}`] = JSON.stringify(combinedEnv[next]);
+    return prev;
+  }, {});
 
   return {
     entry: entries,
@@ -103,7 +141,12 @@ module.exports = (env) => {
         failOnError: true,
       }),
       new DefinePlugin({
+        // Include all environment variables
+        ...envKeys,
+        // Ensure APP_VERSION is available
         'process.env.APP_VERSION': JSON.stringify(appVersion),
+        // Explicitly add browserTarget as an environment variable
+        'process.env.BROWSER_TARGET': JSON.stringify(browserTarget),
       }),
     ],
     optimization: {

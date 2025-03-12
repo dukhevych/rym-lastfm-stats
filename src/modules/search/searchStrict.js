@@ -23,7 +23,7 @@ function getNodeDirectTextContent(item) {
   if (!item) return '';
 
   const result = [];
-  item.childNodes.forEach(node => {
+  item.childNodes.forEach((node) => {
     if (node.nodeType === Node.TEXT_NODE) {
       result.push(node.textContent);
     }
@@ -43,7 +43,7 @@ function injectShowAllButton() {
   const target = document.querySelector('.page_search_results h3');
   target.appendChild(button);
   button.addEventListener('click', () => {
-    searchItems.forEach(item => {
+    searchItems.forEach((item) => {
       item.style.display = '';
     });
     button.style.display = 'none';
@@ -67,12 +67,23 @@ async function render(config) {
     const artistNameSelector = 'a.searchpage.artist';
     const artistAkaSelector = '.subinfo';
 
-    searchItems.forEach(item => {
-      const artistName = deburr(item.querySelector(artistNameSelector)?.textContent) || '';
-      const artistAka = getNodeDirectTextContent(item.querySelector(artistAkaSelector)).trim() || '';
-      const akaValues = artistAka.toLowerCase().trim().replace(/^a\.k\.a:\s*/, '').split(', ');
+    searchItems.forEach((item) => {
+      const artistName =
+        deburr(item.querySelector(artistNameSelector)?.textContent) || '';
+      const artistAka =
+        getNodeDirectTextContent(
+          item.querySelector(artistAkaSelector),
+        ).trim() || '';
+      const akaValues = artistAka
+        .toLowerCase()
+        .trim()
+        .replace(/^a\.k\.a:\s*/, '')
+        .split(', ');
 
-      if (artistName.toLowerCase().trim() !== searchTerm && !akaValues.includes(searchTerm)) {
+      if (
+        artistName.toLowerCase().trim() !== searchTerm &&
+        !akaValues.includes(searchTerm)
+      ) {
         searchItemsMore.push(item);
       }
     });
@@ -80,9 +91,12 @@ async function render(config) {
     const artistNameSelector = 'a.artist';
     const releaseTitleSelector = 'a.searchpage';
 
-    searchItems.forEach(item => {
-      const artistName = item.querySelector(artistNameSelector)?.textContent.toLowerCase() || '';
-      const releaseTitle = item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '';
+    searchItems.forEach((item) => {
+      const artistName =
+        item.querySelector(artistNameSelector)?.textContent.toLowerCase() || '';
+      const releaseTitle =
+        item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() ||
+        '';
 
       let query = searchTerm;
 
@@ -105,11 +119,20 @@ async function render(config) {
     });
   } else if (searchType === 'z') {
     const artistNameSelector = '.infobox td:nth-child(2) > span .ui_name_locale';
-    const trackNameSelector = '.infobox td:nth-child(2) > table .ui_name_locale_original';
+    const trackNameSelector =
+      '.infobox td:nth-child(2) > table .ui_name_locale_original';
 
-    searchItems.forEach(item => {
-      const artistName = item.querySelector(artistNameSelector)?.textContent.trim().toLowerCase() || '';
-      const trackName = item.querySelector(trackNameSelector)?.textContent.trim().toLowerCase() || '';
+    searchItems.forEach((item) => {
+      const artistName =
+        item
+          .querySelector(artistNameSelector)
+          ?.textContent.trim()
+          .toLowerCase() || '';
+      const trackName =
+        item
+          .querySelector(trackNameSelector)
+          ?.textContent.trim()
+          .toLowerCase() || '';
 
       let query = searchTerm;
 
@@ -134,7 +157,7 @@ async function render(config) {
 
   if (searchItemsMore.length) {
     if (searchItemsMore.length < searchItems.length) {
-      searchItemsMore.forEach(item => {
+      searchItemsMore.forEach((item) => {
         item.style.display = 'none';
       });
       injectShowAllButton();
@@ -162,13 +185,25 @@ async function render(config) {
         document.head.appendChild(style);
 
         if (searchType === 'a') {
-          const p = utils.createParagraph('This artist may not be added yet into RYM database. ');
-          p.appendChild(utils.createLink('/artist/profile_ac', 'Add artist', false));
+          const p = utils.createParagraph(
+            'This artist may not be added yet into RYM database. ',
+          );
+          p.appendChild(
+            utils.createLink('/artist/profile_ac', 'Add artist', false),
+          );
           warning.appendChild(p);
         } else if (searchType === 'l') {
-          warning.appendChild(utils.createParagraph('This release may not be added yet into RYM database.'));
+          warning.appendChild(
+            utils.createParagraph(
+              'This release may not be added yet into RYM database.',
+            ),
+          );
         } else if (searchType === 'z') {
-          warning.appendChild(utils.createParagraph('This song may not be added yet into RYM database.'));
+          warning.appendChild(
+            utils.createParagraph(
+              'This song may not be added yet into RYM database.',
+            ),
+          );
         }
 
         header.insertAdjacentElement('afterend', warning);

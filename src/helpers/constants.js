@@ -59,13 +59,12 @@ export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
 export const OPTIONS_DEFAULT = {
   lastfmApiKey: '',
-  lastfmUsername: '',
 
   // ARTIST PAGE
-  artistStats: true,
+  // artistStats: true,
 
   // RELEASE PAGE
-  releaseStats: true,
+  // releaseStats: true,
 
   // PROFILE PAGE
   recentTracks: true,
