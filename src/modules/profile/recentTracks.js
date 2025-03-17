@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
+import { throttle } from 'lodash';
 
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
@@ -12,7 +13,8 @@ const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn
 
 const LISTENING_LABEL_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_date';
 const LISTENING_ARTIST_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_artist a.artist';
-const LISTENING_TITLE_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_release a.play_history_item_release';
+const LISTENING_TITLE_SELECTOR =
+  PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_release a.play_history_item_release';
 const LISTENING_COVER_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_artbox a';
 const LISTENING_COVER_IMG_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' img.play_history_item_art';
 
@@ -340,11 +342,17 @@ function addRecentTracksStyles() {
     }
 
     /* Theme-specific styles */
-    ${constants.LIGHT_THEME_CLASSES.map((themeClass) => '.' + themeClass + ' .lastfm-tracks-wrapper li + li').join(',')} {
+    ${constants.LIGHT_THEME_CLASSES
+      .map((themeClass) => '.' + themeClass + ' .lastfm-tracks-wrapper li + li')
+      .join(',')
+    } {
       border-color: rgba(0, 0, 0, 0.1);
     }
 
-    ${constants.DARK_THEME_CLASSES.map((themeClass) => '.' + themeClass + ' .lastfm-tracks-wrapper li + li').join(',')} {
+    ${constants.DARK_THEME_CLASSES
+      .map((themeClass) => '.' + themeClass + ' .lastfm-tracks-wrapper li + li')
+      .join(',')
+    } {
       border-color: rgba(255, 255, 255, 0.1);
     }
 
@@ -409,19 +417,23 @@ async function render(_config) {
 
   if (!config) return;
 
-  const apiKey = config.lastfmApiKey || window.LASTFM_API_KEY;
-
-  if (!apiKey) {
-    console.error(
+  if (!config.lastfmApiKey) {
+    console.info(
       'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
     );
     return;
   }
 
-  const userName = utils.getUserName(config);
+  const userData = await utils.getSyncedUserData();
+  const userName = userData?.name;
+
+  if (!userData) {
+    console.log('No user data found. Recent Tracks can\'t be displayed.');
+    return;
+  };
 
   if (!userName) {
-    console.log("No Last.fm username found. Recent Tracks can't be displayed.");
+    console.log('No Last.fm username found. Recent Tracks can\'t be displayed.');
     return;
   }
 
@@ -439,7 +451,7 @@ async function render(_config) {
 
   const recentTracks = await api.fetchUserRecentTracks(
     userName,
-    apiKey,
+    config.lastfmApiKey,
     { limit: config.recentTracksLimit },
   );
 
@@ -462,27 +474,71 @@ async function render(_config) {
     currentTrack.classList.remove('is-loading');
   }
 
-  setInterval(async () => {
-    const recentTracks = await api.fetchUserRecentTracks(
+  let intervalId;
+
+  const updateAction = async () => {
+    const data = await api.fetchUserRecentTracks(
       userName,
-      apiKey,
+      config.lastfmApiKey,
       { limit: config.recentTracksLimit },
     );
 
-    if (recentTracks[0]['@attr']?.nowplaying) {
+    if (data[0]['@attr']?.nowplaying) {
       button.classList.add('is-now-playing');
     } else {
       button.classList.remove('is-now-playing');
     }
 
+
     if (config.recentTracksReplace) {
-      replaceListeningTo(recentTracks[0]);
+      replaceListeningTo(data[0]);
     }
 
-    const tracksList = createTracksList(recentTracks, userName);
+    const tracksList = createTracksList(data, userName);
 
     tracksWrapper.replaceChildren(tracksList);
-  }, 60000);
+  };
+
+  const startInterval = () => {
+    if (!intervalId) {
+      intervalId = setInterval(
+        updateAction,
+        constants.RECENT_TRACKS_INTERVAL_MS,
+      );
+    }
+  };
+
+  const stopInterval = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+
+  const handleVisibilityChange = async () => {
+    if (document.visibilityState === 'visible') {
+      await updateAction();
+      startInterval();
+    } else {
+      stopInterval();
+    }
+  };
+
+  const throttledHandleVisibilityChange = throttle(
+    handleVisibilityChange,
+    constants.RECENT_TRACKS_INTERVAL_MS_THROTTLED,
+  );
+
+  document.addEventListener(
+    'visibilitychange',
+    throttledHandleVisibilityChange,
+  );
+
+  // Start the interval if the tab is already active when the script runs
+  if (document.visibilityState === 'visible') {
+    await updateAction();
+    startInterval();
+  }
 }
 
 export default {

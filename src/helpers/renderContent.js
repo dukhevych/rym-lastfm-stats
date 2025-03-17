@@ -2,7 +2,7 @@ import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 
 export async function renderContent(module) {
-  const storageItems = await utils.getStorageItems();
+  const storageItems = await utils.getSyncedOptions();
 
   const config = Object.assign({}, constants.OPTIONS_DEFAULT, storageItems);
 

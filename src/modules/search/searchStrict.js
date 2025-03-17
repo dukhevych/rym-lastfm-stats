@@ -23,7 +23,7 @@ function getNodeDirectTextContent(item) {
   if (!item) return '';
 
   const result = [];
-  item.childNodes.forEach(node => {
+  item.childNodes.forEach((node) => {
     if (node.nodeType === Node.TEXT_NODE) {
       result.push(node.textContent);
     }
@@ -43,7 +43,7 @@ function injectShowAllButton() {
   const target = document.querySelector('.page_search_results h3');
   target.appendChild(button);
   button.addEventListener('click', () => {
-    searchItems.forEach(item => {
+    searchItems.forEach((item) => {
       item.style.display = '';
     });
     button.style.display = 'none';
@@ -65,14 +65,38 @@ async function render(config) {
 
   if (searchType === 'a') {
     const artistNameSelector = 'a.searchpage.artist';
+    const artistNameLocalizedSelector = 'a.searchpage.artist + span.smallgray';
     const artistAkaSelector = '.subinfo';
 
-    searchItems.forEach(item => {
-      const artistName = deburr(item.querySelector(artistNameSelector)?.textContent) || '';
-      const artistAka = getNodeDirectTextContent(item.querySelector(artistAkaSelector)).trim() || '';
-      const akaValues = artistAka.toLowerCase().trim().replace(/^a\.k\.a:\s*/, '').split(', ');
+    searchItems.forEach((item) => {
+      const artistName = (item.querySelector(artistNameSelector)?.textContent || '')
+        .trim()
+        .toLowerCase();
+      const artistNameDeburred = deburr(artistName);
 
-      if (artistName.toLowerCase().trim() !== searchTerm && !akaValues.includes(searchTerm)) {
+      const artistNameLocalized = (item.querySelector(artistNameLocalizedSelector)?.textContent || '')
+        .trim()
+        .toLowerCase()
+        .replace(/^\[|\]$/g, '');
+      const artistNameLocalizedDeburred = deburr(artistNameLocalized);
+
+      const artistAka =
+        getNodeDirectTextContent(
+          item.querySelector(artistAkaSelector),
+        ).trim() || '';
+      const akaValues = artistAka
+        .toLowerCase()
+        .trim()
+        .replace(/^a\.k\.a:\s*/, '')
+        .split(', ');
+
+      if (
+        artistName !== searchTerm &&
+        artistNameLocalized !== searchTerm &&
+        artistNameDeburred !== searchTerm &&
+        artistNameLocalizedDeburred !== searchTerm &&
+        !akaValues.includes(searchTerm)
+      ) {
         searchItemsMore.push(item);
       }
     });
@@ -80,8 +104,26 @@ async function render(config) {
     const artistNameSelector = 'a.artist';
     const releaseTitleSelector = 'a.searchpage';
 
-    searchItems.forEach(item => {
-      const artistName = item.querySelector(artistNameSelector)?.textContent.toLowerCase() || '';
+    searchItems.forEach((item) => {
+      let artistName = (item.querySelector(artistNameSelector)?.textContent || '')
+        .trim()
+        .toLowerCase();
+
+      let artistNameLocalized;
+
+      const artistNameParts = artistName.split(' ');
+
+      if (artistNameParts.length > 1) {
+        const lastPart = artistNameParts.pop();
+        if (lastPart.match(/^\[|\]$/)) {
+          artistNameLocalized = lastPart.replace(/^\[|\]$/g, '');
+          artistName = artistNameParts.join(' ');
+        }
+      }
+
+      const artistNameDeburred = deburr(artistName);
+      const artistNameLocalizedDeburred = artistNameLocalized ? deburr(artistNameLocalized) : artistNameLocalized;
+
       const releaseTitle = item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '';
 
       let query = searchTerm;
@@ -89,7 +131,12 @@ async function render(config) {
       let hasArtist = false;
       let hasReleaseTitle = false;
 
-      if (query.includes(artistName)) {
+      if (
+        query.includes(artistName)
+        || query.includes(artistNameLocalized)
+        || query.includes(artistNameDeburred)
+        || query.includes(artistNameLocalizedDeburred)
+      ) {
         hasArtist = true;
         query = searchTerm.replace(artistName, '').trim();
       }

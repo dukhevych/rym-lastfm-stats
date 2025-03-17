@@ -2,6 +2,26 @@ const CACHE_LIFETIME = 86400000;
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
+const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
+
+export function fetchUserData(lastfmSession, apiKey) {
+  const _params = {
+    method: 'user.getinfo',
+    api_key: apiKey,
+    format: 'json',
+    sk: lastfmSession,
+  };
+
+  const params = new URLSearchParams(_params);
+
+  const url = `${BASE_URL}?${params.toString()}`;
+
+  return fetch(url)
+    .then((response) => response.json())
+    .then((data) => data.user)
+    .catch((error) => console.error('Error:', error));
+}
+
 export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}) {
   if (!username) {
     return Promise.reject(new Error('No username provided.'));
@@ -10,8 +30,6 @@ export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}) {
   if (!apiKey) {
     return Promise.reject(new Error('No API key provided.'));
   }
-
-  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
 
   const _params = {
     method: 'user.getrecenttracks',
@@ -24,7 +42,7 @@ export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}) {
 
   const params = new URLSearchParams(_params);
 
-  const url = `${baseUrl}?${params.toString()}`;
+  const url = `${BASE_URL}?${params.toString()}`;
 
   return fetch(url)
     .then((response) => response.json())
@@ -47,8 +65,6 @@ export function fetchUserTopAlbums(
     return Promise.reject(new Error('No API key provided.'));
   }
 
-  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
-
   const _params = {
     method: 'user.gettopalbums',
     user: username,
@@ -60,7 +76,7 @@ export function fetchUserTopAlbums(
 
   const params = new URLSearchParams(_params);
 
-  const url = `${baseUrl}?${params.toString()}`;
+  const url = `${BASE_URL}?${params.toString()}`;
 
   return fetch(url)
     .then((response) => response.json())
@@ -83,8 +99,6 @@ export function fetchUserTopArtists(
     return Promise.reject(new Error('No API key provided.'));
   }
 
-  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
-
   const _params = {
     method: 'user.gettopartists',
     user: username,
@@ -96,7 +110,7 @@ export function fetchUserTopArtists(
 
   const params = new URLSearchParams(_params);
 
-  const url = `${baseUrl}?${params.toString()}`;
+  const url = `${BASE_URL}?${params.toString()}`;
 
   return fetch(url)
     .then((response) => response.json())
@@ -115,8 +129,6 @@ export function fetchArtistStats(username, apiKey, { artist }) {
     return Promise.reject(new Error('No artist provided.'));
   }
 
-  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
-
   const _params = {
     method: 'artist.getInfo',
     artist: artist,
@@ -129,7 +141,7 @@ export function fetchArtistStats(username, apiKey, { artist }) {
   }
 
   const params = new URLSearchParams(_params);
-  const url = `${baseUrl}?${params.toString()}`;
+  const url = `${BASE_URL}?${params.toString()}`;
 
   if (username) {
     return fetch(url)
@@ -179,7 +191,11 @@ export function fetchArtistStats(username, apiKey, { artist }) {
   });
 }
 
-export function fetchReleaseStats(username, apiKey, { artist, releaseTitle }) {
+export function fetchReleaseStats(
+  username,
+  apiKey,
+  { artist, releaseTitle, releaseType },
+) {
   if (!apiKey) {
     return Promise.reject(new Error('No API key provided.'));
   }
@@ -192,21 +208,35 @@ export function fetchReleaseStats(username, apiKey, { artist, releaseTitle }) {
     return Promise.reject(new Error('No release title provided.'));
   }
 
-  const baseUrl = 'https://ws.audioscrobbler.com/2.0/';
+  const methods = {
+    album: 'album.getInfo',
+    single: 'track.getInfo',
+  };
+
+  const method = methods[releaseType] || methods.album;
+
   const _params = {
-    method: 'album.getInfo',
+    method,
     artist: artist,
-    album: releaseTitle,
     api_key: apiKey,
     format: 'json',
   };
+
+  if (releaseType === 'album') {
+    _params.album = releaseTitle;
+  } else if (releaseType === 'single') {
+    _params.track = releaseTitle;
+  } else {
+    _params.album = releaseTitle;
+}
 
   if (username) {
     _params.user = username;
   }
 
   const params = new URLSearchParams(_params);
-  const url = `${baseUrl}?${params.toString()}`;
+
+  const url = `${BASE_URL}?${params.toString()}`;
 
   if (username) {
     return fetch(url)

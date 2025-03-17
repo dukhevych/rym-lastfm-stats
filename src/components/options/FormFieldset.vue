@@ -1,13 +1,20 @@
 <template>
   <fieldset
-    class="form-group focus-within:shadow-lg"
+    class="
+      form-group h-full w-full bg-clip-padding
+      focus-within:shadow-lg
+    "
     :class="{
-      'pointer-events-none opacity-30 filter grayscale select-none': disabled,
+      'pointer-events-none select-none opacity-30 grayscale filter': disabled,
     }"
   >
     <div
       v-if="props.title || $slots.helper"
-      class="form-group-header text-xl font-bold bg-rym-gradient text-white p-3 flex justify-between items-center"
+      class="
+        form-group-header bg-rym-gradient flex min-h-[52px] items-center justify-between p-3 text-xl
+        font-bold text-white
+        [text-shadow:2px_2px_4px_rgba(0,0,0,0.5)]
+      "
     >
       <template v-if="props.title">
         {{ props.title }}
@@ -17,12 +24,16 @@
         class="group relative ml-auto"
       >
         <div
-          class="w-5 h-5 rounded-full bg-white text-center text-blue-500 text-sm cursor-pointer"
+          class="h-5 w-5 cursor-pointer rounded-full bg-white text-center text-sm text-blue-500"
         >
           ?
         </div>
         <div
-          class="absolute right-0 transform mt-2 w-max p-3 bg-gray-700 text-white text-sm rounded hidden group-hover:flex flex-col gap-2 max-w-[250px]"
+          class="
+            absolute right-0 mt-2 hidden w-max max-w-[250px] transform flex-col gap-2 bg-gray-700
+            p-3 text-sm text-white
+            group-hover:flex
+          "
         >
           <slot name="helper" />
         </div>
@@ -30,8 +41,13 @@
     </div>
 
     <div
-      class="form-group-body border-x-2 border-b-2 p-3 flex flex-col gap-3 border-gray-300 dark:border-gray-700"
+      class="
+        form-group-body border-white-300 flex flex-col gap-3 border-2 bg-gray-600 bg-opacity-40 p-3
+        shadow-[inset_0_15px_30px_-15px_rgba(255,255,255,0.2)]
+        dark:border-white-700
+      "
     >
+      <!-- backdrop-blur-sm backdrop-filter -->
       <component
         :is="child"
         v-for="(child, i) in $slots.default()"

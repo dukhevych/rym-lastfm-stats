@@ -9,13 +9,16 @@
           :id="name"
           type="range"
           :name="name"
-          class="w-[300px]"
+          class="w-[100%]"
           v-bind="$attrs"
           :value="props.modelValue"
           @input="$emit('update:modelValue', $event.target.value)"
         >
         <span
-          class="bg-gray-200 dark:bg-gray-800 py-2 px-4 rounded"
+          class="
+            rounded bg-gray-200 px-4 py-2
+            dark:bg-gray-800
+          "
         >{{ props.modelValue }}</span>
       </div>
     </div>
@@ -23,8 +26,6 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, defineOptions } from 'vue';
-
 const props = defineProps({
   label: {
     type: String,
@@ -40,7 +41,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:modelValue']);
+defineEmits(['update:modelValue']);
 
 defineOptions({
   name: 'FormRange',

@@ -2,20 +2,12 @@ import * as api from '@/helpers/api';
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 const PROFILE_CONTAINER_SELECTOR =
   '.bubble_header.profile_header + .bubble_content';
 
 let config = null;
-
-function getApiKey(config) {
-  const apiKey = config.lastfmApiKey || window.LASTFM_API_KEY;
-  if (!apiKey) {
-    console.error(
-      'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
-    );
-  }
-  return apiKey;
-}
 
 async function handlePeriodChange(period, userName, apiKey, container, label) {
   container.classList.add('is-loading');
@@ -32,7 +24,7 @@ async function handlePeriodChange(period, userName, apiKey, container, label) {
   label.textContent = constants.PERIOD_LABELS_MAP[period];
   label.title = constants.PERIOD_LABELS_MAP[period];
 
-  populateTopAlbums(container, data, userName);
+  populateTopAlbums(container, data);
   container.classList.remove('is-loading');
 }
 
@@ -40,10 +32,11 @@ export async function render(_config) {
   config = _config;
   if (!config) return;
 
-  const apiKey = getApiKey(config);
-  if (!apiKey) return;
+  if (!config.lastfmApiKey) return;
 
-  const userName = utils.getUserName(config);
+  const userData = await utils.getSyncedUserData();
+  const userName = userData?.name;
+
   if (!userName) {
     console.log("No Last.fm username found. Top Albums can't be displayed.");
     return;
@@ -53,7 +46,7 @@ export async function render(_config) {
 
   const topAlbums = await api.fetchUserTopAlbums(
     userName,
-    apiKey,
+    config.lastfmApiKey,
     {
       limit: config.topAlbumsLimit,
       period: config.topAlbumsPeriod,
@@ -68,16 +61,21 @@ export async function render(_config) {
   } = createTopAlbumsUI();
 
   topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
+    await browserAPI.storage.sync.set({
+      topAlbumsPeriod: event.target.value,
+    });
+
     await handlePeriodChange(
       event.target.value,
       userName,
-      apiKey,
+      config.lastfmApiKey,
       topAlbumsContainer,
       topAlbumsPeriodLabel,
     );
   });
 
   populateTopAlbums(topAlbumsContainer, topAlbums, userName);
+
   insertTopAlbumsIntoDOM(topAlbumsHeader, topAlbumsContainer);
 }
 
@@ -233,20 +231,20 @@ function createTopAlbumsUI() {
   };
 }
 
-function populateTopAlbums(container, topAlbums, userName) {
+function populateTopAlbums(container, topAlbums) {
   container.replaceChildren();
   topAlbums.forEach((album) => {
-    const albumWrapper = createAlbumWrapper(album, userName);
+    const albumWrapper = createAlbumWrapper(album);
     container.appendChild(albumWrapper);
   });
 }
 
-function createAlbumWrapper(album, userName) {
+function createAlbumWrapper(album) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('album-wrapper');
 
   wrapper.appendChild(createAlbumCover(album));
-  wrapper.appendChild(createAlbumInfo(album, userName));
+  wrapper.appendChild(createAlbumInfo(album));
   wrapper.appendChild(createAlbumLink(album));
 
   return wrapper;
@@ -261,13 +259,13 @@ function createAlbumCover(album) {
   return cover;
 }
 
-function createAlbumInfo(album, userName) {
+function createAlbumInfo(album) {
   const infoWrapper = document.createElement('div');
   infoWrapper.classList.add('album-details');
 
   infoWrapper.appendChild(createAlbumTitle(album));
   infoWrapper.appendChild(createAlbumArtist(album));
-  infoWrapper.appendChild(createAlbumPlays(album, userName));
+  infoWrapper.appendChild(createAlbumPlays(album));
 
   return infoWrapper;
 }

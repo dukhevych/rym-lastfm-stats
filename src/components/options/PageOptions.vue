@@ -1,33 +1,41 @@
 <template>
   <div
     id="app"
-    class="flex flex-col h-full"
+    class="flex h-full flex-col"
   >
     <header
-      class="flex justify-between items-center py-6 max-w-[700px] w-full mx-auto"
+      class="mx-auto flex w-full max-w-[700px] items-center justify-between py-6"
     >
-      <div class="flex gap-3 items-center">
+      <div class="flex items-center gap-3">
         <img
           src="/icons/icon48.png"
           alt=""
         >
-        <h1 class="text-2xl font-bold cursor-default select-none relative">
-          <span class="absolute text-[10px] top-0 right-0 -translate-y-1/2 font-bold">{{ appVersion }}</span>
+        <h1 class="relative cursor-default select-none text-2xl font-bold">
+          <span
+            class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
+          >{{ appVersion }}</span>
           <span class="text-red-600">RYM Last.fm Stats</span>
         </h1>
       </div>
       <div>
         <a
           href="mailto:landenmetal@gmail.com"
-          class="font-bold hover:underline"
+          class="
+            font-bold
+            hover:underline
+          "
         >Contact me</a>
       </div>
     </header>
 
     <main class="flex flex-col">
-      <div class="max-w-[700px] mx-auto">
+      <div class="mx-auto max-w-[700px]">
         <div
-          class="bg-gray-200 dark:bg-gray-800 p-4 rounded flex flex-col gap-2"
+          class="
+            flex flex-col gap-2 rounded bg-gray-200 p-4
+            dark:bg-gray-800
+          "
         >
           <p>
             This extension allows you to display Last.fm stats on RateYourMusic
@@ -37,47 +45,104 @@
           <p>More to come!</p>
         </div>
 
+        <!-- <div style="background-color: #fff; padding: 100px;">
+          <button
+            class="btn-skeumorphic"
+            :class="{
+              'cursor-not-allowed': signinInProgress,
+              'active:scale-[0.9]': !signinInProgress,
+            }"
+            :disabled="signinInProgress"
+            @click.prevent="openAuthPage"
+          >
+            <span>
+              <template v-if="signinInProgress">
+                Loading...
+              </template>
+              <template v-else>
+                Sign in with Lastfm2
+              </template>
+            </span>
+          </button>
+        </div> -->
+
         <form
           v-if="!loading"
-          class="flex flex-col py-5 gap-5"
+          class="flex flex-col gap-5 py-5"
           novalidate
           @submit.prevent="submit"
         >
-          <div class="form-actions flex justify-between gap-5">
-            <div
+          <div class="form-actions flex items-center justify-between gap-5">
+            <div class="mr-auto flex gap-5">
+              <div v-if="userData">
+                Signed in as <strong>{{ userData.name }}</strong> (<a
+                  href="#"
+                  class="
+                    font-bold text-blue-600
+                    hover:underline
+                  "
+                  @click.prevent="logout"
+                >logout</a>)
+              </div>
+              <button
+                v-if="!userData"
+                class="
+                  min-w-[120px] rounded bg-blue-600 px-4 py-2 text-center font-bold text-white
+                  hover:bg-blue-800
+                "
+                :class="{
+                  'pointer-events-none': signinInProgress,
+                  'bg-gray-400': signinInProgress,
+                }"
+                :disabled="signinInProgress"
+                @click.prevent="openAuthPage"
+              >
+                <template v-if="signinInProgress">
+                  Loading...
+                </template>
+                <template v-else>
+                  Sign in with Lastfm
+                </template>
+              </button>
+            </div>
+            <!-- <div
               v-if="saved"
-              class="bg-green-100 grow border-l-4 border-green-500 text-green-700 p-2 rounded"
+              class="grow rounded border-l-4 border-green-500 bg-green-100 p-2 text-green-700"
             >
               <p>Your settings have been saved.</p>
-            </div>
-            <div class="ml-auto flex gap-5">
+            </div> -->
+            <div class="ml-auto flex items-center gap-5">
+              <div
+                v-if="saved"
+                class="text-green-700"
+              >
+                <p><b>Saved!</b></p>
+              </div>
               <button
-                class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 text-center rounded min-w-[120px]"
+                class="
+                  min-w-[120px] rounded bg-red-600 px-4 py-2 text-center font-bold text-white
+                  hover:bg-red-800
+                "
                 @click.prevent="reset"
               >
-                Reset
-              </button>
-              <button
-                class="bg-blue-600 hover:bg-blue-800 text-white relative font-bold py-2 px-4 text-center rounded min-w-[120px] disabled:bg-gray-500"
-                :class="{
-                  'cursor-not-allowed': !dirty,
-                  'active:scale-[0.9]': dirty,
-                }"
-                :disabled="!dirty"
-                type="submit"
-              >
-                Save
+                Reset Settings
               </button>
             </div>
           </div>
 
           <!-- MAIN SETTINGS -->
-          <FormFieldset title="Main settings">
+          <FormFieldset title="Last.fm API Key">
+            <template #helper>
+              <p>
+                API Key is required for Profile enhancements and personal scrobbling stats on Artist and Release pages.
+              </p>
+            </template>
+
             <!-- LAST.FM API KEY -->
             <FormInput
               v-model="options.lastfmApiKey"
               name="lastfmApiKey"
-              label="Last.fm API Key"
+              placeholder="Add your lastfm API key here"
               min="32"
               max="32"
               @focus="(e) => e.target.select()"
@@ -87,7 +152,10 @@
                   Click
                   <a
                     href="https://www.last.fm/api/account/create"
-                    class="text-blue-600 font-bold hover:underline"
+                    class="
+                      font-bold text-blue-600
+                      hover:underline
+                    "
                     target="_blank"
                   >here</a>
                   to create a Last.fm API Key.
@@ -98,52 +166,14 @@
                   If you <strong>already have</strong> Last.fm API Keys, you can find them <a
                     href="https://www.last.fm/api/accounts"
                     target="_blank"
-                    class="text-blue-600 font-bold hover:underline"
+                    class="
+                      font-bold text-blue-600
+                      hover:underline
+                    "
                   >here</a>.
                 </p>
               </template>
             </FormInput>
-
-            <!-- LAST.FM USERNAME -->
-            <FormInput
-              v-model="options.lastfmUsername"
-              name="lastfmUsername"
-              label="Last.fm Username"
-              :disabled="!hasApiKey"
-            >
-              <template #hint>
-                <p>
-                  Enables personal statistics for <strong>Release</strong> and <strong>Artist</strong> pages and additional features for your <strong>Profile</strong> page.
-                </p>
-              </template>
-            </FormInput>
-
-            <!-- LAST.FM USERNAME AUTO DETECT -->
-            <FormCheckbox
-              v-model="options.lastfmUsernameAutoDetect"
-              name="lastfmUsernameAutoDetect"
-              label="Automatic username detection"
-              :disabled="!hasApiKey"
-            />
-          </FormFieldset>
-
-          <!-- STATS -->
-          <FormFieldset
-            title="Last.fm Stats"
-          >
-            <!-- ARTIST STATS -->
-            <FormCheckbox
-              v-model="options.artistStats"
-              name="artistStats"
-              label="Artist page"
-            />
-
-            <!-- RELEASE STATS -->
-            <FormCheckbox
-              v-model="options.releaseStats"
-              name="releaseStats"
-              label="Release page"
-            />
           </FormFieldset>
 
           <!-- PROFILE -->
@@ -153,12 +183,7 @@
           >
             <template #helper>
               <p>
-                If you want to display this on your profile, add your
-                Last.fm username to the Main settings.
-              </p>
-              <p>
-                As a fallback, extension scans every User Profile for any
-                Last.fm link and uses it.
+                Profile enhancements work only if you're signed in with Last.fm
               </p>
             </template>
 
@@ -173,7 +198,7 @@
             <FormCheckbox
               v-model="options.recentTracksReplace"
               name="recentTracksReplace"
-              label="Replace default RYM 'Listening to'"
+              label="Replace 'Listening to' (experimental)"
               :disabled="options.recentTracks === false"
             />
 
@@ -203,133 +228,44 @@
               :max="constants.TOP_ALBUMS_LIMIT_MAX"
               :disabled="options.topAlbums === false"
             />
-
-            <!-- TOP ALBUMS PERIOD -->
-            <div class="form-item flex flex-col gap-1">
-              <div class="form-label font-bold">
-                <label for="topAlbumsPeriod">Top albums default period</label>
-              </div>
-              <div class="form-input">
-                <div class="form-select">
-                  <select
-                    id="topAlbumsPeriod"
-                    v-model="options.topAlbumsPeriod"
-                    name="topAlbumsPeriod"
-                    class="w-full bg-gray-200 dark:bg-gray-800 p-2 h-10 rounded"
-                    :disabled="options.topAlbums === false"
-                  >
-                    <option
-                      v-for="item in constants.PERIOD_OPTIONS"
-                      :key="item.value"
-                      :value="item.value"
-                    >
-                      {{ item.label }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-            </div>
           </FormFieldset>
-
-          <!-- SEARCH -->
-          <fieldset
-            class="form-group focus-within:shadow-lg hidden"
-            :class="{
-              'pointer-events-none opacity-50':
-                options.lastfmApiKey.length !== 32,
-            }"
-          >
-            <div
-              class="form-group-header text-xl font-bold bg-rym-gradient text-white p-3 flex justify-between items-center"
-            >
-              Search
-            </div>
-
-            <div
-              class="form-group-body border-x-2 border-b-2 p-3 flex flex-col gap-3 border-gray-300 dark:border-gray-700"
-            >
-              <!-- STRICT SEARCH -->
-              <div class="form-item flex flex-col gap-1">
-                <div class="form-input">
-                  <div class="flex items-center space-x-2">
-                    <label
-                      for="searchStrict"
-                      class="flex items-center cursor-pointer gap-2"
-                    >
-                      <div class="relative">
-                        <input
-                          id="searchStrict"
-                          v-model="options.searchStrict"
-                          type="checkbox"
-                          class="sr-only peer"
-                        >
-                        <div
-                          class="w-11 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-focus-visible:ring-4 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-800 peer-checked:bg-blue-600"
-                        />
-                      </div>
-                      <span class="text-lg font-bold">Strict search</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </fieldset>
-
-          <div class="form-actions flex justify-between gap-5">
-            <div
-              v-if="saved"
-              class="bg-green-100 grow border-l-4 border-green-500 text-green-700 p-2 rounded"
-            >
-              <p>Your settings have been saved.</p>
-            </div>
-            <div class="ml-auto flex gap-5">
-              <button
-                class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 text-center rounded min-w-[120px]"
-                @click.prevent="reset"
-              >
-                Reset
-              </button>
-              <button
-                class="bg-blue-600 hover:bg-blue-800 text-white relative font-bold py-2 px-4 text-center rounded min-w-[120px] disabled:bg-gray-500"
-                :class="{
-                  'cursor-not-allowed': !dirty,
-                  'active:scale-[0.9]': dirty,
-                }"
-                :disabled="!dirty"
-                type="submit"
-              >
-                Save
-              </button>
-            </div>
-          </div>
         </form>
       </div>
     </main>
 
     <footer
-      class="flex flex-col items-center bg-gray-200 dark:bg-gray-800 py-6 gap-2 mt-auto"
+      class="
+        mt-auto flex flex-col items-center gap-2 bg-gray-200 py-6
+        dark:bg-gray-800
+      "
     >
       <div class="flex gap-8">
         <a
           href="https://open.spotify.com/user/11139279910/playlists"
-          class="text-blue-500 font-bold hover:underline"
+          class="
+            font-bold text-blue-500
+            hover:underline
+          "
           target="_blank"
         >Impressive Sound</a>
         <a
           href="https://rateyourmusic.com/~Landen"
-          class="text-blue-500 font-bold hover:underline"
+          class="
+            font-bold text-blue-500
+            hover:underline
+          "
           target="_blank"
         >My RYM Profile</a>
         <a
           href="https://www.linkedin.com/in/dukhevych/"
-          class="text-blue-500 font-bold hover:underline"
+          class="
+            font-bold text-blue-500
+            hover:underline
+          "
           target="_blank"
         >LinkedIn</a>
       </div>
-      <div>
-        {{ new Date().getFullYear() }} &copy;
-        Landen
-      </div>
+      <div>{{ new Date().getFullYear() }} &copy; Landen</div>
     </footer>
   </div>
 </template>
@@ -338,53 +274,117 @@
 import { ref, reactive, watch, computed } from 'vue';
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
+import * as api from '@/helpers/api.js';
 import FormInput from '@/components/options/FormInput.vue';
 import FormCheckbox from '@/components/options/FormCheckbox.vue';
 import FormFieldset from '@/components/options/FormFieldset.vue';
 import FormRange from './FormRange.vue';
+import { debounce } from 'lodash';
 
 const appVersion = process.env.APP_VERSION;
+const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 const loading = ref(true);
 const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
 
 const config = ref(null);
+const userData = ref(null);
 const saved = ref(false);
 const dirty = ref(false);
+const signinInProgress = ref(false);
 
 const submit = async () => {
   const newConfig = JSON.parse(JSON.stringify(options));
+
+  Object.keys(newConfig).forEach((key) => {
+    if (newConfig[key] === config.value[key]) {
+      delete newConfig[key];
+    }
+  });
+
   await browserAPI.storage.sync.set(newConfig);
+
   config.value = newConfig;
   saved.value = true;
+  if (submit.timer) {
+    clearTimeout(submit.timer);
+  }
+  submit.timer = setTimeout(() => {
+    if (!dirty.value) {
+      saved.value = false;
+    }
+  }, 3000);
   dirty.value = false;
 };
 
 const reset = async () => {
   const doConfirm = confirm('Are you sure you want to reset all settings?');
   if (!doConfirm) return;
-  Object.assign(options, constants.OPTIONS_DEFAULT);
+  Object.assign(options, constants.PROFILE_OPTIONS_DEFAULT);
   await submit();
 };
 
-utils.getStorageItems().then((items) => {
-  config.value = items;
-  Object.assign(options, config.value);
+const openAuthPage = () => {
+  signinInProgress.value = true;
+  browserAPI.windows.create({
+    url: `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}`,
+    type: 'popup',
+    width: 500,
+    height: 600,
+  });
+  browserAPI.runtime.onMessage.addListener((message) => {
+    if (message.type === 'lastfm_auth') {
+      api.fetchUserData(message.value, SYSTEM_API_KEY).then((data) => {
+        userData.value = data;
+        browserAPI.storage.sync.set({ userData: data });
+        signinInProgress.value = false;
+      });
+    }
+  });
+};
 
-  watch(
-    () => options,
-    () => {
-      saved.value = false;
-      dirty.value = true;
-    },
-    { deep: true },
-  );
+const init = async () => {
+  try {
+    const syncedOptions = await utils.getSyncedOptions();
 
-  loading.value = false;
-});
+    config.value = syncedOptions;
+
+    Object.assign(options, config.value);
+
+    const syncedUserData = await utils.getSyncedUserData();
+
+    userData.value = syncedUserData;
+
+    const debouncedSubmit = debounce(() => {
+      submit();
+    }, 300);
+
+    watch(
+      () => options,
+      () => {
+        saved.value = false;
+        dirty.value = true;
+        debouncedSubmit();
+      },
+      { deep: true },
+    );
+    loading.value = false;
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 const hasApiKey = computed(() => {
   return options.lastfmApiKey && options.lastfmApiKey.length === 32;
 });
+
+const logout = async () => {
+  const doConfirm = confirm('Are you sure you want to logout?');
+  if (!doConfirm) return;
+  await browserAPI.storage.sync.remove('userData');
+  userData.value = null;
+};
+
+init();
 </script>

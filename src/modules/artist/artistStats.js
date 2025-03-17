@@ -16,7 +16,10 @@ function getArtist() {
   return null;
 }
 
-function insertDummyLink(artist) {
+function insertArtistStats(
+  { playcount, listeners, userplaycount, url },
+  timestamp,
+) {
   const infoBlock = document.querySelector(ARTIST_CONTAINER_SELECTOR);
 
   if (infoBlock) {
@@ -27,42 +30,19 @@ function insertDummyLink(artist) {
     const content = document.createElement('div');
     content.classList.add('info_content');
 
-    const url = 'https://www.last.fm/music/' + encodeURIComponent(artist);
-
-    const link = utils.createLink(url, 'View on Last.fm');
-
-    content.appendChild(link);
-
-    infoBlock.appendChild(heading);
-    infoBlock.appendChild(content);
-  }
-}
-
-function insertArtistStats(
-  { playcount, listeners, userplaycount, url },
-  label = 'Last.fm',
-) {
-  const infoBlock = document.querySelector(ARTIST_CONTAINER_SELECTOR);
-
-  if (infoBlock) {
-    const heading = document.createElement('div');
-    heading.classList.add('info_hdr');
-    heading.textContent = label;
-
-    const content = document.createElement('div');
-    content.classList.add('info_content');
+    const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
 
     const listenersSpan =
       listeners !== undefined
         ? utils.createSpan(
-            `${listeners} listeners`,
+            `${listeners} listeners ${cacheTimeHint}`,
             `${utils.shortenNumber(parseInt(listeners))} listeners`,
           )
         : null;
     const playcountSpan =
       playcount !== undefined
         ? utils.createSpan(
-            `${playcount}, ${parseInt(playcount / listeners)} per listener`,
+            `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`,
             `${utils.shortenNumber(parseInt(playcount))} plays`,
           )
         : null;
@@ -106,31 +86,50 @@ async function render(config) {
     return;
   }
 
-  const apiKey = config.lastfmApiKey || window.LASTFM_API_KEY;
+  const userData = await utils.getSyncedUserData();
+  const userName = userData?.name;
+  const storageKey = `artistStats_${artist}`;
 
-  if (!apiKey) {
-    insertDummyLink(artist);
-    alert(
-      'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
-    );
-    return;
+  if (!config.lastfmApiKey) {
+    const cachedData = localStorage.getItem(storageKey);
+
+    if (cachedData) {
+      const { timestamp, data } = JSON.parse(cachedData);
+      const cachedDate = new Date(timestamp).toDateString();
+      const currentDate = new Date().toDateString();
+
+      if (cachedDate === currentDate) {
+        console.log('Inserting cached lastfm data:', data);
+
+        insertArtistStats(data, timestamp);
+        return;
+      }
+    }
   }
 
-  const userName = config.lastfmUsername;
+  console.log('Fetching lastfm data for', artist);
 
-  const data = await api.fetchArtistStats(userName, apiKey, {
-    artist,
-  });
+  const data = await api.fetchArtistStats(
+    userName,
+    config.lastfmApiKey || process.env.LASTFM_API_KEY,
+    { artist },
+  );
 
   const { playcount, listeners, userplaycount } = data.artist.stats;
   const { url } = data.artist;
 
-  insertArtistStats({
+  const stats = {
     playcount,
     listeners,
     userplaycount,
     url,
-  });
+  };
+
+  if (!config.lastfmApiKey) {
+    localStorage.setItem(storageKey, JSON.stringify({ timestamp: Date.now(), data: stats }));
+  }
+
+  insertArtistStats(stats);
 }
 
 export default {

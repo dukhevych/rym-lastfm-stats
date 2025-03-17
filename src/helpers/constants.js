@@ -1,5 +1,3 @@
-import topArtists from "../modules/profile/topArtists";
-
 export const LASTFM_COLOR = '#f71414';
 
 export const LIGHT_THEME_CLASSES = [
@@ -58,24 +56,13 @@ export const TOP_ALBUMS_LIMIT_DEFAULT = 8;
 export const TOP_ARTISTS_PERIOD_DEFAULT = '12month';
 export const TOP_ARTISTS_LIMIT_MIN = 1;
 export const TOP_ARTISTS_LIMIT_MAX = 8;
-export const TOP_ARTISTS_LIMIT_DEFAULT = 8;
+export const TOP_ARTISTS_LIMIT_DEFAULT = 10;
 
 export const RECENT_TRACKS_LIMIT_MIN = 1;
 export const RECENT_TRACKS_LIMIT_MAX = 20;
 export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
-export const OPTIONS_DEFAULT = {
-  lastfmApiKey: '',
-  lastfmUsername: '',
-  lastfmUsernameAutoDetect: false,
-
-  // ARTIST PAGE
-  artistStats: true,
-
-  // RELEASE PAGE
-  releaseStats: true,
-
-  // PROFILE PAGE
+export const PROFILE_OPTIONS_DEFAULT = {
   recentTracks: true,
   recentTracksReplace: false,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
@@ -85,9 +72,15 @@ export const OPTIONS_DEFAULT = {
   topAlbums: true,
   topAlbumsLimit: TOP_ALBUMS_LIMIT_DEFAULT,
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
+}
 
-  // SEARCH PAGE
-  // searchStrict: true, // Implemented, though works automatically, there's no point to make it configurable
+export const OPTIONS_DEFAULT = {
+  lastfmApiKey: '',
+  ...PROFILE_OPTIONS_DEFAULT,
 };
 
 export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);
+
+export const RECENT_TRACKS_INTERVAL_MS = 120000;
+
+export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = 30000;
