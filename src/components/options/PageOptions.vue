@@ -470,7 +470,7 @@ const hasApiKey = computed(() => {
 });
 
 const logout = async () => {
-  const doConfirm = confirm('Are you sure you want to logout? You will lose personal statistics, but overall artists and releases stats will remain.');
+  const doConfirm = confirm('Are you sure you want to logout?');
   if (!doConfirm) return;
   await browserAPI.storage.sync.remove('userData');
   userData.value = null;

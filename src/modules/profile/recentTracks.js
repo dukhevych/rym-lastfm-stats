@@ -457,7 +457,7 @@ async function render(_config) {
   }
 
   if (config.recentTracksReplace) {
-    replaceListeningTo(recentTracks[0]);
+    replaceListeningTo(data[0]);
   }
 
   const tracksList = createTracksList(data, userName);
