@@ -427,11 +427,6 @@ async function render(_config) {
   const userData = await utils.getSyncedUserData();
   const userName = userData?.name;
 
-  if (!userData) {
-    console.log('No user data found. Recent Tracks can\'t be displayed.');
-    return;
-  };
-
   if (!userName) {
     console.log('No Last.fm username found. Recent Tracks can\'t be displayed.');
     return;

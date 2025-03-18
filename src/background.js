@@ -1,17 +1,22 @@
 import { MD5 } from './libs/crypto-js.min.js';
+import * as utils from './helpers/utils.js';
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
 
-browserAPI.runtime.onInstalled.addListener((details) => {
+browserAPI.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     console.log('RYM Last.fm extension installed');
     browserAPI.runtime.openOptionsPage();
   }
   if (details.reason === 'update') {
     console.log('RYM Last.fm extension updated');
+    const { userData, lastfmUsername } = await utils.storageGet(['userData', 'lastfmUsername']);
+    if (!userData && lastfmUsername) {
+      await utils.storageSet({ userData: { name: lastfmUsername } });
+    }
     browserAPI.runtime.openOptionsPage();
   }
 });

@@ -42,7 +42,53 @@
             artist and release pages, see your recent tracks and top albums on
             your profile.
           </p>
-          <p>More to come!</p>
+          <p>
+            <a
+              href="#"
+              class="
+                font-bold text-blue-600
+                hover:underline
+              "
+              @click.prevent="showModal = true"
+            >How it works?</a>
+          </p>
+        </div>
+
+        <!-- Modal -->
+        <div
+          v-show="showModal"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        >
+          <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-xl font-bold">
+                Modal Title
+              </h2>
+              <button
+                class="
+                  text-gray-500
+                  hover:text-gray-700
+                "
+                @click="showModal = false"
+              >
+                &times;
+              </button>
+            </div>
+            <div class="mb-4">
+              <p>SCREENSHOTS</p>
+            </div>
+            <div class="flex justify-end">
+              <button
+                class="
+                  rounded bg-blue-500 px-4 py-2 text-white
+                  hover:bg-blue-700
+                "
+                @click="showModal = false"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- <div style="background-color: #fff; padding: 100px;">
@@ -69,7 +115,6 @@
         <form
           v-if="!loading"
           class="flex flex-col gap-5 py-5"
-          novalidate
           @submit.prevent="submit"
         >
           <div class="form-actions flex items-center justify-between gap-5">
@@ -105,12 +150,6 @@
                 </template>
               </button>
             </div>
-            <!-- <div
-              v-if="saved"
-              class="grow rounded border-l-4 border-green-500 bg-green-100 p-2 text-green-700"
-            >
-              <p>Your settings have been saved.</p>
-            </div> -->
             <div class="ml-auto flex items-center gap-5">
               <div
                 v-if="saved"
@@ -146,6 +185,7 @@
               min="32"
               max="32"
               @focus="(e) => e.target.select()"
+              @blur="(e) => e.target.value = e.target.value.trim()"
             >
               <template #hint>
                 <p>
@@ -179,7 +219,7 @@
           <!-- PROFILE -->
           <FormFieldset
             title="Profile"
-            :disabled="!hasApiKey"
+            :disabled="!hasApiKey || !userData"
           >
             <template #helper>
               <p>
@@ -228,6 +268,23 @@
               :max="constants.TOP_ALBUMS_LIMIT_MAX"
               :disabled="options.topAlbums === false"
             />
+
+            <!-- TOP ARTISTS -->
+            <FormCheckbox
+              v-model="options.topArtists"
+              name="topArtists"
+              label="Top artists"
+            />
+
+            <!-- TOP ARTISTS LIMIT -->
+            <FormRange
+              v-model="options.topArtistsLimit"
+              name="topArtistsLimit"
+              :label="`Top artists limit (${constants.TOP_ARTISTS_LIMIT_MIN}-${constants.TOP_ARTISTS_LIMIT_MAX})`"
+              :min="constants.TOP_ARTISTS_LIMIT_MIN"
+              :max="constants.TOP_ARTISTS_LIMIT_MAX"
+              :disabled="options.topArtists === false"
+            />
           </FormFieldset>
         </form>
       </div>
@@ -235,11 +292,11 @@
 
     <footer
       class="
-        mt-auto flex flex-col items-center gap-2 bg-gray-200 py-6
+        mt-auto flex flex-col items-center gap-2 bg-gray-100 py-6
         dark:bg-gray-800
       "
     >
-      <div class="flex gap-8">
+      <div class="flex gap-6">
         <a
           href="https://open.spotify.com/user/11139279910/playlists"
           class="
@@ -247,7 +304,13 @@
             hover:underline
           "
           target="_blank"
-        >Impressive Sound</a>
+        >
+          <img
+            src="/icons/spotify.svg"
+            alt="Spotify"
+            class="block h-6 w-6"
+          >
+        </a>
         <a
           href="https://rateyourmusic.com/~Landen"
           class="
@@ -255,7 +318,13 @@
             hover:underline
           "
           target="_blank"
-        >My RYM Profile</a>
+        >
+          <img
+            src="/icons/rym.svg"
+            alt="RYM"
+            class="block h-6 w-6"
+          >
+        </a>
         <a
           href="https://www.linkedin.com/in/dukhevych/"
           class="
@@ -263,7 +332,27 @@
             hover:underline
           "
           target="_blank"
-        >LinkedIn</a>
+        >
+          <img
+            src="/icons/linkedin.svg"
+            alt="LinkedIn"
+            class="block h-6 w-6"
+          >
+        </a>
+        <a
+          href="https://github.com/dukhevych/rym-lastfm-stats"
+          class="
+            font-bold text-blue-500
+            hover:underline
+          "
+          target="_blank"
+        >
+          <img
+            src="/icons/github.svg"
+            alt="Github"
+            class="block h-6 w-6"
+          >
+        </a>
       </div>
       <div>{{ new Date().getFullYear() }} &copy; Landen</div>
     </footer>
@@ -293,6 +382,7 @@ const userData = ref(null);
 const saved = ref(false);
 const dirty = ref(false);
 const signinInProgress = ref(false);
+const showModal = ref(false);
 
 const submit = async () => {
   const newConfig = JSON.parse(JSON.stringify(options));
@@ -380,7 +470,7 @@ const hasApiKey = computed(() => {
 });
 
 const logout = async () => {
-  const doConfirm = confirm('Are you sure you want to logout?');
+  const doConfirm = confirm('Are you sure you want to logout? You will lose personal statistics, but overall artists and releases stats will remain.');
   if (!doConfirm) return;
   await browserAPI.storage.sync.remove('userData');
   userData.value = null;

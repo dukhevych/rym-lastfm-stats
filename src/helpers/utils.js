@@ -105,20 +105,50 @@ export async function getUserName() {
   });
 };
 
-export function getSyncedOptions(fields = constants.OPTIONS_DEFAULT_KEYS) {
-  return new Promise((resolve) => {
-    browserAPI.storage.sync.get(fields, (items) => {
-      resolve(items);
+const STORAGE_TYPES = ['local', 'sync'];
+
+export function storageGet(keys, storageType = 'sync') {
+  if (!STORAGE_TYPES.includes(storageType)) {
+    throw new Error(`Invalid storage type: ${storageType}`);
+  }
+
+  return new Promise((resolve, reject) => {
+    browserAPI.storage[storageType].get(keys, (result) => {
+      if (typeof chrome !== 'undefined' && chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        if (typeof keys === 'string') {
+          resolve(result[keys]);
+        } else {
+          resolve(result);
+        }
+      }
     });
   });
+}
+
+export function storageSet(payload, storageType = 'sync') {
+  if (!STORAGE_TYPES.includes(storageType)) {
+    throw new Error(`Invalid storage type: ${storageType}`);
+  }
+
+  return new Promise((resolve, reject) => {
+    browserAPI.storage[storageType].set(payload, () => {
+      if (typeof chrome !== 'undefined' && chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+export function getSyncedOptions(fields = constants.OPTIONS_DEFAULT_KEYS) {
+  return storageGet(fields);
 };
 
 export function getSyncedUserData() {
-  return new Promise((resolve) => {
-    browserAPI.storage.sync.get('userData', (items) => {
-      resolve(items.userData);
-    });
-  })
+  return storageGet('userData');
 };
 
 export function generateSearchUrl({
