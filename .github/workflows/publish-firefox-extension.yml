@@ -1,9 +1,14 @@
 name: Publish Firefox Extension
-
 on:
   push:
     branches:
       - release
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no actual publishing)'
+        type: boolean
+        default: true
 
 jobs:
   publish-firefox:
@@ -12,18 +17,55 @@ jobs:
       build_command: npm run build:firefox
       dist_folder: ./dist/firefox
       zip_name: firefox-extension
-
   publish:
     runs-on: ubuntu-latest
     needs: publish-firefox
-
     steps:
+    - name: Download extension package
+      uses: actions/download-artifact@v3
+      with:
+        name: firefox-extension-${{ needs.publish-firefox.outputs.version }}
+        path: ./
+    - name: Verify ZIP file
+      run: |
+        echo "Extension version: ${{ needs.publish-firefox.outputs.version }}"
+        echo "ZIP file: ${{ needs.publish-firefox.outputs.zip_path }}"
+        ls -la
+        echo "ZIP contents:"
+        unzip -l ${{ needs.publish-firefox.outputs.zip_path }}
+
+    # The Firefox workflow needs access to the source directory
+    - name: Checkout code (for Firefox source)
+      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
+      uses: actions/checkout@v2
+
+    - name: Prepare Firefox source directory
+      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
+      run: |
+        npm install
+        ${{ needs.publish-firefox.outputs.build_command || 'npm run build:firefox' }}
+
+    # Only run this step if NOT in dry-run mode
     - name: Sign and Publish to Firefox Add-ons Store
+      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
       env:
         AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
         AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
       run: |
+        npm install -g web-ext
         npx web-ext sign --source-dir ./dist/firefox \
                          --api-key $AMO_API_KEY \
                          --api-secret $AMO_API_SECRET \
                          --channel listed
+
+    # Print message in dry-run mode
+    - name: Dry Run Message
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run }}
+      run: |
+        echo "🔍 DRY RUN COMPLETED"
+        echo "✅ Build successful"
+        echo "✅ ZIP created: ${{ needs.publish-firefox.outputs.zip_path }}"
+        echo "✅ Version: ${{ needs.publish-firefox.outputs.version }}"
+        echo "⏭️ Publishing step was skipped"
+        echo ""
+        echo "If this were a real publish, the extension would be signed and uploaded to the Firefox Add-ons Store"
