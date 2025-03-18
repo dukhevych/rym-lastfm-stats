@@ -228,7 +228,7 @@ export function fetchReleaseStats(
     _params.track = releaseTitle;
   } else {
     _params.album = releaseTitle;
-}
+  }
 
   if (username) {
     _params.user = username;

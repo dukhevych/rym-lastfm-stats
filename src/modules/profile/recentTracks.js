@@ -444,13 +444,13 @@ async function render(_config) {
 
   insertRecentTracksButtonIntoDOM(button);
 
-  const recentTracks = await api.fetchUserRecentTracks(
+  const data = await api.fetchUserRecentTracks(
     userName,
     config.lastfmApiKey,
     { limit: config.recentTracksLimit },
   );
 
-  if (recentTracks[0]['@attr']?.nowplaying) {
+  if (data[0]['@attr']?.nowplaying) {
     button.classList.add('is-now-playing');
   } else {
     button.classList.remove('is-now-playing');
@@ -460,7 +460,7 @@ async function render(_config) {
     replaceListeningTo(recentTracks[0]);
   }
 
-  const tracksList = createTracksList(recentTracks, userName);
+  const tracksList = createTracksList(data, userName);
 
   tracksWrapper.appendChild(tracksList);
   insertRecentTracksWrapperIntoDOM(tracksWrapper);

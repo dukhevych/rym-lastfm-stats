@@ -3,9 +3,9 @@ import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 
 const META_TITLE_SELECTOR = 'meta[property="og:title"]';
-const ALBUM_CONTAINER_SELECTOR = '.album_info tbody';
+const INFO_CONTAINER_SELECTOR = '.album_info tbody';
 
-function parseArtistAndAlbum(metaContent) {
+function parseArtistAndTitle(metaContent) {
   const cleanContent = metaContent.replace(' - RYM/Sonemic', '');
   const parts = cleanContent.split(' by ');
 
@@ -22,9 +22,9 @@ function parseArtistAndAlbum(metaContent) {
   }
 }
 
-function getArtistAndAlbum() {
+function getArtistAndTitle() {
   const metaTag = document.querySelector(META_TITLE_SELECTOR);
-  if (metaTag) return parseArtistAndAlbum(metaTag.content);
+  if (metaTag) return parseArtistAndTitle(metaTag.content);
   return { releaseTitle: null, artist: null };
 }
 
@@ -32,7 +32,7 @@ function insertReleaseStats(
   { playcount, listeners, userplaycount, url },
   timestamp,
 ) {
-  const infoTable = document.querySelector(ALBUM_CONTAINER_SELECTOR);
+  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
 
   if (infoTable) {
     const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
@@ -95,7 +95,7 @@ function insertReleaseStats(
 async function render(config) {
   if (!config) return;
 
-  const { artist, releaseTitle } = getArtistAndAlbum();
+  const { artist, releaseTitle } = getArtistAndTitle();
 
   if (!artist || !releaseTitle) {
     console.error('No artist or release title found.');
@@ -123,7 +123,7 @@ async function render(config) {
     }
   }
 
-  const infoTable = document.querySelector(ALBUM_CONTAINER_SELECTOR);
+  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
 
   const releaseType = infoTable
     .querySelector('tr:nth-child(2) td')
@@ -139,7 +139,12 @@ async function render(config) {
     }
   );
 
-  const { playcount, listeners, userplaycount, url } = data.album;
+  const releaseTypeDataMap = {
+    album: 'album',
+    single: 'track',
+  };
+
+  const { playcount, listeners, userplaycount, url } = data[releaseTypeDataMap[releaseType]];
 
   const stats = {
     playcount,
@@ -157,5 +162,5 @@ async function render(config) {
 
 export default {
   render,
-  targetSelectors: [META_TITLE_SELECTOR, ALBUM_CONTAINER_SELECTOR],
+  targetSelectors: [META_TITLE_SELECTOR, INFO_CONTAINER_SELECTOR],
 };
