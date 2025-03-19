@@ -368,7 +368,7 @@ import FormInput from '@/components/options/FormInput.vue';
 import FormCheckbox from '@/components/options/FormCheckbox.vue';
 import FormFieldset from '@/components/options/FormFieldset.vue';
 import FormRange from './FormRange.vue';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 
 const appVersion = process.env.APP_VERSION;
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;

@@ -1,4 +1,4 @@
-import { deburr } from 'lodash';
+import deburr from 'lodash/deburr';
 import * as utils from '@/helpers/utils.js';
 
 const SEARCH_TYPES = {

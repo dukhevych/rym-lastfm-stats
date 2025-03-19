@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import { throttle } from 'lodash';
+import throttle from 'lodash/throttle';
 
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';

@@ -24,6 +24,7 @@ const entries = glob.sync('./src/*.js').reduce((acc, file) => {
 
 module.exports = (env) => {
   const browserTarget = env.browser;
+  const isLocalDev = env.local === 'true';
   const outputPath = path.resolve(__dirname, `dist/${browserTarget}`);
 
   // Load environment variables from .env files
@@ -37,21 +38,13 @@ module.exports = (env) => {
   };
 
   // Load environment variables in order of precedence
-  // 1. .env.[browser].local (local development overrides for specific browser)
-  // 2. .env.[browser] (CI/CD environment variables for specific browser)
-  // 3. .env.local (local development overrides)
-  // 4. .env (default environment variables)
-  const envRoot = loadEnv('.env');
-  const envLocal = loadEnv(`.env.local`);
-  const envBrowser = loadEnv(`.env.${browserTarget}`);
-  const envBrowserLocal = loadEnv(`.env.${browserTarget}.local`);
+  const envRoot = loadEnv(!isLocalDev ? '.env' : '.env.local');
+  const envBrowser = loadEnv(!isLocalDev ? `.env.${browserTarget}` : `.env.${browserTarget}.local`);
 
   const combinedEnv = {
     ...process.env,     // System environment variables
     ...envRoot,         // .env variables
-    ...envLocal,        // .env.local variables
     ...envBrowser,      // .env.[browser] variables
-    ...envBrowserLocal, // .env.[browser].local variables
   };
 
   // Convert to format suitable for DefinePlugin
