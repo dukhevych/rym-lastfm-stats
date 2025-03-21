@@ -74,7 +74,7 @@ export async function render(_config) {
     topArtistsContainer.classList.remove('is-loading');
   });
 
-  populateTopArtists(topArtistsContainer, topArtists, userName);
+  populateTopArtists(topArtistsContainer, topArtists);
 
   insertTopArtistsIntoDOM(topArtistsHeader, topArtistsContainer);
 }
@@ -84,6 +84,42 @@ function addTopArtistsStyles() {
   style.textContent = `
     .top-artists {
       position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+    }
+
+    .top-artist {
+      flex-grow;
+      flex-shrink: 0;
+      flex-basis: calc(var(--playcountPercentage) * 1%);
+      min-width: calc(var(--playcountPercentage) * 1%);
+      border-radius: 6px;
+      position: relative;
+      border-width: 1px;
+      border-style: solid;
+      padding: 10px;
+      box-sizing: border-box;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background-color .15s ease-in-out;
+      font-weight: bold;
+
+      background-color: hsl(var(--hue), 80%, 10%);
+      border-color: hsl(var(--hue), 40%, 5%);
+
+      &:hover {
+        background-color: hsl(var(--hue), 80%, 20%);
+      }
+
+      a {
+        flex-grow: 1;
+        text-align: left;
+        text-decoration: none;
+        color: inherit;
+      }
     }
 
     .artist-scrobbles {
@@ -153,7 +189,17 @@ function createTopArtistsUI() {
 
 function populateTopArtists(container, topArtists) {
   container.replaceChildren();
-  topArtists.forEach((artist) => {
+  const maxPlaycount = Math.max(...topArtists.map(artist => artist.playcount));
+  const minPlaycount = Math.min(...topArtists.map(artist => artist.playcount));
+  const playcountRange = maxPlaycount - minPlaycount;
+
+  const topArtistsWithPercentage = topArtists.map(artist => ({
+    ...artist,
+    playcountPercentage: (artist.playcount / maxPlaycount) * 100,
+    playcountPercentageAbsolute: playcountRange ? ((artist.playcount - minPlaycount) / playcountRange) * 100 : 0,
+  }));
+
+  topArtistsWithPercentage.forEach((artist) => {
     const artistLink = createArtistLink(artist);
     container.appendChild(artistLink);
   });
@@ -161,20 +207,30 @@ function populateTopArtists(container, topArtists) {
 
 function createArtistLink(artist) {
   const wrapper = document.createElement('div');
+  wrapper.classList.add('top-artist');
+
+  // Calculate background color based on playcount percentage
+  const hue = (1 - artist.playcountPercentageAbsolute / 100) * 240; // 0 (red) to 240 (violet)
+  wrapper.style.setProperty('--hue', hue);
+  wrapper.style.setProperty('--playcountPercentage', artist.playcountPercentage);
+
   const link = utils.createLink(
     utils.generateSearchUrl({ artist: artist.name }),
     artist.name,
     false,
   );
-  link.classList.add('artist');
 
   wrapper.appendChild(link);
 
-  const stats = '(' + artist.playcount + ' scrobbles)';
+  const stats = '(' + artist.playcount + ` scrobble${artist.playcount > 1 ? 's' : ''}` + ')';
   const span = utils.createSpan(stats, stats);
   span.classList.add('artist-scrobbles');
 
   wrapper.appendChild(span);
+
+  wrapper.addEventListener('click', () => {
+    window.location.href = link.href;
+  });
 
   return wrapper;
 }
