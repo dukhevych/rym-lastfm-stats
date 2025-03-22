@@ -9,14 +9,15 @@
     >
       <label :for="props.name">{{ props.label }}</label>
     </div>
-    <div class="form-input">
+    <div class="form-input relative">
       <input
         :id="props.name"
         class="
-          w-full rounded bg-gray-200 p-2
+          w-full rounded bg-gray-200 p-2 pr-10
           disabled:cursor-not-allowed disabled:opacity-50
           dark:bg-gray-800
         "
+        :class="{'pr-10': props.clearable}"
         :value="props.modelValue"
         type="text"
         :name="props.name"
@@ -24,6 +25,29 @@
         @input="$emit('update:modelValue', $event.target.value)"
         @keypress="handleKeypress"
       >
+      <button
+        v-if="props.clearable && props.modelValue && !wasCleared"
+        class="
+          transition-duration-200 absolute right-0 top-0 flex aspect-square h-full items-center
+          justify-center rounded-none transition-colors
+          hover:bg-gray-900
+        "
+        title="Clear the input"
+        @click="clearInput"
+      >
+        ✕
+      </button>
+      <button
+        v-if="props.clearable && wasCleared"
+        class="
+          absolute right-0 top-0 flex aspect-square h-full items-center justify-center rounded-none
+          hover:bg-gray-300
+        "
+        title="Undo clear"
+        @click="returnInput"
+      >
+        ↩
+      </button>
     </div>
     <div
       v-if="$slots.error || props.error"
@@ -56,6 +80,8 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
+
 const props = defineProps({
   label: {
     type: String,
@@ -76,20 +102,38 @@ const props = defineProps({
   modelValue: {
     type: [String, Number],
     required: true,
+  },
+  clearable: {
+    type: Boolean,
+    default: false
   }
 });
 
-defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue']);
 
 defineOptions({
   name: 'FormInput',
   inheritAttrs: false,
 });
 
+const lastValue = ref('');
+const wasCleared = ref(false);
+
 const handleKeypress = (event) => {
   const maxLength = event.target.getAttribute('max');
   if (maxLength && event.target.value.length >= maxLength) {
     event.preventDefault();
   }
+};
+
+const clearInput = () => {
+  lastValue.value = props.modelValue;
+  emit('update:modelValue', '');
+  wasCleared.value = true;
+};
+
+const returnInput = () => {
+  emit('update:modelValue', lastValue.value);
+  wasCleared.value = false;
 };
 </script>

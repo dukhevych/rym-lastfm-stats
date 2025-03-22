@@ -181,6 +181,7 @@
             <FormInput
               v-model="options.lastfmApiKey"
               name="lastfmApiKey"
+              clearable
               placeholder="Add your lastfm API key here"
               min="32"
               max="32"

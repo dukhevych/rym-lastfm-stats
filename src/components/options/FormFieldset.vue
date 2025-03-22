@@ -30,8 +30,8 @@
         </div>
         <div
           class="
-            absolute right-0 mt-2 hidden w-max max-w-[250px] transform flex-col gap-2 bg-gray-700
-            p-3 text-sm text-white
+            absolute right-0 z-10 mt-2 hidden w-max max-w-[250px] transform flex-col gap-2
+            bg-gray-700 p-3 text-sm text-white
             group-hover:flex
           "
         >
