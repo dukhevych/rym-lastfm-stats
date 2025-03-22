@@ -22,7 +22,7 @@ jobs:
     needs: publish-chrome
     steps:
     - name: Download extension package
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: chrome-extension-${{ needs.publish-chrome.outputs.version }}
         path: ./
