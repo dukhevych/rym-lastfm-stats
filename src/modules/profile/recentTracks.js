@@ -281,6 +281,7 @@ function addRecentTracksStyles() {
 
     .profile_view_play_history_btn {
       gap: 2rem;
+      min-height: 45px;
       flex: 1 0 auto;
     }
 
@@ -495,14 +496,6 @@ async function render(_config) {
   const { button, tracksWrapper } = prepareRecentTracksUI();
 
   insertRecentTracksButtonIntoDOM(button);
-
-  const data0 = await api.fetchUserRecentTracks(
-    userName,
-    config.lastfmApiKey,
-    { limit: 1 },
-  );
-
-  console.log(data0[0]['@attr']?.nowplaying);
 
   const data = await api.fetchUserRecentTracks(
     userName,
