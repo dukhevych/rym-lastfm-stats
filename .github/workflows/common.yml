@@ -43,7 +43,7 @@ jobs:
         zip -r ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip ${{ inputs.dist_folder }}
         echo "ZIP_PATH=${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip" >> $GITHUB_OUTPUT
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}
         path: ${{ steps.zip.outputs.ZIP_PATH }}
