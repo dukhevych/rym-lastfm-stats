@@ -5,12 +5,15 @@ on:
       build_command:
         description: 'The command to build the extension'
         required: true
+        type: string
       dist_folder:
         description: 'The folder to package'
         required: true
+        type: string
       zip_name:
         description: 'The name of the ZIP file'
         required: true
+        type: string
     outputs:
       version:
         description: "The version of the package"
