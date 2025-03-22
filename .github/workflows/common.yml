@@ -36,7 +36,7 @@ jobs:
       run: ${{ inputs.build_command }}
     - name: Get package version
       id: version
-      run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+      run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
     - name: Package the extension
       id: zip
       run: |
