@@ -187,6 +187,53 @@ function addRecentTracksStyles() {
       --clr-lastfm-lighter: color-mix(in lab, var(--clr-lastfm) 80%, white);
     }
 
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    ${LISTENING_COVER_SELECTOR} {
+      &.is-now-playing {
+        border-radius: 50%;
+        animation: rotate 9s linear infinite;
+        &:after { opacity: 1; }
+
+        &:hover {
+          border-radius: 0;
+          animation: none;
+          transform: rotate(0);
+          &:after {
+            opacity: 0;
+            transform: scale(0);
+          }
+        }
+      }
+
+      overflow: hidden;
+      position: relative;
+      transition: border-radius .15s ease-in-out;
+
+      &:after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        width: 33.33%;
+        height: 33.33%;
+        border-radius: 50%;
+        margin: auto;
+        opacity: 0;
+        transition: opacity .15s ease-in-out, transform .15s ease-in-out;
+      }
+    }
+
     ${PROFILE_LISTENING_CONTAINER_SELECTOR} {
       padding: 1.25rem;
     }
@@ -365,9 +412,10 @@ function addRecentTracksStyles() {
 
 function replaceListeningTo(latestTrack) {
   const label = document.querySelector(LISTENING_LABEL_SELECTOR);
+  const isNowPlaying = latestTrack['@attr']?.nowplaying;
 
   if (label) {
-    if (latestTrack['@attr']?.nowplaying) {
+    if (isNowPlaying) {
       label.classList.add('is-now-playing');
       label.textContent = 'Scrobbling now';
       label.append(gif.cloneNode());
@@ -382,11 +430,15 @@ function replaceListeningTo(latestTrack) {
 
   const cover = document.querySelector(LISTENING_COVER_SELECTOR);
   if (cover) {
+    if (isNowPlaying) {
+      cover.classList.add('is-now-playing');
+    }
     cover.href = utils.generateSearchUrl({
       artist: latestTrack.artist['#text'],
       releaseTitle: latestTrack.album['#text'] || '',
       trackTitle: latestTrack.album['#text'] ? '' : latestTrack.name,
     }, config);
+    cover.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.album['#text'] || latestTrack.name}" on RateYourMusic`;
   }
 
   const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
@@ -443,6 +495,14 @@ async function render(_config) {
   const { button, tracksWrapper } = prepareRecentTracksUI();
 
   insertRecentTracksButtonIntoDOM(button);
+
+  const data0 = await api.fetchUserRecentTracks(
+    userName,
+    config.lastfmApiKey,
+    { limit: 1 },
+  );
+
+  console.log(data0[0]['@attr']?.nowplaying);
 
   const data = await api.fetchUserRecentTracks(
     userName,
