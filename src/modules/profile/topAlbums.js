@@ -127,10 +127,37 @@ function addTopAlbumsStyles() {
 
     .top-albums a { color: white; }
 
-    .top-albums .album-image img {
-      display: block;
-      width: 100%;
-      height: auto;
+    .top-albums .album-image {
+      position: relative;
+
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .loader {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        svg {
+          height: 50px;
+          width: 50px;
+        }
+      }
+    }
+
+    .fade-in {
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+
+    .fade-in.loaded {
+      opacity: 1;
     }
 
     .top-albums .album-image::after {
@@ -253,9 +280,49 @@ function createAlbumWrapper(album) {
 function createAlbumCover(album) {
   const cover = document.createElement('div');
   cover.classList.add('album-image');
+
   const img = document.createElement('img');
+  img.classList.add('fade-in');
+
+  const loader = document.createElement('div');
+  loader.classList.add('loader');
+
+  if (!document.getElementById('svg-loader-symbol')) {
+    const svgSymbol = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgSymbol.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svgSymbol.setAttribute('style', 'display:none;');
+    svgSymbol.innerHTML = `
+      <symbol id="svg-loader-symbol" viewBox="0 0 300 150">
+        <path fill="none" stroke="#FF156D" stroke-width="15" stroke-linecap="round" stroke-dasharray="300 385" stroke-dashoffset="0" d="M275 75c0 31-27 50-50 50-58 0-92-100-150-100-28 0-50 22-50 50s23 50 50 50c58 0 92-100 150-100 24 0 50 19 50 50Z">
+          <animate attributeName="stroke-dashoffset" calcMode="spline" dur="2" values="685;-685" keySplines="0 0 1 1" repeatCount="indefinite"></animate>
+        </path>
+      </symbol>
+    `;
+    document.body.appendChild(svgSymbol);
+  }
+
+  const svgLoader = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svgLoader.setAttribute('viewBox', '0 0 300 150');
+  const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#svg-loader-symbol');
+  svgLoader.appendChild(useElement);
+  loader.appendChild(svgLoader);
+
   img.src = album.image[2]['#text'];
+  img.onload = () => {
+    loader.remove();
+    img.classList.add('loaded');
+  };
+
+  img.onerror = () => {
+    loader.remove();
+    img.classList.add('loaded');
+    img.src = 'https://lastfm.freetls.fastly.net/i/u/avatar300s/c6f59c1e5e7240a4c0d427abd71f3dbb.jpg';
+  };
+
+  cover.appendChild(loader);
   cover.appendChild(img);
+
   return cover;
 }
 
