@@ -1,0 +1,46 @@
+name: Common Build and Package
+on:
+  workflow_call:
+    inputs:
+      build_command:
+        description: 'The command to build the extension'
+        required: true
+      dist_folder:
+        description: 'The folder to package'
+        required: true
+      zip_name:
+        description: 'The name of the ZIP file'
+        required: true
+    outputs:
+      version:
+        description: "The version of the package"
+        value: ${{ jobs.build-and-package.outputs.version }}
+      zip_path:
+        description: "The path to the packaged ZIP file"
+        value: ${{ jobs.build-and-package.outputs.zip_path }}
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+      zip_path: ${{ steps.zip.outputs.ZIP_PATH }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install dependencies
+      run: npm install
+    - name: Build the extension
+      run: ${{ inputs.build_command }}
+    - name: Get package version
+      id: version
+      run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+    - name: Package the extension
+      id: zip
+      run: |
+        zip -r ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip ${{ inputs.dist_folder }}
+        echo "ZIP_PATH=${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip" >> $GITHUB_OUTPUT
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}
+        path: ${{ steps.zip.outputs.ZIP_PATH }}
