@@ -59,7 +59,7 @@ async function render(config) {
 
   if (strict !== 'true' || !Object.keys(SEARCH_TYPES).includes(searchType)) return;
 
-  const searchTerm = urlParams.get('searchterm').toLowerCase();
+  const searchTerm = deburr(urlParams.get('searchterm').toLowerCase());
 
   searchItems = document.querySelectorAll(SEARCH_ITEMS_SELECTOR);
 
@@ -91,11 +91,11 @@ async function render(config) {
         .split(', ');
 
       if (
-        artistName !== searchTerm &&
-        artistNameLocalized !== searchTerm &&
+        // artistName !== searchTerm &&
+        // artistNameLocalized !== searchTerm &&
         artistNameDeburred !== searchTerm &&
         artistNameLocalizedDeburred !== searchTerm &&
-        !akaValues.includes(searchTerm)
+        !deburr(akaValues).includes(searchTerm)
       ) {
         searchItemsMore.push(item);
       }
@@ -126,19 +126,17 @@ async function render(config) {
 
       const releaseTitle = item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '';
 
-      let query = searchTerm;
+      let query = deburr(searchTerm);
 
       let hasArtist = false;
       let hasReleaseTitle = false;
 
       if (
-        query.includes(artistName)
-        || query.includes(artistNameLocalized)
-        || query.includes(artistNameDeburred)
+        query.includes(artistNameDeburred)
         || query.includes(artistNameLocalizedDeburred)
       ) {
         hasArtist = true;
-        query = searchTerm.replace(artistName, '').trim();
+        query = searchTerm.replace(artistNameDeburred, '').trim();
       }
 
       if (query.includes(releaseTitle)) {
