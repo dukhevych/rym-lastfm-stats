@@ -29,7 +29,7 @@ jobs:
       zip_path: ${{ steps.zip.outputs.ZIP_PATH }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Install dependencies
       run: npm install
     - name: Build the extension
@@ -43,7 +43,7 @@ jobs:
         zip -r ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip ${{ inputs.dist_folder }}
         echo "ZIP_PATH=${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip" >> $GITHUB_OUTPUT
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}
         path: ${{ steps.zip.outputs.ZIP_PATH }}

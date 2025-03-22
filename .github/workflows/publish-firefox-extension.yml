@@ -37,7 +37,7 @@ jobs:
     # The Firefox workflow needs access to the source directory
     - name: Checkout code (for Firefox source)
       if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Prepare Firefox source directory
       if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
