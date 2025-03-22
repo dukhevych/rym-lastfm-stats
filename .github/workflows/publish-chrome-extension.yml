@@ -1,0 +1,63 @@
+name: Publish Chrome Extension
+on:
+  push:
+    branches:
+      - release
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no actual publishing)'
+        type: boolean
+        default: true
+
+jobs:
+  publish-chrome:
+    uses: ./.github/workflows/common.yml
+    with:
+      build_command: npm run build:chrome
+      dist_folder: ./dist/chrome
+      zip_name: chrome-extension
+  publish:
+    runs-on: ubuntu-latest
+    needs: publish-chrome
+    steps:
+    - name: Download extension package
+      uses: actions/download-artifact@v3
+      with:
+        name: chrome-extension-${{ needs.publish-chrome.outputs.version }}
+        path: ./
+    - name: Verify ZIP file
+      run: |
+        echo "Extension version: ${{ needs.publish-chrome.outputs.version }}"
+        echo "ZIP file: ${{ needs.publish-chrome.outputs.zip_path }}"
+        ls -la
+        echo "ZIP contents:"
+        unzip -l ${{ needs.publish-chrome.outputs.zip_path }}
+
+    # Only run this step if NOT in dry-run mode
+    - name: Upload to Chrome Web Store
+      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
+      env:
+        CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+        CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+        REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+      run: |
+        npm install -g chrome-webstore-upload-cli
+        npx webstore upload --source ${{ needs.publish-chrome.outputs.zip_path }} \
+                            --extension-id $EXTENSION_ID \
+                            --client-id $CLIENT_ID \
+                            --client-secret $CLIENT_SECRET \
+                            --refresh-token $REFRESH_TOKEN
+
+    # Print message in dry-run mode
+    - name: Dry Run Message
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run }}
+      run: |
+        echo "🔍 DRY RUN COMPLETED"
+        echo "✅ Build successful"
+        echo "✅ ZIP created: ${{ needs.publish-chrome.outputs.zip_path }}"
+        echo "✅ Version: ${{ needs.publish-chrome.outputs.version }}"
+        echo "⏭️ Publishing step was skipped"
+        echo ""
+        echo "If this were a real publish, the extension would be uploaded to the Chrome Web Store"
