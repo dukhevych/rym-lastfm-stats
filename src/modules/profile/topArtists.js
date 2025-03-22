@@ -223,12 +223,17 @@ function populateTopArtists(container, topArtists) {
   });
 }
 
+// TODO - add theme-based color range
+const hueStart = 0;
+const hueEnd = 240;
+
 function createArtistLink(artist) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('top-artist');
 
-  // Calculate background color based on playcount percentage
-  const hue = (1 - artist.playcountPercentageAbsolute / 100) * 240; // 0 (red) to 240 (violet)
+  const hue = parseInt(
+    hueStart + (1 - artist.playcountPercentageAbsolute / 100) * (hueEnd - hueStart)
+  );
   wrapper.style.setProperty('--hue', hue);
   wrapper.style.setProperty('--playcountPercentage', artist.playcountPercentage);
 
