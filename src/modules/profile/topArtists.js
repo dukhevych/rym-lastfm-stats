@@ -82,6 +82,22 @@ export async function render(_config) {
 function addTopArtistsStyles() {
   const style = document.createElement('style');
   style.textContent = `
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .top-artists-fade-in {
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+    }
+
     .top-artists {
       position: relative;
       display: flex;
@@ -199,8 +215,10 @@ function populateTopArtists(container, topArtists) {
     playcountPercentageAbsolute: playcountRange ? ((artist.playcount - minPlaycount) / playcountRange) * 100 : 0,
   }));
 
-  topArtistsWithPercentage.forEach((artist) => {
+  topArtistsWithPercentage.forEach((artist, index) => {
     const artistLink = createArtistLink(artist);
+    artistLink.classList.add('top-artists-fade-in');
+    artistLink.style.animationDelay = `${index * 0.07}s`;
     container.appendChild(artistLink);
   });
 }
