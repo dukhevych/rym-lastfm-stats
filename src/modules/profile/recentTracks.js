@@ -5,6 +5,8 @@ import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
 
+let abortController = new AbortController();
+
 const PROFILE_LISTENING_CONTAINER_SELECTOR = '.profile_listening_container';
 const PROFILE_LISTENING_SET_TO_SELECTOR = '.profile_set_listening_box';
 const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_container';
@@ -77,6 +79,7 @@ function createTracksList(recentTracks, userName) {
   const tracksList = document.createElement('ul');
   recentTracks.forEach((track) => {
     const trackItem = createTrackItem(track, userName);
+    trackItem.dataset.id = track.mbid || `${track.artist["#text"]}-${track.name}-${track.date?.uts || ''}`;
     tracksList.appendChild(trackItem);
   });
   return tracksList;
@@ -439,7 +442,8 @@ function replaceListeningTo(latestTrack) {
       releaseTitle: latestTrack.album['#text'] || '',
       trackTitle: latestTrack.album['#text'] ? '' : latestTrack.name,
     }, config);
-    cover.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.album['#text'] || latestTrack.name}" on RateYourMusic`;
+    const searchQuery = `${latestTrack.artist['#text']} - ${latestTrack.album['#text'] || latestTrack.name}`;
+    cover.title = `Search for "${searchQuery}" on RateYourMusic`;
   }
 
   const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
@@ -497,25 +501,40 @@ async function render(_config) {
 
   insertRecentTracksButtonIntoDOM(button);
 
-  const data = await api.fetchUserRecentTracks(
-    userName,
-    config.lastfmApiKey,
-    { limit: config.recentTracksLimit },
-  );
+  const updateAction = async () => {
+    abortController.abort();
+    abortController = new AbortController();
 
-  if (data[0]['@attr']?.nowplaying) {
-    button.classList.add('is-now-playing');
-  } else {
-    button.classList.remove('is-now-playing');
-  }
+    try {
+      const data = await api.fetchUserRecentTracks(
+        userName,
+        config.lastfmApiKey,
+        { limit: config.recentTracksLimit },
+        abortController.signal,
+      );
 
-  if (config.recentTracksReplace) {
-    replaceListeningTo(data[0]);
-  }
+      if (data[0]["@attr"]?.nowplaying) {
+        button.classList.add("is-now-playing");
+      } else {
+        button.classList.remove("is-now-playing");
+      }
 
-  const tracksList = createTracksList(data, userName);
+      if (config.recentTracksReplace) {
+        replaceListeningTo(data[0]);
+      }
 
-  tracksWrapper.appendChild(tracksList);
+      const tracksList = createTracksList(data, userName);
+
+      tracksWrapper.replaceChildren(tracksList);
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error("Failed to fetch recent tracks:", err);
+      }
+    }
+  };
+
+  await updateAction();
+
   insertRecentTracksWrapperIntoDOM(tracksWrapper);
 
   if (currentTrack && config.recentTracksReplace) {
@@ -523,29 +542,6 @@ async function render(_config) {
   }
 
   let intervalId;
-
-  const updateAction = async () => {
-    const data = await api.fetchUserRecentTracks(
-      userName,
-      config.lastfmApiKey,
-      { limit: config.recentTracksLimit },
-    );
-
-    if (data[0]['@attr']?.nowplaying) {
-      button.classList.add('is-now-playing');
-    } else {
-      button.classList.remove('is-now-playing');
-    }
-
-
-    if (config.recentTracksReplace) {
-      replaceListeningTo(data[0]);
-    }
-
-    const tracksList = createTracksList(data, userName);
-
-    tracksWrapper.replaceChildren(tracksList);
-  };
 
   const startInterval = () => {
     if (!intervalId) {
@@ -582,7 +578,6 @@ async function render(_config) {
     throttledHandleVisibilityChange,
   );
 
-  // Start the interval if the tab is already active when the script runs
   if (document.visibilityState === 'visible') {
     await updateAction();
     startInterval();

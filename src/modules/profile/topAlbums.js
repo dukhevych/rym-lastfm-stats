@@ -1,6 +1,7 @@
 import * as api from '@/helpers/api';
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
+import svgLoader from '@/assets/icons/loader.svg?raw';
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
@@ -291,22 +292,25 @@ function createAlbumCover(album) {
     const svgSymbol = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svgSymbol.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     svgSymbol.setAttribute('style', 'display:none;');
-    svgSymbol.innerHTML = `
-      <symbol id="svg-loader-symbol" viewBox="0 0 300 150">
-        <path fill="none" stroke="#FF156D" stroke-width="15" stroke-linecap="round" stroke-dasharray="300 385" stroke-dashoffset="0" d="M275 75c0 31-27 50-50 50-58 0-92-100-150-100-28 0-50 22-50 50s23 50 50 50c58 0 92-100 150-100 24 0 50 19 50 50Z">
-          <animate attributeName="stroke-dashoffset" calcMode="spline" dur="2" values="685;-685" keySplines="0 0 1 1" repeatCount="indefinite"></animate>
-        </path>
-      </symbol>
-    `;
+
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgLoader, 'image/svg+xml');
+    const svgElement = svgDoc.documentElement;
+    const symbolElement = document.createElementNS('http://www.w3.org/2000/svg', 'symbol');
+    symbolElement.setAttribute('id', 'svg-loader-symbol');
+    symbolElement.setAttribute('viewBox', svgElement.getAttribute('viewBox'));
+    symbolElement.innerHTML = svgElement.innerHTML;
+
+    svgSymbol.appendChild(symbolElement);
     document.body.appendChild(svgSymbol);
   }
 
-  const svgLoader = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svgLoader.setAttribute('viewBox', '0 0 300 150');
+  const svgLoaderElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svgLoaderElement.setAttribute('viewBox', '0 0 300 150');
   const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
   useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#svg-loader-symbol');
-  svgLoader.appendChild(useElement);
-  loader.appendChild(svgLoader);
+  svgLoaderElement.appendChild(useElement);
+  loader.appendChild(svgLoaderElement);
 
   img.src = album.image[2]['#text'];
   img.onload = () => {

@@ -92,6 +92,11 @@ module.exports = (env) => {
           test: /\.css$/,
           use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
         },
+        {
+          test: /\.svg$/i,
+          resourceQuery: /raw/,
+          use: 'raw-loader',
+        },
       ],
     },
     plugins: [

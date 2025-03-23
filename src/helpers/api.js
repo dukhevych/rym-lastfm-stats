@@ -22,7 +22,7 @@ export function fetchUserData(lastfmSession, apiKey) {
     .catch((error) => console.error('Error:', error));
 }
 
-export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}) {
+export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}, signal) {
   if (!username) {
     return Promise.reject(new Error('No username provided.'));
   }
@@ -44,7 +44,7 @@ export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}) {
 
   const url = `${BASE_URL}?${params.toString()}`;
 
-  return fetch(url)
+  return fetch(url, { signal })
     .then((response) => response.json())
     .then((data) => {
       return data.recenttracks.track;
