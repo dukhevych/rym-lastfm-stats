@@ -5,12 +5,20 @@ on:
       build_command:
         description: 'The command to build the extension'
         required: true
+        type: string
       dist_folder:
         description: 'The folder to package'
         required: true
+        type: string
       zip_name:
         description: 'The name of the ZIP file'
         required: true
+        type: string
+      release_type:
+        description: 'Release type (production, beta, alpha, unlisted)'
+        required: false
+        type: string
+        default: 'production'
     outputs:
       version:
         description: "The version of the package"
@@ -18,29 +26,33 @@ on:
       zip_path:
         description: "The path to the packaged ZIP file"
         value: ${{ jobs.build-and-package.outputs.zip_path }}
+      release_type:
+        description: "The release type"
+        value: ${{ inputs.release_type }}
 jobs:
   build-and-package:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
       zip_path: ${{ steps.zip.outputs.ZIP_PATH }}
+      build_command: ${{ inputs.build_command }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Install dependencies
       run: npm install
     - name: Build the extension
       run: ${{ inputs.build_command }}
     - name: Get package version
       id: version
-      run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+      run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
     - name: Package the extension
       id: zip
       run: |
         zip -r ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip ${{ inputs.dist_folder }}
         echo "ZIP_PATH=${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip" >> $GITHUB_OUTPUT
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}
         path: ${{ steps.zip.outputs.ZIP_PATH }}

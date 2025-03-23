@@ -3,13 +3,24 @@ on:
   push:
     branches:
       - release
+      - beta
+      - alpha
   workflow_dispatch:
     inputs:
       dry_run:
         description: 'Dry run (no actual publishing)'
         type: boolean
         default: true
-
+      release_type:
+        description: 'Release type'
+        type: choice
+        options:
+          - production
+          - beta
+          - alpha
+          - unlisted
+        default: 'production'
+        required: true
 jobs:
   publish-firefox:
     uses: ./.github/workflows/common.yml
@@ -17,12 +28,13 @@ jobs:
       build_command: npm run build:firefox
       dist_folder: ./dist/firefox
       zip_name: firefox-extension
+      release_type: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_type || (github.ref_name == 'release' && 'production' || github.ref_name) }}
   publish:
     runs-on: ubuntu-latest
     needs: publish-firefox
     steps:
     - name: Download extension package
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: firefox-extension-${{ needs.publish-firefox.outputs.version }}
         path: ./
@@ -30,21 +42,31 @@ jobs:
       run: |
         echo "Extension version: ${{ needs.publish-firefox.outputs.version }}"
         echo "ZIP file: ${{ needs.publish-firefox.outputs.zip_path }}"
+        echo "Release type: ${{ needs.publish-firefox.outputs.release_type }}"
         ls -la
         echo "ZIP contents:"
         unzip -l ${{ needs.publish-firefox.outputs.zip_path }}
-
     # The Firefox workflow needs access to the source directory
     - name: Checkout code (for Firefox source)
       if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
-      uses: actions/checkout@v2
-
+      uses: actions/checkout@v4
     - name: Prepare Firefox source directory
       if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
       run: |
         npm install
         ${{ needs.publish-firefox.outputs.build_command || 'npm run build:firefox' }}
 
+        # Update the version in manifest.json if needed for alpha/beta
+        if [[ "${{ needs.publish-firefox.outputs.release_type }}" == "alpha" || "${{ needs.publish-firefox.outputs.release_type }}" == "beta" ]]; then
+          VERSION=$(node -p "require('./package.json').version")
+          SUFFIX="${{ needs.publish-firefox.outputs.release_type }}"
+          UPDATED_VERSION="${VERSION}-${SUFFIX}"
+
+          # Update manifest.json with the new version
+          jq ".version = \"$UPDATED_VERSION\"" ./dist/firefox/manifest.json > temp.json && mv temp.json ./dist/firefox/manifest.json
+          echo "Updated version to $UPDATED_VERSION in manifest.json"
+          cat ./dist/firefox/manifest.json | grep version
+        fi
     # Only run this step if NOT in dry-run mode
     - name: Sign and Publish to Firefox Add-ons Store
       if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
@@ -53,11 +75,19 @@ jobs:
         AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
       run: |
         npm install -g web-ext
+
+        # Determine the channel based on release type
+        CHANNEL="listed"
+        if [[ "${{ needs.publish-firefox.outputs.release_type }}" == "unlisted" ]]; then
+          CHANNEL="unlisted"
+        fi
+
+        echo "Publishing with channel: $CHANNEL"
+
         npx web-ext sign --source-dir ./dist/firefox \
                          --api-key $AMO_API_KEY \
                          --api-secret $AMO_API_SECRET \
-                         --channel listed
-
+                         --channel $CHANNEL
     # Print message in dry-run mode
     - name: Dry Run Message
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run }}
@@ -66,6 +96,15 @@ jobs:
         echo "✅ Build successful"
         echo "✅ ZIP created: ${{ needs.publish-firefox.outputs.zip_path }}"
         echo "✅ Version: ${{ needs.publish-firefox.outputs.version }}"
+        echo "✅ Release type: ${{ needs.publish-firefox.outputs.release_type }}"
         echo "⏭️ Publishing step was skipped"
         echo ""
-        echo "If this were a real publish, the extension would be signed and uploaded to the Firefox Add-ons Store"
+        if [[ "${{ needs.publish-firefox.outputs.release_type }}" == "production" ]]; then
+          echo "If this were a real publish, the extension would be signed and uploaded to the Firefox Add-ons Store as a production release"
+        elif [[ "${{ needs.publish-firefox.outputs.release_type }}" == "beta" ]]; then
+          echo "If this were a real publish, the extension would be signed and uploaded to the Firefox Add-ons Store as a beta release"
+        elif [[ "${{ needs.publish-firefox.outputs.release_type }}" == "alpha" ]]; then
+          echo "If this were a real publish, the extension would be signed and uploaded to the Firefox Add-ons Store as an alpha release"
+        elif [[ "${{ needs.publish-firefox.outputs.release_type }}" == "unlisted" ]]; then
+          echo "If this were a real publish, the extension would be signed and uploaded to the Firefox Add-ons Store as an unlisted release"
+        fi
