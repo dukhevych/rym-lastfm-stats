@@ -14,6 +14,11 @@ on:
         description: 'The name of the ZIP file'
         required: true
         type: string
+      release_type:
+        description: 'Release type (production, beta, alpha, unlisted)'
+        required: false
+        type: string
+        default: 'production'
     outputs:
       version:
         description: "The version of the package"
@@ -21,12 +26,16 @@ on:
       zip_path:
         description: "The path to the packaged ZIP file"
         value: ${{ jobs.build-and-package.outputs.zip_path }}
+      release_type:
+        description: "The release type"
+        value: ${{ inputs.release_type }}
 jobs:
   build-and-package:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
       zip_path: ${{ steps.zip.outputs.ZIP_PATH }}
+      build_command: ${{ inputs.build_command }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -40,7 +49,7 @@ jobs:
     - name: Package the extension
       id: zip
       run: |
-        zip -r ${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip ${{ inputs.dist_folder }}
+        cd ${{ inputs.dist_folder }} && zip -r ../../${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip ./*
         echo "ZIP_PATH=${{ inputs.zip_name }}-${{ steps.version.outputs.VERSION }}.zip" >> $GITHUB_OUTPUT
     - name: Upload artifact
       uses: actions/upload-artifact@v4
