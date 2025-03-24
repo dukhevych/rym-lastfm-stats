@@ -92,7 +92,7 @@ jobs:
         fi
 
         echo "Uploading extension..."
-        npx webstore upload --source ${{ needs.publish-chrome.outputs.zip_path }} \
+        npx chrome-webstore-upload upload --source ${{ needs.publish-chrome.outputs.zip_path }} \
                             --extension-id $EXTENSION_ID \
                             --client-id $CLIENT_ID \
                             --client-secret $CLIENT_SECRET \
@@ -100,7 +100,7 @@ jobs:
 
         if [[ -n "$PUBLISH_TARGET" ]]; then
           echo "Publishing to target: $PUBLISH_TARGET"
-          npx webstore publish --extension-id $EXTENSION_ID \
+          npx chrome-webstore-upload publish --extension-id $EXTENSION_ID \
                                --client-id $CLIENT_ID \
                                --client-secret $CLIENT_SECRET \
                                --refresh-token $REFRESH_TOKEN \
