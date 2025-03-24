@@ -29,6 +29,9 @@ jobs:
       dist_folder: ./dist/firefox
       zip_name: firefox-extension
       release_type: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_type || (github.ref_name == 'release' && 'production' || github.ref_name) }}
+    secrets:
+      FIREFOX_LASTFM_API_KEY: ${{ secrets.FIREFOX_LASTFM_API_KEY }}
+      FIREFOX_LASTFM_API_SECRET: ${{ secrets.FIREFOX_LASTFM_API_SECRET }}
   publish:
     runs-on: ubuntu-latest
     needs: publish-firefox
