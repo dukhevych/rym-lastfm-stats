@@ -1,19 +1,22 @@
-const path = require("path");
-const CopyPlugin = require("copy-webpack-plugin");
+const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const glob = require("glob");
-const { VueLoaderPlugin } = require("vue-loader");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const glob = require('glob');
+const { VueLoaderPlugin } = require('vue-loader');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const { DefinePlugin } = require('webpack');
+const dotenv = require('dotenv');
+const dotenvExpand = require('dotenv-expand');
+const fs = require('fs');
 
-const generateManifest = require("./manifest.config.js");
+const generateManifest = require('./manifest.config.js');
 const packageJson = require('./package.json');
 
 const appVersion = packageJson.version;
 
-const entries = glob.sync("./src/*.js").reduce((acc, file) => {
+const entries = glob.sync('./src/*.js').reduce((acc, file) => {
   const name = path.basename(file, path.extname(file));
   acc[name] = path.resolve(__dirname, file);
   return acc;
@@ -21,31 +24,59 @@ const entries = glob.sync("./src/*.js").reduce((acc, file) => {
 
 module.exports = (env) => {
   const browserTarget = env.browser;
+  const isLocalDev = env.local === 'true';
   const outputPath = path.resolve(__dirname, `dist/${browserTarget}`);
+
+  // Load environment variables from .env files
+  const loadEnv = (envPath) => {
+    if (fs.existsSync(envPath)) {
+      const envConfig = dotenv.config({ path: envPath });
+      dotenvExpand.expand(envConfig);
+      return envConfig.parsed || {};
+    }
+    return {};
+  };
+
+  // Load environment variables in order of precedence
+  const envRoot = loadEnv(!isLocalDev ? '.env' : '.env.local');
+  const envBrowser = loadEnv(!isLocalDev ? `.env.${browserTarget}` : `.env.${browserTarget}.local`);
+
+  const combinedEnv = {
+    ...process.env,     // System environment variables
+    ...envRoot,         // .env variables
+    ...envBrowser,      // .env.[browser] variables
+  };
+
+  // Convert to format suitable for DefinePlugin
+  const envKeys = Object.keys(combinedEnv).reduce((prev, next) => {
+    prev[`process.env.${next}`] = JSON.stringify(combinedEnv[next]);
+    return prev;
+  }, {});
 
   return {
     entry: entries,
     output: {
-      filename: "[name].js",
+      filename: '[name].js',
       path: outputPath,
+      sourceMapFilename: '[name].[contenthash].js.map',
     },
     cache: {
-      type: 'filesystem', // Enable filesystem caching
+      type: 'filesystem',
     },
     // devtool: 'source-map',
-    mode: "production",
+    mode: 'production',
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "src"),
-        vue$: "vue/dist/vue.runtime.esm-browser.prod.js",
+        '@': path.resolve(__dirname, 'src'),
+        vue$: 'vue/dist/vue.runtime.esm-browser.prod.js',
       },
-      extensions: [".js", ".vue"],
+      extensions: ['.js', '.vue'],
     },
     module: {
       rules: [
         {
           test: /\.vue$/,
-          loader: "vue-loader",
+          loader: 'vue-loader',
         },
         {
           test: /\.js$/,
@@ -59,7 +90,12 @@ module.exports = (env) => {
         },
         {
           test: /\.css$/,
-          use: [MiniCssExtractPlugin.loader, "css-loader", "postcss-loader"],
+          use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
+        },
+        {
+          test: /\.svg$/i,
+          resourceQuery: /raw/,
+          use: 'raw-loader',
         },
       ],
     },
@@ -70,16 +106,21 @@ module.exports = (env) => {
         dangerouslyAllowCleanPatternsOutsideProject: true,
         verbose: true
       }),
+      new DefinePlugin({
+        ...envKeys,
+        'process.env.APP_VERSION': JSON.stringify(appVersion),
+        'process.env.BROWSER_TARGET': JSON.stringify(browserTarget),
+      }),
       new VueLoaderPlugin(),
       new MiniCssExtractPlugin({
-        filename: "[name].css",
+        filename: '[name].css',
       }),
       new CopyPlugin({
         patterns: [
-          { from: "public", to: "." },
+          { from: 'public', to: '.' },
           {
-            from: "manifest.config.js",
-            to: "manifest.json",
+            from: 'manifest.config.js',
+            to: 'manifest.json',
             transform() {
               const manifest = generateManifest(browserTarget);
               return Buffer.from(
@@ -102,14 +143,17 @@ module.exports = (env) => {
         fix: true,
         failOnError: true,
       }),
-      new DefinePlugin({
-        'process.env.APP_VERSION': JSON.stringify(appVersion),
-      }),
     ],
     optimization: {
       minimize: true,
       minimizer: [new TerserPlugin({
-        parallel: true, // Enable parallelization
+        parallel: true,
+        terserOptions: {
+          sourceMap: true, // Ensure Terser generates source maps
+          compress: {
+            drop_console: false, // Keep console logs for debugging if needed
+          },
+        },
       })],
     },
   };
