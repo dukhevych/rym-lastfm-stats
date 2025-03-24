@@ -48,10 +48,10 @@ jobs:
         unzip -l ${{ needs.publish-firefox.outputs.zip_path }}
     # The Firefox workflow needs access to the source directory
     - name: Checkout code (for Firefox source)
-      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
+      if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
       uses: actions/checkout@v4
     - name: Prepare Firefox source directory
-      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
+      if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
       run: |
         npm install
         ${{ needs.publish-firefox.outputs.build_command || 'npm run build:firefox' }}
@@ -69,7 +69,7 @@ jobs:
         fi
     # Only run this step if NOT in dry-run mode
     - name: Sign and Publish to Firefox Add-ons Store
-      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
+      if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
       env:
         AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
         AMO_API_SECRET: ${{ secrets.AMO_API_SECRET }}
@@ -90,7 +90,7 @@ jobs:
                          --channel $CHANNEL
     # Print message in dry-run mode
     - name: Dry Run Message
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run }}
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}
       run: |
         echo "🔍 DRY RUN COMPLETED"
         echo "✅ Build successful"

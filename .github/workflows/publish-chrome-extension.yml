@@ -47,10 +47,10 @@ jobs:
         unzip -l ${{ needs.publish-chrome.outputs.zip_path }}
     # The Chrome workflow needs access to the source directory to modify version
     - name: Checkout code
-      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
+      if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
       uses: actions/checkout@v4
     - name: Prepare Chrome source directory
-      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
+      if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
       run: |
         npm install
         ${{ needs.publish-chrome.outputs.build_command || 'npm run build:chrome' }}
@@ -72,7 +72,7 @@ jobs:
         fi
     # Only run this step if NOT in dry-run mode
     - name: Upload to Chrome Web Store
-      if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.dry_run }}
+      if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
       env:
         CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
         CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
@@ -108,7 +108,7 @@ jobs:
         fi
     # Print message in dry-run mode
     - name: Dry Run Message
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run }}
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}
       run: |
         echo "🔍 DRY RUN COMPLETED"
         echo "✅ Build successful"
