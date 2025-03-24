@@ -62,11 +62,10 @@ jobs:
         if [[ "${{ needs.publish-chrome.outputs.release_type }}" == "alpha" || "${{ needs.publish-chrome.outputs.release_type }}" == "beta" ]]; then
           VERSION=$(node -p "require('./package.json').version")
           SUFFIX="${{ needs.publish-chrome.outputs.release_type }}"
-          UPDATED_VERSION="${VERSION}-${SUFFIX}"
 
-          # Update manifest.json with the new version
-          jq ".version = \"$UPDATED_VERSION\"" ./dist/chrome/manifest.json > temp.json && mv temp.json ./dist/chrome/manifest.json
-          echo "Updated version to $UPDATED_VERSION in manifest.json"
+          jq ".version = \"$VERSION\" | .version_name = \"$VERSION $SUFFIX\"" ./dist/chrome/manifest.json > temp.json && mv temp.json ./dist/chrome/manifest.json
+
+          echo "Updated manifest.json:"
           cat ./dist/chrome/manifest.json | grep version
 
           # Repackage with updated manifest
