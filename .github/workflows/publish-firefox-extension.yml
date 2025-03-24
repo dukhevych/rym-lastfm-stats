@@ -46,27 +46,34 @@ jobs:
         ls -la
         echo "ZIP contents:"
         unzip -l ${{ needs.publish-firefox.outputs.zip_path }}
-    # The Firefox workflow needs access to the source directory
-    - name: Checkout code (for Firefox source)
-      if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
-      uses: actions/checkout@v4
-    - name: Prepare Firefox source directory
+
+    # Extract the built extension from the ZIP file
+    - name: Extract extension from ZIP
       if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
       run: |
-        npm install
-        ${{ needs.publish-firefox.outputs.build_command || 'npm run build:firefox' }}
+        mkdir -p ./dist/firefox
+        unzip ${{ needs.publish-firefox.outputs.zip_path }} -d ./dist/firefox
 
-        # Update the version in manifest.json if needed for alpha/beta
-        if [[ "${{ needs.publish-firefox.outputs.release_type }}" == "alpha" || "${{ needs.publish-firefox.outputs.release_type }}" == "beta" ]]; then
-          VERSION=$(node -p "require('./package.json').version")
-          SUFFIX="${{ needs.publish-firefox.outputs.release_type }}"
-          UPDATED_VERSION="${VERSION}-${SUFFIX}"
+    # Checkout only for updating manifest version - no rebuild needed
+    - name: Checkout code (for manifest updates only)
+      if: ${{ (github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true') && (needs.publish-firefox.outputs.release_type == 'alpha' || needs.publish-firefox.outputs.release_type == 'beta') }}
+      uses: actions/checkout@v4
 
-          # Update manifest.json with the new version
-          jq ".version = \"$UPDATED_VERSION\"" ./dist/firefox/manifest.json > temp.json && mv temp.json ./dist/firefox/manifest.json
-          echo "Updated version to $UPDATED_VERSION in manifest.json"
-          cat ./dist/firefox/manifest.json | grep version
-        fi
+    # Update manifest version for alpha/beta if needed
+    - name: Update manifest version
+      if: ${{ (github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true') && (needs.publish-firefox.outputs.release_type == 'alpha' || needs.publish-firefox.outputs.release_type == 'beta') }}
+      run: |
+        # Get version from package.json
+        npm install -g json
+        VERSION=$(json version < ./package.json)
+        SUFFIX="${{ needs.publish-firefox.outputs.release_type }}"
+        UPDATED_VERSION="${VERSION}-${SUFFIX}"
+
+        # Update manifest.json with the new version
+        jq ".version = \"$UPDATED_VERSION\"" ./dist/firefox/manifest.json > temp.json && mv temp.json ./dist/firefox/manifest.json
+        echo "Updated version to $UPDATED_VERSION in manifest.json"
+        cat ./dist/firefox/manifest.json | grep version
+
     # Only run this step if NOT in dry-run mode
     - name: Sign and Publish to Firefox Add-ons Store
       if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
@@ -88,6 +95,7 @@ jobs:
                          --api-key $AMO_API_KEY \
                          --api-secret $AMO_API_SECRET \
                          --channel $CHANNEL
+
     # Print message in dry-run mode
     - name: Dry Run Message
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}
