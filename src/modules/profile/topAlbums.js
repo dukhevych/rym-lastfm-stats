@@ -97,6 +97,13 @@ function addTopAlbumsStyles() {
       position: absolute;
     }
 
+    ${constants.LIGHT_THEME_CLASSES
+      .map((themeClass) => '.' + themeClass + ' .top-albums::after')
+      .join(',')
+    } {
+      background: rgba(255,255,255,.5);
+    }
+
     .top-albums.is-loading::after { display: block; }
 
     .top-albums-header {

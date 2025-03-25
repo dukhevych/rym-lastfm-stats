@@ -112,9 +112,9 @@ function addTopArtistsStyles() {
       min-width: calc(var(--playcountPercentage) * 1%);
       border-radius: 6px;
       position: relative;
-      border-width: 1px;
+      border-width: 0 15px 0 0;
       border-style: solid;
-      padding: 10px;
+      padding: 10px 15px;
       box-sizing: border-box;
       cursor: pointer;
       color: white;
@@ -124,8 +124,8 @@ function addTopArtistsStyles() {
       transition: background-color .15s ease-in-out;
       font-weight: bold;
 
-      background-color: hsl(var(--hue), 80%, 10%);
-      border-color: hsl(var(--hue), 40%, 5%);
+      background-color: hsl(var(--hue), 80%, 15%);
+      border-color: hsl(var(--hue), 40%, 10%);
 
       &:hover {
         background-color: hsl(var(--hue), 80%, 20%);
@@ -144,7 +144,7 @@ function addTopArtistsStyles() {
       .join(',')
     } {
       background-color: hsl(var(--hue), 50%, 50%);
-      border-color: hsl(var(--hue), 50%, 30%);
+      border-color: hsl(var(--hue), 50%, 40%);
 
       &:hover {
         background-color: hsl(var(--hue), 50%, 70%);
@@ -162,6 +162,13 @@ function addTopArtistsStyles() {
       display: none;
       background: rgba(0,0,0,.5);
       position: absolute;
+    }
+
+    ${constants.LIGHT_THEME_CLASSES
+      .map((themeClass) => '.' + themeClass + ' .top-artists::after')
+      .join(',')
+    } {
+      background: rgba(255,255,255,.5);
     }
 
     .top-artists.is-loading::after { display: block; }
@@ -258,7 +265,7 @@ function createArtistLink(artist) {
 
   wrapper.appendChild(link);
 
-  const stats = '(' + artist.playcount + ` scrobble${artist.playcount > 1 ? 's' : ''}` + ')';
+  const stats = artist.playcount + ` play${artist.playcount > 1 ? 's' : ''}`;
   const span = utils.createSpan(stats, stats);
   span.classList.add('artist-scrobbles');
 
