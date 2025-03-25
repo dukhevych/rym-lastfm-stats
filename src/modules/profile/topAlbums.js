@@ -126,7 +126,7 @@ function addTopAlbumsStyles() {
       aspect-ratio: 1 / 1;
     }
 
-    .top-albums a { color: white; }
+    .top-albums a { color: inherit; }
 
     .top-albums .album-image {
       position: relative;
@@ -171,6 +171,13 @@ function addTopAlbumsStyles() {
       width: 100%;
     }
 
+    ${constants.LIGHT_THEME_CLASSES
+      .map((themeClass) => '.' + themeClass + ' .top-albums .album-image::after')
+      .join(',')
+    } {
+      background-image: linear-gradient(180deg,transparent 0,rgba(255,255,255,.55) 70%,rgba(255,255,255,.9));
+    }
+
     .top-albums .album-details a:hover {
       text-decoration: underline;
     }
@@ -187,6 +194,13 @@ function addTopAlbumsStyles() {
       text-shadow: 0 0 10px rgba(0,0,0,.7);
       display: flex;
       flex-direction: column;
+    }
+
+    ${constants.LIGHT_THEME_CLASSES
+      .map((themeClass) => '.' + themeClass + ' .top-albums .album-details')
+      .join(',')
+    } {
+      text-shadow: 0 0 5px rgba(255,255,255,.8);
     }
 
     .album-wrapper .album-details a {

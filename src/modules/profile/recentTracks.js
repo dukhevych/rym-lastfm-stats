@@ -200,6 +200,10 @@ function addRecentTracksStyles() {
     }
 
     ${LISTENING_COVER_SELECTOR} {
+      overflow: hidden;
+      position: relative;
+      transition: border-radius .15s ease-in-out;
+
       &.is-now-playing {
         border-radius: 50%;
         animation: rotate 9s linear infinite;
@@ -215,10 +219,6 @@ function addRecentTracksStyles() {
           }
         }
       }
-
-      overflow: hidden;
-      position: relative;
-      transition: border-radius .15s ease-in-out;
 
       &:after {
         content: '';
@@ -312,16 +312,40 @@ function addRecentTracksStyles() {
       position: absolute;
       left: -9999px;
       right: 9999px;
-      transition: all .3s ease-in-out;
+      transition: all .15s ease-out;
       opacity: 0;
       transform: translateY(-10px);
       margin-top: 0;
+      padding-bottom: 30px;
+
+      &:before,
+      &:after {
+        position: absolute;
+        opacity: 0.75;
+        bottom: 0;
+        height: 30px;
+        padding: 0 15px;
+        font-size: 0.75em;
+        line-height: 29px;
+      }
+
+      &:before {
+        content: attr(data-timestamp);
+        right: 0;
+      }
+
+      &:after {
+        content: 'Powered by RYM Last.fm Stats';
+        left: 0;
+      }
     }
 
     .lastfm-tracks-wrapper.is-active {
       opacity: 1;
       transform: translateY(0);
-      position: static;
+      position: relative;
+      left: auto;
+      right: auto;
     }
 
     .lastfm-tracks-wrapper ul {
@@ -525,7 +549,11 @@ async function render(_config) {
 
       const tracksList = createTracksList(data, userName);
 
+      const timestamp = new Date();
+
       tracksWrapper.replaceChildren(tracksList);
+
+      tracksWrapper.dataset.timestamp = `Updated at ${timestamp.toLocaleString()}`;
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error("Failed to fetch recent tracks:", err);

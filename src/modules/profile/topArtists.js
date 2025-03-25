@@ -117,6 +117,7 @@ function addTopArtistsStyles() {
       padding: 10px;
       box-sizing: border-box;
       cursor: pointer;
+      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -135,6 +136,18 @@ function addTopArtistsStyles() {
         text-align: left;
         text-decoration: none;
         color: inherit;
+      }
+    }
+
+    ${constants.LIGHT_THEME_CLASSES
+      .map((themeClass) => '.' + themeClass + ' .top-artist')
+      .join(',')
+    } {
+      background-color: hsl(var(--hue), 50%, 50%);
+      border-color: hsl(var(--hue), 50%, 30%);
+
+      &:hover {
+        background-color: hsl(var(--hue), 50%, 70%);
       }
     }
 
