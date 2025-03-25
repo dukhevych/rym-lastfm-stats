@@ -64,7 +64,7 @@ export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
 export const PROFILE_OPTIONS_DEFAULT = {
   recentTracks: true,
-  recentTracksReplace: false,
+  recentTracksReplace: true,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
   topArtists: true,
   topArtistsLimit: TOP_ARTISTS_LIMIT_DEFAULT,
