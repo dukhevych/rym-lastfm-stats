@@ -1,9 +1,9 @@
 <template>
   <div
-    class="form-item flex flex-col gap-1"
+    class="form-item flex flex-col gap-2"
     :class="{ 'pointer-events-none opacity-50': $attrs.disabled }"
   >
-    <div class="form-input">
+    <div class="form-input flex">
       <label
         :for="props.name"
         class="flex cursor-pointer items-center gap-2"
@@ -34,6 +34,28 @@
         <span class="text-lg font-bold">{{ props.label }}</span>
       </label>
     </div>
+    <div
+      v-if="$slots.hint || props.hint"
+      class="
+        form-hint rounded border-l-4 border-blue-500 bg-gray-50 px-4 py-2 text-sm
+        dark:bg-gray-900
+      "
+    >
+      <div v-if="$slots.hint">
+        <template
+          v-for="(child, i) in $slots.hint()"
+          :key="i"
+        >
+          <component :is="child" />
+        </template>
+      </div>
+      <slot
+        v-else
+        name="hint"
+      >
+        {{ props.hint }}
+      </slot>
+    </div>
   </div>
 </template>
 <script setup>
@@ -49,7 +71,11 @@ const props = defineProps({
   modelValue: {
     type: Boolean,
     required: true,
-  }
+  },
+  hint: {
+    type: String,
+    default: '',
+  },
 });
 
 defineEmits(['update:modelValue']);

@@ -140,7 +140,7 @@ module.exports = (env) => {
       new ESLintPlugin({
         extensions: ['js', 'vue'],
         configType: 'flat',
-        fix: true,
+        fix: process.env.NODE_ENV === 'production',
         failOnError: true,
       }),
     ],

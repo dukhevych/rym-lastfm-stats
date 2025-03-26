@@ -37,7 +37,7 @@ module.exports = [
       // enable all recommended rules to warn
       ...eslintPluginReadableTailwind.configs.warning.rules,
       // enable all recommended rules to error
-      ...eslintPluginReadableTailwind.configs.error.rules,
+      // ...eslintPluginReadableTailwind.configs.error.rules,
 
       // or configure rules individually
       "readable-tailwind/multiline": ["warn", { printWidth: 100 }]

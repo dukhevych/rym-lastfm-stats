@@ -1,34 +1,51 @@
-import deburr from 'lodash/deburr';
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 
-const META_TITLE_SELECTOR = 'meta[property="og:title"]';
 const INFO_CONTAINER_SELECTOR = '.album_info tbody';
+const INFO_ARTISTS_SELECTOR = '.album_info [itemprop="byArtist"] a';
+const INFO_ALBUM_TITLE_SELECTOR = '.album_title';
 
-function parseArtistAndTitle(metaContent) {
-  const cleanContent = metaContent.replace(' - RYM/Sonemic', '');
-  const parts = cleanContent.split(' by ');
+function getArtistNames() {
+  const artists = document.querySelectorAll(INFO_ARTISTS_SELECTOR);
+  return Array.from(artists)
+    .map((artist) => {
+      const localizedName = artist.querySelector('.subtext');
+      return localizedName ? localizedName.textContent.replace(/^\[|\]$/g, '') : artist.textContent;
+    });
+}
 
-  if (parts.length === 2) {
-    return {
-      releaseTitle: deburr(parts[0].trim()),
-      artist: deburr(parts[1].trim()),
-    };
-  } else {
-    return {
-      releaseTitle: null,
-      artist: null,
-    };
+function getReleaseTitle() {
+  const title = document.querySelector(INFO_ALBUM_TITLE_SELECTOR);
+  if (!title) return null;
+  return Array.from(title.childNodes)
+    .filter(node => node.nodeType === Node.TEXT_NODE)
+    .map(node => node.textContent.trim())
+    .join('');
+}
+
+function prepareReleaseStatsUI() {
+  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
+  if (infoTable) {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+
+    const td = document.createElement('td');
+    td.id = 'lastfm_data';
+
+    th.classList.add('info_hdr');
+    th.textContent = 'Last.fm';
+    td.classList.add('release_pri_descriptors');
+    td.colspan = '2';
+    td.textContent = 'Loading...';
+
+    tr.appendChild(th);
+    tr.appendChild(td);
+
+    infoTable.appendChild(tr);
   }
 }
 
-function getArtistAndTitle() {
-  const metaTag = document.querySelector(META_TITLE_SELECTOR);
-  if (metaTag) return parseArtistAndTitle(metaTag.content);
-  return { releaseTitle: null, artist: null };
-}
-
-function insertReleaseStats(
+function populateReleaseStats(
   { playcount, listeners, userplaycount, url },
   timestamp,
 ) {
@@ -37,14 +54,9 @@ function insertReleaseStats(
   if (infoTable) {
     const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
 
-    const tr = document.createElement('tr');
-    const th = document.createElement('th');
-    const td = document.createElement('td');
+    const td = infoTable.querySelector('#lastfm_data');
 
-    th.classList.add('info_hdr');
-    th.textContent = 'Last.fm';
-    td.classList.add('release_pri_descriptors');
-    td.colspan = '2';
+    td.textContent = '';
 
     const listenersSpan =
       listeners !== undefined
@@ -84,18 +96,15 @@ function insertReleaseStats(
       }
       td.appendChild(element);
     });
-
-    tr.appendChild(th);
-    tr.appendChild(td);
-
-    infoTable.appendChild(tr);
   }
 }
 
 async function render(config) {
   if (!config) return;
 
-  const { artist, releaseTitle } = getArtistAndTitle();
+  const artistNames = getArtistNames();
+  const artist = artistNames[0];
+  const releaseTitle = getReleaseTitle();
 
   if (!artist || !releaseTitle) {
     console.error('No artist or release title found.');
@@ -105,6 +114,8 @@ async function render(config) {
   const userData = await utils.getSyncedUserData();
   const userName = userData?.name;
   const storageKey = `releaseStats_${artist}`;
+
+  prepareReleaseStatsUI();
 
   if (!config.lastfmApiKey) {
     const cachedData = localStorage.getItem(storageKey);
@@ -117,7 +128,7 @@ async function render(config) {
       if (cachedDate === currentDate) {
         console.log('Inserting cached lastfm data:', data);
 
-        insertReleaseStats(data, timestamp);
+        populateReleaseStats(data, timestamp);
         return;
       }
     }
@@ -127,7 +138,7 @@ async function render(config) {
 
   const releaseType = infoTable
     .querySelector('tr:nth-child(2) td')
-    .textContent.toLowerCase();
+    .textContent.toLowerCase().split(', ')[0];
 
   const data = await api.fetchReleaseStats(
     userName,
@@ -144,7 +155,7 @@ async function render(config) {
     single: 'track',
   };
 
-  const { playcount, listeners, userplaycount, url } = data[releaseTypeDataMap[releaseType]];
+  const { playcount, listeners, userplaycount, url } = data[releaseTypeDataMap[releaseType] ?? 'album'];
 
   const stats = {
     playcount,
@@ -157,10 +168,10 @@ async function render(config) {
     localStorage.setItem(storageKey, JSON.stringify({ timestamp: Date.now(), data: stats }));
   }
 
-  insertReleaseStats(stats);
+  populateReleaseStats(stats);
 }
 
 export default {
   render,
-  targetSelectors: [META_TITLE_SELECTOR, INFO_CONTAINER_SELECTOR],
+  targetSelectors: [INFO_CONTAINER_SELECTOR, INFO_ARTISTS_SELECTOR, INFO_ALBUM_TITLE_SELECTOR],
 };

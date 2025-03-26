@@ -1,7 +1,7 @@
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 
-export async function renderContent(module) {
+export async function renderContent(module, condition) {
   const storageItems = await utils.getSyncedOptions();
 
   const config = Object.assign({}, constants.OPTIONS_DEFAULT, storageItems);
@@ -19,12 +19,15 @@ export async function renderContent(module) {
     }
   });
 
-  async function main() {
+  function main() {
     const targetElementsExist = renderTargets.every(
       (selector) => !!document.querySelector(selector),
     );
 
     if (document.body && targetElementsExist) {
+      if (condition && !condition()) {
+        return;
+      }
       Promise.all(renderPromises.map((render) => render(config)));
     } else {
       requestAnimationFrame(main);

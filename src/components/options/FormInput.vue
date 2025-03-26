@@ -72,9 +72,12 @@
           <component :is="child" />
         </template>
       </div>
-      <!-- <slot name="hint">
+      <slot
+        v-else
+        name="hint"
+      >
         {{ props.hint }}
-      </slot> -->
+      </slot>
     </div>
   </div>
 </template>

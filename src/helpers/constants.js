@@ -72,6 +72,7 @@ export const PROFILE_OPTIONS_DEFAULT = {
   topAlbums: true,
   topAlbumsLimit: TOP_ALBUMS_LIMIT_DEFAULT,
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
+  parseOtherProfiles: false,
 }
 
 export const OPTIONS_DEFAULT = {

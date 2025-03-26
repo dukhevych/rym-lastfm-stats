@@ -59,10 +59,15 @@
           v-show="showModal"
           class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
         >
-          <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+          <div
+            class="
+              w-full max-w-md rounded-lg bg-white p-6 shadow-lg
+              dark:bg-black
+            "
+          >
             <div class="mb-4 flex items-center justify-between">
               <h2 class="text-xl font-bold">
-                Modal Title
+                How it works?
               </h2>
               <button
                 class="
@@ -90,27 +95,6 @@
             </div>
           </div>
         </div>
-
-        <!-- <div style="background-color: #fff; padding: 100px;">
-          <button
-            class="btn-skeumorphic"
-            :class="{
-              'cursor-not-allowed': signinInProgress,
-              'active:scale-[0.9]': !signinInProgress,
-            }"
-            :disabled="signinInProgress"
-            @click.prevent="openAuthPage"
-          >
-            <span>
-              <template v-if="signinInProgress">
-                Loading...
-              </template>
-              <template v-else>
-                Sign in with Lastfm2
-              </template>
-            </span>
-          </button>
-        </div> -->
 
         <form
           v-if="!loading"
@@ -150,23 +134,7 @@
                 </template>
               </button>
             </div>
-            <div class="ml-auto flex items-center gap-5">
-              <div
-                v-if="saved"
-                class="text-green-700"
-              >
-                <p><b>Saved!</b></p>
-              </div>
-              <button
-                class="
-                  min-w-[120px] rounded bg-red-600 px-4 py-2 text-center font-bold text-white
-                  hover:bg-red-800
-                "
-                @click.prevent="reset"
-              >
-                Reset Settings
-              </button>
-            </div>
+            <div class="ml-auto flex items-center gap-5" />
           </div>
 
           <!-- MAIN SETTINGS -->
@@ -189,32 +157,37 @@
               @blur="(e) => e.target.value = e.target.value.trim()"
             >
               <template #hint>
-                <p>
-                  Click
-                  <a
-                    href="https://www.last.fm/api/account/create"
-                    class="
-                      font-bold text-blue-600
-                      hover:underline
-                    "
-                    target="_blank"
-                  >here</a>
-                  to create a Last.fm API Key.
-                  <code><strong>"Application name"</strong></code> field is
-                  enough.
-                </p>
-                <p>
-                  If you <strong>already have</strong> Last.fm API Keys, you can find them <a
-                    href="https://www.last.fm/api/accounts"
-                    target="_blank"
-                    class="
-                      font-bold text-blue-600
-                      hover:underline
-                    "
-                  >here</a>.
-                </p>
+                With API Key you will get your
+                <strong>personal scrobbling stats</strong>
+                on your
+                <strong>Profile page</strong>.
               </template>
             </FormInput>
+
+            <div class="flex gap-3">
+              <a
+                href="https://www.last.fm/api/account/create"
+                class="
+                  inline-block min-w-[120px] rounded bg-blue-600 px-4 py-2 text-center font-bold
+                  text-white
+                  hover:bg-blue-800
+                "
+                target="_blank"
+              >
+                Create New
+              </a>
+              <a
+                href="https://www.last.fm/api/accounts"
+                class="
+                  inline-block min-w-[120px] rounded bg-blue-600 px-4 py-2 text-center font-bold
+                  text-white
+                  hover:bg-blue-800
+                "
+                target="_blank"
+              >
+                My Last.fm API Keys
+              </a>
+            </div>
           </FormFieldset>
 
           <!-- PROFILE -->
@@ -253,6 +226,8 @@
               :disabled="options.recentTracks === false"
             />
 
+            <FormSeparator />
+
             <!-- TOP ALBUMS -->
             <FormCheckbox
               v-model="options.topAlbums"
@@ -270,6 +245,8 @@
               :disabled="options.topAlbums === false"
             />
 
+            <FormSeparator />
+
             <!-- TOP ARTISTS -->
             <FormCheckbox
               v-model="options.topArtists"
@@ -286,7 +263,42 @@
               :max="constants.TOP_ARTISTS_LIMIT_MAX"
               :disabled="options.topArtists === false"
             />
+
+            <FormSeparator />
+
+            <!-- OTHER PROFILES -->
+            <FormCheckbox
+              v-model="options.parseOtherProfiles"
+              name="parseOtherProfiles"
+              label="Parse other users profiles"
+              hint="Try to parse other users profiles on RYM and display their Last.fm stats if username found."
+            />
           </FormFieldset>
+
+          <div class="form-actions flex items-center justify-between gap-5">
+            <div class="mr-auto flex items-center gap-5">
+              <a
+                href="#"
+                class="
+                  font-bold text-blue-600
+                  hover:underline
+                "
+                @click.prevent="reset"
+              >
+                Reset Settings
+              </a>
+            </div>
+            <div class="ml-auto flex items-center gap-5">
+              <transition name="slide-fade">
+                <div
+                  v-show="saved"
+                  class="text-green-700"
+                >
+                  <b>Saved!</b>
+                </div>
+              </transition>
+            </div>
+          </div>
         </form>
       </div>
     </main>
@@ -369,6 +381,7 @@ import FormInput from '@/components/options/FormInput.vue';
 import FormCheckbox from '@/components/options/FormCheckbox.vue';
 import FormFieldset from '@/components/options/FormFieldset.vue';
 import FormRange from './FormRange.vue';
+import FormSeparator from './FormSeparator.vue';
 import debounce from 'lodash/debounce';
 
 const appVersion = process.env.APP_VERSION;
@@ -417,6 +430,11 @@ const reset = async () => {
 };
 
 const openAuthPage = () => {
+  if (!SYSTEM_API_KEY) {
+    alert('API Key is not set');
+    return;
+  }
+
   signinInProgress.value = true;
   browserAPI.windows.create({
     url: `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}`,
@@ -479,3 +497,22 @@ const logout = async () => {
 
 init();
 </script>
+
+<style>
+.slide-fade-enter-active {
+  transition: all 0.15s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.5s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+}
+.slide-fade-enter-from {
+  transform: translateY(-100%);
+}
+.slide-fade-leave-to {
+  transform: translateY(100%);
+}
+</style>

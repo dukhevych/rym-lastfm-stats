@@ -76,6 +76,7 @@ export const formatNumber = (number) => {
   return formatter.format(number);
 };
 
+// Can become broken if RYM changes layout and ids
 export function isMyProfile() {
   const headerProfileUsername = document.querySelector(
     '#header_profile_username',
@@ -92,6 +93,7 @@ export function isMyProfile() {
   return false;
 };
 
+// Depends on the list of dark theme classes that is hardcoded and can be changed by RYM
 export function isDarkMode() {
   const htmlClasses = document.querySelector('html').classList;
   return constants.DARK_THEME_CLASSES.some((darkThemeClass) =>
@@ -155,7 +157,7 @@ export function generateSearchUrl({
   artist = '',
   releaseTitle = '',
   trackTitle = '',
-} = {}) {
+} = {}, strictSearch = true) {
   let url = 'https://rateyourmusic.com';
 
   const searchterm = [artist, releaseTitle, trackTitle]
@@ -173,7 +175,8 @@ export function generateSearchUrl({
   else if (releaseTitle) url += `&searchtype=l`;
   else if (artist) url += `&searchtype=a`;
 
-  url += '&strict=true';
+  // Strict search results are provided by this addon and are not a part of RYM functionality
+  if (strictSearch) url += '&strict=true';
 
   return url;
 };
