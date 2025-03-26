@@ -112,31 +112,45 @@ function addTopArtistsStyles() {
       min-width: calc(var(--playcountPercentage) * 1%);
       border-radius: 6px;
       position: relative;
-      border-width: 0 15px 0 0;
-      border-style: solid;
-      padding: 10px 15px;
+      border-top: 5px solid;
       box-sizing: border-box;
       cursor: pointer;
       color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      transition: background-color .15s ease-in-out;
+      overflow: hidden;
+      align-items: stretch;
+      transition: all .15s ease-in-out;
       font-weight: bold;
+      box-shadow: inset 0 5px 10px -5px rgba(0, 0, 0, .1), inset 0 -5px 10px -5px rgba(255, 255, 255, .05);
+      will-change: background-color, border-color, transform;
+      line-height: 1;
 
-      background-color: hsl(var(--hue), 80%, 15%);
-      border-color: hsl(var(--hue), 40%, 10%);
+      background-color: hsl(var(--hue), 60%, 20%);
+      border-color: rgba(0, 0, 0, 0.3);
+
+      & > * { padding: 8px 15px 10px; }
 
       &:hover {
-        background-color: hsl(var(--hue), 80%, 20%);
+        background-color: hsl(var(--hue), 55%, 25%);
       }
 
-      a {
+      .artist-scrobbles {
+        background-color: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+      }
+
+      .artist-name {
         flex-grow: 1;
         text-align: left;
         text-decoration: none;
         color: inherit;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, .5);
       }
+
+      &:hover { color: white; }
     }
 
     ${constants.LIGHT_THEME_CLASSES
@@ -144,10 +158,9 @@ function addTopArtistsStyles() {
       .join(',')
     } {
       background-color: hsl(var(--hue), 50%, 50%);
-      border-color: hsl(var(--hue), 50%, 40%);
 
       &:hover {
-        background-color: hsl(var(--hue), 50%, 70%);
+        background-color: hsl(var(--hue), 45%, 55%);
       }
     }
 
@@ -247,35 +260,44 @@ function populateTopArtists(container, topArtists) {
 const hueStart = 0;
 const hueEnd = 240;
 
-function createArtistLink(artist) {
-  const wrapper = document.createElement('div');
+function createArtistTemplate() {
+  const wrapper = document.createElement('a');
   wrapper.classList.add('top-artist');
+
+  const artistName = document.createElement('span');
+  artistName.classList.add('artist-name');
+  wrapper.appendChild(artistName);
+
+  const playcount = document.createElement('span');
+  playcount.classList.add('artist-scrobbles');
+  wrapper.appendChild(playcount);
+
+  return wrapper;
+}
+
+function populateArtistTemplate(artist, artistElement) {
+  artistElement.querySelector('.artist-name').textContent = artist.name;
+
+  const playsText = artist.playcount + ` play${artist.playcount > 1 ? 's' : ''}`;
+  artistElement.querySelector('.artist-scrobbles').textContent = playsText;
 
   const hue = parseInt(
     hueStart + (1 - artist.playcountPercentageAbsolute / 100) * (hueEnd - hueStart)
   );
-  wrapper.style.setProperty('--hue', hue);
-  wrapper.style.setProperty('--playcountPercentage', artist.playcountPercentage);
 
-  const link = utils.createLink(
-    utils.generateSearchUrl({ artist: artist.name }),
-    artist.name,
-    false,
-  );
+  artistElement.style.setProperty('--hue', hue);
+  artistElement.style.setProperty('--playcountPercentage', artist.playcountPercentage);
 
-  wrapper.appendChild(link);
+  artistElement.href = utils.generateSearchUrl({ artist: artist.name });
+  artistElement.title = `Search ${artist.name} on RateYourMusic`;
+}
 
-  const stats = artist.playcount + ` play${artist.playcount > 1 ? 's' : ''}`;
-  const span = utils.createSpan(stats, stats);
-  span.classList.add('artist-scrobbles');
+const ARTIST_TEMPLATE = createArtistTemplate();
 
-  wrapper.appendChild(span);
-
-  wrapper.addEventListener('click', () => {
-    window.location.href = link.href;
-  });
-
-  return wrapper;
+function createArtistLink(artist) {
+  const artistElement = ARTIST_TEMPLATE.cloneNode(true);
+  populateArtistTemplate(artist, artistElement);
+  return artistElement;
 }
 
 function insertTopArtistsIntoDOM(topArtistsHeader, topArtistsContainer) {
