@@ -7,3 +7,5 @@ export default {
   topAlbums,
   topArtists,
 };
+
+export const targetSelectors = ['#header_profile_username', '#profilename'];

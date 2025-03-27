@@ -1,7 +1,7 @@
 <template>
   <div
     id="app"
-    class="flex h-full flex-col"
+    class="flex h-full flex-col px-2"
   >
     <header
       class="mx-auto flex w-full max-w-[700px] items-center justify-between py-6"

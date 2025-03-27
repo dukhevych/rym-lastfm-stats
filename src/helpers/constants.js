@@ -54,8 +54,8 @@ export const TOP_ALBUMS_LIMIT_MAX = 8;
 export const TOP_ALBUMS_LIMIT_DEFAULT = 8;
 
 export const TOP_ARTISTS_PERIOD_DEFAULT = '12month';
-export const TOP_ARTISTS_LIMIT_MIN = 1;
-export const TOP_ARTISTS_LIMIT_MAX = 8;
+export const TOP_ARTISTS_LIMIT_MIN = 5;
+export const TOP_ARTISTS_LIMIT_MAX = 10;
 export const TOP_ARTISTS_LIMIT_DEFAULT = 10;
 
 export const RECENT_TRACKS_LIMIT_MIN = 1;

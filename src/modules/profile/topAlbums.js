@@ -29,14 +29,20 @@ async function handlePeriodChange(period, userName, apiKey, container, label) {
   container.classList.remove('is-loading');
 }
 
-export async function render(_config) {
+export async function render(_config, _userName) {
   config = _config;
   if (!config) return;
 
   if (!config.lastfmApiKey) return;
 
-  const userData = await utils.getSyncedUserData();
-  const userName = userData?.name;
+  let userName;
+
+  if (_userName) {
+    userName = _userName;
+  } else {
+    const userData = await utils.getSyncedUserData();
+    userName = userData?.name;
+  }
 
   if (!userName) {
     console.log("No Last.fm username found. Top Albums can't be displayed.");
@@ -62,10 +68,6 @@ export async function render(_config) {
   } = createTopAlbumsUI();
 
   topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
-    await browserAPI.storage.sync.set({
-      topAlbumsPeriod: event.target.value,
-    });
-
     await handlePeriodChange(
       event.target.value,
       userName,
@@ -73,6 +75,12 @@ export async function render(_config) {
       topAlbumsContainer,
       topAlbumsPeriodLabel,
     );
+
+    if (!_userName) {
+      await browserAPI.storage.sync.set({
+        topAlbumsPeriod: event.target.value,
+      });
+    }
   });
 
   populateTopAlbums(topAlbumsContainer, topAlbums, userName);

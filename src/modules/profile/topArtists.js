@@ -9,7 +9,7 @@ const PROFILE_CONTAINER_SELECTOR =
 
 let config = null;
 
-export async function render(_config) {
+export async function render(_config, _userName) {
   config = _config;
 
   if (!config) return;
@@ -21,8 +21,14 @@ export async function render(_config) {
     return;
   }
 
-  const userData = await utils.getSyncedUserData();
-  const userName = userData?.name;
+  let userName;
+
+  if (_userName) {
+    userName = _userName;
+  } else {
+    const userData = await utils.getSyncedUserData();
+    userName = userData?.name;
+  }
 
   if (!userName) {
     console.log("No Last.fm username found. Top Artists can't be displayed.");
@@ -48,10 +54,6 @@ export async function render(_config) {
   } = createTopArtistsUI();
 
   topArtistsPeriodSwitcher.addEventListener('change', async (event) => {
-    await browserAPI.storage.sync.set({
-      topArtistsPeriod: event.target.value,
-    });
-
     const period = event.target.value;
 
     topArtistsContainer.classList.add('is-loading');
@@ -72,6 +74,12 @@ export async function render(_config) {
     populateTopArtists(topArtistsContainer, data);
 
     topArtistsContainer.classList.remove('is-loading');
+
+    if (!_userName) {
+      await browserAPI.storage.sync.set({
+        topArtistsPeriod: event.target.value,
+      });
+    }
   });
 
   populateTopArtists(topArtistsContainer, topArtists);

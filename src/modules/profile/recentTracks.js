@@ -493,7 +493,7 @@ function replaceListeningTo(latestTrack) {
   }
 }
 
-async function render(_config) {
+async function render(_config, _userName) {
   config = _config;
 
   if (!config) return;
@@ -505,8 +505,14 @@ async function render(_config) {
     return;
   }
 
-  const userData = await utils.getSyncedUserData();
-  const userName = userData?.name;
+  let userName;
+
+  if (_userName) {
+    userName = _userName;
+  } else {
+    const userData = await utils.getSyncedUserData();
+    userName = userData?.name;
+  }
 
   if (!userName) {
     console.log('No Last.fm username found. Recent Tracks can\'t be displayed.');

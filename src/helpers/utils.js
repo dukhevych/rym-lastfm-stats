@@ -107,6 +107,31 @@ export async function getUserName() {
   });
 };
 
+export function detectUserName() {
+  let userName = null;
+
+  const firstLastFmLink = Array.from(document.querySelectorAll('a')).find((link) => {
+    if (link.closest('#shoutbox_commentarea') !== null) {
+      return false;
+    }
+    const href = link.href.toLowerCase();
+    return (
+      href.includes('last.fm/user/')
+      || (href.includes('lastfm.') && href.includes('/user/'))
+    );
+  });
+
+  if (firstLastFmLink) {
+    const parts = firstLastFmLink.href
+      .replace(/\/$/, '')
+      .replace(/^\/|\/$/g, '')
+      .split('/');
+    userName = parts[parts.length - 1].trim();
+  }
+
+  return userName;
+}
+
 const STORAGE_TYPES = ['local', 'sync'];
 
 export function storageGet(keys, storageType = 'sync') {
@@ -180,3 +205,38 @@ export function generateSearchUrl({
 
   return url;
 };
+
+export function waitForDOMReady() {
+  return new Promise((resolve) => {
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+      return resolve();
+    }
+
+    const check = () => {
+      if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        resolve();
+      } else {
+        requestAnimationFrame(check);
+      }
+    };
+
+    requestAnimationFrame(check);
+  });
+}
+
+export async function checkDOMCondition(targetSelectors, conditionCallback) {
+  return new Promise((resolve) => {
+    function _() {
+      const targetElementsExist = targetSelectors.every(
+        (selector) => !!document.querySelector(selector),
+      );
+
+      if (document.body && targetElementsExist) {
+        resolve(conditionCallback());
+      } else {
+        requestAnimationFrame(_);
+      }
+    }
+    _();
+  });
+}
