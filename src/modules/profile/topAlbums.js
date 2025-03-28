@@ -3,8 +3,6 @@ import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import svgLoader from '@/assets/icons/loader.svg?raw';
 
-const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-
 const PROFILE_CONTAINER_SELECTOR =
   '.bubble_header.profile_header + .bubble_content';
 
@@ -55,7 +53,6 @@ export async function render(_config, _userName) {
     userName,
     config.lastfmApiKey,
     {
-      limit: config.topAlbumsLimit,
       period: config.topAlbumsPeriod,
     },
   );
@@ -64,10 +61,29 @@ export async function render(_config, _userName) {
     topAlbumsHeader,
     topAlbumsContainer,
     topAlbumsPeriodSwitcher,
+    topAlbumsPeriodSaveButton,
     topAlbumsPeriodLabel,
   } = createTopAlbumsUI();
 
+  topAlbumsPeriodSaveButton.addEventListener('click', async () => {
+    const selectedPeriod = topAlbumsPeriodSwitcher.value;
+    const selectedPeriodLabel = constants.PERIOD_LABELS_MAP[selectedPeriod];
+    topAlbumsPeriodLabel.textContent = selectedPeriodLabel;
+
+    await utils.storageSet({
+      topAlbumsPeriod: selectedPeriod,
+    });
+
+    topAlbumsPeriodSaveButton.style.display = 'none';
+  });
+
+  let initialPeriod = config.topAlbumsPeriod;
+
   topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
+    const period = event.target.value;
+
+    topAlbumsContainer.classList.add('is-loading');
+
     await handlePeriodChange(
       event.target.value,
       userName,
@@ -76,10 +92,10 @@ export async function render(_config, _userName) {
       topAlbumsPeriodLabel,
     );
 
-    if (!_userName) {
-      await browserAPI.storage.sync.set({
-        topAlbumsPeriod: event.target.value,
-      });
+    if (period !== initialPeriod) {
+      topAlbumsPeriodSaveButton.style.display = 'block';
+    } else {
+      topAlbumsPeriodSaveButton.style.display = 'none';
     }
   });
 
@@ -118,9 +134,26 @@ function addTopAlbumsStyles() {
       display: flex;
       gap: 10px;
       align-items: center;
+      justify-content: space-between;
+
+      & > div {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      button, select { cursor: pointer; }
+
+      button {
+        background: var(--surface-primary);
+        border-radius: 3px;
+        padding: .15em .5em;
+        color: var(--text-primary);
+        border: 1px solid var(--ui-detail-neutral);
+        font-size: 16px;
+      }
     }
 
-    .top-albums-header select { margin-left: auto; }
 
     #top-albums-period-label::before { content: '('; }
     #top-albums-period-label::after { content: ')'; }
@@ -163,6 +196,7 @@ function addTopAlbumsStyles() {
         svg {
           height: 50px;
           width: 50px;
+          color: var(--clr-lastfm);
         }
       }
     }
@@ -260,21 +294,31 @@ function createTopAlbumsUI() {
   topAlbumsHeader.classList.add('bubble_header');
   topAlbumsHeader.classList.add('top-albums-header');
 
-  let headerText = 'Top Albums';
+  const topAlbumsHeaderLeft = document.createElement('div');
+  const topAlbumsHeaderRight = document.createElement('div');
+
+  topAlbumsHeaderLeft.textContent = 'Top Albums';
 
   const topAlbumsPeriodLabel = utils.createSpan(periodLabel, periodLabel);
   topAlbumsPeriodLabel.id = 'top-albums-period-label';
 
-  topAlbumsHeader.textContent = headerText;
+  topAlbumsHeaderLeft.appendChild(topAlbumsPeriodLabel);
 
-  topAlbumsHeader.appendChild(topAlbumsPeriodLabel);
+  const topAlbumsPeriodSaveButton = document.createElement('button');
+  topAlbumsPeriodSaveButton.textContent = 'Save';
+
+  topAlbumsHeaderRight.appendChild(topAlbumsPeriodSaveButton);
+  topAlbumsPeriodSaveButton.style.display = 'none';
 
   const topAlbumsPeriodSwitcher = utils.createSelect(
     constants.PERIOD_OPTIONS,
     config.topAlbumsPeriod,
   );
 
-  topAlbumsHeader.appendChild(topAlbumsPeriodSwitcher);
+  topAlbumsHeaderRight.appendChild(topAlbumsPeriodSwitcher);
+
+  topAlbumsHeader.appendChild(topAlbumsHeaderLeft);
+  topAlbumsHeader.appendChild(topAlbumsHeaderRight);
 
   const topAlbumsContainer = document.createElement('div');
   topAlbumsContainer.classList.add('bubble_content', 'top-albums');
@@ -284,6 +328,7 @@ function createTopAlbumsUI() {
     topAlbumsHeader,
     topAlbumsContainer,
     topAlbumsPeriodSwitcher,
+    topAlbumsPeriodSaveButton,
     topAlbumsPeriodLabel,
   };
 }

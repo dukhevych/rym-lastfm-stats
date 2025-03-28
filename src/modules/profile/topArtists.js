@@ -2,8 +2,6 @@ import * as api from '@/helpers/api';
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 
-const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-
 const PROFILE_CONTAINER_SELECTOR =
   '.bubble_header.profile_header + .bubble_content';
 
@@ -50,8 +48,23 @@ export async function render(_config, _userName) {
     topArtistsHeader,
     topArtistsContainer,
     topArtistsPeriodSwitcher,
+    topArtistsPeriodSaveButton,
     topArtistsPeriodLabel,
   } = createTopArtistsUI();
+
+  topArtistsPeriodSaveButton.addEventListener('click', async () => {
+    const selectedPeriod = topArtistsPeriodSwitcher.value;
+    const selectedPeriodLabel = constants.PERIOD_LABELS_MAP[selectedPeriod];
+    topArtistsPeriodLabel.textContent = selectedPeriodLabel;
+
+    await utils.storageSet({
+      topArtistsPeriod: selectedPeriod,
+    });
+
+    topArtistsPeriodSaveButton.style.display = 'none';
+  });
+
+  let initialPeriod = config.topArtistsPeriod;
 
   topArtistsPeriodSwitcher.addEventListener('change', async (event) => {
     const period = event.target.value;
@@ -75,10 +88,10 @@ export async function render(_config, _userName) {
 
     topArtistsContainer.classList.remove('is-loading');
 
-    if (!_userName) {
-      await browserAPI.storage.sync.set({
-        topArtistsPeriod: event.target.value,
-      });
+    if (period !== initialPeriod) {
+      topArtistsPeriodSaveButton.style.display = 'block';
+    } else {
+      topArtistsPeriodSaveButton.style.display = 'none';
     }
   });
 
@@ -90,6 +103,14 @@ export async function render(_config, _userName) {
 function addTopArtistsStyles() {
   const style = document.createElement('style');
   style.textContent = `
+    :root {
+      --gradient-angle: -45deg;
+      --gradient-angle-abs: calc(max(var(--gradient-angle), var(--gradient-angle) * -1));
+      --gradient-angle-sin-raw: sin(var(--gradient-angle-abs));
+      --gradient-angle-sin: calc(max(var(--gradient-angle-sin-raw), var(--gradient-angle-sin-raw) * -1));
+      --gradient-size: 40px;
+    }
+
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -98,6 +119,15 @@ function addTopArtistsStyles() {
       to {
         opacity: 1;
         transform: translateX(0);
+      }
+    }
+
+    @keyframes move-gradient {
+      from {
+        background-position: 0 0;
+      }
+      to {
+        background-position: 56px 0;
       }
     }
 
@@ -136,9 +166,36 @@ function addTopArtistsStyles() {
       line-height: 1;
 
       background-color: hsl(var(--hue), 60%, 20%);
-      border-color: rgba(0, 0, 0, 0.3);
+      border-color: rgba(0, 0, 0, 0.4);
 
-      & > * { padding: 8px 15px 10px; }
+      &:before {
+        content: '';
+        position: absolute;
+
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background-image: repeating-linear-gradient(
+          var(--gradient-angle),
+          rgba(0, 0, 0, 7%),
+          rgba(0, 0, 0, 7%) calc(var(--gradient-size) / 2),
+          transparent calc(var(--gradient-size) / 2),
+          transparent var(--gradient-size)
+        );
+        background-size: calc(var(--gradient-size) / var(--gradient-angle-sin)) 100%;
+        background-position: 0 0;
+      }
+
+      &:hover:before {
+        animation: move-gradient 2s linear infinite;
+      }
+
+      & > * {
+        padding: 8px 15px 10px;
+        position: relative;
+        z-index: 1;
+      }
 
       &:hover {
         background-color: hsl(var(--hue), 55%, 25%);
@@ -168,7 +225,7 @@ function addTopArtistsStyles() {
       background-color: hsl(var(--hue), 50%, 50%);
 
       &:hover {
-        background-color: hsl(var(--hue), 45%, 55%);
+        background-color: hsl(var(--hue), 55%, 60%);
       }
     }
 
@@ -198,9 +255,25 @@ function addTopArtistsStyles() {
       display: flex;
       gap: 10px;
       align-items: center;
-    }
+      justify-content: space-between;
 
-    .top-artists-header select { margin-left: auto; }
+      & > div {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      button, select { cursor: pointer; }
+
+      button {
+        background: var(--surface-primary);
+        border-radius: 3px;
+        padding: .15em .5em;
+        color: var(--text-primary);
+        border: 1px solid var(--ui-detail-neutral);
+        font-size: 16px;
+      }
+    }
 
     #top-artists-period-label::before { content: '('; }
     #top-artists-period-label::after { content: ')'; }
@@ -216,21 +289,31 @@ function createTopArtistsUI() {
   topArtistsHeader.classList.add('bubble_header');
   topArtistsHeader.classList.add('top-artists-header');
 
-  let headerText = 'Top Artists';
+  const topArtistsHeaderLeft = document.createElement('div');
+  const topArtistsHeaderRight = document.createElement('div');
+
+  topArtistsHeaderLeft.textContent = 'Top Artists';
 
   const topArtistsPeriodLabel = utils.createSpan(periodLabel, periodLabel);
   topArtistsPeriodLabel.id = 'top-artists-period-label';
 
-  topArtistsHeader.textContent = headerText;
+  topArtistsHeaderLeft.appendChild(topArtistsPeriodLabel);
 
-  topArtistsHeader.appendChild(topArtistsPeriodLabel);
+  const topArtistsPeriodSaveButton = document.createElement('button');
+  topArtistsPeriodSaveButton.textContent = 'Save';
+
+  topArtistsHeaderRight.appendChild(topArtistsPeriodSaveButton);
+  topArtistsPeriodSaveButton.style.display = 'none';
 
   const topArtistsPeriodSwitcher = utils.createSelect(
     constants.PERIOD_OPTIONS,
     config.topArtistsPeriod,
   );
 
-  topArtistsHeader.appendChild(topArtistsPeriodSwitcher);
+  topArtistsHeaderRight.appendChild(topArtistsPeriodSwitcher);
+
+  topArtistsHeader.appendChild(topArtistsHeaderLeft);
+  topArtistsHeader.appendChild(topArtistsHeaderRight);
 
   const topArtistsContainer = document.createElement('div');
   topArtistsContainer.classList.add('bubble_content', 'top-artists');
@@ -240,6 +323,7 @@ function createTopArtistsUI() {
     topArtistsHeader,
     topArtistsContainer,
     topArtistsPeriodSwitcher,
+    topArtistsPeriodSaveButton,
     topArtistsPeriodLabel,
   };
 }

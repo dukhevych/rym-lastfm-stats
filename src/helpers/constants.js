@@ -49,9 +49,6 @@ export const PERIOD_LABELS_MAP = PERIOD_OPTIONS.reduce(
 );
 
 export const TOP_ALBUMS_PERIOD_DEFAULT = '1month';
-export const TOP_ALBUMS_LIMIT_MIN = 4;
-export const TOP_ALBUMS_LIMIT_MAX = 8;
-export const TOP_ALBUMS_LIMIT_DEFAULT = 8;
 
 export const TOP_ARTISTS_PERIOD_DEFAULT = '12month';
 export const TOP_ARTISTS_LIMIT_MIN = 5;
@@ -70,7 +67,6 @@ export const PROFILE_OPTIONS_DEFAULT = {
   topArtistsLimit: TOP_ARTISTS_LIMIT_DEFAULT,
   topArtistsPeriod: TOP_ARTISTS_PERIOD_DEFAULT,
   topAlbums: true,
-  topAlbumsLimit: TOP_ALBUMS_LIMIT_DEFAULT,
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
   parseOtherProfiles: false,
 }
