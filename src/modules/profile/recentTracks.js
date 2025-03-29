@@ -25,9 +25,102 @@ gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f879
 
 let config = null;
 
+const PLAY_HISTORY_ITEM_CLASSES = {
+  wrapper: 'play_history_item',
+  artbox: 'play_history_artbox',
+  infobox: 'play_history_infobox',
+  infoboxLower: 'play_history_infobox_lower',
+  itemDate: 'play_history_item_date',
+  statusSpan: 'current-track-status',
+  release: 'play_history_item_release',
+  artistSpan: 'play_history_item_artist',
+  separator: 'play_history_separator',
+  albumLink: 'album play_history_item_release',
+  coverImg: 'play_history_item_art',
+}
+
+function createPlayHistoryItem({ artistName, artistUrl, albumName, albumUrl, coverUrl }) {
+  const item = document.createElement('div');
+  item.className = PLAY_HISTORY_ITEM_CLASSES.wrapper;
+
+  const artbox = document.createElement('div');
+  artbox.className = PLAY_HISTORY_ITEM_CLASSES.artbox;
+
+  const artLink = document.createElement('a');
+  // artLink.className = 'is-now-playing';
+  // artLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+
+  const img = document.createElement('img');
+  img.className = PLAY_HISTORY_ITEM_CLASSES.coverImg;
+
+  artLink.appendChild(img);
+  artbox.appendChild(artLink);
+
+  const infobox = document.createElement('div');
+  infobox.className = PLAY_HISTORY_ITEM_CLASSES.infobox;
+
+  const itemDate = document.createElement('div');
+  // itemDate.className = 'is-now-playing';
+  itemDate.className = PLAY_HISTORY_ITEM_CLASSES.itemDate;
+
+  const statusSpan = document.createElement('span');
+  statusSpan.id = 'current-track-status';
+  // statusSpan.textContent = 'Scrobbling now';
+
+  const nowPlayingImg = document.createElement('img');
+  nowPlayingImg.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+
+  itemDate.appendChild(statusSpan);
+  itemDate.appendChild(nowPlayingImg);
+
+  const infoboxLower = document.createElement('div');
+  infoboxLower.className = PLAY_HISTORY_ITEM_CLASSES.infoboxLower;
+
+  const release = document.createElement('div');
+  release.className = 'play_history_item_release';
+
+  const artistSpan = document.createElement('span');
+  artistSpan.className = 'play_history_item_artist';
+
+  const artistLink = document.createElement('a');
+  artistLink.className = 'artist';
+  // artistLink.href = artistUrl;
+  // artistLink.title = `Search for "${artistName}" on RateYourMusic`;
+  // artistLink.textContent = artistName;
+
+  artistSpan.appendChild(artistLink);
+
+  const separator = document.createElement('span');
+  separator.className = 'play_history_separator';
+  separator.textContent = ' - ';
+
+  const albumLink = document.createElement('a');
+  albumLink.className = 'album play_history_item_release';
+  // albumLink.href = albumUrl;
+  // albumLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+  // albumLink.textContent = albumName;
+
+  release.appendChild(artistSpan);
+  release.appendChild(separator);
+  release.appendChild(albumLink);
+
+  infoboxLower.appendChild(release);
+  infobox.appendChild(itemDate);
+  infobox.appendChild(infoboxLower);
+
+  item.appendChild(artbox);
+  item.appendChild(infobox);
+
+  return item;
+}
+
 function prepareRecentTracksUI() {
   const button = createLastfmButton();
   const tracksWrapper = document.createElement('div');
+  let currentTrackCoverImg;
+  let currentTrackTitle;
+  let currentTrackArtist;
+
   tracksWrapper.classList.add(
     'profile_listening_container',
     'lastfm-tracks-wrapper',
@@ -38,13 +131,23 @@ function prepareRecentTracksUI() {
   });
 
   if (config.recentTracksReplace) {
-    const setToBtn = document.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
+    const panelContainer = document.querySelector(PROFILE_LISTENING_CONTAINER_SELECTOR);
+
+    const setToBtn = panelContainer.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
     if (setToBtn) setToBtn.remove();
 
-    const playHistoryBtn = document.querySelector(PROFILE_LISTENING_PLAY_HISTORY_BTN);
+    const playHistoryBtn = panelContainer.querySelector(PROFILE_LISTENING_PLAY_HISTORY_BTN);
     if (playHistoryBtn) playHistoryBtn.remove();
 
-    const label = document.querySelector(LISTENING_LABEL_SELECTOR);
+    const currentTrackContainer = panelContainer.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
+
+    if (currentTrackContainer.children.length === 0) {
+      // create UI from scratch
+    } else {
+      // fix broken UI (replace completely?)
+    }
+
+    const label = panelContainer.querySelector(LISTENING_LABEL_SELECTOR);
     if (label) {
       label.textContent = 'Scrobbling now';
       label.append(gif.cloneNode());
@@ -60,7 +163,13 @@ function prepareRecentTracksUI() {
     if (title) title.textContent = 'Title';
   }
 
-  return { button, tracksWrapper };
+  return {
+    button,
+    tracksWrapper,
+    currentTrackCoverImg,
+    currentTrackTitle,
+    currentTrackArtist,
+  };
 }
 
 function createLastfmButton() {
