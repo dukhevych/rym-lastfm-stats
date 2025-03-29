@@ -7,27 +7,169 @@ import * as api from '@/helpers/api.js';
 
 let abortController = new AbortController();
 
-const PROFILE_LISTENING_CONTAINER_SELECTOR = '.profile_listening_container';
 const PROFILE_LISTENING_SET_TO_SELECTOR = '.profile_set_listening_box';
+
 const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_container';
 const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
 
-const LISTENING_LABEL_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_date';
-const LISTENING_ARTIST_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_artist a.artist';
+const LISTENING_LABEL_SELECTOR = '.profile_listening_container' + ' .play_history_item_date';
+const LISTENING_ARTIST_SELECTOR = '.profile_listening_container' + ' .play_history_item_artist a.artist';
 const LISTENING_TITLE_SELECTOR =
-  PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_item_release a.play_history_item_release';
-const LISTENING_COVER_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' .play_history_artbox a';
-const LISTENING_COVER_IMG_SELECTOR = PROFILE_LISTENING_CONTAINER_SELECTOR + ' img.play_history_item_art';
+  '.profile_listening_container' + ' .play_history_item_release a.play_history_item_release';
+const LISTENING_COVER_SELECTOR = '.profile_listening_container' + ' .play_history_artbox a';
+const LISTENING_COVER_IMG_SELECTOR = '.profile_listening_container' + ' img.play_history_item_art';
 
 const gif = document.createElement('img');
 gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
 
 let config = null;
 
+const PLAY_HISTORY_ITEM_CLASSES = {
+  item: 'play_history_item',
+  artbox: 'play_history_artbox',
+  infobox: 'play_history_infobox',
+  infoboxLower: 'play_history_infobox_lower',
+  itemDate: 'play_history_item_date',
+  statusSpan: 'current-track-status',
+  release: 'play_history_item_release',
+  artistSpan: 'play_history_item_artist',
+  separator: 'play_history_separator',
+  albumLink: 'album play_history_item_release',
+  coverImg: 'play_history_item_art',
+}
+
+function createPlayHistoryItem() {
+  const item = document.createElement('div');
+  item.className = PLAY_HISTORY_ITEM_CLASSES.item;
+
+  const artbox = document.createElement('div');
+  artbox.className = PLAY_HISTORY_ITEM_CLASSES.artbox;
+
+  const artLink = document.createElement('a');
+  // artLink.className = 'is-now-playing';
+  // artLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+
+  const img = document.createElement('img');
+  img.className = PLAY_HISTORY_ITEM_CLASSES.coverImg;
+
+  artLink.appendChild(img);
+  artbox.appendChild(artLink);
+
+  const infobox = document.createElement('div');
+  infobox.className = PLAY_HISTORY_ITEM_CLASSES.infobox;
+
+  const itemDate = document.createElement('div');
+  // itemDate.className = 'is-now-playing';
+  itemDate.className = PLAY_HISTORY_ITEM_CLASSES.itemDate;
+
+  const statusSpan = document.createElement('span');
+  statusSpan.id = 'current-track-status';
+  // statusSpan.textContent = 'Scrobbling now';
+
+  const nowPlayingImg = document.createElement('img');
+  nowPlayingImg.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+
+  itemDate.appendChild(statusSpan);
+  itemDate.appendChild(nowPlayingImg);
+
+  const infoboxLower = document.createElement('div');
+  infoboxLower.className = PLAY_HISTORY_ITEM_CLASSES.infoboxLower;
+
+  const release = document.createElement('div');
+  release.className = 'play_history_item_release';
+
+  const artistSpan = document.createElement('span');
+  artistSpan.className = 'play_history_item_artist';
+
+  const artistLink = document.createElement('a');
+  artistLink.className = 'artist';
+  // artistLink.href = artistUrl;
+  // artistLink.title = `Search for "${artistName}" on RateYourMusic`;
+  // artistLink.textContent = artistName;
+
+  artistSpan.appendChild(artistLink);
+
+  const separator = document.createElement('span');
+  separator.className = 'play_history_separator';
+  separator.textContent = ' - ';
+
+  const albumLink = document.createElement('a');
+  albumLink.className = 'album play_history_item_release';
+  // albumLink.href = albumUrl;
+  // albumLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+  // albumLink.textContent = albumName;
+
+  release.appendChild(artistSpan);
+  release.appendChild(separator);
+  release.appendChild(albumLink);
+
+  infoboxLower.appendChild(release);
+  infobox.appendChild(itemDate);
+  infobox.appendChild(infoboxLower);
+
+  item.appendChild(artbox);
+  item.appendChild(infobox);
+
+  return item;
+}
+
+function populatePlayHistoryItem(
+  item,
+  {
+    artistName,
+    artistUrl,
+    albumName,
+    albumUrl,
+    coverUrl,
+    isNowPlaying,
+  },
+) {
+  const img = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.coverImg}`);
+
+  if (isNowPlaying) {
+    item.classList.add('is-now-playing');
+  } else {
+    item.classList.remove('is-now-playing');
+  }
+
+  if (img) {
+    img.src = coverUrl;
+  }
+
+  const artLink = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artbox} a`);
+  if (artLink) {
+    artLink.href = albumUrl;
+    artLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+  }
+  const artistLink = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artistSpan} a`);
+  if (artistLink) {
+    artistLink.href = artistUrl;
+    artistLink.title = `Search for "${artistName}" on RateYourMusic`;
+    artistLink.textContent = artistName;
+  }
+  const albumLink = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.albumLink}`);
+  albumLink.href = albumUrl;
+  albumLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+  albumLink.textContent = albumName;
+  const statusSpan = item.querySelector(`#${PLAY_HISTORY_ITEM_CLASSES.statusSpan}`);
+  if (statusSpan) {
+    statusSpan.textContent = 'Scrobbling now';
+  }
+  const nowPlayingImg = item.querySelector(`#${PLAY_HISTORY_ITEM_CLASSES.statusSpan} img`);
+  if (nowPlayingImg) {
+    nowPlayingImg.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+  }
+  item.classList.add('is-now-playing');
+}
+
 function prepareRecentTracksUI() {
   const button = createLastfmButton();
   const tracksWrapper = document.createElement('div');
+  let currentTrackCoverImg;
+  let currentTrackTitle;
+  let currentTrackArtist;
+
   tracksWrapper.classList.add(
     'profile_listening_container',
     'lastfm-tracks-wrapper',
@@ -38,13 +180,23 @@ function prepareRecentTracksUI() {
   });
 
   if (config.recentTracksReplace) {
-    const setToBtn = document.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
-    if (setToBtn) setToBtn.remove();
+    const panelContainer = document.querySelector('.profile_listening_container');
 
-    const playHistoryBtn = document.querySelector(PROFILE_LISTENING_PLAY_HISTORY_BTN);
-    if (playHistoryBtn) playHistoryBtn.remove();
+    const setToBtn = panelContainer.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
+    if (setToBtn) setToBtn.style.display = 'none';
 
-    const label = document.querySelector(LISTENING_LABEL_SELECTOR);
+    const playHistoryBtn = panelContainer.querySelector(PROFILE_LISTENING_PLAY_HISTORY_BTN);
+    if (playHistoryBtn) playHistoryBtn.style.display = 'none';
+
+    const currentTrackContainer = panelContainer.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
+
+    if (currentTrackContainer.children.length === 0) {
+      // create UI from scratch
+    } else {
+      // fix broken UI (replace completely too?)
+    }
+
+    const label = panelContainer.querySelector(LISTENING_LABEL_SELECTOR);
     if (label) {
       label.textContent = 'Scrobbling now';
       label.append(gif.cloneNode());
@@ -60,7 +212,13 @@ function prepareRecentTracksUI() {
     if (title) title.textContent = 'Title';
   }
 
-  return { button, tracksWrapper };
+  return {
+    button,
+    tracksWrapper,
+    currentTrackCoverImg,
+    currentTrackTitle,
+    currentTrackArtist,
+  };
 }
 
 function createLastfmButton() {
@@ -166,7 +324,7 @@ function createTrackDate(track) {
 
 function insertRecentTracksWrapperIntoDOM(tracksWrapper) {
   const listeningContainer = document.querySelector(
-    PROFILE_LISTENING_CONTAINER_SELECTOR,
+    '.profile_listening_container',
   );
   listeningContainer.insertAdjacentElement('afterend', tracksWrapper);
 }
@@ -190,79 +348,19 @@ function addRecentTracksStyles() {
       --clr-lastfm-lighter: color-mix(in lab, var(--clr-lastfm) 80%, white);
     }
 
-    @keyframes rotate {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    ${LISTENING_COVER_SELECTOR} {
-      overflow: hidden;
-      position: relative;
-      transition: border-radius .15s ease-in-out;
-
-      &.is-now-playing {
-        border-radius: 50%;
-        animation: rotate 9s linear infinite;
-        &:after { opacity: 1; }
-
-        &:hover {
-          border-radius: 0;
-          animation: none;
-          transform: rotate(0);
-          &:after {
-            opacity: 0;
-            transform: scale(0);
-          }
-        }
-      }
-
-      &:after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        width: 33.33%;
-        height: 33.33%;
-        border-radius: 50%;
-        margin: auto;
-        opacity: 0;
-        transition: opacity .15s ease-in-out, transform .15s ease-in-out;
-      }
-    }
-
-    ${PROFILE_LISTENING_CONTAINER_SELECTOR} {
-      padding: 1.25rem;
-    }
-
-    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} .play_history_infobox {
-      padding: 0;
-    }
-
-    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} .play_history_item {
-      padding-top: 0;
-      align-items: center;
-    }
-
-    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} .play_history_item_art {
-      display: block;
-      width: 45px;
-      height: 45px;
-      max-width: none;
-    }
-
-    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR}.is-loading {
-      opacity: 0;
-      left: -9999px;
-      right: 9999px;
-      position: absolute;
-    }
+const PLAY_HISTORY_ITEM_CLASSES = {
+  item: 'play_history_item',
+  artbox: 'play_history_artbox',
+  infobox: 'play_history_infobox',
+  infoboxLower: 'play_history_infobox_lower',
+  itemDate: 'play_history_item_date',
+  statusSpan: 'current-track-status',
+  release: 'play_history_item_release',
+  artistSpan: 'play_history_item_artist',
+  separator: 'play_history_separator',
+  albumLink: 'album play_history_item_release',
+  coverImg: 'play_history_item_art',
+}
 
     ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} {
       transition: opacity .3s ease-in-out;
@@ -270,16 +368,97 @@ function addRecentTracksStyles() {
       right: auto;
       position: relative;
       opacity: 1;
+
+      &.is-loading {
+        opacity: 0;
+        left: -9999px;
+        right: 9999px;
+        position: absolute;
+      }
     }
 
-    ${LISTENING_LABEL_SELECTOR} img {
-      display: none;
-      opacity: 0.5;
-      margin-left: 1rem;
+    .${PLAY_HISTORY_ITEM_CLASSES.item} {
+      padding-top: 0;
+      align-items: center;
+
+      .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
+        @keyframes rotate {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        a {
+          overflow: hidden;
+          position: relative;
+          transition: border-radius .15s ease-in-out;
+
+          &.is-now-playing {
+            border-radius: 50%;
+            animation: rotate 9s linear infinite;
+            &:after { opacity: 1; }
+
+            &:hover {
+              border-radius: 0;
+              animation: none;
+              transform: rotate(0);
+              &:after {
+                opacity: 0;
+                transform: scale(0);
+              }
+            }
+          }
+
+          &:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            width: 33.33%;
+            height: 33.33%;
+            border-radius: 50%;
+            margin: auto;
+            opacity: 0;
+            transition: opacity .15s ease-in-out, transform .15s ease-in-out;
+          }
+        }
+      }
+      .${PLAY_HISTORY_ITEM_CLASSES.infobox} {
+        padding: 0;
+      }
+      .${PLAY_HISTORY_ITEM_CLASSES.infoboxLower} {}
+      .${PLAY_HISTORY_ITEM_CLASSES.itemDate} {
+        img {
+          display: none;
+          opacity: 0.5;
+          margin-left: 1rem;
+        }
+      }
+      .${PLAY_HISTORY_ITEM_CLASSES.statusSpan} {}
+      .${PLAY_HISTORY_ITEM_CLASSES.release} {}
+      .${PLAY_HISTORY_ITEM_CLASSES.artistSpan} {}
+      .${PLAY_HISTORY_ITEM_CLASSES.separator} {}
+      .${PLAY_HISTORY_ITEM_CLASSES.albumLink} {}
+      .${PLAY_HISTORY_ITEM_CLASSES.coverImg} {
+        display: block;
+        width: 45px;
+        height: 45px;
+        max-width: none;
+      }
+
+      &.is-now-playing {
+        .${PLAY_HISTORY_ITEM_CLASSES.itemDate} img { display: inline; }
+      }
     }
 
-    ${LISTENING_LABEL_SELECTOR}.is-now-playing img {
-      display: inline;
+    .profile_listening_container {
+      padding: 1.25rem;
     }
 
     .profile_view_play_history_btn {
@@ -338,82 +517,86 @@ function addRecentTracksStyles() {
         content: 'Powered by RYM Last.fm Stats';
         left: 0;
       }
-    }
 
-    .lastfm-tracks-wrapper.is-active {
-      opacity: 1;
-      transform: translateY(0);
-      position: relative;
-      left: auto;
-      right: auto;
-    }
+      &.is-active {
+        opacity: 1;
+        transform: translateY(0);
+        position: relative;
+        left: auto;
+        right: auto;
+      }
 
-    .lastfm-tracks-wrapper ul {
-      display: table;
-      width: 100%;
-    }
+      ul {
+        display: table;
+        width: 100%;
+      }
 
-    .lastfm-tracks-wrapper li {
-      display: table-row;
-    }
+      li {
+        display: table-row;
 
-    .lastfm-tracks-wrapper li > * {
-      display: table-cell;
-      vertical-align: middle;
-      padding: 9px;
-    }
+        &.is-now-playing {
+          ${utils.isDarkMode() ? 'background: rgba(255, 255, 255, 0.1);' : 'background: rgba(0, 0, 0, 0.1);'}}
+        }
 
-    .lastfm-tracks-wrapper li > *:first-child {
-      padding-left: 15px;
-    }
+        & + li { border-top: 1px solid; }
 
-    .lastfm-tracks-wrapper li > *:last-child {
-      padding-right: 15px;
-      white-space: nowrap;
-    }
+        & > * {
+          display: table-cell;
+          vertical-align: middle;
+          padding: 9px;
 
-    .lastfm-tracks-wrapper .track-image a {
-      display: block;
-      position: relative;
-      width: 34px;
-      height: 34px;
-      ${utils.isDarkMode() ? 'background: rgba(255, 255, 255, 0.1);' : 'background: rgba(0, 0, 0, 0.1);'}
-    }
+          &:first-child {
+            padding-left: 15px;
+          }
 
-    .lastfm-tracks-wrapper .track-image a:empty::after {
-      content: '?';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
+          &:last-child {
+            padding-right: 15px;
+            white-space: nowrap;
+          }
+        }
+      }
 
-    .lastfm-tracks-wrapper .track-image img {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
+      .track-image {
+        a {
+          display: block;
+          position: relative;
+          width: 34px;
+          height: 34px;
+          ${utils.isDarkMode() ? 'background: rgba(255, 255, 255, 0.1);' : 'background: rgba(0, 0, 0, 0.1);'}
 
-    .lastfm-tracks-wrapper .track-title {
-      font-weight: bold;
-      width: 60%;
-    }
+          &:empty::after {
+            content: '?';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+          }
+        }
 
-    .lastfm-tracks-wrapper .track-artist {
-      width: 40%;
-      font-weight: bold;
-    }
+        img {
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+      }
 
-    .lastfm-tracks-wrapper .track-date {
-      text-align: right;
-    }
+      .track-title {
+        font-weight: bold;
+        width: 60%;
+      }
 
-    .lastfm-tracks-wrapper .track-date img {
-      margin-right: 0.5em;
-    }
+      .track-artist {
+        width: 40%;
+        font-weight: bold;
+      }
 
-    .lastfm-tracks-wrapper li + li {
-      border-top: 1px solid;
+      .track-date {
+        text-align: right;
+
+        img {
+          margin-right: 0.5em;
+        }
+      }
     }
 
     /* Theme-specific styles */
@@ -429,10 +612,6 @@ function addRecentTracksStyles() {
       .join(',')
     } {
       border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .lastfm-tracks-wrapper li.is-now-playing {
-      ${utils.isDarkMode() ? 'background: rgba(255, 255, 255, 0.1);' : 'background: rgba(0, 0, 0, 0.1);'}
     }
   `;
   document.head.appendChild(style);
@@ -621,7 +800,7 @@ async function render(_config, _userName) {
 export default {
   render,
   targetSelectors: [
-    PROFILE_LISTENING_CONTAINER_SELECTOR,
+    '.profile_listening_container',
     // PROFILE_LISTENING_SET_TO_SELECTOR,
     // PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
     // PROFILE_LISTENING_PLAY_HISTORY_BTN,

@@ -53,7 +53,7 @@ export const TOP_ALBUMS_PERIOD_DEFAULT = '1month';
 export const TOP_ARTISTS_PERIOD_DEFAULT = '12month';
 export const TOP_ARTISTS_LIMIT_MIN = 5;
 export const TOP_ARTISTS_LIMIT_MAX = 10;
-export const TOP_ARTISTS_LIMIT_DEFAULT = 10;
+export const TOP_ARTISTS_LIMIT_DEFAULT = 5;
 
 export const RECENT_TRACKS_LIMIT_MIN = 1;
 export const RECENT_TRACKS_LIMIT_MAX = 20;
@@ -78,6 +78,6 @@ export const OPTIONS_DEFAULT = {
 
 export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);
 
-export const RECENT_TRACKS_INTERVAL_MS = 120000;
+export const RECENT_TRACKS_INTERVAL_MS = 180000;
 
-export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = 30000;
+export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = 60000;
