@@ -1,6 +1,41 @@
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 import * as constants from './constants.js';
 
+export function detectColorScheme() {
+  const html = document.documentElement;
+  const classes = html.classList;
+
+  const isLight = constants.LIGHT_THEME_CLASSES.some(c => classes.contains(c));
+  const isDark = constants.DARK_THEME_CLASSES.some(c => classes.contains(c));
+
+  if (isLight && isDark) {
+    console.warn('Both light and dark classes are present. Defaulting to dark mode.');
+    return 'dark';
+  }
+  if (!isLight && !isDark) {
+    console.warn('Neither light nor dark classes are present. Defaulting to dark mode.');
+    return 'dark';
+  }
+  if (isLight) {
+    html.setAttribute('data-scheme', 'light');
+    return 'light';
+  }
+  if (isDark) {
+    html.setAttribute('data-scheme', 'dark');
+    return 'dark';
+  }
+}
+
+export function initColorSchemeDetection() {
+  detectColorScheme();
+
+  const observer = new MutationObserver(() => {
+    detectColorScheme();
+  });
+
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+}
+
 export function shortenNumber(num) {
   if (num >= 1000000) {
     return parseFloat((num / 1000000).toFixed(1)) + 'M';
@@ -239,4 +274,10 @@ export async function checkDOMCondition(targetSelectors, conditionCallback) {
     }
     _();
   });
+}
+
+export const getFullConfig = async () => {
+  const storageItems = await getSyncedOptions();
+  const config = { ...constants.OPTIONS_DEFAULT, ...storageItems };
+  return config;
 }

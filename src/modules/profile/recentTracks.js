@@ -348,20 +348,6 @@ function addRecentTracksStyles() {
       --clr-lastfm-lighter: color-mix(in lab, var(--clr-lastfm) 80%, white);
     }
 
-const PLAY_HISTORY_ITEM_CLASSES = {
-  item: 'play_history_item',
-  artbox: 'play_history_artbox',
-  infobox: 'play_history_infobox',
-  infoboxLower: 'play_history_infobox_lower',
-  itemDate: 'play_history_item_date',
-  statusSpan: 'current-track-status',
-  release: 'play_history_item_release',
-  artistSpan: 'play_history_item_artist',
-  separator: 'play_history_separator',
-  albumLink: 'album play_history_item_release',
-  coverImg: 'play_history_item_art',
-}
-
     ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} {
       transition: opacity .3s ease-in-out;
       left: auto;
@@ -534,10 +520,6 @@ const PLAY_HISTORY_ITEM_CLASSES = {
       li {
         display: table-row;
 
-        &.is-now-playing {
-          ${utils.isDarkMode() ? 'background: rgba(255, 255, 255, 0.1);' : 'background: rgba(0, 0, 0, 0.1);'}}
-        }
-
         & + li { border-top: 1px solid; }
 
         & > * {
@@ -562,7 +544,6 @@ const PLAY_HISTORY_ITEM_CLASSES = {
           position: relative;
           width: 34px;
           height: 34px;
-          ${utils.isDarkMode() ? 'background: rgba(255, 255, 255, 0.1);' : 'background: rgba(0, 0, 0, 0.1);'}
 
           &:empty::after {
             content: '?';
@@ -599,21 +580,35 @@ const PLAY_HISTORY_ITEM_CLASSES = {
       }
     }
 
-    /* Theme-specific styles */
-    ${constants.LIGHT_THEME_CLASSES
-      .map((themeClass) => '.' + themeClass + ' .lastfm-tracks-wrapper li + li')
-      .join(',')
-    } {
-      border-color: rgba(0, 0, 0, 0.1);
+    html[data-scheme="light"] {
+      .lastfm-tracks-wrapper {
+        .track-image a { background: rgba(0, 0, 0, 0.1); }
+        li {
+          & + li {
+            border-color: rgba(0, 0, 0, 0.1);
+          }
+          &.is-now-playing {
+            background: rgba(0, 0, 0, 0.1);
+          }
+        }
+      }
     }
 
-    ${constants.DARK_THEME_CLASSES
-      .map((themeClass) => '.' + themeClass + ' .lastfm-tracks-wrapper li + li')
-      .join(',')
-    } {
-      border-color: rgba(255, 255, 255, 0.1);
+    html[data-scheme="dark"] {
+      .lastfm-tracks-wrapper {
+      .track-image a { background: rgba(255, 255, 255, 0.1); }
+        li {
+          & + li {
+            border-color: rgba(255, 255, 255, 0.1);
+          }
+          &.is-now-playing {
+            background: rgba(255, 255, 255, 0.1);
+          }
+        }
+      }
     }
   `;
+
   document.head.appendChild(style);
 }
 
