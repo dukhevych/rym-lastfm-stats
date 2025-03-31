@@ -35,15 +35,6 @@ export async function render(_config, _userName) {
 
   addTopArtistsStyles();
 
-  const topArtists = await api.fetchUserTopArtists(
-    userName,
-    config.lastfmApiKey,
-    {
-      limit: config.topArtistsLimit,
-      period: config.topArtistsPeriod,
-    },
-  );
-
   const {
     topArtistsHeader,
     topArtistsContainer,
@@ -95,9 +86,23 @@ export async function render(_config, _userName) {
     }
   });
 
-  populateTopArtists(topArtistsContainer, topArtists);
+  const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
+  icon.classList.add('loader');
+
+  topArtistsContainer.appendChild(icon);
 
   insertTopArtistsIntoDOM(topArtistsHeader, topArtistsContainer);
+
+  const topArtists = await api.fetchUserTopArtists(
+    userName,
+    config.lastfmApiKey,
+    {
+      limit: config.topArtistsLimit,
+      period: config.topArtistsPeriod,
+    },
+  );
+
+  populateTopArtists(topArtistsContainer, topArtists);
 }
 
 function addTopArtistsStyles() {
@@ -141,6 +146,13 @@ function addTopArtistsStyles() {
       display: flex;
       flex-direction: column;
       align-items: start;
+
+      & > .loader {
+        color: var(--clr-lastfm);
+        width: 182px;
+        min-height: calc(38px * ${config.topArtistsLimit});
+        align-self: center;
+      }
     }
 
     .top-artist {

@@ -345,3 +345,7 @@ export const createSvgUse = function(iconName, viewBox) {
   wrapper.appendChild(useElement);
   return wrapper;
 }
+
+export function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

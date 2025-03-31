@@ -48,14 +48,6 @@ export async function render(_config, _userName) {
     return;
   }
 
-  const topAlbums = await api.fetchUserTopAlbums(
-    userName,
-    config.lastfmApiKey,
-    {
-      period: config.topAlbumsPeriod,
-    },
-  );
-
   const {
     topAlbumsHeader,
     topAlbumsContainer,
@@ -98,9 +90,22 @@ export async function render(_config, _userName) {
     }
   });
 
-  populateTopAlbums(topAlbumsContainer, topAlbums, userName);
+  const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
+  icon.classList.add('loader');
+
+  topAlbumsContainer.appendChild(icon);
 
   insertTopAlbumsIntoDOM(topAlbumsHeader, topAlbumsContainer);
+
+  const topAlbums = await api.fetchUserTopAlbums(
+    userName,
+    config.lastfmApiKey,
+    {
+      period: config.topAlbumsPeriod,
+    },
+  );
+
+  populateTopAlbums(topAlbumsContainer, topAlbums, userName);
 }
 
 function createTopAlbumsUI() {
