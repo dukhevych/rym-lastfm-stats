@@ -124,7 +124,7 @@ async function render(config) {
       const artistNameDeburred = deburr(artistName);
       const artistNameLocalizedDeburred = artistNameLocalized ? deburr(artistNameLocalized) : artistNameLocalized;
 
-      const releaseTitle = item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '';
+      const releaseTitleDeburred = deburr(item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '');
 
       let query = deburr(searchTerm);
 
@@ -139,9 +139,9 @@ async function render(config) {
         query = searchTerm.replace(artistNameDeburred, '').trim();
       }
 
-      if (query.includes(releaseTitle)) {
+      if (query.includes(releaseTitleDeburred)) {
         hasReleaseTitle = true;
-        query = searchTerm.replace(releaseTitle, '').trim();
+        query = searchTerm.replace(releaseTitleDeburred, '').trim();
       }
 
       if (!hasArtist || !hasReleaseTitle) {
@@ -153,10 +153,10 @@ async function render(config) {
     const trackNameSelector = '.infobox td:nth-child(2) > table .ui_name_locale_original';
 
     searchItems.forEach(item => {
-      const artistName = item.querySelector(artistNameSelector)?.textContent.trim().toLowerCase() || '';
-      const trackName = item.querySelector(trackNameSelector)?.textContent.trim().toLowerCase() || '';
+      const artistName = deburr(item.querySelector(artistNameSelector)?.textContent.trim().toLowerCase() || '');
+      const trackName = deburr(item.querySelector(trackNameSelector)?.textContent.trim().toLowerCase() || '');
 
-      let query = searchTerm;
+      let query = deburr(searchTerm);
 
       let hasArtist = false;
       let hasTrackName = false;
@@ -177,6 +177,12 @@ async function render(config) {
     });
   }
 
+  const searchMoreLink = document.querySelector('#search_morelink');
+
+  if (searchMoreLink) {
+    searchMoreLink.href += '&strict=true';
+  }
+
   if (searchItemsMore.length) {
     if (searchItemsMore.length < searchItems.length) {
       searchItemsMore.forEach(item => {
@@ -189,7 +195,11 @@ async function render(config) {
       if (header) {
         const warning = document.createElement('div');
         warning.classList.add('rym-warning');
-        warning.appendChild(utils.createParagraph('No exact matches found.'));
+
+        const url = new URL(window.location.href);
+        const page = url.searchParams.get('page') ?? '1';
+
+        warning.appendChild(utils.createParagraph(`No direct matches found on the #${page} page.`));
 
         const style = document.createElement('style');
         style.textContent = `
@@ -207,16 +217,26 @@ async function render(config) {
         document.head.appendChild(style);
 
         if (searchType === 'a') {
-          const p = utils.createParagraph('This artist may not be added yet into RYM database. ');
+          const p = utils.createParagraph('This artist may not be added yet into RYM database or too obscure.');
           p.appendChild(utils.createLink('/artist/profile_ac', 'Add artist', false));
           warning.appendChild(p);
         } else if (searchType === 'l') {
-          warning.appendChild(utils.createParagraph('This release may not be added yet into RYM database.'));
+          const p = utils.createParagraph('This release may not be added yet into RYM database or too obscure.');
+          warning.appendChild(p);
         } else if (searchType === 'z') {
-          warning.appendChild(utils.createParagraph('This song may not be added yet into RYM database.'));
+          const p = utils.createParagraph('This song may not be added yet into RYM database or too obscure.');
+          warning.appendChild(p);
         }
 
         header.insertAdjacentElement('afterend', warning);
+
+        if (searchMoreLink) {
+          const tryNextPageLink = searchMoreLink.cloneNode(true);
+          tryNextPageLink.classList.add(...['btn', 'blue_btn', 'btn_small']);
+          tryNextPageLink.textContent = 'Try next page';
+          tryNextPageLink.style.marginBottom = '1rem';
+          warning.insertAdjacentElement('afterend', tryNextPageLink);
+        }
       }
     }
   }
