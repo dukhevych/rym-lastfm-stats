@@ -25,32 +25,28 @@ browserAPI.action.onClicked.addListener(() => {
   browserAPI.runtime.openOptionsPage();
 });
 
-browserAPI.webNavigation.onCompleted.addListener(
-  async (details) => {
-    const url = new URL(details.url);
+browserAPI.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+  if (changeInfo.url &&
+      changeInfo.url.includes('dukhevych.github.io/lastfm-oauth-redirect/oauth-callback.html') &&
+      changeInfo.url.includes('token=')) {
+
+    const url = new URL(changeInfo.url);
     const token = url.searchParams.get('token');
 
-    if (token) {
-      console.log('OAuth token received:', token);
+    const sessionKey = await fetchSessionKey(token);
 
-      browserAPI.tabs.remove(details.tabId);
+    if (sessionKey) {
+      console.log('Authenticated! Session Key:', sessionKey);
 
-      // Exchange the token for a session key
-      const sessionKey = await fetchSessionKey(token);
+      await browserAPI.storage.local.set({ lastfmSession: sessionKey });
 
-      if (sessionKey) {
-        console.log('Authenticated! Session Key:', sessionKey);
-        browserAPI.storage.local.set({ lastfmSession: sessionKey });
-
-        browserAPI.runtime.sendMessage({
-          type: 'lastfm_auth',
-          value: sessionKey,
-        });
-      }
+      browserAPI.runtime.sendMessage({
+        type: 'lastfm_auth',
+        value: sessionKey,
+      });
     }
-  },
-  { url: [{ hostContains: 'last.fm' }] },
-);
+  }
+});
 
 const fetchSessionKey = async (token) => {
   let apiSig;

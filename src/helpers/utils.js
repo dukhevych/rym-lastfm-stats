@@ -2,28 +2,17 @@ const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 import * as constants from './constants.js';
 
 export function detectColorScheme() {
-  const html = document.documentElement;
-  const classes = html.classList;
+  const theme = constants.THEMES[`theme_${localStorage.getItem('theme')}`];
+  const html = document.querySelector('html');
 
-  const isLight = constants.LIGHT_THEME_CLASSES.some(c => classes.contains(c));
-  const isDark = constants.DARK_THEME_CLASSES.some(c => classes.contains(c));
-
-  if (isLight && isDark) {
-    console.warn('Both light and dark classes are present. Defaulting to dark mode.');
-    return 'dark';
-  }
-  if (!isLight && !isDark) {
-    console.warn('Neither light nor dark classes are present. Defaulting to dark mode.');
-    return 'dark';
-  }
-  if (isLight) {
-    html.setAttribute('data-scheme', 'light');
-    return 'light';
-  }
-  if (isDark) {
+  if (!['light', 'dark'].includes(theme)) {
     html.setAttribute('data-scheme', 'dark');
-    return 'dark';
+    return;
   }
+
+  html.setAttribute('data-scheme', theme);
+
+  return theme;
 }
 
 export function initColorSchemeDetection() {
@@ -280,4 +269,79 @@ export const getFullConfig = async () => {
   const storageItems = await getSyncedOptions();
   const config = { ...constants.OPTIONS_DEFAULT, ...storageItems };
   return config;
+}
+
+import svgLoader from '@/assets/icons/loader.svg?raw';
+
+const svgSpriteId = 'svg-sprite';
+let svgSprite = null;
+
+export const createSVGSprite = function() {
+  const loader = document.createElement('div');
+  loader.classList.add('loader');
+
+  svgSprite = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svgSprite.setAttribute('id', svgSpriteId);
+  svgSprite.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  svgSprite.setAttribute('style', 'display:none;');
+
+  addIconToSVGSprite(svgLoader, 'svg-loader-symbol');
+
+  return svgSprite;
+}
+
+export const insertSVGSprite = function(svgSprite) {
+  return new Promise((resolve) => {
+    if (document.body) {
+      document.body.appendChild(svgSprite);
+      resolve();
+    } else {
+      function _() {
+        if (document.body) {
+          document.body.appendChild(svgSprite);
+          resolve();
+        } else {
+          requestAnimationFrame(_);
+        }
+      }
+      _();
+    }
+  });
+}
+
+export const addIconToSVGSprite = function(iconRaw, iconName) {
+  if (!svgSprite) {
+    console.error('SVG sprite not found');
+    return;
+  }
+  if (!iconRaw) {
+    console.error('Icon raw data is empty');
+    return;
+  }
+  if (!iconName) {
+    console.error('Icon name is empty');
+    return;
+  }
+  if (svgSprite.querySelector(`#${iconName}`)) {
+    console.warn(`Icon with name "${iconName}" already exists in the SVG sprite.`);
+    return;
+  }
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(iconRaw, 'image/svg+xml');
+  const svgElement = svgDoc.documentElement;
+  const symbolElement = document.createElementNS('http://www.w3.org/2000/svg', 'symbol');
+  symbolElement.setAttribute('id', iconName);
+  symbolElement.setAttribute('viewBox', svgElement.getAttribute('viewBox'));
+  symbolElement.innerHTML = svgElement.innerHTML;
+
+  svgSprite.appendChild(symbolElement);
+}
+
+export const createSvgUse = function(iconName, viewBox) {
+  const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  wrapper.setAttribute('viewBox', viewBox);
+  const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#${iconName}`);
+  wrapper.appendChild(useElement);
+  return wrapper;
 }

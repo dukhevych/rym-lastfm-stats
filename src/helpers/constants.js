@@ -13,6 +13,18 @@ export const DARK_THEME_CLASSES = [
   'theme_darkgray',
 ];
 
+export const THEMES = {};
+
+LIGHT_THEME_CLASSES.reduce((acc, theme) => {
+  acc[theme] = 'light';
+  return acc;
+}, THEMES);
+
+DARK_THEME_CLASSES.reduce((acc, theme) => {
+  acc[theme] = 'dark';
+  return acc;
+}, THEMES);
+
 export const PERIOD_OPTIONS = [
   {
     value: 'overall',

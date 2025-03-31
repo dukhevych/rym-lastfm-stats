@@ -5,6 +5,8 @@ import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
 
+import './recentTracks.css';
+
 let abortController = new AbortController();
 
 const PROFILE_LISTENING_SET_TO_SELECTOR = '.profile_set_listening_box';
@@ -12,13 +14,6 @@ const PROFILE_LISTENING_SET_TO_SELECTOR = '.profile_set_listening_box';
 const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_container';
 const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
-
-const LISTENING_LABEL_SELECTOR = '.profile_listening_container' + ' .play_history_item_date';
-const LISTENING_ARTIST_SELECTOR = '.profile_listening_container' + ' .play_history_item_artist a.artist';
-const LISTENING_TITLE_SELECTOR =
-  '.profile_listening_container' + ' .play_history_item_release a.play_history_item_release';
-const LISTENING_COVER_SELECTOR = '.profile_listening_container' + ' .play_history_artbox a';
-const LISTENING_COVER_IMG_SELECTOR = '.profile_listening_container' + ' img.play_history_item_art';
 
 const gif = document.createElement('img');
 gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
@@ -29,29 +24,29 @@ const PLAY_HISTORY_ITEM_CLASSES = {
   item: 'play_history_item',
   artbox: 'play_history_artbox',
   infobox: 'play_history_infobox',
+  itemArt: 'play_history_item_art',
   infoboxLower: 'play_history_infobox_lower',
   itemDate: 'play_history_item_date',
   statusSpan: 'current-track-status',
   release: 'play_history_item_release',
   artistSpan: 'play_history_item_artist',
+  artistLink: 'artist',
   separator: 'play_history_separator',
   albumLink: 'album play_history_item_release',
-  coverImg: 'play_history_item_art',
 }
 
 function createPlayHistoryItem() {
   const item = document.createElement('div');
   item.className = PLAY_HISTORY_ITEM_CLASSES.item;
+  item.classList.add('is-custom');
 
   const artbox = document.createElement('div');
   artbox.className = PLAY_HISTORY_ITEM_CLASSES.artbox;
 
   const artLink = document.createElement('a');
-  // artLink.className = 'is-now-playing';
-  // artLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
 
   const img = document.createElement('img');
-  img.className = PLAY_HISTORY_ITEM_CLASSES.coverImg;
+  img.className = PLAY_HISTORY_ITEM_CLASSES.itemArt;
 
   artLink.appendChild(img);
   artbox.appendChild(artLink);
@@ -60,15 +55,12 @@ function createPlayHistoryItem() {
   infobox.className = PLAY_HISTORY_ITEM_CLASSES.infobox;
 
   const itemDate = document.createElement('div');
-  // itemDate.className = 'is-now-playing';
   itemDate.className = PLAY_HISTORY_ITEM_CLASSES.itemDate;
 
   const statusSpan = document.createElement('span');
   statusSpan.id = 'current-track-status';
-  // statusSpan.textContent = 'Scrobbling now';
 
-  const nowPlayingImg = document.createElement('img');
-  nowPlayingImg.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+  const nowPlayingImg = gif.cloneNode();
 
   itemDate.appendChild(statusSpan);
   itemDate.appendChild(nowPlayingImg);
@@ -77,28 +69,22 @@ function createPlayHistoryItem() {
   infoboxLower.className = PLAY_HISTORY_ITEM_CLASSES.infoboxLower;
 
   const release = document.createElement('div');
-  release.className = 'play_history_item_release';
+  release.className = PLAY_HISTORY_ITEM_CLASSES.release;
 
   const artistSpan = document.createElement('span');
-  artistSpan.className = 'play_history_item_artist';
+  artistSpan.className = PLAY_HISTORY_ITEM_CLASSES.artistSpan;
 
   const artistLink = document.createElement('a');
-  artistLink.className = 'artist';
-  // artistLink.href = artistUrl;
-  // artistLink.title = `Search for "${artistName}" on RateYourMusic`;
-  // artistLink.textContent = artistName;
+  artistLink.className = PLAY_HISTORY_ITEM_CLASSES.artistLink;
 
   artistSpan.appendChild(artistLink);
 
   const separator = document.createElement('span');
-  separator.className = 'play_history_separator';
+  separator.className = PLAY_HISTORY_ITEM_CLASSES.separator;
   separator.textContent = ' - ';
 
   const albumLink = document.createElement('a');
-  albumLink.className = 'album play_history_item_release';
-  // albumLink.href = albumUrl;
-  // albumLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
-  // albumLink.textContent = albumName;
+  albumLink.className = PLAY_HISTORY_ITEM_CLASSES.albumLink;
 
   release.appendChild(artistSpan);
   release.appendChild(separator);
@@ -121,54 +107,82 @@ function populatePlayHistoryItem(
     artistUrl,
     albumName,
     albumUrl,
+    trackName,
+    trackUrl,
     coverUrl,
     isNowPlaying,
+    timestamp,
   },
 ) {
-  const img = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.coverImg}`);
-
   if (isNowPlaying) {
     item.classList.add('is-now-playing');
   } else {
     item.classList.remove('is-now-playing');
   }
 
-  if (img) {
-    img.src = coverUrl;
+  const artbox = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artbox}`);
+
+  if (artbox) {
+    const artLink = artbox.querySelector('a');
+    if (artLink) {
+      artLink.href = albumUrl;
+      artLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+
+      const itemArt = artLink.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.itemArt}`);
+
+      if (itemArt) {
+        itemArt.src = coverUrl;
+      }
+    }
   }
 
-  const artLink = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artbox} a`);
-  if (artLink) {
-    artLink.href = albumUrl;
-    artLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+  const infobox = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.infobox}`);
+
+  if (infobox) {
+    const itemDate = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.itemDate}`);
+    if (itemDate) {
+      if (isNowPlaying) {
+        itemDate.dataset.label = 'Scrobbling now';
+        itemDate.title = '';
+      } else {
+        const date = new Date(timestamp * 1000);
+        const dateFormatted = formatDistanceToNow(date, {
+          addSuffix: true,
+        });
+        itemDate.dataset.label = `Last scrobble (${dateFormatted})`;
+        itemDate.title = date.toLocaleString();
+      }
+    }
   }
-  const artistLink = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artistSpan} a`);
-  if (artistLink) {
-    artistLink.href = artistUrl;
-    artistLink.title = `Search for "${artistName}" on RateYourMusic`;
-    artistLink.textContent = artistName;
+
+  const infoboxLower = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.infoboxLower}`);
+  if (infoboxLower) {
+    const release = infoboxLower.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.release}`);
+    if (release) {
+      const releaseLink = release.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.release}`);
+      if (releaseLink) {
+        releaseLink.href = trackUrl;
+        releaseLink.title = `Search for "${artistName} - ${trackName}" on RateYourMusic`;
+        releaseLink.textContent = trackName;
+      }
+
+      const artistSpan = infoboxLower.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artistSpan}`);
+      if (artistSpan) {
+        const artistLink = artistSpan.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artistSpan} a`);
+        if (artistLink) {
+          artistLink.href = artistUrl;
+          artistLink.title = `Search for "${artistName}" on RateYourMusic`;
+          artistLink.textContent = artistName;
+        }
+      }
+    }
   }
-  const albumLink = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.albumLink}`);
-  albumLink.href = albumUrl;
-  albumLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
-  albumLink.textContent = albumName;
-  const statusSpan = item.querySelector(`#${PLAY_HISTORY_ITEM_CLASSES.statusSpan}`);
-  if (statusSpan) {
-    statusSpan.textContent = 'Scrobbling now';
-  }
-  const nowPlayingImg = item.querySelector(`#${PLAY_HISTORY_ITEM_CLASSES.statusSpan} img`);
-  if (nowPlayingImg) {
-    nowPlayingImg.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
-  }
-  item.classList.add('is-now-playing');
 }
 
 function prepareRecentTracksUI() {
   const button = createLastfmButton();
   const tracksWrapper = document.createElement('div');
-  let currentTrackCoverImg;
-  let currentTrackTitle;
-  let currentTrackArtist;
+  let playHistoryItem;
 
   tracksWrapper.classList.add(
     'profile_listening_container',
@@ -190,34 +204,21 @@ function prepareRecentTracksUI() {
 
     const currentTrackContainer = panelContainer.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
 
-    if (currentTrackContainer.children.length === 0) {
-      // create UI from scratch
-    } else {
-      // fix broken UI (replace completely too?)
-    }
+    currentTrackContainer.classList.add('is-loading');
 
-    const label = panelContainer.querySelector(LISTENING_LABEL_SELECTOR);
-    if (label) {
-      label.textContent = 'Scrobbling now';
-      label.append(gif.cloneNode());
-    }
+    playHistoryItem = createPlayHistoryItem();
 
-    const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
-    if (coverImg) coverImg.src = '';
+    currentTrackContainer.replaceChildren(playHistoryItem);
 
-    const artist = document.querySelector(LISTENING_ARTIST_SELECTOR);
-    if (artist) artist.textContent = 'Artist';
-
-    const title = document.querySelector(LISTENING_TITLE_SELECTOR);
-    if (title) title.textContent = 'Title';
+    const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
+    icon.classList.add('loader');
+    currentTrackContainer.appendChild(icon);
   }
 
   return {
     button,
     tracksWrapper,
-    currentTrackCoverImg,
-    currentTrackTitle,
-    currentTrackArtist,
+    playHistoryItem,
   };
 }
 
@@ -232,6 +233,15 @@ function createLastfmButton() {
 
   return button;
 }
+
+// function createRevertButton() {
+//   const button = document.createElement('button');
+//   const playHistoryClasses = ['btn', 'blue_btn', 'btn_small'];
+//   button.classList.add(...playHistoryClasses);
+//   button.textContent = 'Hide';
+
+//   return button;
+// }
 
 function createTracksList(recentTracks, userName) {
   const tracksList = document.createElement('ul');
@@ -329,78 +339,57 @@ function insertRecentTracksWrapperIntoDOM(tracksWrapper) {
   listeningContainer.insertAdjacentElement('afterend', tracksWrapper);
 }
 
-function insertRecentTracksButtonIntoDOM(button) {
-  const buttonsContainer = document.querySelector(
-    PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
-  );
-
-  if (buttonsContainer) {
-    buttonsContainer.prepend(button);
-  }
-}
-
 function addRecentTracksStyles() {
   const style = document.createElement('style');
   style.textContent = `
-    :root {
-      --clr-lastfm: ${constants.LASTFM_COLOR};
-      --clr-lastfm-darker: color-mix(in lab, var(--clr-lastfm) 80%, black);
-      --clr-lastfm-lighter: color-mix(in lab, var(--clr-lastfm) 80%, white);
-    }
-
-    ${PROFILE_LISTENING_CURRENT_TRACK_SELECTOR} {
-      transition: opacity .3s ease-in-out;
-      left: auto;
-      right: auto;
-      position: relative;
-      opacity: 1;
-
-      &.is-loading {
-        opacity: 0;
-        left: -9999px;
-        right: 9999px;
-        position: absolute;
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
       }
     }
 
-    .${PLAY_HISTORY_ITEM_CLASSES.item} {
+    .${PLAY_HISTORY_ITEM_CLASSES.item}.is-custom {
       padding-top: 0;
+      left: -9999px;
+      right: -9999px;
+      position: relative;
       align-items: center;
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: all .15s ease-in-out;
+      transition-property: opacity, transform;
+
+      &.is-loaded {
+        left: auto;
+        right: auto;
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      & + .loader {
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        transform: translateY(-50%);
+        width: 45px;
+        height: 45px;
+        color: var(--clr-lastfm);
+      }
+
+      &.is-loaded + .loader {
+        display: none;}
 
       .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
-        @keyframes rotate {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
         a {
-          overflow: hidden;
           position: relative;
-          transition: border-radius .15s ease-in-out;
 
-          &.is-now-playing {
-            border-radius: 50%;
-            animation: rotate 9s linear infinite;
-            &:after { opacity: 1; }
-
-            &:hover {
-              border-radius: 0;
-              animation: none;
-              transform: rotate(0);
-              &:after {
-                opacity: 0;
-                transform: scale(0);
-              }
-            }
-          }
-
-          &:after {
+          &:before {
             content: '';
             position: absolute;
+            z-index: 1;
             top: 0;
             left: 0;
             right: 0;
@@ -413,6 +402,11 @@ function addRecentTracksStyles() {
             opacity: 0;
             transition: opacity .15s ease-in-out, transform .15s ease-in-out;
           }
+
+          img {
+            transition: all .15s ease-in-out;
+            transition-property: border-radius;
+          }
         }
       }
       .${PLAY_HISTORY_ITEM_CLASSES.infobox} {
@@ -420,6 +414,9 @@ function addRecentTracksStyles() {
       }
       .${PLAY_HISTORY_ITEM_CLASSES.infoboxLower} {}
       .${PLAY_HISTORY_ITEM_CLASSES.itemDate} {
+        &:before {
+          content: attr(data-label);
+        }
         img {
           display: none;
           opacity: 0.5;
@@ -431,7 +428,7 @@ function addRecentTracksStyles() {
       .${PLAY_HISTORY_ITEM_CLASSES.artistSpan} {}
       .${PLAY_HISTORY_ITEM_CLASSES.separator} {}
       .${PLAY_HISTORY_ITEM_CLASSES.albumLink} {}
-      .${PLAY_HISTORY_ITEM_CLASSES.coverImg} {
+      .${PLAY_HISTORY_ITEM_CLASSES.itemArt} {
         display: block;
         width: 45px;
         height: 45px;
@@ -440,169 +437,28 @@ function addRecentTracksStyles() {
 
       &.is-now-playing {
         .${PLAY_HISTORY_ITEM_CLASSES.itemDate} img { display: inline; }
-      }
-    }
 
-    .profile_listening_container {
-      padding: 1.25rem;
-    }
-
-    .profile_view_play_history_btn {
-      gap: 2rem;
-      min-height: 45px;
-      flex: 1 0 auto;
-    }
-
-    .btn.btn-lastfm {
-      background-color: var(--clr-lastfm) !important;
-      color: white !important;
-      margin-right: 0;
-    }
-
-    .btn.btn-lastfm:hover {
-      background-color: var(--clr-lastfm-darker);
-    }
-
-    .btn.btn-lastfm img {
-      display: none;
-      margin-right: 0.5em;
-    }
-
-    .btn.btn-lastfm.is-now-playing img {
-      display: inline;
-    }
-
-    .lastfm-tracks-wrapper {
-      display: block;
-      position: absolute;
-      left: -9999px;
-      right: 9999px;
-      transition: all .15s ease-out;
-      opacity: 0;
-      transform: translateY(-10px);
-      margin-top: 0;
-      padding-bottom: 30px;
-
-      &:before,
-      &:after {
-        position: absolute;
-        opacity: 0.75;
-        bottom: 0;
-        height: 30px;
-        padding: 0 15px;
-        font-size: 0.75em;
-        line-height: 29px;
-      }
-
-      &:before {
-        content: attr(data-timestamp);
-        right: 0;
-      }
-
-      &:after {
-        content: 'Powered by RYM Last.fm Stats';
-        left: 0;
-      }
-
-      &.is-active {
-        opacity: 1;
-        transform: translateY(0);
-        position: relative;
-        left: auto;
-        right: auto;
-      }
-
-      ul {
-        display: table;
-        width: 100%;
-      }
-
-      li {
-        display: table-row;
-
-        & + li { border-top: 1px solid; }
-
-        & > * {
-          display: table-cell;
-          vertical-align: middle;
-          padding: 9px;
-
-          &:first-child {
-            padding-left: 15px;
+        .${PLAY_HISTORY_ITEM_CLASSES.artbox} a {
+          img {
+            animation: rotate 9s linear infinite;
+            border-radius: 50%;
+            outline: 1px solid rgba(255,255,255, 0.2);
+            outline-offset: -1px;
           }
 
-          &:last-child {
-            padding-right: 15px;
-            white-space: nowrap;
-          }
-        }
-      }
+          &:before { opacity: 1; }
 
-      .track-image {
-        a {
-          display: block;
-          position: relative;
-          width: 34px;
-          height: 34px;
+          &:hover {
+            img {
+              border-radius: 0;
+              animation: none;
+              transform: rotate(0);
+            }
 
-          &:empty::after {
-            content: '?';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-          }
-        }
-
-        img {
-          display: block;
-          width: 100%;
-          height: 100%;
-        }
-      }
-
-      .track-title {
-        font-weight: bold;
-        width: 60%;
-      }
-
-      .track-artist {
-        width: 40%;
-        font-weight: bold;
-      }
-
-      .track-date {
-        text-align: right;
-
-        img {
-          margin-right: 0.5em;
-        }
-      }
-    }
-
-    html[data-scheme="light"] {
-      .lastfm-tracks-wrapper {
-        .track-image a { background: rgba(0, 0, 0, 0.1); }
-        li {
-          & + li {
-            border-color: rgba(0, 0, 0, 0.1);
-          }
-          &.is-now-playing {
-            background: rgba(0, 0, 0, 0.1);
-          }
-        }
-      }
-    }
-
-    html[data-scheme="dark"] {
-      .lastfm-tracks-wrapper {
-      .track-image a { background: rgba(255, 255, 255, 0.1); }
-        li {
-          & + li {
-            border-color: rgba(255, 255, 255, 0.1);
-          }
-          &.is-now-playing {
-            background: rgba(255, 255, 255, 0.1);
+            &:before {
+              opacity: 0;
+              transform: scale(0);
+            }
           }
         }
       }
@@ -610,61 +466,6 @@ function addRecentTracksStyles() {
   `;
 
   document.head.appendChild(style);
-}
-
-function replaceListeningTo(latestTrack) {
-  const label = document.querySelector(LISTENING_LABEL_SELECTOR);
-  const isNowPlaying = latestTrack['@attr']?.nowplaying;
-
-  if (label) {
-    if (isNowPlaying) {
-      label.classList.add('is-now-playing');
-      label.textContent = 'Scrobbling now';
-      label.append(gif.cloneNode());
-    } else {
-      const date = formatDistanceToNow(new Date(latestTrack.date.uts * 1000), {
-        addSuffix: true,
-      });
-      label.classList.remove('is-now-playing');
-      label.textContent = `Last scrobble (${date})`;
-    }
-  }
-
-  const cover = document.querySelector(LISTENING_COVER_SELECTOR);
-  if (cover) {
-    if (isNowPlaying) {
-      cover.classList.add('is-now-playing');
-    }
-    cover.href = utils.generateSearchUrl({
-      artist: latestTrack.artist['#text'],
-      releaseTitle: latestTrack.album['#text'] || '',
-      trackTitle: latestTrack.album['#text'] ? '' : latestTrack.name,
-    }, config);
-    const searchQuery = `${latestTrack.artist['#text']} - ${latestTrack.album['#text'] || latestTrack.name}`;
-    cover.title = `Search for "${searchQuery}" on RateYourMusic`;
-  }
-
-  const coverImg = document.querySelector(LISTENING_COVER_IMG_SELECTOR);
-  if (coverImg) coverImg.src = latestTrack.image[1]['#text'];
-
-  const artist = document.querySelector(LISTENING_ARTIST_SELECTOR);
-  if (artist) {
-    artist.textContent = latestTrack.artist['#text'];
-    artist.href = utils.generateSearchUrl({
-      artist: latestTrack.artist['#text'],
-    }, config);
-    artist.title = `Search for "${latestTrack.artist['#text']}" on RateYourMusic`;
-  }
-
-  const title = document.querySelector(LISTENING_TITLE_SELECTOR);
-  if (title) {
-    title.textContent = latestTrack.name;
-    title.href = utils.generateSearchUrl({
-      artist: latestTrack.artist['#text'],
-      trackTitle: latestTrack.name,
-    }, config);
-    title.title = `Search for "${latestTrack.artist['#text']} - ${latestTrack.name}" on RateYourMusic`;
-  }
 }
 
 async function render(_config, _userName) {
@@ -695,15 +496,17 @@ async function render(_config, _userName) {
 
   addRecentTracksStyles();
 
-  const currentTrack = document.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
+  const currentTrackContainer = document.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
 
-  if (currentTrack && config.recentTracksReplace) {
-    currentTrack.classList.add('is-loading');
+  const { button, tracksWrapper, playHistoryItem } = prepareRecentTracksUI();
+
+  const buttonsContainer = document.querySelector(
+    PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
+  );
+
+  if (buttonsContainer) {
+    buttonsContainer.prepend(button);
   }
-
-  const { button, tracksWrapper } = prepareRecentTracksUI();
-
-  insertRecentTracksButtonIntoDOM(button);
 
   const updateAction = async () => {
     abortController.abort();
@@ -724,7 +527,30 @@ async function render(_config, _userName) {
       }
 
       if (config.recentTracksReplace) {
-        replaceListeningTo(data[0]);
+        populatePlayHistoryItem(
+          playHistoryItem,
+          {
+            artistName: data[0].artist['#text'],
+            artistUrl: utils.generateSearchUrl({
+              artist: data[0].artist['#text'],
+            }, config),
+            albumName: data[0].album['#text'],
+            albumUrl: utils.generateSearchUrl({
+              artist: data[0].artist['#text'],
+              releaseTitle: data[0].album['#text'],
+            }, config),
+            trackUrl: utils.generateSearchUrl({
+              artist: data[0].artist['#text'],
+              trackTitle: data[0].name,
+            }, config),
+            trackName: data[0].name,
+            coverUrl: data[0].image[1]['#text'],
+            isNowPlaying: data[0]["@attr"]?.nowplaying,
+            timestamp: data[0].date?.uts,
+          },
+        );
+        playHistoryItem.classList.add('is-loaded');
+        currentTrackContainer.classList.remove('is-loading');
       }
 
       const tracksList = createTracksList(data, userName);
@@ -741,13 +567,7 @@ async function render(_config, _userName) {
     }
   };
 
-  await updateAction();
-
   insertRecentTracksWrapperIntoDOM(tracksWrapper);
-
-  if (currentTrack && config.recentTracksReplace) {
-    currentTrack.classList.remove('is-loading');
-  }
 
   let intervalId;
 
@@ -759,6 +579,11 @@ async function render(_config, _userName) {
       );
     }
   };
+
+  if (document.visibilityState === 'visible') {
+    await updateAction();
+    startInterval();
+  }
 
   const stopInterval = () => {
     if (intervalId) {
@@ -785,11 +610,6 @@ async function render(_config, _userName) {
     'visibilitychange',
     throttledHandleVisibilityChange,
   );
-
-  if (document.visibilityState === 'visible') {
-    await updateAction();
-    startInterval();
-  }
 }
 
 export default {

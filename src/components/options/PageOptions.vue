@@ -107,7 +107,7 @@
                 Signed in as <strong>{{ userData.name }}</strong> (<a
                   href="#"
                   class="
-                    font-bold text-blue-600
+                    text-clr-rym font-bold
                     hover:underline
                   "
                   @click.prevent="logout"
@@ -125,13 +125,12 @@
                   'bg-gray-400': signinInProgress,
                 }"
                 :disabled="signinInProgress"
-                @click.prevent="openAuthPage"
+                @click="openAuthPage"
               >
                 <template v-if="signinInProgress">
-                  Loading...
+                  In progress...
                 </template>
                 <template v-else>
-                  <!-- <KeyIcon class="size-6" /> -->
                   <svg
                     fill="currentColor"
                     viewBox="0 0 32 32"
@@ -197,6 +196,76 @@
               </a>
             </div>
           </FormFieldset>
+
+          <div
+            v-if="!userData || !hasApiKey"
+            class="flex items-center gap-3"
+          >
+            <svg
+              class="h-6 w-6 shrink-0"
+              fill="#cc3300"
+              version="1.1"
+              xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink"
+              width="800px"
+              height="800px"
+              viewBox="0 0 478.125 478.125"
+              xml:space="preserve"
+            >
+              <g>
+                <g>
+                  <g>
+                    <circle
+                      cx="239.904"
+                      cy="314.721"
+                      r="35.878"
+                    />
+                    <path
+                      d="M256.657,127.525h-31.9c-10.557,0-19.125,8.645-19.125,19.125v101.975c0,10.48,8.645,19.125,19.125,19.125h31.9
+				c10.48,0,19.125-8.645,19.125-19.125V146.65C275.782,136.17,267.138,127.525,256.657,127.525z"
+                    />
+                    <path
+                      d="M239.062,0C106.947,0,0,106.947,0,239.062s106.947,239.062,239.062,239.062c132.115,0,239.062-106.947,239.062-239.062
+				S371.178,0,239.062,0z M239.292,409.734c-94.171,0-170.595-76.348-170.595-170.596c0-94.248,76.347-170.595,170.595-170.595
+				s170.595,76.347,170.595,170.595C409.887,333.387,333.464,409.734,239.292,409.734z"
+                    />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            <p>
+              To enable advanced features for your <strong>RYM Profile</strong> please
+              <a
+                v-if="!userData"
+                href="#"
+                class="
+                  text-clr-rym font-bold
+                  hover:underline
+                "
+                @click.prevent="openAuthPage"
+              >sign in with Last.fm</a>
+              <template v-else>
+                sign in
+              </template>
+              and add your Last.fm API Key. You can create it by visiting <a
+                href="https://www.last.fm/api/account/create"
+                target="_blank"
+                class="
+                  text-clr-rym font-bold
+                  hover:underline
+                "
+              >this link</a>
+              (only "Application" field is required).
+              If you already have an API Key, you can find it in your API Applications <a
+                href="https://www.last.fm/api/accounts"
+                target="_blank"
+                class="
+                  text-clr-rym font-bold
+                  hover:underline
+                "
+              >here</a>.
+            </p>
+          </div>
 
           <!-- PROFILE -->
           <FormFieldset
@@ -435,12 +504,14 @@ const openAuthPage = () => {
   }
 
   signinInProgress.value = true;
+
   browserAPI.windows.create({
-    url: `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}`,
+    url: `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&source=rym-lastfm-stats`,
     type: 'popup',
     width: 500,
     height: 600,
   });
+
   browserAPI.runtime.onMessage.addListener((message) => {
     if (message.type === 'lastfm_auth') {
       api.fetchUserData(message.value, SYSTEM_API_KEY).then((data) => {

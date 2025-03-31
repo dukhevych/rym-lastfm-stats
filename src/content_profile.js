@@ -5,6 +5,9 @@ import * as utils from '@/helpers/utils.js';
 (async function () {
   utils.initColorSchemeDetection();
 
+  const sprite = utils.createSVGSprite();
+  await utils.insertSVGSprite(sprite);
+
   const config = await utils.getFullConfig();
 
   const isMyProfile = await utils.checkDOMCondition(targetSelectors, () => utils.isMyProfile());

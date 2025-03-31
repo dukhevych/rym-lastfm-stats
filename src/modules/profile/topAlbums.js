@@ -1,7 +1,8 @@
 import * as api from '@/helpers/api';
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
-import svgLoader from '@/assets/icons/loader.svg?raw';
+
+import './topAlbums.css';
 
 const PROFILE_CONTAINER_SELECTOR =
   '.bubble_header.profile_header + .bubble_content';
@@ -46,8 +47,6 @@ export async function render(_config, _userName) {
     console.log("No Last.fm username found. Top Albums can't be displayed.");
     return;
   }
-
-  addTopAlbumsStyles();
 
   const topAlbums = await api.fetchUserTopAlbums(
     userName,
@@ -102,188 +101,6 @@ export async function render(_config, _userName) {
   populateTopAlbums(topAlbumsContainer, topAlbums, userName);
 
   insertTopAlbumsIntoDOM(topAlbumsHeader, topAlbumsContainer);
-}
-
-function addTopAlbumsStyles() {
-  const style = document.createElement('style');
-  style.textContent = `
-    .top-albums {
-      display: flex;
-      flex-wrap: wrap;
-      position: relative;
-    }
-
-    .top-albums::after {
-      content: '';
-      inset: 0;
-      display: none;
-      background: rgba(0,0,0,.5);
-      position: absolute;
-    }
-
-    ${constants.LIGHT_THEME_CLASSES
-      .map((themeClass) => '.' + themeClass + ' .top-albums::after')
-      .join(',')
-    } {
-      background: rgba(255,255,255,.5);
-    }
-
-    .top-albums.is-loading::after { display: block; }
-
-    .top-albums-header {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      justify-content: space-between;
-
-      & > div {
-        display: flex;
-        gap: 10px;
-        align-items: stretch;
-      }
-
-      button, select { cursor: pointer; }
-
-      button {
-        background: var(--surface-primary);
-        border-radius: 3px;
-        padding: .15em .5em;
-        color: var(--text-primary);
-        border: 1px solid var(--ui-detail-neutral);
-        font-size: 16px;
-      }
-    }
-
-
-    #top-albums-period-label::before { content: '('; }
-    #top-albums-period-label::after { content: ')'; }
-
-    .top-albums .album-wrapper {
-      position: relative;
-      width: 182px;
-    }
-
-    @media screen and (max-width: 1024px) {
-      .top-albums .album-wrapper {
-        width: 25%;
-      }
-    }
-
-    .top-albums .album-image {
-      position: relative;
-      aspect-ratio: 1 / 1;
-    }
-
-    .top-albums a { color: inherit; }
-
-    .top-albums .album-image {
-      position: relative;
-
-      img {
-        display: block;
-        width: 100%;
-        height: auto;
-      }
-
-      .loader {
-        position: absolute;
-        height: 100%;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        svg {
-          height: 50px;
-          width: 50px;
-          color: var(--clr-lastfm);
-        }
-      }
-    }
-
-    .fade-in {
-      opacity: 0;
-      transition: opacity 1s ease-in-out;
-    }
-
-    .fade-in.loaded {
-      opacity: 1;
-    }
-
-    .top-albums .album-image::after {
-      background-image: linear-gradient(180deg,transparent 0,rgba(0,0,0,.45) 70%,rgba(0,0,0,.8));
-      content: "";
-      height: 100%;
-      left: 0;
-      position: absolute;
-      top: 0;
-      width: 100%;
-    }
-
-    ${constants.LIGHT_THEME_CLASSES
-      .map((themeClass) => '.' + themeClass + ' .top-albums .album-image::after')
-      .join(',')
-    } {
-      background-image: linear-gradient(180deg,transparent 0,rgba(255,255,255,.55) 70%,rgba(255,255,255,.9));
-    }
-
-    .top-albums .album-details a:hover {
-      text-decoration: underline;
-    }
-
-    .top-albums .album-details {
-      bottom: 15px;
-      font-size: 14px;
-      line-height: 1.5;
-      left: 15px;
-      line-height: 18px;
-      margin: 0;
-      position: absolute;
-      right: 15px;
-      text-shadow: 0 0 10px rgba(0,0,0,.7);
-      display: flex;
-      flex-direction: column;
-    }
-
-    ${constants.LIGHT_THEME_CLASSES
-      .map((themeClass) => '.' + themeClass + ' .top-albums .album-details')
-      .join(',')
-    } {
-      text-shadow: 0 0 5px rgba(255,255,255,.8);
-    }
-
-    .album-wrapper .album-details a {
-      position: relative;
-      z-index: 1;
-      display: block;
-      max-width: 100%;
-      font-size: 12px;
-      padding: 1px 0;
-      line-height: 1.4;
-      white-space: nowrap;
-      overflow-x: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .album-wrapper .album-details .album-title {
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    .top-albums .album-wrapper:has(.album-link:hover) .album-title {
-      text-decoration: underline;
-    }
-
-    .top-albums .album-link {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 0;
-    }
-  `;
-  document.head.appendChild(style);
 }
 
 function createTopAlbumsUI() {
@@ -362,31 +179,11 @@ function createAlbumCover(album) {
   const loader = document.createElement('div');
   loader.classList.add('loader');
 
-  if (!document.getElementById('svg-loader-symbol')) {
-    const svgSymbol = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svgSymbol.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    svgSymbol.setAttribute('style', 'display:none;');
-
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(svgLoader, 'image/svg+xml');
-    const svgElement = svgDoc.documentElement;
-    const symbolElement = document.createElementNS('http://www.w3.org/2000/svg', 'symbol');
-    symbolElement.setAttribute('id', 'svg-loader-symbol');
-    symbolElement.setAttribute('viewBox', svgElement.getAttribute('viewBox'));
-    symbolElement.innerHTML = svgElement.innerHTML;
-
-    svgSymbol.appendChild(symbolElement);
-    document.body.appendChild(svgSymbol);
-  }
-
-  const svgLoaderElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svgLoaderElement.setAttribute('viewBox', '0 0 300 150');
-  const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-  useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#svg-loader-symbol');
-  svgLoaderElement.appendChild(useElement);
-  loader.appendChild(svgLoaderElement);
+  const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
+  loader.appendChild(icon);
 
   img.src = album.image[2]['#text'];
+
   img.onload = () => {
     loader.remove();
     img.classList.add('loaded');
