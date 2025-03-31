@@ -21,6 +21,7 @@
       <div>
         <a
           href="mailto:landenmetal@gmail.com"
+          target="_blank"
           class="
             font-bold
             hover:underline
@@ -142,7 +143,16 @@
                 </template>
               </button>
             </div>
-            <div class="ml-auto flex items-center gap-5" />
+            <div class="ml-auto flex items-center gap-5">
+              <a
+                href="https://github.com/dukhevych/rym-lastfm-stats/issues/new"
+                target="_blank"
+                class="
+                  font-bold
+                  hover:underline
+                "
+              >Report issue</a>
+            </div>
           </div>
 
           <!-- MAIN SETTINGS -->
