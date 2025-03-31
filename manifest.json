@@ -10,7 +10,6 @@
   "host_permissions": [
     "https://rateyourmusic.com/artist/*",
     "https://rateyourmusic.com/release/*",
-    "https://rateyourmusic.com/music_export",
     "https://rateyourmusic.com/~*",
     "https://ws.audioscrobbler.com/",
     "https://dukhevych.github.io/lastfm-oauth-redirect/*"
@@ -34,11 +33,6 @@
     {
       "matches": ["*://rateyourmusic.com/search?*"],
       "js": ["content_search.js"],
-      "run_at": "document_start"
-    },
-    {
-      "matches": ["*://rateyourmusic.com/music_export"],
-      "js": ["content_export.js"],
       "run_at": "document_start"
     }
   ],
