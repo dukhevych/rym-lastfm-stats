@@ -380,7 +380,8 @@ function addRecentTracksStyles() {
       }
 
       &.is-loaded + .loader {
-        display: none;}
+        display: none;
+      }
 
       .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
         a {
@@ -395,10 +396,11 @@ function addRecentTracksStyles() {
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.95);
-            width: 33.33%;
-            height: 33.33%;
+            width: 20%;
+            height: 20%;
             border-radius: 50%;
             margin: auto;
+            outline: 2px solid rgba(255, 255, 255, 0.5);
             opacity: 0;
             transition: opacity .15s ease-in-out, transform .15s ease-in-out;
           }
@@ -442,8 +444,8 @@ function addRecentTracksStyles() {
           img {
             animation: rotate 9s linear infinite;
             border-radius: 50%;
-            outline: 1px solid rgba(255,255,255, 0.2);
-            outline-offset: -1px;
+            outline: 2px solid rgba(255,255,255, 0.5);
+            outline-offset: -2px;
           }
 
           &:before { opacity: 1; }
@@ -458,6 +460,24 @@ function addRecentTracksStyles() {
             &:before {
               opacity: 0;
               transform: scale(0);
+            }
+          }
+        }
+      }
+    }
+
+    html[data-scheme="light"] {
+      .${PLAY_HISTORY_ITEM_CLASSES.item}.is-custom {
+        .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
+          a::before {
+            background-color: rgba(255, 255, 255, 0.95);
+            outline-color: rgba(0, 0, 0, 0.5);
+          }
+        }
+        &.is-now-playing {
+          .${PLAY_HISTORY_ITEM_CLASSES.artbox} a {
+            img {
+              outline: 2px solid rgba(0, 0, 0, 0.5);
             }
           }
         }
