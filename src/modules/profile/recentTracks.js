@@ -10,7 +10,6 @@ import './recentTracks.css';
 let abortController = new AbortController();
 
 const PROFILE_LISTENING_SET_TO_SELECTOR = '.profile_set_listening_box';
-
 const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_container';
 const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
@@ -180,7 +179,7 @@ function populatePlayHistoryItem(
 }
 
 function prepareRecentTracksUI() {
-  const button = createLastfmButton();
+  let button;
   const tracksWrapper = document.createElement('div');
   let playHistoryItem;
 
@@ -189,9 +188,14 @@ function prepareRecentTracksUI() {
     'lastfm-tracks-wrapper',
   );
 
-  button.addEventListener('click', () => {
-    tracksWrapper.classList.toggle('is-active');
-  });
+  if (config.recentTracksShowOnLoad) {
+    tracksWrapper.classList.add('is-active');
+  } else {
+    button = createLastfmButton()
+    button.addEventListener('click', () => {
+      tracksWrapper.classList.toggle('is-active');
+    });
+  }
 
   if (config.recentTracksReplace) {
     const panelContainer = document.querySelector('.profile_listening_container');
@@ -203,8 +207,6 @@ function prepareRecentTracksUI() {
     if (playHistoryBtn) playHistoryBtn.style.display = 'none';
 
     const currentTrackContainer = panelContainer.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
-
-    currentTrackContainer.classList.add('is-loading');
 
     playHistoryItem = createPlayHistoryItem();
 
@@ -247,7 +249,7 @@ function createTracksList(recentTracks, userName) {
   const tracksList = document.createElement('ul');
   recentTracks.forEach((track) => {
     const trackItem = createTrackItem(track, userName);
-    trackItem.dataset.id = track.mbid || `${track.artist["#text"]}-${track.name}-${track.date?.uts || ''}`;
+    trackItem.dataset.id = `${track.a}-${track.n}-${track.d || ''}`;
     tracksList.appendChild(trackItem);
   });
   return tracksList;
@@ -274,16 +276,16 @@ function createTrackCover(track) {
   link.classList.add('track-image');
 
   link.href = utils.generateSearchUrl({
-    artist: track.artist['#text'],
-    releaseTitle: track.album['#text'] || '',
-    trackTitle: track.album['#text'] ? '' : track.name,
+    artist: track.a,
+    releaseTitle: track.r || '',
+    trackTitle: track.r ? '' : track.n,
   }, config);
 
-  link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
+  link.title = `Search for "${track.a} - ${track.r || track.n}" on RateYourMusic`;
   wrapper.appendChild(link);
-  if (track.image[0]['#text']) {
+  if (track.i) {
     const img = document.createElement('img');
-    img.src = track.image[0]['#text'];
+    img.src = track.i;
     link.appendChild(img);
   }
   return wrapper;
@@ -293,11 +295,11 @@ function createTrackTitle(track) {
   const link = document.createElement('a');
   link.classList.add('track-title');
   link.href = utils.generateSearchUrl({
-    artist: track.artist['#text'],
-    trackTitle: track.name,
+    artist: track.a,
+    trackTitle: track.n,
   }, config);
-  link.title = `Search for "${track.artist['#text']} - ${track.album['#text'] || track.name}" on RateYourMusic`;
-  link.textContent = track.name;
+  link.title = `Search for "${track.a} - ${track.r || track.n}" on RateYourMusic`;
+  link.textContent = track.n;
   return link;
 }
 
@@ -305,10 +307,10 @@ function createTrackArtist(track) {
   const artist = document.createElement('div');
   artist.classList.add('track-artist');
   const link = document.createElement('a');
-  link.textContent = track.artist['#text'];
-  link.title = `Search for "${track.artist['#text']}" on RateYourMusic`;
+  link.textContent = track.a;
+  link.title = `Search for "${track.a}" on RateYourMusic`;
   link.href = utils.generateSearchUrl({
-    artist: track.artist['#text'],
+    artist: track.a,
   }, config);
   artist.appendChild(link);
   return artist;
@@ -317,17 +319,15 @@ function createTrackArtist(track) {
 function createTrackDate(track) {
   const date = document.createElement('span');
   date.classList.add('track-date');
-  if (track['@attr']?.nowplaying) {
+  if (track.c) {
     date.textContent = 'Scrobbling now';
-    const icon = document.createElement('img');
-    icon.src =
-      'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+    const icon = gif.cloneNode();
     date.prepend(icon);
   } else {
-    date.textContent = formatDistanceToNow(new Date(track.date.uts * 1000), {
+    date.textContent = formatDistanceToNow(new Date(track.d * 1000), {
       addSuffix: true,
     });
-    date.title = new Date(track.date.uts * 1000).toLocaleString();
+    date.title = new Date(track.d * 1000).toLocaleString();
   }
   return date;
 }
@@ -516,16 +516,58 @@ async function render(_config, _userName) {
 
   addRecentTracksStyles();
 
-  const currentTrackContainer = document.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
-
   const { button, tracksWrapper, playHistoryItem } = prepareRecentTracksUI();
 
-  const buttonsContainer = document.querySelector(
-    PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
-  );
+  if (button) {
+    const buttonsContainer = document.querySelector(
+      PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
+    );
 
-  if (buttonsContainer) {
-    buttonsContainer.prepend(button);
+    if (buttonsContainer) {
+      buttonsContainer.prepend(button);
+    }
+  }
+
+  const populateRecentTracks = (data, timestamp) => {
+    if (button) {
+      if (data[0].c) {
+        button.classList.add("is-now-playing");
+      } else {
+        button.classList.remove("is-now-playing");
+      }
+    }
+
+    if (config.recentTracksReplace) {
+      populatePlayHistoryItem(
+        playHistoryItem,
+        {
+          artistName: data[0].a,
+          artistUrl: utils.generateSearchUrl({
+            artist: data[0].a,
+          }, config),
+          albumName: data[0].r,
+          albumUrl: utils.generateSearchUrl({
+            artist: data[0].a,
+            releaseTitle: data[0].r,
+          }, config),
+          trackUrl: utils.generateSearchUrl({
+            artist: data[0].a,
+            trackTitle: data[0].n,
+          }, config),
+          trackName: data[0].n,
+          coverUrl: data[0].i,
+          isNowPlaying: data[0].c,
+          timestamp: data[0].d,
+        },
+      );
+      playHistoryItem.classList.add('is-loaded');
+    }
+
+    const tracksList = createTracksList(data, userName);
+
+    tracksWrapper.replaceChildren(tracksList);
+
+    tracksWrapper.dataset.timestamp = `Updated at ${new Date(timestamp).toLocaleString()}`;
   }
 
   const updateAction = async () => {
@@ -540,46 +582,26 @@ async function render(_config, _userName) {
         abortController.signal,
       );
 
-      if (data[0]["@attr"]?.nowplaying) {
-        button.classList.add("is-now-playing");
-      } else {
-        button.classList.remove("is-now-playing");
-      }
+      const timestamp = Date.now();
 
-      if (config.recentTracksReplace) {
-        populatePlayHistoryItem(
-          playHistoryItem,
-          {
-            artistName: data[0].artist['#text'],
-            artistUrl: utils.generateSearchUrl({
-              artist: data[0].artist['#text'],
-            }, config),
-            albumName: data[0].album['#text'],
-            albumUrl: utils.generateSearchUrl({
-              artist: data[0].artist['#text'],
-              releaseTitle: data[0].album['#text'],
-            }, config),
-            trackUrl: utils.generateSearchUrl({
-              artist: data[0].artist['#text'],
-              trackTitle: data[0].name,
-            }, config),
-            trackName: data[0].name,
-            coverUrl: data[0].image[1]['#text'],
-            isNowPlaying: data[0]["@attr"]?.nowplaying,
-            timestamp: data[0].date?.uts,
-          },
-        );
-        playHistoryItem.classList.add('is-loaded');
-        currentTrackContainer.classList.remove('is-loading');
-      }
+      const normalizedData = data.map((item) => ({
+        c: item["@attr"]?.nowplaying ?? null,
+        i: item.image[0]['#text'],
+        n: item.name,
+        d: item.date?.uts ?? null,
+        r: item.album['#text'],
+        a: item.artist['#text'],
+      }));
 
-      const tracksList = createTracksList(data, userName);
+      await utils.storageSet({
+        recentTracksCache: {
+          data: normalizedData,
+          timestamp,
+          userName,
+        }
+      });
 
-      const timestamp = new Date();
-
-      tracksWrapper.replaceChildren(tracksList);
-
-      tracksWrapper.dataset.timestamp = `Updated at ${timestamp.toLocaleString()}`;
+      populateRecentTracks(normalizedData, timestamp);
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error("Failed to fetch recent tracks:", err);
@@ -600,8 +622,30 @@ async function render(_config, _userName) {
     }
   };
 
+  const { recentTracksCache } = await utils.storageGet(['recentTracksCache']);
+
+  if (
+    recentTracksCache
+    && recentTracksCache.data
+    && recentTracksCache.timestamp
+    && recentTracksCache.userName === userName
+  ) {
+    if (
+      Date.now() - recentTracksCache.timestamp >
+      constants.RECENT_TRACKS_INTERVAL_MS
+    ) {
+      await updateAction();
+    } else {
+      populateRecentTracks(recentTracksCache.data);
+      tracksWrapper.dataset.timestamp = `Updated at ${new Date(recentTracksCache.timestamp).toLocaleString()}`;
+    }
+  } else {
+    if (document.visibilityState === 'visible') {
+      await updateAction();
+    }
+  }
+
   if (document.visibilityState === 'visible') {
-    await updateAction();
     startInterval();
   }
 
@@ -636,9 +680,5 @@ export default {
   render,
   targetSelectors: [
     '.profile_listening_container',
-    // PROFILE_LISTENING_SET_TO_SELECTOR,
-    // PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
-    // PROFILE_LISTENING_PLAY_HISTORY_BTN,
-    // PROFILE_LISTENING_CURRENT_TRACK_SELECTOR,
   ],
 };

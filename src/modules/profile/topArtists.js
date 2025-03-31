@@ -93,16 +93,46 @@ export async function render(_config, _userName) {
 
   insertTopArtistsIntoDOM(topArtistsHeader, topArtistsContainer);
 
-  const topArtists = await api.fetchUserTopArtists(
-    userName,
-    config.lastfmApiKey,
-    {
-      limit: config.topArtistsLimit,
-      period: config.topArtistsPeriod,
-    },
-  );
+  const updateAction = async () => {
+    const topArtists = await api.fetchUserTopArtists(
+      userName,
+      config.lastfmApiKey,
+      {
+        limit: config.topArtistsLimit,
+        period: config.topArtistsPeriod,
+      },
+    );
 
-  populateTopArtists(topArtistsContainer, topArtists);
+    populateTopArtists(topArtistsContainer, topArtists);
+
+    await utils.storageSet({
+      topArtistsCache: {
+        data: topArtists,
+        timestamp: Date.now(),
+        userName,
+      },
+    });
+  }
+
+  const { topArtistsCache } = await utils.storageGet(['topArtistsCache']);
+
+  if (
+    topArtistsCache
+    && topArtistsCache.data
+    && topArtistsCache.timestamp
+    && topArtistsCache.userName === userName
+  ) {
+    if (
+      Date.now() - topArtistsCache.timestamp >
+      constants.TOP_ARTISTS_INTERVAL_MS
+    ) {
+      await updateAction();
+    } else {
+      populateTopArtists(topArtistsContainer, topArtistsCache.data, userName);
+    }
+  } else {
+    await updateAction();
+  }
 }
 
 function addTopArtistsStyles() {

@@ -97,15 +97,45 @@ export async function render(_config, _userName) {
 
   insertTopAlbumsIntoDOM(topAlbumsHeader, topAlbumsContainer);
 
-  const topAlbums = await api.fetchUserTopAlbums(
-    userName,
-    config.lastfmApiKey,
-    {
-      period: config.topAlbumsPeriod,
-    },
-  );
+  const updateAction = async () => {
+    const topAlbums = await api.fetchUserTopAlbums(
+      userName,
+      config.lastfmApiKey,
+      {
+        period: config.topAlbumsPeriod,
+      },
+    );
 
-  populateTopAlbums(topAlbumsContainer, topAlbums, userName);
+    populateTopAlbums(topAlbumsContainer, topAlbums, userName);
+
+    await utils.storageSet({
+      topAlbumsCache: {
+        data: topAlbums,
+        timestamp: Date.now(),
+        userName,
+      },
+    });
+  }
+
+  const { topAlbumsCache } = await utils.storageGet(['topAlbumsCache']);
+
+  if (
+    topAlbumsCache
+    && topAlbumsCache.data
+    && topAlbumsCache.timestamp
+    && topAlbumsCache.userName === userName
+  ) {
+    if (
+      Date.now() - topAlbumsCache.timestamp >
+      constants.TOP_ALBUMS_INTERVAL_MS
+    ) {
+      await updateAction();
+    } else {
+      populateTopAlbums(topAlbumsContainer, topAlbumsCache.data, userName);
+    }
+  } else {
+    await updateAction();
+  }
 }
 
 function createTopAlbumsUI() {

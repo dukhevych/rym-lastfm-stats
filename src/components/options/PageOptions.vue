@@ -285,6 +285,13 @@
               label="Recent tracks"
             />
 
+            <!-- RECENT TRACKS SHOW ON LOAD -->
+            <FormCheckbox
+              v-model="options.recentTracksShowOnLoad"
+              name="recentTracksShowOnLoad"
+              label="Show Recent tracks on page load"
+            />
+
             <!-- RECENT TRACKS REPLACE -->
             <FormCheckbox
               v-model="options.recentTracksReplace"
@@ -516,7 +523,7 @@ const openAuthPage = () => {
     if (message.type === 'lastfm_auth') {
       api.fetchUserData(message.value, SYSTEM_API_KEY).then((data) => {
         userData.value = data;
-        browserAPI.storage.sync.set({ userData: data });
+        browserAPI.storage.sync.set({ userData: { name: data.name } });
         signinInProgress.value = false;
       });
     }

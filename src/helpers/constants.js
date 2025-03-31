@@ -73,6 +73,7 @@ export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
 export const PROFILE_OPTIONS_DEFAULT = {
   recentTracks: true,
+  recentTracksShowOnLoad: false,
   recentTracksReplace: true,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
   topArtists: true,
@@ -90,6 +91,10 @@ export const OPTIONS_DEFAULT = {
 
 export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);
 
-export const RECENT_TRACKS_INTERVAL_MS = 180000;
+export const RECENT_TRACKS_INTERVAL_MS = 120000;
+
+export const TOP_ALBUMS_INTERVAL_MS = 120000;
+
+export const TOP_ARTISTS_INTERVAL_MS = 120000;
 
 export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = 60000;
