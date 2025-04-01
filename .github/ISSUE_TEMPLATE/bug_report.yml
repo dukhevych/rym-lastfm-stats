@@ -1,0 +1,76 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in the browser extension.
+title: "[Bug] "
+labels: [bug]
+assignees:
+  - dukhevych
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Thanks for taking the time to report a bug!**
+        Please fill out the details below as accurately as possible.
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Which browser are you using?
+      placeholder: e.g. Chrome 123.0.0.0, Firefox 124.0
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Extension Version
+      description: What version of the extension are you using?
+      placeholder: e.g. v1.2.3
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: Describe the issue clearly. What did you expect to happen, and what happened instead?
+      placeholder: Tell us what broke and what you expected
+    validations:
+      required: true
+
+  - type: input
+    id: rym-url
+    attributes:
+      label: RYM Page URL (if applicable)
+      description: If this bug appears on a specific RYM page, please paste the full URL here.
+      placeholder: https://rateyourmusic.com/release/...
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to trigger the bug
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See the error
+    validations:
+      required: false
+
+  - type: textarea
+    id: console-log
+    attributes:
+      label: Console Errors (if any)
+      description: Please copy any relevant errors from the browser console.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Info
+      description: Anything else you'd like to share? (screenshots, screen recording, etc.)
+    validations:
+      required: false
