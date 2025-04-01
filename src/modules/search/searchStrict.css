@@ -1,0 +1,17 @@
+.rym-warning {
+  padding: 0.5rem 2rem;
+  margin: 1rem 0;
+  font-weight: bold;
+  border-left: 10px solid currentColor;
+}
+
+.rym-warning p { margin: 0; }
+
+.rym-warning p + p { margin-top: 0.5em; }
+
+.btn-search-strict-show-all {
+  margin-left: 10px;
+  font-size: 0.5em;
+  position: relative;
+  top: -4px;
+}

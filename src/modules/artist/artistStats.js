@@ -162,16 +162,24 @@ async function render(config) {
 
   let playcount = 0;
   let listeners = 0;
-  let userplaycount = 0;
+  let userplaycount;
 
   playcount += +data1.artist.stats.playcount;
   listeners += +data1.artist.stats.listeners;
-  userplaycount += +data1.artist.stats.userplaycount;
+
+  if (data1.artist.stats.userplaycount) {
+    userplaycount = 0;
+    userplaycount += +data1.artist.stats.userplaycount;
+  }
 
   if (data2 && data2.artist) {
     playcount += +data2.artist.stats.playcount;
     listeners += +data2.artist.stats.listeners;
-    userplaycount += +data2.artist.stats.userplaycount;
+
+    if (data2.artist.stats.userplaycount) {
+      userplaycount = userplaycount || 0;
+      userplaycount += +data2.artist.stats.userplaycount;
+    }
   }
 
   const { url } = data1.artist;

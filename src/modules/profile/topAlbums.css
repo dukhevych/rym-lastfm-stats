@@ -3,6 +3,7 @@
   flex-wrap: wrap;
   position: relative;
   justify-content: center;
+  padding: 14px;
 
   & > .loader {
     color: var(--clr-lastfm);
@@ -128,14 +129,15 @@ html[data-scheme="light"] {
 }
 
 .top-albums .album-details {
-  bottom: 15px;
+  bottom: 0;
   font-size: 14px;
   line-height: 1.5;
-  left: 15px;
+  left: 0;
   line-height: 18px;
   margin: 0;
   position: absolute;
-  right: 15px;
+  right: 0;
+  padding: 15px;
   text-shadow: 0 0 10px rgba(0,0,0,.7);
   display: flex;
   flex-direction: column;
@@ -157,7 +159,7 @@ html[data-scheme="light"] {
 
 html[data-scheme="light"] {
   .top-albums .album-details {
-    text-shadow: 0 0 10px rgba(255,255,255,.7);
+    text-shadow: 1px 1px 1px rgba(255,255,255,.4), 0px 0px 5px rgba(0,0,0,.5);
   }
 }
 

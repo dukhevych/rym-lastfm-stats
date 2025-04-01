@@ -1,6 +1,8 @@
 import deburr from 'lodash/deburr';
 import * as utils from '@/helpers/utils.js';
 
+import './searchStrict.css';
+
 const SEARCH_TYPES = {
   a: 'artist',
   l: 'release',
@@ -35,11 +37,7 @@ function getNodeDirectTextContent(item) {
 function injectShowAllButton() {
   const button = document.createElement('button');
   button.textContent = `Show all results (+ ${searchItemsMore.length} more)`;
-  button.classList.add('btn', 'blue_btn', 'btn_small');
-  button.style.marginLeft = '10px';
-  button.style.fontSize = '0.5em';
-  button.style.position = 'relative';
-  button.style.top = '-4px';
+  button.classList.add('btn', 'blue_btn', 'btn_small', 'btn-search-strict-show-all');
   const target = document.querySelector('.page_search_results h3');
   target.appendChild(button);
   button.addEventListener('click', () => {
@@ -200,21 +198,6 @@ async function render(config) {
         const page = url.searchParams.get('page') ?? '1';
 
         warning.appendChild(utils.createParagraph(`No direct matches found on the #${page} page.`));
-
-        const style = document.createElement('style');
-        style.textContent = `
-          .rym-warning {
-            padding: 0.5rem 2rem;
-            margin: 1rem 0;
-            font-weight: bold;
-            border-left: 10px solid currentColor;
-          }
-
-          .rym-warning p { margin: 0; }
-
-          .rym-warning p + p { margin-top: 0.5em; }
-        }`;
-        document.head.appendChild(style);
 
         if (searchType === 'a') {
           const p = utils.createParagraph('This artist may not be added yet into RYM database or too obscure.');

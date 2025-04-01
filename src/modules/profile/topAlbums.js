@@ -174,7 +174,6 @@ function createTopAlbumsUI() {
 
   const topAlbumsContainer = document.createElement('div');
   topAlbumsContainer.classList.add('bubble_content', 'top-albums');
-  topAlbumsContainer.style.padding = '14px';
 
   return {
     topAlbumsHeader,
