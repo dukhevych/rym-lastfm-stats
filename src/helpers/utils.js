@@ -332,7 +332,9 @@ export const addIconToSVGSprite = function(iconRaw, iconName) {
   const symbolElement = document.createElementNS('http://www.w3.org/2000/svg', 'symbol');
   symbolElement.setAttribute('id', iconName);
   symbolElement.setAttribute('viewBox', svgElement.getAttribute('viewBox'));
-  symbolElement.innerHTML = svgElement.innerHTML;
+  [...svgElement.childNodes].forEach(node => {
+    symbolElement.appendChild(node.cloneNode(true));
+  });
 
   svgSprite.appendChild(symbolElement);
 }
@@ -348,4 +350,37 @@ export const createSvgUse = function(iconName, viewBox) {
 
 export function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function debounce(fn, wait) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this, args), wait);
+  };
+}
+
+export function throttle(fn, wait) {
+  let lastCall = 0;
+  let timeout;
+
+  return function (...args) {
+    const now = Date.now();
+
+    const invoke = () => {
+      lastCall = now;
+      fn.apply(this, args);
+    };
+
+    if (now - lastCall >= wait) {
+      invoke();
+    } else {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => invoke(), wait - (now - lastCall));
+    }
+  };
+}
+
+export function deburr(string) {
+  return string.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }

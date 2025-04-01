@@ -1,4 +1,3 @@
-import deburr from 'lodash/deburr';
 import * as utils from '@/helpers/utils.js';
 
 import './searchStrict.css';
@@ -57,7 +56,7 @@ async function render(config) {
 
   if (strict !== 'true' || !Object.keys(SEARCH_TYPES).includes(searchType)) return;
 
-  const searchTerm = deburr(urlParams.get('searchterm').toLowerCase());
+  const searchTerm = utils.deburr(urlParams.get('searchterm').toLowerCase());
 
   searchItems = document.querySelectorAll(SEARCH_ITEMS_SELECTOR);
 
@@ -70,13 +69,13 @@ async function render(config) {
       const artistName = (item.querySelector(artistNameSelector)?.textContent || '')
         .trim()
         .toLowerCase();
-      const artistNameDeburred = deburr(artistName);
+      const artistNameDeburred = utils.deburr(artistName);
 
       const artistNameLocalized = (item.querySelector(artistNameLocalizedSelector)?.textContent || '')
         .trim()
         .toLowerCase()
         .replace(/^\[|\]$/g, '');
-      const artistNameLocalizedDeburred = deburr(artistNameLocalized);
+      const artistNameLocalizedDeburred = utils.deburr(artistNameLocalized);
 
       const artistAka =
         getNodeDirectTextContent(
@@ -93,7 +92,7 @@ async function render(config) {
         // artistNameLocalized !== searchTerm &&
         artistNameDeburred !== searchTerm &&
         artistNameLocalizedDeburred !== searchTerm &&
-        !deburr(akaValues).includes(searchTerm)
+        !utils.deburr(akaValues).includes(searchTerm)
       ) {
         searchItemsMore.push(item);
       }
@@ -119,12 +118,13 @@ async function render(config) {
         }
       }
 
-      const artistNameDeburred = deburr(artistName);
-      const artistNameLocalizedDeburred = artistNameLocalized ? deburr(artistNameLocalized) : artistNameLocalized;
+      const artistNameDeburred = utils.deburr(artistName);
+      const artistNameLocalizedDeburred = artistNameLocalized ? utils.deburr(artistNameLocalized) : artistNameLocalized;
 
-      const releaseTitleDeburred = deburr(item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '');
+      const releaseTitleDeburred = utils
+        .deburr(item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '');
 
-      let query = deburr(searchTerm);
+      let query = utils.deburr(searchTerm);
 
       let hasArtist = false;
       let hasReleaseTitle = false;
@@ -151,10 +151,10 @@ async function render(config) {
     const trackNameSelector = '.infobox td:nth-child(2) > table .ui_name_locale_original';
 
     searchItems.forEach(item => {
-      const artistName = deburr(item.querySelector(artistNameSelector)?.textContent.trim().toLowerCase() || '');
-      const trackName = deburr(item.querySelector(trackNameSelector)?.textContent.trim().toLowerCase() || '');
+      const artistName = utils.deburr(item.querySelector(artistNameSelector)?.textContent.trim().toLowerCase() || '');
+      const trackName = utils.deburr(item.querySelector(trackNameSelector)?.textContent.trim().toLowerCase() || '');
 
-      let query = deburr(searchTerm);
+      let query = utils.deburr(searchTerm);
 
       let hasArtist = false;
       let hasTrackName = false;

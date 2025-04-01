@@ -583,8 +583,6 @@ import FormFieldset from '@/components/options/FormFieldset.vue';
 import FormRange from './FormRange.vue';
 import FormSeparator from './FormSeparator.vue';
 
-import debounce from 'lodash/debounce';
-
 const appVersion = process.env.APP_VERSION;
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 
@@ -681,7 +679,7 @@ const init = async () => {
 
     userData.value = syncedUserData;
 
-    const debouncedSubmit = debounce(() => {
+    const debouncedSubmit = utils.debounce(() => {
       submit();
     }, 300);
 

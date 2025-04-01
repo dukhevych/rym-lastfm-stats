@@ -1,5 +1,4 @@
 import { formatDistanceToNow } from 'date-fns';
-import throttle from 'lodash/throttle';
 
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
@@ -693,7 +692,7 @@ async function render(_config, _userName) {
     }
   };
 
-  const throttledHandleVisibilityChange = throttle(
+  const throttledHandleVisibilityChange = utils.throttle(
     handleVisibilityChange,
     constants.RECENT_TRACKS_INTERVAL_MS_THROTTLED,
   );
