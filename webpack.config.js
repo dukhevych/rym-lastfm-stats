@@ -90,7 +90,16 @@ module.exports = (env) => {
         },
         {
           test: /\.css$/,
-          use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
+          use: [
+            {
+              loader: 'style-loader',
+              options: {
+                insert: require.resolve('./src/helpers/styleLoaderInsert.js'),
+              }
+            },
+            'css-loader',
+            'postcss-loader',
+          ],
         },
         {
           test: /\.svg$/i,
@@ -140,12 +149,12 @@ module.exports = (env) => {
       new ESLintPlugin({
         extensions: ['js', 'vue'],
         configType: 'flat',
-        fix: true,
+        fix: process.env.NODE_ENV === 'production',
         failOnError: true,
       }),
     ],
     optimization: {
-      minimize: true,
+      minimize: process.env.NODE_ENV === 'production',
       minimizer: [new TerserPlugin({
         parallel: true,
         terserOptions: {

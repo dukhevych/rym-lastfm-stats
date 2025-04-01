@@ -1,11 +1,4 @@
-import * as utils from '@/helpers/utils.js';
-import * as constants from '@/helpers/constants.js';
-
-export async function renderContent(module) {
-  const storageItems = await utils.getStorageItems();
-
-  const config = Object.assign({}, constants.OPTIONS_DEFAULT, storageItems);
-
+export async function renderContent(module, config, userName) {
   const renderPromises = [];
   const renderTargets = [];
 
@@ -19,13 +12,13 @@ export async function renderContent(module) {
     }
   });
 
-  async function main() {
+  function main() {
     const targetElementsExist = renderTargets.every(
       (selector) => !!document.querySelector(selector),
     );
 
     if (document.body && targetElementsExist) {
-      Promise.all(renderPromises.map((render) => render(config)));
+      Promise.all(renderPromises.map((render) => render(config, userName)));
     } else {
       requestAnimationFrame(main);
     }

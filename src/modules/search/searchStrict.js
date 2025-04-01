@@ -1,5 +1,7 @@
-import { deburr } from 'lodash';
+import deburr from 'lodash/deburr';
 import * as utils from '@/helpers/utils.js';
+
+import './searchStrict.css';
 
 const SEARCH_TYPES = {
   a: 'artist',
@@ -23,7 +25,7 @@ function getNodeDirectTextContent(item) {
   if (!item) return '';
 
   const result = [];
-  item.childNodes.forEach(node => {
+  item.childNodes.forEach((node) => {
     if (node.nodeType === Node.TEXT_NODE) {
       result.push(node.textContent);
     }
@@ -35,15 +37,11 @@ function getNodeDirectTextContent(item) {
 function injectShowAllButton() {
   const button = document.createElement('button');
   button.textContent = `Show all results (+ ${searchItemsMore.length} more)`;
-  button.classList.add('btn', 'blue_btn', 'btn_small');
-  button.style.marginLeft = '10px';
-  button.style.fontSize = '0.5em';
-  button.style.position = 'relative';
-  button.style.top = '-4px';
+  button.classList.add('btn', 'blue_btn', 'btn_small', 'btn-search-strict-show-all');
   const target = document.querySelector('.page_search_results h3');
   target.appendChild(button);
   button.addEventListener('click', () => {
-    searchItems.forEach(item => {
+    searchItems.forEach((item) => {
       item.style.display = '';
     });
     button.style.display = 'none';
@@ -59,20 +57,44 @@ async function render(config) {
 
   if (strict !== 'true' || !Object.keys(SEARCH_TYPES).includes(searchType)) return;
 
-  const searchTerm = urlParams.get('searchterm').toLowerCase();
+  const searchTerm = deburr(urlParams.get('searchterm').toLowerCase());
 
   searchItems = document.querySelectorAll(SEARCH_ITEMS_SELECTOR);
 
   if (searchType === 'a') {
     const artistNameSelector = 'a.searchpage.artist';
+    const artistNameLocalizedSelector = 'a.searchpage.artist + span.smallgray';
     const artistAkaSelector = '.subinfo';
 
-    searchItems.forEach(item => {
-      const artistName = deburr(item.querySelector(artistNameSelector)?.textContent) || '';
-      const artistAka = getNodeDirectTextContent(item.querySelector(artistAkaSelector)).trim() || '';
-      const akaValues = artistAka.toLowerCase().trim().replace(/^a\.k\.a:\s*/, '').split(', ');
+    searchItems.forEach((item) => {
+      const artistName = (item.querySelector(artistNameSelector)?.textContent || '')
+        .trim()
+        .toLowerCase();
+      const artistNameDeburred = deburr(artistName);
 
-      if (artistName.toLowerCase().trim() !== searchTerm && !akaValues.includes(searchTerm)) {
+      const artistNameLocalized = (item.querySelector(artistNameLocalizedSelector)?.textContent || '')
+        .trim()
+        .toLowerCase()
+        .replace(/^\[|\]$/g, '');
+      const artistNameLocalizedDeburred = deburr(artistNameLocalized);
+
+      const artistAka =
+        getNodeDirectTextContent(
+          item.querySelector(artistAkaSelector),
+        ).trim() || '';
+      const akaValues = artistAka
+        .toLowerCase()
+        .trim()
+        .replace(/^a\.k\.a:\s*/, '')
+        .split(', ');
+
+      if (
+        // artistName !== searchTerm &&
+        // artistNameLocalized !== searchTerm &&
+        artistNameDeburred !== searchTerm &&
+        artistNameLocalizedDeburred !== searchTerm &&
+        !deburr(akaValues).includes(searchTerm)
+      ) {
         searchItemsMore.push(item);
       }
     });
@@ -80,23 +102,44 @@ async function render(config) {
     const artistNameSelector = 'a.artist';
     const releaseTitleSelector = 'a.searchpage';
 
-    searchItems.forEach(item => {
-      const artistName = item.querySelector(artistNameSelector)?.textContent.toLowerCase() || '';
-      const releaseTitle = item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '';
+    searchItems.forEach((item) => {
+      let artistName = (item.querySelector(artistNameSelector)?.textContent || '')
+        .trim()
+        .toLowerCase();
 
-      let query = searchTerm;
+      let artistNameLocalized;
+
+      const artistNameParts = artistName.split(' ');
+
+      if (artistNameParts.length > 1) {
+        const lastPart = artistNameParts.pop();
+        if (lastPart.match(/^\[|\]$/)) {
+          artistNameLocalized = lastPart.replace(/^\[|\]$/g, '');
+          artistName = artistNameParts.join(' ');
+        }
+      }
+
+      const artistNameDeburred = deburr(artistName);
+      const artistNameLocalizedDeburred = artistNameLocalized ? deburr(artistNameLocalized) : artistNameLocalized;
+
+      const releaseTitleDeburred = deburr(item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '');
+
+      let query = deburr(searchTerm);
 
       let hasArtist = false;
       let hasReleaseTitle = false;
 
-      if (query.includes(artistName)) {
+      if (
+        query.includes(artistNameDeburred)
+        || query.includes(artistNameLocalizedDeburred)
+      ) {
         hasArtist = true;
-        query = searchTerm.replace(artistName, '').trim();
+        query = searchTerm.replace(artistNameDeburred, '').trim();
       }
 
-      if (query.includes(releaseTitle)) {
+      if (query.includes(releaseTitleDeburred)) {
         hasReleaseTitle = true;
-        query = searchTerm.replace(releaseTitle, '').trim();
+        query = searchTerm.replace(releaseTitleDeburred, '').trim();
       }
 
       if (!hasArtist || !hasReleaseTitle) {
@@ -108,10 +151,10 @@ async function render(config) {
     const trackNameSelector = '.infobox td:nth-child(2) > table .ui_name_locale_original';
 
     searchItems.forEach(item => {
-      const artistName = item.querySelector(artistNameSelector)?.textContent.trim().toLowerCase() || '';
-      const trackName = item.querySelector(trackNameSelector)?.textContent.trim().toLowerCase() || '';
+      const artistName = deburr(item.querySelector(artistNameSelector)?.textContent.trim().toLowerCase() || '');
+      const trackName = deburr(item.querySelector(trackNameSelector)?.textContent.trim().toLowerCase() || '');
 
-      let query = searchTerm;
+      let query = deburr(searchTerm);
 
       let hasArtist = false;
       let hasTrackName = false;
@@ -132,6 +175,12 @@ async function render(config) {
     });
   }
 
+  const searchMoreLink = document.querySelector('#search_morelink');
+
+  if (searchMoreLink) {
+    searchMoreLink.href += '&strict=true';
+  }
+
   if (searchItemsMore.length) {
     if (searchItemsMore.length < searchItems.length) {
       searchItemsMore.forEach(item => {
@@ -144,34 +193,33 @@ async function render(config) {
       if (header) {
         const warning = document.createElement('div');
         warning.classList.add('rym-warning');
-        warning.appendChild(utils.createParagraph('No exact matches found.'));
 
-        const style = document.createElement('style');
-        style.textContent = `
-          .rym-warning {
-            padding: 0.5rem 2rem;
-            margin: 1rem 0;
-            font-weight: bold;
-            border-left: 10px solid currentColor;
-          }
+        const url = new URL(window.location.href);
+        const page = url.searchParams.get('page') ?? '1';
 
-          .rym-warning p { margin: 0; }
-
-          .rym-warning p + p { margin-top: 0.5em; }
-        }`;
-        document.head.appendChild(style);
+        warning.appendChild(utils.createParagraph(`No direct matches found on the #${page} page.`));
 
         if (searchType === 'a') {
-          const p = utils.createParagraph('This artist may not be added yet into RYM database. ');
+          const p = utils.createParagraph('This artist may not be added yet into RYM database or too obscure.');
           p.appendChild(utils.createLink('/artist/profile_ac', 'Add artist', false));
           warning.appendChild(p);
         } else if (searchType === 'l') {
-          warning.appendChild(utils.createParagraph('This release may not be added yet into RYM database.'));
+          const p = utils.createParagraph('This release may not be added yet into RYM database or too obscure.');
+          warning.appendChild(p);
         } else if (searchType === 'z') {
-          warning.appendChild(utils.createParagraph('This song may not be added yet into RYM database.'));
+          const p = utils.createParagraph('This song may not be added yet into RYM database or too obscure.');
+          warning.appendChild(p);
         }
 
         header.insertAdjacentElement('afterend', warning);
+
+        if (searchMoreLink) {
+          const tryNextPageLink = searchMoreLink.cloneNode(true);
+          tryNextPageLink.classList.add(...['btn', 'blue_btn', 'btn_small']);
+          tryNextPageLink.textContent = 'Try next page';
+          tryNextPageLink.style.marginBottom = '1rem';
+          warning.insertAdjacentElement('afterend', tryNextPageLink);
+        }
       }
     }
   }

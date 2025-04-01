@@ -2,234 +2,202 @@ import * as api from '@/helpers/api';
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 
+import './topAlbums.css';
+
 const PROFILE_CONTAINER_SELECTOR =
   '.bubble_header.profile_header + .bubble_content';
 
-export async function render(config) {
+let config = null;
+
+async function handlePeriodChange(period, userName, apiKey, container, label) {
+  container.classList.add('is-loading');
+
+  const data = await api.fetchUserTopAlbums(
+    userName,
+    apiKey,
+    {
+      limit: config.topAlbumsLimit,
+      period: period,
+    },
+  );
+
+  label.textContent = constants.PERIOD_LABELS_MAP[period];
+  label.title = constants.PERIOD_LABELS_MAP[period];
+
+  populateTopAlbums(container, data);
+  container.classList.remove('is-loading');
+}
+
+export async function render(_config, _userName) {
+  config = _config;
   if (!config) return;
 
-  if (!config.lastfmApiKey) {
-    console.error(
-      'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
-    );
-    return;
-  }
+  if (!config.lastfmApiKey) return;
 
-  const userName = utils.getUserName(config);
+  let userName;
+
+  if (_userName) {
+    userName = _userName;
+  } else {
+    const userData = await utils.getSyncedUserData();
+    userName = userData?.name;
+  }
 
   if (!userName) {
     console.log("No Last.fm username found. Top Albums can't be displayed.");
     return;
   }
 
-  addTopAlbumsStyles();
-
-  const topAlbums = await api.fetchUserTopAlbums(
-    userName,
-    config.lastfmApiKey,
-    {
-      limit: config.topAlbumsLimit,
-      period: config.topAlbumsPeriod,
-    },
-  );
-
   const {
     topAlbumsHeader,
     topAlbumsContainer,
     topAlbumsPeriodSwitcher,
+    topAlbumsPeriodSaveButton,
     topAlbumsPeriodLabel,
-  } = createTopAlbumsUI(config);
+  } = createTopAlbumsUI();
+
+  topAlbumsPeriodSaveButton.addEventListener('click', async () => {
+    const selectedPeriod = topAlbumsPeriodSwitcher.value;
+    const selectedPeriodLabel = constants.PERIOD_LABELS_MAP[selectedPeriod];
+    topAlbumsPeriodLabel.textContent = selectedPeriodLabel;
+
+    await utils.storageSet({
+      topAlbumsPeriod: selectedPeriod,
+    });
+
+    topAlbumsPeriodSaveButton.style.display = 'none';
+  });
+
+  let initialPeriod = config.topAlbumsPeriod;
 
   topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
     const period = event.target.value;
 
     topAlbumsContainer.classList.add('is-loading');
 
-    const data = await api.fetchUserTopAlbums(userName, config.lastfmApiKey, {
-      limit: config.topAlbumsLimit,
-      period: period,
-    });
+    await handlePeriodChange(
+      event.target.value,
+      userName,
+      config.lastfmApiKey,
+      topAlbumsContainer,
+      topAlbumsPeriodLabel,
+    );
 
-    topAlbumsPeriodLabel.textContent =
-      constants.TOP_ALBUMS_PERIOD_LABELS_MAP[period];
-    topAlbumsPeriodLabel.title = constants.TOP_ALBUMS_PERIOD_LABELS_MAP[period];
-
-    populateTopAlbums(topAlbumsContainer, data, userName);
-
-    topAlbumsContainer.classList.remove('is-loading');
+    if (period !== initialPeriod) {
+      topAlbumsPeriodSaveButton.style.display = 'block';
+    } else {
+      topAlbumsPeriodSaveButton.style.display = 'none';
+    }
   });
 
-  populateTopAlbums(topAlbumsContainer, topAlbums, userName);
+  const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
+  icon.classList.add('loader');
+
+  topAlbumsContainer.appendChild(icon);
 
   insertTopAlbumsIntoDOM(topAlbumsHeader, topAlbumsContainer);
+
+  const updateAction = async () => {
+    const topAlbums = await api.fetchUserTopAlbums(
+      userName,
+      config.lastfmApiKey,
+      {
+        period: config.topAlbumsPeriod,
+      },
+    );
+
+    populateTopAlbums(topAlbumsContainer, topAlbums, userName);
+
+    await utils.storageSet({
+      topAlbumsCache: {
+        data: topAlbums,
+        timestamp: Date.now(),
+        userName,
+      },
+    });
+  }
+
+  const { topAlbumsCache } = await utils.storageGet(['topAlbumsCache']);
+
+  if (
+    topAlbumsCache
+    && topAlbumsCache.data
+    && topAlbumsCache.timestamp
+    && topAlbumsCache.userName === userName
+  ) {
+    if (
+      Date.now() - topAlbumsCache.timestamp >
+      constants.TOP_ALBUMS_INTERVAL_MS
+    ) {
+      await updateAction();
+    } else {
+      populateTopAlbums(topAlbumsContainer, topAlbumsCache.data, userName);
+    }
+  } else {
+    await updateAction();
+  }
 }
 
-function addTopAlbumsStyles() {
-  const style = document.createElement('style');
-  style.textContent = `
-    .top-albums {
-      display: flex;
-      flex-wrap: wrap;
-      position: relative;
-    }
-
-    .top-albums::after {
-      content: '';
-      inset: 0;
-      display: none;
-      background: rgba(0,0,0,.5);
-      position: absolute;
-    }
-
-    .top-albums.is-loading::after { display: block; }
-
-    .top-albums-header {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .top-albums-header select { margin-left: auto; }
-
-    #top-albums-period-label::before { content: '('; }
-    #top-albums-period-label::after { content: ')'; }
-
-    .top-albums .album-wrapper {
-      position: relative;
-      width: 182px;
-    }
-
-    @media screen and (max-width: 1024px) {
-      .top-albums .album-wrapper {
-        width: 25%;
-      }
-    }
-
-    .top-albums .album-image {
-      position: relative;
-      aspect-ratio: 1 / 1;
-    }
-
-    .top-albums a { color: white; }
-
-    .top-albums .album-image img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
-    .top-albums .album-image::after {
-      background-image: linear-gradient(180deg,transparent 0,rgba(0,0,0,.45) 70%,rgba(0,0,0,.8));
-      content: "";
-      height: 100%;
-      left: 0;
-      position: absolute;
-      top: 0;
-      width: 100%;
-    }
-
-    .top-albums .album-details a:hover {
-      text-decoration: underline;
-    }
-
-    .top-albums .album-details {
-      bottom: 15px;
-      font-size: 14px;
-      line-height: 1.5;
-      left: 15px;
-      line-height: 18px;
-      margin: 0;
-      position: absolute;
-      right: 15px;
-      text-shadow: 0 0 10px rgba(0,0,0,.7);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .album-wrapper .album-details a {
-      position: relative;
-      z-index: 1;
-      display: block;
-      max-width: 100%;
-      font-size: 12px;
-      padding: 1px 0;
-      line-height: 1.4;
-      white-space: nowrap;
-      overflow-x: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .album-wrapper .album-details .album-title {
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    .top-albums .album-wrapper:has(.album-link:hover) .album-title {
-      text-decoration: underline;
-    }
-
-    .top-albums .album-link {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 0;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-function createTopAlbumsUI(config) {
-  const periodLabel = constants.TOP_ALBUMS_PERIOD_OPTIONS.find(
+function createTopAlbumsUI() {
+  const periodLabel = constants.PERIOD_OPTIONS.find(
     (option) => option.value === config.topAlbumsPeriod,
   )?.label;
   const topAlbumsHeader = document.createElement('div');
   topAlbumsHeader.classList.add('bubble_header');
   topAlbumsHeader.classList.add('top-albums-header');
 
-  let headerText = 'Top Albums';
+  const topAlbumsHeaderLeft = document.createElement('div');
+  const topAlbumsHeaderRight = document.createElement('div');
+
+  topAlbumsHeaderLeft.textContent = 'Top Albums';
 
   const topAlbumsPeriodLabel = utils.createSpan(periodLabel, periodLabel);
   topAlbumsPeriodLabel.id = 'top-albums-period-label';
 
-  topAlbumsHeader.textContent = headerText;
+  topAlbumsHeaderLeft.appendChild(topAlbumsPeriodLabel);
 
-  topAlbumsHeader.appendChild(topAlbumsPeriodLabel);
+  const topAlbumsPeriodSaveButton = document.createElement('button');
+  topAlbumsPeriodSaveButton.textContent = 'Save';
+
+  topAlbumsHeaderRight.appendChild(topAlbumsPeriodSaveButton);
+  topAlbumsPeriodSaveButton.style.display = 'none';
 
   const topAlbumsPeriodSwitcher = utils.createSelect(
-    constants.TOP_ALBUMS_PERIOD_OPTIONS,
+    constants.PERIOD_OPTIONS,
     config.topAlbumsPeriod,
   );
 
-  topAlbumsHeader.appendChild(topAlbumsPeriodSwitcher);
+  topAlbumsHeaderRight.appendChild(topAlbumsPeriodSwitcher);
+
+  topAlbumsHeader.appendChild(topAlbumsHeaderLeft);
+  topAlbumsHeader.appendChild(topAlbumsHeaderRight);
 
   const topAlbumsContainer = document.createElement('div');
   topAlbumsContainer.classList.add('bubble_content', 'top-albums');
-  topAlbumsContainer.style.padding = '14px';
 
   return {
     topAlbumsHeader,
     topAlbumsContainer,
     topAlbumsPeriodSwitcher,
+    topAlbumsPeriodSaveButton,
     topAlbumsPeriodLabel,
   };
 }
 
-function populateTopAlbums(container, topAlbums, userName) {
+function populateTopAlbums(container, topAlbums) {
   container.replaceChildren();
   topAlbums.forEach((album) => {
-    const albumWrapper = createAlbumWrapper(album, userName);
+    const albumWrapper = createAlbumWrapper(album);
     container.appendChild(albumWrapper);
   });
 }
 
-function createAlbumWrapper(album, userName) {
+function createAlbumWrapper(album) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('album-wrapper');
 
   wrapper.appendChild(createAlbumCover(album));
-  wrapper.appendChild(createAlbumInfo(album, userName));
+  wrapper.appendChild(createAlbumInfo(album));
   wrapper.appendChild(createAlbumLink(album));
 
   return wrapper;
@@ -238,27 +206,52 @@ function createAlbumWrapper(album, userName) {
 function createAlbumCover(album) {
   const cover = document.createElement('div');
   cover.classList.add('album-image');
+
   const img = document.createElement('img');
+  img.classList.add('fade-in');
+
+  const loader = document.createElement('div');
+  loader.classList.add('loader');
+
+  const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
+  loader.appendChild(icon);
+
   img.src = album.image[2]['#text'];
+
+  img.onload = () => {
+    loader.remove();
+    img.classList.add('loaded');
+  };
+
+  img.onerror = () => {
+    loader.remove();
+    img.classList.add('loaded');
+    img.src = 'https://lastfm.freetls.fastly.net/i/u/avatar300s/c6f59c1e5e7240a4c0d427abd71f3dbb.jpg';
+  };
+
+  cover.appendChild(loader);
   cover.appendChild(img);
+
   return cover;
 }
 
-function createAlbumInfo(album, userName) {
+function createAlbumInfo(album) {
   const infoWrapper = document.createElement('div');
   infoWrapper.classList.add('album-details');
 
   infoWrapper.appendChild(createAlbumTitle(album));
   infoWrapper.appendChild(createAlbumArtist(album));
-  infoWrapper.appendChild(createAlbumPlays(album, userName));
+  infoWrapper.appendChild(createAlbumPlays(album));
 
   return infoWrapper;
 }
 
 function createAlbumTitle(album) {
   const title = document.createElement('a');
-  title.href = album.url;
-  title.target = '_blank';
+  title.href = utils.generateSearchUrl({
+    artist: album.artist.name,
+    releaseTitle: album.name,
+  }, config);
   title.textContent = album.name;
   title.title = album.name;
   title.classList.add('album-title');
@@ -267,26 +260,27 @@ function createAlbumTitle(album) {
 
 function createAlbumArtist(album) {
   const artist = document.createElement('a');
-  artist.href = album.artist.url;
-  artist.target = '_blank';
+  artist.href = utils.generateSearchUrl({
+    artist: album.artist.name,
+  }, config);
   artist.textContent = album.artist.name;
   artist.title = album.artist.name;
   artist.classList.add('album-artist');
   return artist;
 }
 
-function createAlbumPlays(album, userName) {
-  const plays = document.createElement('a');
-  plays.href = `https://www.last.fm/user/${userName}/library/music/${encodeURIComponent(album.artist.name)}/${encodeURIComponent(album.name)}?date_preset=LAST_30_DAYS`;
-  plays.target = '_blank';
+function createAlbumPlays(album) {
+  const plays = document.createElement('span');
   plays.textContent = `${utils.formatNumber(album.playcount)} plays`;
   return plays;
 }
 
 function createAlbumLink(album) {
   const link = document.createElement('a');
-  link.href = album.url;
-  link.target = '_blank';
+  link.href = utils.generateSearchUrl({
+    artist: album.artist.name,
+    releaseTitle: album.name,
+  }, config);
   link.classList.add('album-link');
   return link;
 }
