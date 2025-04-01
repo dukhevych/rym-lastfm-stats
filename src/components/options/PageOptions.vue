@@ -161,16 +161,16 @@
               </p>
               <p>This data is <strong>updated once per day</strong> and <strong>not personalized</strong>.</p>
               <div class="my-4 flex flex-col gap-1">
-                <div class="flex gap-1">
+                <div class="flex w-full gap-1">
                   <img
                     src="/images/artist-static.jpg"
                     alt=""
-                    class="block h-auto w-full"
+                    class="block w-1/2 max-w-full"
                   >
                   <img
                     src="/images/release-static.jpg"
                     alt=""
-                    class="block h-auto w-full"
+                    class="block w-1/2 max-w-full"
                   >
                 </div>
                 <div class="text-center text-sm opacity-50">
