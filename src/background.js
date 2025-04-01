@@ -36,7 +36,9 @@ browserAPI.runtime.onInstalled.addListener(async (details) => {
       await utils.storageRemove(['lastfmUsername']);
     }
 
-    browserAPI.runtime.openOptionsPage();
+    if (previousVersion.split('.')[0] < 2) {
+      browserAPI.runtime.openOptionsPage();
+    }
   }
 });
 

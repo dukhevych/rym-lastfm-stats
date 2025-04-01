@@ -1,3 +1,5 @@
+import { remove as removeDiacritics } from 'diacritics';
+
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 import * as constants from './constants.js';
 
@@ -398,5 +400,8 @@ export function throttle(fn, wait) {
 }
 
 export function deburr(string) {
-  return string.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (typeof string !== 'string') {
+    throw new TypeError('Expected a string');
+  }
+  return removeDiacritics(string);
 }

@@ -85,7 +85,10 @@ async function render(config) {
         .toLowerCase()
         .trim()
         .replace(/^a\.k\.a:\s*/, '')
-        .split(', ');
+        .split(', ')
+        .map((aka) => aka.trim())
+        .filter(Boolean)
+        .join(', ');
 
       if (
         // artistName !== searchTerm &&
