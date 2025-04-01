@@ -1,6 +1,6 @@
 {
   "name": "rym-lastfm-stats",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "description": "",
   "main": "background.js",
   "scripts": {
@@ -11,7 +11,8 @@
     "dev:firefox": "webpack --env browser=firefox --env local=true --watch",
     "dev": "npm run dev:firefox && npm run dev:chrome",
     "lint": "eslint . --max-warnings 0",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "publish": "bash ./scripts/trigger-publish.sh"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
