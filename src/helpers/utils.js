@@ -194,6 +194,22 @@ export function storageSet(payload, storageType = 'sync') {
   });
 }
 
+export function storageRemove(keys, storageType = 'sync') {
+  if (!STORAGE_TYPES.includes(storageType)) {
+    throw new Error(`Invalid storage type: ${storageType}`);
+  }
+
+  return new Promise((resolve, reject) => {
+    browserAPI.storage[storageType].remove(keys, () => {
+      if (typeof chrome !== 'undefined' && chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 export function getSyncedOptions(fields = constants.OPTIONS_DEFAULT_KEYS) {
   return storageGet(fields);
 };

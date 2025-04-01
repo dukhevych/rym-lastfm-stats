@@ -1,7 +1,10 @@
 import { MD5 } from './libs/crypto-js.min.js';
 import * as utils from './helpers/utils.js';
+import * as api from './helpers/api.js';
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
+const currentVersion = browserAPI.runtime.getManifest().version;
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
@@ -12,11 +15,27 @@ browserAPI.runtime.onInstalled.addListener(async (details) => {
     browserAPI.runtime.openOptionsPage();
   }
   if (details.reason === 'update') {
-    console.log('RYM Last.fm extension updated');
+    const previousVersion = details.previousVersion;
+
+    console.log(`RYM Last.fm extension updated from v${previousVersion} to v${currentVersion}`);
+
     const { userData, lastfmUsername } = await utils.storageGet(['userData', 'lastfmUsername']);
+
     if (!userData && lastfmUsername) {
-      await utils.storageSet({ userData: { name: lastfmUsername } });
+      const userDataRaw = await api.fetchUserDataByName(lastfmUsername, SYSTEM_API_KEY);
+      const normalizedData = {
+        name: userDataRaw.name,
+        url: userDataRaw.url,
+        image: userDataRaw.image[0]?.['#text'],
+      };
+      await utils.storageSet({ userData: normalizedData });
+      await utils.storageRemove(['lastfmUsername']);
     }
+
+    if (userData && lastfmUsername) {
+      await utils.storageRemove(['lastfmUsername']);
+    }
+
     browserAPI.runtime.openOptionsPage();
   }
 });
@@ -38,7 +57,7 @@ browserAPI.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
     if (sessionKey) {
       console.log('Authenticated! Session Key:', sessionKey);
 
-      await browserAPI.storage.local.set({ lastfmSession: sessionKey });
+      await utils.storageSet({ lastfmSession: sessionKey });
 
       browserAPI.runtime.sendMessage({
         type: 'lastfm_auth',

@@ -4,6 +4,32 @@ const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
+export function fetchUserDataByName(username, apiKey) {
+  if (!username) {
+    return Promise.reject(new Error('No username provided.'));
+  }
+
+  if (!apiKey) {
+    return Promise.reject(new Error('No API key provided.'));
+  }
+
+  const _params = {
+    method: 'user.getinfo',
+    user: username,
+    api_key: apiKey,
+    format: 'json',
+  };
+
+  const params = new URLSearchParams(_params);
+
+  const url = `${BASE_URL}?${params.toString()}`;
+
+  return fetch(url)
+    .then((response) => response.json())
+    .then((data) => data.user)
+    .catch((error) => console.error('Error:', error));
+}
+
 export function fetchUserData(lastfmSession, apiKey) {
   const _params = {
     method: 'user.getinfo',
