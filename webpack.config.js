@@ -119,6 +119,7 @@ module.exports = (env) => {
         ...envKeys,
         'process.env.APP_VERSION': JSON.stringify(appVersion),
         'process.env.BROWSER_TARGET': JSON.stringify(browserTarget),
+        'globalThis': 'window',
       }),
       new VueLoaderPlugin(),
       new MiniCssExtractPlugin({
