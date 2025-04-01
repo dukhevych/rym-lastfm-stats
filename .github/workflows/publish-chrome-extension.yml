@@ -67,7 +67,10 @@ jobs:
 
           echo "Updated manifest.json:"
           cat ./dist/chrome/manifest.json | grep version
-
+          # Repackage with updated manifest
+          rm -f ${{ needs.publish-chrome.outputs.zip_path }}
+          zip -r ${{ needs.publish-chrome.outputs.zip_path }} ./dist/chrome
+        else
           # Repackage with updated manifest
           rm -f ${{ needs.publish-chrome.outputs.zip_path }}
           zip -r ${{ needs.publish-chrome.outputs.zip_path }} ./dist/chrome
