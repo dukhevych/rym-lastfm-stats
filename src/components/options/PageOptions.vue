@@ -368,13 +368,6 @@
               label="Recent tracks"
             />
 
-            <!-- RECENT TRACKS SHOW ON LOAD -->
-            <FormCheckbox
-              v-model="options.recentTracksShowOnLoad"
-              name="recentTracksShowOnLoad"
-              label="Show Recent tracks on page load"
-            />
-
             <!-- RECENT TRACKS REPLACE -->
             <FormCheckbox
               v-model="options.recentTracksReplace"

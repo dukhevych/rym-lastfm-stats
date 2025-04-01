@@ -5,6 +5,9 @@ import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
 
+import lockSvg from '@/assets/icons/lock.svg?raw';
+import unlockSvg from '@/assets/icons/unlock.svg?raw';
+
 import './recentTracks.css';
 
 let abortController = new AbortController();
@@ -178,8 +181,22 @@ function populatePlayHistoryItem(
   }
 }
 
+function createLockButton() {
+  const button = document.createElement('button');
+  button.classList.add('btn-lastfm-lock');
+
+  const unlockIcon = new DOMParser().parseFromString(unlockSvg, 'image/svg+xml').documentElement;
+  const lockIcon = new DOMParser().parseFromString(lockSvg, 'image/svg+xml').documentElement;
+
+  button.appendChild(unlockIcon);
+  button.appendChild(lockIcon);
+
+  return button;
+}
+
 function prepareRecentTracksUI() {
-  let button;
+  const button = createLastfmButton();
+  const lockButton = createLockButton();
   const tracksWrapper = document.createElement('div');
   let playHistoryItem;
 
@@ -190,12 +207,23 @@ function prepareRecentTracksUI() {
 
   if (config.recentTracksShowOnLoad) {
     tracksWrapper.classList.add('is-active');
-  } else {
-    button = createLastfmButton()
-    button.addEventListener('click', () => {
-      tracksWrapper.classList.toggle('is-active');
-    });
+    lockButton.classList.add('is-locked');
   }
+
+  button.addEventListener('click', () => {
+    tracksWrapper.classList.toggle('is-active');
+  });
+
+  lockButton.addEventListener('click', async () => {
+    if (lockButton.classList.contains('is-locked')) {
+      await utils.storageSet({ recentTracksShowOnLoad: false });
+      lockButton.classList.remove('is-locked');
+    } else {
+      await utils.storageSet({ recentTracksShowOnLoad: true });
+      lockButton.classList.add('is-locked');
+      tracksWrapper.classList.add('is-active');
+    }
+  });
 
   if (config.recentTracksReplace) {
     const panelContainer = document.querySelector('.profile_listening_container');
@@ -219,6 +247,7 @@ function prepareRecentTracksUI() {
 
   return {
     button,
+    lockButton,
     tracksWrapper,
     playHistoryItem,
   };
@@ -516,16 +545,15 @@ async function render(_config, _userName) {
 
   addRecentTracksStyles();
 
-  const { button, tracksWrapper, playHistoryItem } = prepareRecentTracksUI();
+  const { button, lockButton, tracksWrapper, playHistoryItem } = prepareRecentTracksUI();
 
-  if (button) {
-    const buttonsContainer = document.querySelector(
-      PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
-    );
+  const buttonsContainer = document.querySelector(
+    PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
+  );
 
-    if (buttonsContainer) {
-      buttonsContainer.prepend(button);
-    }
+  if (buttonsContainer) {
+    buttonsContainer.prepend(button);
+    buttonsContainer.prepend(lockButton);
   }
 
   const populateRecentTracks = (data, timestamp) => {
