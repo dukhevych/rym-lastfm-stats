@@ -1,6 +1,6 @@
 {
   "name": "rym-lastfm-stats",
-  "version": "2.1.9",
+  "version": "2.1.10",
   "description": "",
   "main": "background.js",
   "scripts": {
