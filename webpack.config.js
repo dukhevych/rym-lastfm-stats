@@ -49,8 +49,8 @@ module.exports = (env) => {
 
   console.log('Build version:', appVersion);
   console.log('Browser target:', browserTarget);
-  console.log('System api key:', combinedEnv.LASTFM_API_KEY);
-  console.log('System secret key:', combinedEnv.LASTFM_API_SECRET);
+  console.log('System api key:', combinedEnv.LASTFM_API_KEY.length);
+  console.log('System secret key:', combinedEnv.LASTFM_API_SECRET.length);
 
   // Convert to format suitable for DefinePlugin
   const envKeys = Object.keys(combinedEnv).reduce((prev, next) => {
