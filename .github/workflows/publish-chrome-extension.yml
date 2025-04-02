@@ -52,6 +52,13 @@ jobs:
     - name: Checkout code
       if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
       uses: actions/checkout@v4
+    # Add this step to recreate the .env.chrome file before building
+    - name: Create .env file for Chrome
+      if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
+      run: |
+        echo "LASTFM_API_KEY=${{ secrets.CHROME_LASTFM_API_KEY }}" > .env.chrome
+        echo "LASTFM_API_SECRET=${{ secrets.CHROME_LASTFM_API_SECRET }}" >> .env.chrome
+        echo "✅ Created .env.chrome for rebuild"
     - name: Prepare Chrome source directory
       if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true' }}
       run: |
