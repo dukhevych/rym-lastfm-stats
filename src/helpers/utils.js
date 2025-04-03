@@ -300,7 +300,6 @@ export const getFullConfig = async () => {
 }
 
 import svgLoader from '@/assets/icons/loader.svg?raw';
-import { ht } from 'date-fns/locale';
 
 const svgSpriteId = 'svg-sprite';
 let svgSprite = null;
