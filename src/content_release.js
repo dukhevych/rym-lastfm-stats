@@ -8,4 +8,10 @@ import * as constants from '@/helpers/constants.js';
   const config = { ...constants.OPTIONS_DEFAULT, ...storageItems };
 
   await renderContent(release, config);
+
+  const rymAlbumId = document.querySelector('.album_shortcut').value.replace('[Album', '').replace(']', '');
+
+  const rymAlbumData = await utils.getRymAlbum(rymAlbumId);
+
+  console.log('RYM Album Data:', rymAlbumData);
 })();
