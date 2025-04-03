@@ -2,6 +2,7 @@ import release from '@/modules/release/index.js';
 import { renderContent } from '@/helpers/renderContent.js';
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
+import { getRymAlbum } from '@/helpers/rymSync.js';
 
 (async function () {
   const storageItems = await utils.getSyncedOptions();
@@ -11,7 +12,7 @@ import * as constants from '@/helpers/constants.js';
 
   const rymAlbumId = document.querySelector('.album_shortcut').value.replace('[Album', '').replace(']', '');
 
-  const rymAlbumData = await utils.getRymAlbum(rymAlbumId);
+  const rymAlbumData = await getRymAlbum(rymAlbumId);
 
   console.log('RYM Album Data:', rymAlbumData);
 })();
