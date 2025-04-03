@@ -1,4 +1,4 @@
-import { MD5 } from './libs/crypto-js.min.js';
+// import { MD5 } from './libs/crypto-js.min.js';
 import * as utils from './helpers/utils.js';
 import * as api from './helpers/api.js';
 
@@ -46,82 +46,82 @@ browserAPI.action.onClicked.addListener(() => {
   browserAPI.runtime.openOptionsPage();
 });
 
-browserAPI.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
-  if (changeInfo.url &&
-      changeInfo.url.includes('dukhevych.github.io/lastfm-oauth-redirect/oauth-callback.html') &&
-      changeInfo.url.includes('token=')) {
+// browserAPI.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+//   if (changeInfo.url &&
+//       changeInfo.url.includes('dukhevych.github.io/lastfm-oauth-redirect/oauth-callback.html') &&
+//       changeInfo.url.includes('token=')) {
 
-    const url = new URL(changeInfo.url);
-    const token = url.searchParams.get('token');
+//     const url = new URL(changeInfo.url);
+//     const token = url.searchParams.get('token');
 
-    const sessionKey = await fetchSessionKey(token);
+//     const sessionKey = await fetchSessionKey(token);
 
-    if (sessionKey) {
-      console.log('Authenticated! Session Key:', sessionKey);
+//     if (sessionKey) {
+//       console.log('Authenticated! Session Key:', sessionKey);
 
-      await utils.storageSet({ lastfmSession: sessionKey });
+//       await utils.storageSet({ lastfmSession: sessionKey });
 
-      browserAPI.runtime.sendMessage({
-        type: 'lastfm_auth',
-        value: sessionKey,
-      });
-    }
-  }
-});
+//       browserAPI.runtime.sendMessage({
+//         type: 'lastfm_auth',
+//         value: sessionKey,
+//       });
+//     }
+//   }
+// });
 
-const fetchSessionKey = async (token) => {
-  let apiSig;
+// const fetchSessionKey = async (token) => {
+//   let apiSig;
 
-  try {
-    apiSig = generateApiSig({
-      method: 'auth.getSession',
-      api_key: SYSTEM_API_KEY,
-      token: token,
-    });
-  } catch (error) {
-    console.error('Error generating API signature:', error);
-    return null;
-  }
+//   try {
+//     apiSig = generateApiSig({
+//       method: 'auth.getSession',
+//       api_key: SYSTEM_API_KEY,
+//       token: token,
+//     });
+//   } catch (error) {
+//     console.error('Error generating API signature:', error);
+//     return null;
+//   }
 
-  const _params = {
-    method: 'auth.getSession',
-    api_key: SYSTEM_API_KEY,
-    token: token,
-    api_sig: apiSig,
-    format: 'json',
-  };
+//   const _params = {
+//     method: 'auth.getSession',
+//     api_key: SYSTEM_API_KEY,
+//     token: token,
+//     api_sig: apiSig,
+//     format: 'json',
+//   };
 
-  const params = new URLSearchParams(_params);
+//   const params = new URLSearchParams(_params);
 
-  const url = `https://ws.audioscrobbler.com/2.0/?${params.toString()}`;
+//   const url = `https://ws.audioscrobbler.com/2.0/?${params.toString()}`;
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data.session) {
-      return data.session.key;
-    } else {
-      console.error('Failed to get session:', data);
-      return null;
-    }
-  } catch (error) {
-    console.error('Error fetching session key:', error);
-    return null;
-  }
-};
+//   try {
+//     const response = await fetch(url);
+//     const data = await response.json();
+//     if (data.session) {
+//       return data.session.key;
+//     } else {
+//       console.error('Failed to get session:', data);
+//       return null;
+//     }
+//   } catch (error) {
+//     console.error('Error fetching session key:', error);
+//     return null;
+//   }
+// };
 
-const generateApiSig = (params) => {
-  const sortedKeys = Object.keys(params).sort();
-  let stringToSign = '';
+// const generateApiSig = (params) => {
+//   const sortedKeys = Object.keys(params).sort();
+//   let stringToSign = '';
 
-  sortedKeys.forEach((key) => {
-    stringToSign += key + params[key];
-  });
+//   sortedKeys.forEach((key) => {
+//     stringToSign += key + params[key];
+//   });
 
-  stringToSign += SYSTEM_API_SECRET;
-  return generateMd5(stringToSign);
-};
+//   stringToSign += SYSTEM_API_SECRET;
+//   return generateMd5(stringToSign);
+// };
 
-function generateMd5(string) {
-  return MD5(string).toString();
-}
+// function generateMd5(string) {
+//   return MD5(string).toString();
+// }

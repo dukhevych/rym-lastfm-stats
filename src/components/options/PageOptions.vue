@@ -628,7 +628,7 @@ const reset = async () => {
   await submit();
 };
 
-const openAuthPage = () => {
+const openAuthPage = async () => {
   if (!SYSTEM_API_KEY) {
     alert('API Key is not set');
     return;
@@ -636,29 +636,46 @@ const openAuthPage = () => {
 
   signinInProgress.value = true;
 
-  browserAPI.windows.create({
-    url: `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&source=rym-lastfm-stats`,
-    type: 'popup',
-    width: 500,
-    height: 600,
-  });
+  try {
+    console.log(0);
+    const redirectUrl = await browserAPI.identity.launchWebAuthFlow({
+      url: `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&cb=https://dukhevych.github.io/lastfm-oauth-redirect/oauth-callback.html`,
+      interactive: true,
+    });
 
-  browserAPI.runtime.onMessage.addListener((message) => {
-    if (message.type === 'lastfm_auth') {
-      api.fetchUserData(message.value, SYSTEM_API_KEY).then((data) => {
-        const normalizedData = {
-          name: data.name,
-          url: data.url,
-          image: data.image[0]?.['#text'],
-        };
-        userData.value = normalizedData;
-        browserAPI.storage.sync.set({
-          userData: normalizedData,
-        });
-        signinInProgress.value = false;
-      });
+    console.log(1);
+
+    const url = new URL(redirectUrl);
+    console.log(2);
+    const token = url.searchParams.get('token');
+    console.log(3);
+
+    if (!token) {
+      throw new Error('No token returned');
     }
-  });
+
+    console.log(4);
+
+    const sessionKey = await utils.fetchSessionKey(token);
+    if (!sessionKey) throw new Error('Invalid session key');
+
+    const data = await api.fetchUserData(sessionKey, SYSTEM_API_KEY);
+
+    const normalizedData = {
+      name: data.name,
+      url: data.url,
+      image: data.image[0]?.['#text'],
+    };
+
+    userData.value = normalizedData;
+    browserAPI.storage.sync.set({ userData: normalizedData });
+    await utils.storageSet({ lastfmSession: sessionKey });
+
+    signinInProgress.value = false;
+  } catch (err) {
+    console.error('Auth failed:', err);
+    signinInProgress.value = false;
+  }
 };
 
 const closeModalHandler = (e) => {

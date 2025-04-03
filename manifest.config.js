@@ -4,7 +4,12 @@ const browserSpecificConfigs = {
   chrome: {
     "background": {
       "service_worker": "background.js"
-    }
+    },
+    "oauth2": {
+      "redirect_uris": [
+        "https://dukhevych.github.io/lastfm-oauth-redirect/oauth-callback.html"
+      ]
+    },
   },
   firefox: {
     "background": {
