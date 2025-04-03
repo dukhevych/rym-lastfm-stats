@@ -10,6 +10,7 @@
   "host_permissions": [
     "https://rateyourmusic.com/artist/*",
     "https://rateyourmusic.com/release/*",
+    "https://rateyourmusic.com/charts/*",
     "https://rateyourmusic.com/~*",
     "https://rateyourmusic.com/music_export/*",
     "https://ws.audioscrobbler.com/",
@@ -34,6 +35,11 @@
     {
       "matches": ["*://rateyourmusic.com/search?*"],
       "js": ["content_search.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["*://rateyourmusic.com/charts/*"],
+      "js": ["content_charts.js"],
       "run_at": "document_start"
     },
     {
