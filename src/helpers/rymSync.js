@@ -1,13 +1,18 @@
-export async function getRymAlbum(rymAlbum) {
+import * as constants from '@/helpers/constants';
+import * as utils from '@/helpers/utils';
+
+export async function getRymAlbum(id) {
+  const storeName = getStoreName();
+
   return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open('MusicExportDB', 1);
+    const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
-      const transaction = db.transaction('exports', 'readonly');
-      const store = transaction.objectStore('exports');
+      const transaction = db.transaction(storeName, 'readonly');
+      const store = transaction.objectStore(storeName);
 
-      const getRequest = store.get(rymAlbum);
+      const getRequest = store.get(id);
 
       getRequest.onsuccess = function () {
         resolve(getRequest.result);
@@ -24,25 +29,24 @@ export async function getRymAlbum(rymAlbum) {
   });
 }
 
-export async function getMultipleRymAlbums(rymAlbumIds) {
+export async function getMultipleRymAlbums(ids) {
+  const storeName = getStoreName();
   return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open('MusicExportDB', 1);
+    const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
-      const transaction = db.transaction('exports', 'readonly');
-      const store = transaction.objectStore('exports');
+      const transaction = db.transaction(storeName, 'readonly');
+      const store = transaction.objectStore(storeName);
 
       const getAllRequest = store.getAll();
 
       getAllRequest.onsuccess = function () {
         const allRecords = getAllRequest.result;
 
-        // Map from ID to record for faster lookup
-        const map = new Map(allRecords.map(rec => [rec.rymAlbum, rec]));
+        const map = new Map(allRecords.map(rec => [rec.id, rec]));
 
-        // Return in requested order
-        const results = rymAlbumIds.map(id => map.get(id));
+        const results = ids.map(id => map.get(id));
         resolve(results);
       };
 
@@ -58,16 +62,18 @@ export async function getMultipleRymAlbums(rymAlbumIds) {
 }
 
 
-export async function updateRymAlbum(rymAlbum, updatedData) {
+export async function updateRymAlbum(id, updatedData) {
+  const storeName = getStoreName();
+
   return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open('MusicExportDB', 1);
+    const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
-      const transaction = db.transaction('exports', 'readwrite');
-      const store = transaction.objectStore('exports');
+      const transaction = db.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
 
-      const getRequest = store.get(rymAlbum);
+      const getRequest = store.get(id);
 
       getRequest.onsuccess = function () {
         const existing = getRequest.result;
@@ -83,7 +89,7 @@ export async function updateRymAlbum(rymAlbum, updatedData) {
             reject(event.target.error);
           };
         } else {
-          reject(new Error(`No record found with rymAlbum: ${rymAlbum}`));
+          reject(new Error(`No record found with rymAlbum: ${id}`));
         }
       };
 
@@ -98,23 +104,25 @@ export async function updateRymAlbum(rymAlbum, updatedData) {
   });
 }
 
-export async function updateRymAlbumRating(rymAlbum, rating) {
-  return updateRymAlbum(rymAlbum, { rating });
+export async function updateRymAlbumRating(id, rating, userName) {
+  return updateRymAlbum(id, { rating }, userName);
 }
 
-export async function deleteRymAlbum(rymAlbum) {
+export async function deleteRymAlbum(id) {
+  const storeName = getStoreName();
+
   return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open('MusicExportDB', 1);
+    const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
-      const transaction = db.transaction('exports', 'readwrite');
-      const store = transaction.objectStore('exports');
+      const transaction = db.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
 
-      const deleteRequest = store.delete(rymAlbum);
+      const deleteRequest = store.delete(id);
 
       deleteRequest.onsuccess = function () {
-        resolve(true); // deletion successful
+        resolve(true);
       };
 
       deleteRequest.onerror = function (event) {
@@ -123,6 +131,65 @@ export async function deleteRymAlbum(rymAlbum) {
     };
 
     dbRequest.onerror = function (event) {
+      reject(event.target.error);
+    };
+  });
+}
+
+async function getStoreName() {
+  const userName = await utils.getUserName();
+  if (!userName) {
+    throw new Error('User name not found');
+  }
+  return `${userName}_${constants.RYM_STORE_SUFFIX}`;
+}
+
+export async function upgradeRymBase(parsedData) {
+  const storeName = getStoreName();
+  const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
+
+  return new Promise((resolve, reject) => {
+    dbRequest.onupgradeneeded = function (event) {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(storeName)) {
+        const store = db.createObjectStore(storeName, { keyPath: 'id' });
+        store.createIndex('idIndex', 'id', { unique: true });
+        store.createIndex('releaseNameIndex', 'releaseName', { unique: false });
+      } else {
+        const store = event.target.transaction.objectStore(storeName);
+        if (!store.indexNames.contains('idIndex')) {
+          store.createIndex('idIndex', 'id', { unique: true });
+        }
+        if (!store.indexNames.contains('releaseNameIndex')) {
+          store.createIndex('releaseNameIndex', 'releaseName', { unique: false });
+        }
+      }
+    };
+
+    dbRequest.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
+
+      store.clear().onsuccess = function () {
+        parsedData.forEach(item => {
+          store.put(item);
+        });
+      };
+
+      transaction.oncomplete = function () {
+        console.log('Data successfully saved to IndexedDB.');
+        resolve();
+      };
+
+      transaction.onerror = function (event) {
+        console.error('Error saving data to IndexedDB:', event.target.error);
+        reject(event.target.error);
+      };
+    };
+
+    dbRequest.onerror = function (event) {
+      console.error('Error opening IndexedDB:', event.target.error);
       reject(event.target.error);
     };
   });

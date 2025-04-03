@@ -43,9 +43,9 @@
       "run_at": "document_start"
     },
     {
-      "matches": ["*://rateyourmusic.com/music_export*"],
+      "matches": ["*://rateyourmusic.com/music_export"],
       "js": ["content_export.js"],
-      "run_at": "document_idle"
+      "run_at": "document_end"
     }
   ],
   "action": {

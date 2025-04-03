@@ -1,5 +1,9 @@
 export const LASTFM_COLOR = '#f71414';
 
+export const RYM_DB_NAME = 'RYM_LastFM_Stats';
+
+export const RYM_STORE_SUFFIX = '_rymExport'
+
 export const LIGHT_THEME_CLASSES = [
   'theme_light',
   'theme_lightgray',
