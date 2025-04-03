@@ -4,17 +4,27 @@ const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 import * as constants from './constants.js';
 
 export function detectColorScheme() {
-  const theme = constants.THEMES[`theme_${localStorage.getItem('theme')}`];
   const html = document.querySelector('html');
+  const htmlThemeClass = Array.from(html.classList).find(cls => cls.startsWith('theme_'));
 
-  if (!['light', 'dark'].includes(theme)) {
-    html.setAttribute('data-scheme', 'dark');
-    return;
+  if (htmlThemeClass) {
+    const theme = htmlThemeClass.replace('theme_', '');
+    html.setAttribute('data-scheme', constants.THEMES[htmlThemeClass]);
+    return theme;
   }
 
-  html.setAttribute('data-scheme', theme);
+  if (window.matchMedia) {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      html.setAttribute('data-scheme', 'dark');
+      return 'dark';
+    }
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      html.setAttribute('data-scheme', 'light');
+      return 'light';
+    }
+  }
 
-  return theme;
+  return 'light';
 }
 
 export function initColorSchemeDetection() {
@@ -290,6 +300,7 @@ export const getFullConfig = async () => {
 }
 
 import svgLoader from '@/assets/icons/loader.svg?raw';
+import { ht } from 'date-fns/locale';
 
 const svgSpriteId = 'svg-sprite';
 let svgSprite = null;
