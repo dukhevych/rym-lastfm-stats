@@ -12,7 +12,7 @@
     "https://rateyourmusic.com/release/*",
     "https://rateyourmusic.com/charts/*",
     "https://rateyourmusic.com/~*",
-    "https://rateyourmusic.com/music_export/*",
+    "https://rateyourmusic.com/music_export?sync*",
     "https://ws.audioscrobbler.com/",
     "https://dukhevych.github.io/lastfm-oauth-redirect/*"
   ],
@@ -43,7 +43,7 @@
       "run_at": "document_start"
     },
     {
-      "matches": ["*://rateyourmusic.com/music_export"],
+      "matches": ["*://rateyourmusic.com/music_export?sync"],
       "js": ["content_export.js"],
       "run_at": "document_end"
     }

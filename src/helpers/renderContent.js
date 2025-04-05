@@ -9,7 +9,7 @@ export function renderContent(module, config, moduleName) {
   let start;
 
   if (process.env.NODE_ENV === 'development') {
-    console.log(`Rym Last.fm Stats: Rendering ${moduleName}...`);
+    console.log(`Rym Last.fm Stats: Rendering ${moduleName || 'page'}...`);
     start = performance.now();
   }
 

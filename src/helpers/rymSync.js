@@ -30,7 +30,8 @@ export async function getRymAlbum(id) {
 }
 
 export async function getMultipleRymAlbums(ids) {
-  const storeName = getStoreName();
+  const storeName = await getStoreName();
+
   return new Promise((resolve, reject) => {
     const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
 
@@ -60,7 +61,6 @@ export async function getMultipleRymAlbums(ids) {
     };
   });
 }
-
 
 export async function updateRymAlbum(id, updatedData) {
   const storeName = getStoreName();
@@ -144,13 +144,14 @@ async function getStoreName() {
   return `${userName}_${constants.RYM_STORE_SUFFIX}`;
 }
 
-export async function upgradeRymBase(parsedData) {
-  const storeName = getStoreName();
+export async function upgradeRymDB(parsedData) {
+  const storeName = await getStoreName();
   const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
 
   return new Promise((resolve, reject) => {
     dbRequest.onupgradeneeded = function (event) {
       const db = event.target.result;
+
       if (!db.objectStoreNames.contains(storeName)) {
         const store = db.createObjectStore(storeName, { keyPath: 'id' });
         store.createIndex('idIndex', 'id', { unique: true });

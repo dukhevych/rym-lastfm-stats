@@ -137,9 +137,8 @@ export function isDarkMode() {
 };
 
 export async function getUserName() {
-  return await browserAPI.storage.local.get('userData').then((items) => {
-    return items?.userData?.lastfmUsername;
-  });
+  const userData = await getSyncedUserData();
+  return userData?.name ?? null;
 };
 
 export function detectUserName() {

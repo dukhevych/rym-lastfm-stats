@@ -1,8 +1,12 @@
 import { LASTFM_COLOR } from '@/helpers/constants.js';
+import { upgradeRymDB } from '@/helpers/rymSync.js';
 
 (async function () {
   const form = document.querySelector('form.music_export');
+
   const formSubmitButton = form.querySelector('button[type="submit"]');
+  formSubmitButton.style.display = 'none';
+
   const formSyncButton = document.createElement('button');
 
   formSyncButton.type = 'button';
@@ -32,7 +36,8 @@ import { LASTFM_COLOR } from '@/helpers/constants.js';
       const exportData = await response.text();
 
       // Parse the CSV data
-      const rows = exportData.split('\n').slice(1); // Skip the header row
+      const rows = exportData.split('\n').slice(1);
+
       const parsedData = rows.map(row => {
         const columns = row.split(',');
         const item = {
@@ -58,51 +63,11 @@ import { LASTFM_COLOR } from '@/helpers/constants.js';
         }
       }).filter(item => item.id);
 
-      // Save to IndexedDB
-      const dbRequest = indexedDB.open('MusicExportDB', 1);
-
-      dbRequest.onupgradeneeded = function (event) {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains('exports')) {
-          const store = db.createObjectStore('exports', { keyPath: 'id' });
-          store.createIndex('idIndex', 'id', { unique: true });
-          store.createIndex('releaseNameIndex', 'releaseName', { unique: false });
-        } else {
-          const store = event.target.transaction.objectStore('exports');
-          if (!store.indexNames.contains('idIndex')) {
-            store.createIndex('idIndex', 'id', { unique: true });
-          }
-          if (!store.indexNames.contains('releaseNameIndex')) {
-            store.createIndex('releaseNameIndex', 'releaseName', { unique: false });
-          }
-        }
-      };
-
-      dbRequest.onsuccess = function (event) {
-        const db = event.target.result;
-        const transaction = db.transaction('exports', 'readwrite');
-        const store = transaction.objectStore('exports');
-
-        store.clear().onsuccess = function () {
-          parsedData.forEach(item => {
-            store.put(item);
-          });
-        };
-
-        transaction.oncomplete = function () {
-          console.log('Data successfully saved to IndexedDB.');
-        };
-
-        transaction.onerror = function (event) {
-          console.error('Error saving data to IndexedDB:', event.target.error);
-        };
-      };
-
-      dbRequest.onerror = function (event) {
-        console.error('Error opening IndexedDB:', event.target.error);
-      };
-    } catch (err) {
-      console.error("Submission error:", err);
+      await upgradeRymDB(parsedData);
+      alert('RYM data successfully synced!');
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while syncing data with RYM.');
     }
   });
 })();
