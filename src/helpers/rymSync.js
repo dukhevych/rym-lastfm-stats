@@ -2,7 +2,7 @@ import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
 
 export async function getRymAlbum(id) {
-  const storeName = getStoreName();
+  const storeName = await getStoreName();
 
   return new Promise((resolve, reject) => {
     const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
@@ -63,7 +63,7 @@ export async function getMultipleRymAlbums(ids) {
 }
 
 export async function updateRymAlbum(id, updatedData) {
-  const storeName = getStoreName();
+  const storeName = await getStoreName();
 
   return new Promise((resolve, reject) => {
     const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
@@ -109,7 +109,7 @@ export async function updateRymAlbumRating(id, rating, userName) {
 }
 
 export async function deleteRymAlbum(id) {
-  const storeName = getStoreName();
+  const storeName = await getStoreName();
 
   return new Promise((resolve, reject) => {
     const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
