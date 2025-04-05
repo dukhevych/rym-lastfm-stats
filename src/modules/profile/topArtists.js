@@ -9,7 +9,7 @@ const PROFILE_CONTAINER_SELECTOR =
 
 let config = null;
 
-export async function render(_config, _userName) {
+export async function render(_config) {
   config = _config;
 
   if (!config) return;
@@ -23,8 +23,8 @@ export async function render(_config, _userName) {
 
   let userName;
 
-  if (_userName) {
-    userName = _userName;
+  if (config.userName) {
+    userName = config.userName;
   } else {
     const userData = await utils.getSyncedUserData();
     userName = userData?.name;

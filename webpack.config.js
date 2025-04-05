@@ -47,6 +47,7 @@ module.exports = (env) => {
     ...envBrowser,      // .env.[browser] variables
   };
 
+  console.log(process.env.NODE_ENV);
   console.log('Build version:', appVersion);
   console.log('Browser target:', browserTarget);
   console.log('System api key:', !!combinedEnv.LASTFM_API_KEY);
@@ -69,8 +70,8 @@ module.exports = (env) => {
     cache: {
       type: 'filesystem',
     },
-    // devtool: 'source-map',
-    mode: 'production',
+    devtool: 'source-map',
+    mode: process.env.NODE_ENV || 'production',
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),

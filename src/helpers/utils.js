@@ -1,7 +1,7 @@
 import { remove as removeDiacritics } from 'diacritics';
+import * as constants from './constants.js';
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-import * as constants from './constants.js';
 
 export function detectColorScheme() {
   const html = document.querySelector('html');
@@ -112,7 +112,6 @@ export const formatNumber = (number) => {
   return formatter.format(number);
 };
 
-// Can become broken if RYM changes layout and ids
 export function isMyProfile() {
   const headerProfileUsername = document.querySelector(
     '#header_profile_username',

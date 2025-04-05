@@ -13,15 +13,18 @@ import * as utils from '@/helpers/utils.js';
   const isMyProfile = await utils.checkDOMCondition(targetSelectors, () => utils.isMyProfile());
 
   if (isMyProfile) {
-    renderContent(profile, config);
+    await renderContent(profile, config, 'profile');
     return;
   }
 
   await utils.waitForDOMReady();
 
-  const detectedUsername = utils.detectUserName();
+  const userName = utils.detectUserName();
 
-  if (detectedUsername) {
-    renderContent(profile, config, detectedUsername);
+  if (userName) {
+    await renderContent(profile, {
+      ...config,
+      userName,
+    }, 'profile');
   }
 })();
