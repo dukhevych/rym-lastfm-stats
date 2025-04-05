@@ -1,11 +1,20 @@
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
 
+export async function getRymDBName() {
+  const userName = await utils.getUserName();
+  if (!userName) {
+    throw new Error('User name not found');
+  }
+  return `${constants.RYM_DB_NAME}_${userName}`;
+}
+
 export async function getRymAlbum(id) {
-  const storeName = await getStoreName();
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
 
   return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
+    const dbRequest = indexedDB.open(dbName);
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
@@ -29,11 +38,12 @@ export async function getRymAlbum(id) {
   });
 }
 
-export async function getMultipleRymAlbums(ids) {
-  const storeName = await getStoreName();
+export async function getMultipleRymAlbums(ids, asObject = false) {
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
 
   return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
+    const dbRequest = indexedDB.open(dbName);
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
@@ -43,12 +53,24 @@ export async function getMultipleRymAlbums(ids) {
       const getAllRequest = store.getAll();
 
       getAllRequest.onsuccess = function () {
-        const allRecords = getAllRequest.result;
+        const allRecordsMap = new Map(getAllRequest.result.map(rec => [rec.id, rec]));
 
-        const map = new Map(allRecords.map(rec => [rec.id, rec]));
+        const results = ids.map(id => allRecordsMap.get(id));
 
-        const results = ids.map(id => map.get(id));
-        resolve(results);
+        if (!asObject) {
+          resolve(results);
+          return;
+        }
+
+        const resultsAsObject = results
+          .reduce((acc, curr) => {
+            if (curr) {
+              acc[curr.id] = curr;
+            }
+            return acc;
+          }, {});
+
+        resolve(resultsAsObject);
       };
 
       getAllRequest.onerror = function (event) {
@@ -63,10 +85,11 @@ export async function getMultipleRymAlbums(ids) {
 }
 
 export async function updateRymAlbum(id, updatedData) {
-  const storeName = await getStoreName();
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
 
   return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
+    const dbRequest = indexedDB.open(dbName);
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
@@ -109,10 +132,11 @@ export async function updateRymAlbumRating(id, rating, userName) {
 }
 
 export async function deleteRymAlbum(id) {
-  const storeName = await getStoreName();
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
 
   return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
+    const dbRequest = indexedDB.open(dbName);
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
@@ -136,55 +160,71 @@ export async function deleteRymAlbum(id) {
   });
 }
 
-async function getStoreName() {
-  const userName = await utils.getUserName();
-  if (!userName) {
-    throw new Error('User name not found');
-  }
-  return `${userName}_${constants.RYM_STORE_SUFFIX}`;
+function getStoreName() {
+  return constants.RYM_DB_STORE_NAME || 'rymExportStore';
 }
 
 export async function upgradeRymDB(parsedData) {
-  const storeName = await getStoreName();
-  const dbRequest = indexedDB.open(constants.RYM_DB_NAME, 1);
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
 
   return new Promise((resolve, reject) => {
+    const dbRequest = indexedDB.open(dbName, 2); // Bump version if needed
+
     dbRequest.onupgradeneeded = function (event) {
       const db = event.target.result;
 
-      if (!db.objectStoreNames.contains(storeName)) {
-        const store = db.createObjectStore(storeName, { keyPath: 'id' });
-        store.createIndex('idIndex', 'id', { unique: true });
-        store.createIndex('releaseNameIndex', 'releaseName', { unique: false });
-      } else {
-        const store = event.target.transaction.objectStore(storeName);
-        if (!store.indexNames.contains('idIndex')) {
-          store.createIndex('idIndex', 'id', { unique: true });
-        }
-        if (!store.indexNames.contains('releaseNameIndex')) {
-          store.createIndex('releaseNameIndex', 'releaseName', { unique: false });
-        }
+      // If store already exists, delete and recreate to ensure indexes are correct
+      if (db.objectStoreNames.contains(storeName)) {
+        db.deleteObjectStore(storeName);
       }
+
+      const store = db.createObjectStore(storeName, { keyPath: 'id' });
+      store.createIndex('idIndex', 'id', { unique: true });
+      store.createIndex('releaseNameIndex', 'releaseName', { unique: false });
     };
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
+
       const transaction = db.transaction(storeName, 'readwrite');
       const store = transaction.objectStore(storeName);
 
-      store.clear().onsuccess = function () {
-        parsedData.forEach(item => {
-          store.put(item);
+      const clearRequest = store.clear();
+
+      clearRequest.onsuccess = function () {
+        const putPromises = parsedData.map(item => {
+          return new Promise((res, rej) => {
+            const putRequest = store.put(item);
+            putRequest.onsuccess = () => res();
+            putRequest.onerror = (e) => rej(e.target.error);
+          });
         });
+
+        Promise.all(putPromises)
+          .then(() => {
+            transaction.oncomplete = function () {
+              console.log('Data successfully saved to IndexedDB.');
+              db.close();
+              resolve();
+            };
+          })
+          .catch(error => {
+            console.error('Error inserting data into IndexedDB:', error);
+            db.close();
+            reject(error);
+          });
       };
 
-      transaction.oncomplete = function () {
-        console.log('Data successfully saved to IndexedDB.');
-        resolve();
+      clearRequest.onerror = function (e) {
+        console.error('Error clearing object store:', e.target.error);
+        db.close();
+        reject(e.target.error);
       };
 
       transaction.onerror = function (event) {
-        console.error('Error saving data to IndexedDB:', event.target.error);
+        console.error('Transaction error:', event.target.error);
+        db.close();
         reject(event.target.error);
       };
     };
