@@ -95,10 +95,10 @@ export const OPTIONS_DEFAULT = {
 
 export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);
 
-export const RECENT_TRACKS_INTERVAL_MS = 120000;
+export const RECENT_TRACKS_INTERVAL_MS = process.env.NODE_ENV === 'production' ? 120000 : 30000;
 
 export const TOP_ALBUMS_INTERVAL_MS = 120000;
 
 export const TOP_ARTISTS_INTERVAL_MS = 120000;
 
-export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = 60000;
+export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = process.env.NODE_ENV === 'production' ? 60000 : 15000;;

@@ -38,6 +38,36 @@ export async function getRymAlbum(id) {
   });
 }
 
+export async function getRymAlbumByTitle(fullTitle) {
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
+
+  return new Promise((resolve, reject) => {
+    const dbRequest = indexedDB.open(dbName);
+
+    dbRequest.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction(storeName, 'readonly');
+      const store = transaction.objectStore(storeName);
+
+      const index = store.index('releaseNameIndex');
+      const getRequest = index.get(fullTitle);
+
+      getRequest.onsuccess = function () {
+        resolve(getRequest.result);
+      };
+
+      getRequest.onerror = function (event) {
+        reject(event.target.error);
+      };
+    };
+
+    dbRequest.onerror = function (event) {
+      reject(event.target.error);
+    };
+  });
+}
+
 export async function getMultipleRymAlbums(ids, asObject = false) {
   const dbName = await getRymDBName();
   const storeName = getStoreName();
@@ -127,8 +157,8 @@ export async function updateRymAlbum(id, updatedData) {
   });
 }
 
-export async function updateRymAlbumRating(id, rating, userName) {
-  return updateRymAlbum(id, { rating }, userName);
+export async function updateRymAlbumRating(id, rating) {
+  return updateRymAlbum(id, { rating });
 }
 
 export async function deleteRymAlbum(id) {
