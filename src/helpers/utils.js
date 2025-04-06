@@ -413,3 +413,32 @@ export function deburr(string) {
   }
   return removeDiacritics(string);
 }
+
+export async function getVariableFromMainWindow(propName, timeout = 10000) {
+  return new Promise((resolve, reject) => {
+    const handler = (event) => {
+      if (
+        event.source === window &&
+        event.data?.source === "my-extension" &&
+        event.data?.type === "prop-value" &&
+        event.data?.prop === propName
+      ) {
+        window.removeEventListener("message", handler);
+        clearTimeout(timer);
+        resolve(event.data.value);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      window.removeEventListener("message", handler);
+      reject(new Error(`Timeout: window.${propName} not found within ${timeout}ms`));
+    }, timeout);
+
+    window.addEventListener("message", handler);
+
+    browserAPI.runtime.sendMessage({
+      type: "get-window-variable",
+      propName
+    });
+  });
+}

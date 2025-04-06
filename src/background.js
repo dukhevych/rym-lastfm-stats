@@ -125,3 +125,43 @@ const generateApiSig = (params) => {
 function generateMd5(string) {
   return MD5(string).toString();
 }
+
+browserAPI.runtime.onMessage.addListener((message, sender) => {
+  if (message?.type === "get-window-variable" && sender.tab?.id && typeof message.propName === "string") {
+    browserAPI.scripting.executeScript({
+      target: { tabId: sender.tab.id },
+      world: "MAIN",
+      args: [message.propName],
+      func: (propName) => {
+        function waitForWindowProp(propName, interval = 100, timeout = 10000) {
+          return new Promise((resolve, reject) => {
+            const start = Date.now();
+            const timer = setInterval(() => {
+              if (window[propName] !== undefined) {
+                clearInterval(timer);
+                resolve(window[propName]);
+              } else if (Date.now() - start > timeout) {
+                clearInterval(timer);
+                reject(new Error(`Timeout: window.${propName} not found`));
+              }
+            }, interval);
+          });
+        }
+
+        waitForWindowProp(propName)
+          .then((val) => {
+            window.postMessage({
+              source: "my-extension",
+              type: "prop-value",
+              prop: propName,
+              value: val
+            }, "*");
+          })
+          .catch((err) => {
+            console.warn(`[EXT] ${propName} not found:`, err.message);
+          });
+      }
+    });
+  }
+});
+

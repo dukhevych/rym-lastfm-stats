@@ -5,7 +5,8 @@
   "description": "Display Last.fm stats on RYM pages",
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "scripting"
   ],
   "host_permissions": [
     "https://rateyourmusic.com/artist/*",
@@ -21,6 +22,11 @@
       "matches": ["*://rateyourmusic.com/release/*"],
       "js": ["content_release.js"],
       "run_at": "document_start"
+    },
+    {
+      "matches": ["*://rateyourmusic.com/release/*"],
+      "js": ["content_release_end.js"],
+      "run_at": "document_end"
     },
     {
       "matches": ["*://rateyourmusic.com/artist/*"],
