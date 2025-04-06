@@ -561,7 +561,7 @@ async function render(_config) {
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'MyAwesomeApp/1.0 (your@email.com)',
+        'User-Agent': 'RYM Last.fm Stats/1.0',
       },
     });
 
@@ -571,7 +571,6 @@ async function render(_config) {
 
     const data = await response.json();
 
-    // Extract tracklist from nested media -> tracks
     const tracks = [];
     if (Array.isArray(data.media)) {
       data.media.forEach((medium) => {
@@ -580,14 +579,12 @@ async function render(_config) {
             tracks.push({
               position: track.position,
               title: track.title,
-              length: track.length, // duration in milliseconds
+              length: track.length,
             });
           });
         }
       });
     }
-
-    console.log(tracks);
 
     return tracks;
   }
