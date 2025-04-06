@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 
+import { getRymAlbumByTitle } from '@/helpers/rymSync';
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
@@ -555,6 +556,42 @@ async function render(_config) {
     buttonsContainer.prepend(lockButton);
   }
 
+  async function getTracklistByMBID(mbid) {
+    const url = `https://musicbrainz.org/ws/2/release/${mbid}?inc=recordings&fmt=json`;
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'MyAwesomeApp/1.0 (your@email.com)',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Extract tracklist from nested media -> tracks
+    const tracks = [];
+    if (Array.isArray(data.media)) {
+      data.media.forEach((medium) => {
+        if (Array.isArray(medium.tracks)) {
+          medium.tracks.forEach((track) => {
+            tracks.push({
+              position: track.position,
+              title: track.title,
+              length: track.length, // duration in milliseconds
+            });
+          });
+        }
+      });
+    }
+
+    console.log(tracks);
+
+    return tracks;
+  }
+
   const populateRecentTracks = (data, timestamp) => {
     if (button) {
       if (data[0].c) {
@@ -562,6 +599,12 @@ async function render(_config) {
       } else {
         button.classList.remove("is-now-playing");
       }
+    }
+
+    const lastTrack = data[0];
+
+    if (lastTrack.rmbid) {
+      getTracklistByMBID(lastTrack.rmbid);
     }
 
     if (config.recentTracksReplace) {
@@ -617,6 +660,7 @@ async function render(_config) {
         n: item.name,
         d: item.date?.uts ?? null,
         r: item.album['#text'],
+        rmbid: item.album?.mbid ?? null,
         a: item.artist['#text'],
       }));
 
@@ -628,7 +672,10 @@ async function render(_config) {
         }
       });
 
-      populateRecentTracks(normalizedData, timestamp);
+      return {
+        data: normalizedData,
+        timestamp,
+      };
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error("Failed to fetch recent tracks:", err);
@@ -643,7 +690,10 @@ async function render(_config) {
   const startInterval = () => {
     if (!intervalId) {
       intervalId = setInterval(
-        updateAction,
+        async () => {
+          const { data, timestamp } = await updateAction();
+          populateRecentTracks(data, timestamp);
+        },
         constants.RECENT_TRACKS_INTERVAL_MS,
       );
     }
@@ -661,14 +711,16 @@ async function render(_config) {
       Date.now() - recentTracksCache.timestamp >
       constants.RECENT_TRACKS_INTERVAL_MS
     ) {
-      await updateAction();
+      const { data, timestamp } = await updateAction();
+      populateRecentTracks(data, timestamp);
     } else {
-      populateRecentTracks(recentTracksCache.data);
-      tracksWrapper.dataset.timestamp = `Updated at ${new Date(recentTracksCache.timestamp).toLocaleString()}`;
+      populateRecentTracks(recentTracksCache.data, recentTracksCache.timestamp);
+      // tracksWrapper.dataset.timestamp = `Updated at ${new Date(recentTracksCache.timestamp).toLocaleString()}`;
     }
   } else {
     if (document.visibilityState === 'visible') {
-      await updateAction();
+      const { data, timestamp } = await updateAction();
+      populateRecentTracks(data, timestamp);
     }
   }
 
@@ -685,7 +737,8 @@ async function render(_config) {
 
   const handleVisibilityChange = async () => {
     if (document.visibilityState === 'visible') {
-      await updateAction();
+      const { data, timestamp } = await updateAction();
+      populateRecentTracks(data, timestamp);
       startInterval();
     } else {
       stopInterval();
