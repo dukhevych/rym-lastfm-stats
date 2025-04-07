@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 
-import { getRymAlbumByTitle } from '@/helpers/rymSync';
+// import { getRymAlbumByTitle } from '@/helpers/rymSync';
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
@@ -21,6 +21,11 @@ const gif = document.createElement('img');
 gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
 
 let config = null;
+let userName = null;
+
+let button;
+let tracksWrapper;
+let playHistoryItem;
 
 const PLAY_HISTORY_ITEM_CLASSES = {
   item: 'play_history_item',
@@ -517,171 +522,131 @@ function addRecentTracksStyles() {
   document.head.appendChild(style);
 }
 
-async function render(_config) {
-  config = _config;
+async function updateAction() {
+  abortController.abort();
+  abortController = new AbortController();
 
-  if (!config) return;
-
-  if (!config.lastfmApiKey) {
-    console.info(
-      'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
+  try {
+    const data = await api.fetchUserRecentTracks(
+      userName,
+      config.lastfmApiKey,
+      { limit: config.recentTracksLimit },
+      abortController.signal,
     );
-    return;
-  }
 
-  let userName;
+    const timestamp = Date.now();
 
-  if (config.userName) {
-    userName = config.userName;
-  } else {
-    const userData = await utils.getSyncedUserData();
-    userName = userData?.name;
-  }
+    const normalizedData = data.map((item) => ({
+      c: item["@attr"]?.nowplaying ?? null,
+      i: item.image[0]['#text'],
+      n: item.name,
+      d: item.date?.uts ?? null,
+      r: item.album['#text'],
+      rmbid: item.album?.mbid ?? null,
+      a: item.artist['#text'],
+    }));
 
-  if (!userName) {
-    console.log('No Last.fm username found. Recent Tracks can\'t be displayed.');
-    return;
-  }
-
-  addRecentTracksStyles();
-
-  const { button, lockButton, tracksWrapper, playHistoryItem } = prepareRecentTracksUI();
-
-  const buttonsContainer = document.querySelector(
-    PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
-  );
-
-  if (buttonsContainer) {
-    buttonsContainer.prepend(button);
-    buttonsContainer.prepend(lockButton);
-  }
-
-  async function getTracklistByMBID(mbid) {
-    const url = `https://musicbrainz.org/ws/2/release/${mbid}?inc=recordings&fmt=json`;
-
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'RYM Last.fm Stats/1.0',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    const tracks = [];
-    if (Array.isArray(data.media)) {
-      data.media.forEach((medium) => {
-        if (Array.isArray(medium.tracks)) {
-          medium.tracks.forEach((track) => {
-            tracks.push({
-              position: track.position,
-              title: track.title,
-              length: track.length,
-            });
-          });
-        }
-      });
-    }
-
-    return tracks;
-  }
-
-  const populateRecentTracks = (data, timestamp) => {
-    if (button) {
-      if (data[0].c) {
-        button.classList.add("is-now-playing");
-      } else {
-        button.classList.remove("is-now-playing");
-      }
-    }
-
-    const lastTrack = data[0];
-
-    if (lastTrack.rmbid) {
-      getTracklistByMBID(lastTrack.rmbid);
-    }
-
-    if (config.recentTracksReplace) {
-      populatePlayHistoryItem(
-        playHistoryItem,
-        {
-          artistName: data[0].a,
-          artistUrl: utils.generateSearchUrl({
-            artist: data[0].a,
-          }, config),
-          albumName: data[0].r,
-          albumUrl: utils.generateSearchUrl({
-            artist: data[0].a,
-            releaseTitle: data[0].r,
-          }, config),
-          trackUrl: utils.generateSearchUrl({
-            artist: data[0].a,
-            trackTitle: data[0].n,
-          }, config),
-          trackName: data[0].n,
-          coverUrl: data[0].i,
-          isNowPlaying: data[0].c,
-          timestamp: data[0].d,
-        },
-      );
-      playHistoryItem.classList.add('is-loaded');
-    }
-
-    const tracksList = createTracksList(data, userName);
-
-    tracksWrapper.replaceChildren(tracksList);
-
-    tracksWrapper.dataset.timestamp = `Updated at ${new Date(timestamp).toLocaleString()}`;
-  }
-
-  const updateAction = async () => {
-    abortController.abort();
-    abortController = new AbortController();
-
-    try {
-      const data = await api.fetchUserRecentTracks(
-        userName,
-        config.lastfmApiKey,
-        { limit: config.recentTracksLimit },
-        abortController.signal,
-      );
-
-      const timestamp = Date.now();
-
-      const normalizedData = data.map((item) => ({
-        c: item["@attr"]?.nowplaying ?? null,
-        i: item.image[0]['#text'],
-        n: item.name,
-        d: item.date?.uts ?? null,
-        r: item.album['#text'],
-        rmbid: item.album?.mbid ?? null,
-        a: item.artist['#text'],
-      }));
-
-      await utils.storageSet({
-        recentTracksCache: {
-          data: normalizedData,
-          timestamp,
-          userName,
-        }
-      });
-
-      return {
+    await utils.storageSet({
+      recentTracksCache: {
         data: normalizedData,
         timestamp,
-      };
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        console.error("Failed to fetch recent tracks:", err);
+        userName,
       }
+    });
+
+    return {
+      data: normalizedData,
+      timestamp,
+    };
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.error("Failed to fetch recent tracks:", err);
     }
-  };
+  }
+};
 
-  insertRecentTracksWrapperIntoDOM(tracksWrapper);
+async function getTracklistByMBID(mbid) {
+  const url = `https://musicbrainz.org/ws/2/release/${mbid}?inc=recordings&fmt=json`;
 
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'RYM Last.fm Stats/1.0',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  const tracks = [];
+  if (Array.isArray(data.media)) {
+    data.media.forEach((medium) => {
+      if (Array.isArray(medium.tracks)) {
+        medium.tracks.forEach((track) => {
+          tracks.push({
+            position: track.position,
+            title: track.title,
+            length: track.length,
+          });
+        });
+      }
+    });
+  }
+
+  return tracks;
+}
+
+function populateRecentTracks(data, timestamp) {
+  if (button) {
+    if (data[0].c) {
+      button.classList.add("is-now-playing");
+    } else {
+      button.classList.remove("is-now-playing");
+    }
+  }
+
+  const lastTrack = data[0];
+
+  if (lastTrack.rmbid) {
+    getTracklistByMBID(lastTrack.rmbid);
+  }
+
+  if (config.recentTracksReplace) {
+    populatePlayHistoryItem(
+      playHistoryItem,
+      {
+        artistName: data[0].a,
+        artistUrl: utils.generateSearchUrl({
+          artist: data[0].a,
+        }, config),
+        albumName: data[0].r,
+        albumUrl: utils.generateSearchUrl({
+          artist: data[0].a,
+          releaseTitle: data[0].r,
+        }, config),
+        trackUrl: utils.generateSearchUrl({
+          artist: data[0].a,
+          trackTitle: data[0].n,
+        }, config),
+        trackName: data[0].n,
+        coverUrl: data[0].i,
+        isNowPlaying: data[0].c,
+        timestamp: data[0].d,
+      },
+    );
+    playHistoryItem.classList.add('is-loaded');
+  }
+
+  const tracksList = createTracksList(data, userName);
+
+  tracksWrapper.replaceChildren(tracksList);
+
+  tracksWrapper.dataset.timestamp = `Updated at ${new Date(timestamp).toLocaleString()}`;
+}
+
+function initBackgroundUpdate() {
   let intervalId;
 
   const startInterval = () => {
@@ -695,31 +660,6 @@ async function render(_config) {
       );
     }
   };
-
-  const { recentTracksCache } = await utils.storageGet(['recentTracksCache']);
-
-  if (
-    recentTracksCache
-    && recentTracksCache.data
-    && recentTracksCache.timestamp
-    && recentTracksCache.userName === userName
-  ) {
-    if (
-      Date.now() - recentTracksCache.timestamp >
-      constants.RECENT_TRACKS_INTERVAL_MS
-    ) {
-      const { data, timestamp } = await updateAction();
-      populateRecentTracks(data, timestamp);
-    } else {
-      populateRecentTracks(recentTracksCache.data, recentTracksCache.timestamp);
-      // tracksWrapper.dataset.timestamp = `Updated at ${new Date(recentTracksCache.timestamp).toLocaleString()}`;
-    }
-  } else {
-    if (document.visibilityState === 'visible') {
-      const { data, timestamp } = await updateAction();
-      populateRecentTracks(data, timestamp);
-    }
-  }
 
   if (document.visibilityState === 'visible') {
     startInterval();
@@ -751,6 +691,86 @@ async function render(_config) {
     'visibilitychange',
     throttledHandleVisibilityChange,
   );
+}
+
+async function render(_config) {
+  if (!_config) return;
+
+  config = _config;
+
+  if (!config.lastfmApiKey) {
+    console.info(
+      'RYM Last.fm Stats: Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
+    );
+    return;
+  }
+
+  if (config.userName) {
+    userName = config.userName;
+  } else {
+    const userData = await utils.getSyncedUserData();
+    userName = userData?.name;
+  }
+
+  if (!userName) {
+    console.log('No Last.fm username found. Recent Tracks can\'t be displayed.');
+    return;
+  }
+
+  addRecentTracksStyles();
+
+  const uiComponents = prepareRecentTracksUI();
+
+  const lockButton = uiComponents.lockButton;
+
+  button = uiComponents.button;
+  tracksWrapper = uiComponents.tracksWrapper;
+  playHistoryItem = uiComponents.playHistoryItem;
+
+  const buttonsContainer = document.querySelector(
+    PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
+  );
+
+  if (buttonsContainer) {
+    buttonsContainer.prepend(button);
+    buttonsContainer.prepend(lockButton);
+  }
+
+  insertRecentTracksWrapperIntoDOM(tracksWrapper);
+
+  let initialData;
+  let initialTimestamp;
+
+  const { recentTracksCache } = await utils.storageGet(['recentTracksCache']);
+
+  if (
+    recentTracksCache
+    && recentTracksCache.data
+    && recentTracksCache.timestamp
+    && recentTracksCache.userName === userName
+  ) {
+    if (
+      Date.now() - recentTracksCache.timestamp >
+      constants.RECENT_TRACKS_INTERVAL_MS
+    ) {
+      const { data, timestamp } = await updateAction();
+      initialData = data;
+      initialTimestamp = timestamp;
+    } else {
+      initialData = recentTracksCache.data;
+      initialTimestamp = recentTracksCache.timestamp;
+    }
+  } else {
+    if (document.visibilityState === 'visible') {
+      const { data, timestamp } = await updateAction();
+      initialData = data;
+      initialTimestamp = timestamp;
+    }
+  }
+
+  populateRecentTracks(initialData, initialTimestamp);
+
+  initBackgroundUpdate();
 }
 
 export default {
