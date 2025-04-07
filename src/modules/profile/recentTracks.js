@@ -1,3 +1,4 @@
+import ColorThief from 'colorthief';
 import { formatDistanceToNow } from 'date-fns';
 
 import * as utils from '@/helpers/utils.js';
@@ -8,6 +9,8 @@ import lockSvg from '@/assets/icons/lock.svg?raw';
 import unlockSvg from '@/assets/icons/unlock.svg?raw';
 
 import './recentTracks.css';
+
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 let abortController = new AbortController();
 
@@ -619,6 +622,10 @@ async function render(_config, _userName) {
         r: item.album['#text'],
         a: item.artist['#text'],
       }));
+
+      // test colors extraction
+      const { bgColor, textColor, accentColor } = await utils.getImageColors(normalizedData[0].i, 'dark');
+      console.log('Image colors:', { bgColor, textColor, accentColor });
 
       await utils.storageSet({
         recentTracksCache: {

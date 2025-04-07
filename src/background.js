@@ -9,6 +9,29 @@ const currentVersion = browserAPI.runtime.getManifest().version;
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
 
+browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'FETCH_IMAGE') {
+    fetch(message.url, { mode: 'cors' })
+      .then((response) => response.blob())
+      .then((blob) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          sendResponse({ success: true, dataUrl: reader.result });
+        };
+        reader.onerror = (e) => {
+          sendResponse({ success: false, error: 'Failed to read blob' });
+        };
+        reader.readAsDataURL(blob);
+      })
+      .catch((err) => {
+        sendResponse({ success: false, error: err.message || 'Fetch error' });
+      });
+
+    return true;
+  }
+});
+
+
 browserAPI.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     console.log('RYM Last.fm extension installed');

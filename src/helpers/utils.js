@@ -1,3 +1,4 @@
+import { Vibrant } from "node-vibrant/browser";
 import { remove as removeDiacritics } from 'diacritics';
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
@@ -414,4 +415,39 @@ export function deburr(string) {
     throw new TypeError('Expected a string');
   }
   return removeDiacritics(string);
+}
+
+export async function getImageColors(imageUrl, theme = 'light') {
+  const dataUrl = await new Promise((resolve, reject) => {
+    browserAPI.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl }, (response) => {
+      if (!response?.success) {
+        return reject(new Error(response?.error || 'Failed to fetch image'));
+      }
+      resolve(response.dataUrl);
+    });
+  });
+
+  const v = new Vibrant(dataUrl);
+
+  const palette = await v.getPalette();
+
+  return getVibrantUiColors(palette, theme);
+}
+
+export async function getVibrantUiColors(palette, theme = 'light') {
+  const isLight = theme === 'light';
+
+  const bgSwatch = isLight
+    ? palette.LightMuted || palette.Muted || palette.LightVibrant
+    : palette.DarkMuted || palette.Muted || palette.DarkVibrant;
+
+  const accentSwatch = isLight
+    ? palette.Vibrant || palette.DarkVibrant
+    : palette.Vibrant || palette.LightVibrant;
+
+  const bgColor = bgSwatch?.hex || '#222';
+  const textColor = bgSwatch?.bodyTextColor || '#fff';
+  const accentColor = accentSwatch?.hex || '#ff4081';
+
+  return { bgColor, textColor, accentColor };
 }
