@@ -2,7 +2,7 @@ import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 
 const INFO_CONTAINER_SELECTOR = '.album_info tbody';
-const INFO_ARTISTS_SELECTOR = '.album_info [itemprop="byArtist"] a';
+const INFO_ARTISTS_SELECTOR = '.album_info [itemprop="byArtist"] a.artist';
 const INFO_ALBUM_TITLE_SELECTOR = '.album_title';
 
 function getArtistNames() {
@@ -126,8 +126,6 @@ async function render(config) {
       const currentDate = new Date().toDateString();
 
       if (cachedDate === currentDate) {
-        console.log('Inserting cached lastfm data:', data);
-
         populateReleaseStats(data, timestamp);
         return;
       }

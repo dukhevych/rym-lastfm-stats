@@ -40,22 +40,31 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
 
       const parsedData = rows.map(row => {
         const columns = row.split(',');
+        const firstName = columns[1]?.replace(/"/g, '').trim();
+        const lastName = columns[2]?.replace(/"/g, '').trim();
+        const firstNameLocalized = columns[3]?.replace(/"/g, '').trim();
+        const lastNameLocalized = columns[4]?.replace(/"/g, '').trim();
+
+        let artistName = lastName;
+        if (firstName) {
+          artistName = `${firstName} ${artistName}`;
+        }
+
+        let artistNameLocalized = lastNameLocalized;
+        if (firstNameLocalized) {
+          artistNameLocalized = `${firstNameLocalized} ${artistNameLocalized}`;
+        }
+
         const item = {
           id: columns[0]?.replace(/"/g, '').trim(),
-          firstName: columns[1]?.replace(/"/g, '').trim(),
-          lastName: columns[2]?.replace(/"/g, '').trim(),
-          firstNameLocalized: columns[3]?.replace(/"/g, '').trim(),
-          lastNameLocalized: columns[4]?.replace(/"/g, '').trim(),
+          artistName,
+          artistNameLocalized,
           title: columns[5]?.replace(/"/g, '').trim(),
           releaseDate: columns[6]?.replace(/"/g, '').trim(),
           rating: columns[7]?.replace(/"/g, '').trim(),
         };
 
-        let releaseName = `${item.lastNameLocalized || item.lastName} - ${item.title}`;
-
-        if (item.firstNameLocalized || item.firstName) {
-          releaseName = `${item.firstNameLocalized || item.firstName} ${releaseName}`;
-        }
+        const releaseName = `${item.artistNameLocalized || item.artistName} - ${item.title}`;
 
         return {
           ...item,

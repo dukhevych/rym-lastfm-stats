@@ -1,10 +1,9 @@
-import { MD5 } from './libs/crypto-js.min.js';
-import * as utils from './helpers/utils.js';
-import * as api from './helpers/api.js';
+import { MD5 } from '@/libs/crypto-js.min.js';
+import * as utils from '@/helpers/utils.js';
+import * as api from '@/helpers/api.js';
+import * as constants from '@/helpers/constants.js';
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-
-const currentVersion = browserAPI.runtime.getManifest().version;
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
@@ -17,7 +16,7 @@ browserAPI.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'update') {
     const previousVersion = details.previousVersion;
 
-    console.log(`RYM Last.fm extension updated from v${previousVersion} to v${currentVersion}`);
+    console.log(`RYM Last.fm extension updated from v${previousVersion} to v${constants.APP_VERSION}`);
 
     const { userData, lastfmUsername } = await utils.storageGet(['userData', 'lastfmUsername']);
 
@@ -62,7 +61,7 @@ browserAPI.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
       await utils.storageSet({ lastfmSession: sessionKey });
 
       browserAPI.runtime.sendMessage({
-        type: 'lastfm_auth',
+        type: `${constants.APP_NAME_SLUG}:lastfm_auth`,
         value: sessionKey,
       });
     }
@@ -127,41 +126,44 @@ function generateMd5(string) {
 }
 
 browserAPI.runtime.onMessage.addListener((message, sender) => {
-  if (message?.type === "get-window-variable" && sender.tab?.id && typeof message.propName === "string") {
+  if (
+    message?.type === "get-and-watch-object-field" &&
+    sender.tab?.id &&
+    typeof message.propName === "string" &&
+    typeof message.fieldName === "string"
+  ) {
     browserAPI.scripting.executeScript({
       target: { tabId: sender.tab.id },
       world: "MAIN",
-      args: [message.propName],
-      func: (propName) => {
-        function waitForWindowProp(propName, interval = 100, timeout = 10000) {
-          return new Promise((resolve, reject) => {
-            const start = Date.now();
-            const timer = setInterval(() => {
-              if (window[propName] !== undefined) {
-                clearInterval(timer);
-                resolve(window[propName]);
-              } else if (Date.now() - start > timeout) {
-                clearInterval(timer);
-                reject(new Error(`Timeout: window.${propName} not found`));
-              }
-            }, interval);
-          });
+      args: [message.propName, message.fieldName],
+      func: (propName, fieldName) => {
+        function dispatch(value) {
+          window.dispatchEvent(new CustomEvent("my-extension:field-update", {
+            detail: { prop: propName, field: fieldName, value }
+          }));
         }
 
-        waitForWindowProp(propName)
-          .then((val) => {
-            window.postMessage({
-              source: "my-extension",
-              type: "prop-value",
-              prop: propName,
-              value: val
-            }, "*");
-          })
-          .catch((err) => {
-            console.warn(`[EXT] ${propName} not found:`, err.message);
-          });
+        const target = window[propName];
+        if (!target || typeof target !== "object") return;
+
+        let currentValue = target[fieldName];
+
+        Object.defineProperty(target, fieldName, {
+          configurable: true,
+          enumerable: true,
+          get() {
+            return currentValue;
+          },
+          set(newVal) {
+            currentValue = newVal;
+            dispatch(newVal);
+          }
+        });
+
+        if (currentValue !== undefined) {
+          dispatch(currentValue);
+        }
       }
     });
   }
 });
-

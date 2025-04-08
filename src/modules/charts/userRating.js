@@ -67,7 +67,7 @@ async function render(_config) {
 
     observer.observe(target, {
       childList: true,
-      subtree: false // Set to true if items are nested deeper
+      subtree: false,
     });
 
     console.log('Observer attached.');

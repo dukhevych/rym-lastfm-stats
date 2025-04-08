@@ -17,6 +17,12 @@
     "https://ws.audioscrobbler.com/",
     "https://dukhevych.github.io/lastfm-oauth-redirect/*"
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*", "images/*"],
+      "matches": ["*://rateyourmusic.com/*"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["*://rateyourmusic.com/release/*"],

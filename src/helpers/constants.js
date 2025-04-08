@@ -1,3 +1,5 @@
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 export const LASTFM_COLOR = '#f71414';
 
 export const RYM_DB_NAME = 'rymExportDB';
@@ -102,3 +104,11 @@ export const TOP_ALBUMS_INTERVAL_MS = 120000;
 export const TOP_ARTISTS_INTERVAL_MS = 120000;
 
 export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = process.env.NODE_ENV === 'production' ? 60000 : 15000;;
+
+const manifest = browserAPI.runtime.getManifest();
+
+export const APP_VERSION = manifest.version;
+
+export const APP_NAME = manifest.name;
+
+export const APP_NAME_SLUG = APP_NAME.replace(/\s+/g, '-').toLowerCase();

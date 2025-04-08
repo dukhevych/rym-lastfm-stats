@@ -1,21 +1,48 @@
 import * as utils from '@/helpers/utils.js';
-import { getRymAlbum, updateRymAlbum } from '@/helpers/rymSync.js';
+import { getRymAlbum, updateRymAlbum, addRymAlbum, deleteRymAlbum } from '@/helpers/rymSync.js';
 
 (async function () {
   const releaseId = document.querySelectorAll('.album_shortcut')[0].value.replace('[Album', '').replace(']', '');
 
   const propName = 'rating_l_' + releaseId;
+  const fieldName = 'rating';
 
-  const propValue = await utils.getVariableFromMainWindow(propName);
+  let ratingValue;
 
-  const rymAlbumData = await getRymAlbum(releaseId);
+  const { initialValue } = await utils.getAndWatchObjectField(
+    propName,
+    fieldName,
+    async (updatedValue) => {
+      ratingValue = updatedValue;
+      await updateRymSync(ratingValue);
+    },
+  );
 
-  if (!rymAlbumData) {
-    console.warn('RYM album data not found for release ID:', releaseId);
-    return;
+  ratingValue = initialValue;
+
+  async function updateRymSync(value) {
+    const rymAlbumData = await getRymAlbum(releaseId);
+    if (value > 0) {
+      if (!rymAlbumData) {
+        await addRymAlbum({
+          id: releaseId,
+          artistName: '', // TODO - get artist name
+          artistNameLocalized: '', // TODO - get artist name localized
+          title: '', // TODO - get album title
+          releaseDate: '', // TODO - get release date
+          rating: String(value),
+        });
+      } else {
+        await updateRymAlbum(releaseId, { rating: String(value) });
+      }
+    }
+
+    if (value === 0) {
+      if (rymAlbumData) {
+        await deleteRymAlbum(releaseId);
+      }
+    }
   }
 
-  if (String(rymAlbumData.rating) !== String(propValue.rating)) {
-    await updateRymAlbum(releaseId, { rating: String(propValue.rating) });
-  }
+  await updateRymSync(ratingValue);
 })();

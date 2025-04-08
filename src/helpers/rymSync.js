@@ -114,6 +114,35 @@ export async function getMultipleRymAlbums(ids, asObject = false) {
   });
 }
 
+export async function addRymAlbum(album) {
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
+
+  return new Promise((resolve, reject) => {
+    const dbRequest = indexedDB.open(dbName);
+
+    dbRequest.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
+
+      const putRequest = store.put(album);
+
+      putRequest.onsuccess = function () {
+        resolve(true);
+      };
+
+      putRequest.onerror = function (event) {
+        reject(event.target.error);
+      };
+    };
+
+    dbRequest.onerror = function (event) {
+      reject(event.target.error);
+    };
+  });
+}
+
 export async function updateRymAlbum(id, updatedData) {
   const dbName = await getRymDBName();
   const storeName = getStoreName();

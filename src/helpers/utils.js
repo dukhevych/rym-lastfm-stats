@@ -414,31 +414,43 @@ export function deburr(string) {
   return removeDiacritics(string);
 }
 
-export async function getVariableFromMainWindow(propName, timeout = 10000) {
-  return new Promise((resolve, reject) => {
-    const handler = (event) => {
+export function getAndWatchObjectField(propName, fieldName, onChange) {
+  return new Promise((resolve) => {
+    let resolved = false;
+    let lastValue;
+
+    const handler = (e) => {
       if (
-        event.source === window &&
-        event.data?.source === "my-extension" &&
-        event.data?.type === "prop-value" &&
-        event.data?.prop === propName
+        e?.detail?.prop === propName &&
+        e?.detail?.field === fieldName
       ) {
-        window.removeEventListener("message", handler);
-        clearTimeout(timer);
-        resolve(event.data.value);
+        const newVal = e.detail.value;
+
+        // If value hasn't changed, ignore
+        if (newVal === lastValue) return;
+        lastValue = newVal;
+
+        if (!resolved) {
+          resolved = true;
+          resolve({ initialValue: newVal, stopWatching });
+        } else {
+          onChange?.(newVal);
+        }
       }
     };
 
-    const timer = setTimeout(() => {
-      window.removeEventListener("message", handler);
-      reject(new Error(`Timeout: window.${propName} not found within ${timeout}ms`));
-    }, timeout);
+    function stopWatching() {
+      window.removeEventListener("my-extension:field-update", handler);
+    }
 
-    window.addEventListener("message", handler);
+    window.addEventListener("my-extension:field-update", handler);
 
+    const browserAPI = typeof browser !== "undefined" ? browser : chrome;
     browserAPI.runtime.sendMessage({
-      type: "get-window-variable",
-      propName
+      type: "get-and-watch-object-field",
+      propName,
+      fieldName
     });
   });
 }
+

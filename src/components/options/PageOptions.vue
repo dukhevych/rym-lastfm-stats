@@ -644,7 +644,7 @@ const openAuthPage = () => {
   });
 
   browserAPI.runtime.onMessage.addListener((message) => {
-    if (message.type === 'lastfm_auth') {
+    if (message.type === `${constants.APP_NAME_SLUG}:lastfm_auth`) {
       api.fetchUserData(message.value, SYSTEM_API_KEY).then((data) => {
         const normalizedData = {
           name: data.name,

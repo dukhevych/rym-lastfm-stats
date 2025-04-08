@@ -10,6 +10,8 @@ import unlockSvg from '@/assets/icons/unlock.svg?raw';
 
 import './recentTracks.css';
 
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 let abortController = new AbortController();
 
 const PROFILE_LISTENING_SET_TO_SELECTOR = '.profile_set_listening_box';
@@ -18,7 +20,7 @@ const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
 
 const gif = document.createElement('img');
-gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+gif.src = browserAPI.runtime.getURL('/images/now-playing.gif');
 
 let config = null;
 let userName = null;
