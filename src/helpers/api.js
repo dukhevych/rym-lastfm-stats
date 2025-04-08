@@ -217,6 +217,26 @@ export function fetchArtistStats(username, apiKey, { artist }) {
   });
 }
 
+export function searchAlbum(
+  username,
+  apiKey,
+  { artist, albumTitle },
+) {
+  if (!apiKey) {
+    return Promise.reject(new Error('No API key provided.'));
+  }
+  if (!artist) {
+    return Promise.reject(new Error('No artist provided.'));
+  }
+  if (!albumTitle) {
+    return Promise.reject(new Error('No album title provided.'));
+  }
+
+  return fetch(
+    `https://ws.audioscrobbler.com/2.0/?method=album.search&album=${artist} ${albumTitle}&api_key=${apiKey}&limit=5&format=json`)
+    .then((response) => response.json());
+}
+
 export function fetchReleaseStats(
   username,
   apiKey,

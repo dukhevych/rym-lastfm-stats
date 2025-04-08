@@ -1,6 +1,8 @@
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 const INFO_CONTAINER_SELECTOR = '.album_info tbody';
 const INFO_ARTISTS_SELECTOR = '.album_info [itemprop="byArtist"] a';
 const INFO_ALBUM_TITLE_SELECTOR = '.album_title';
@@ -79,7 +81,39 @@ function populateReleaseStats(
             `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`,
           )
         : null;
-    const link = utils.createLink(url, 'View on Last.fm');
+    // const link = utils.createLink(url, 'View on Last.fm');
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+
+    const lastfmIcon = document.createElement('img');
+    lastfmIcon.src = browserAPI.runtime.getURL('images/lastfm.png');
+
+    lastfmIcon.alt = 'Last.fm';
+    lastfmIcon.style.width = 'auto';
+    lastfmIcon.style.height = '16px';
+
+    link.appendChild(lastfmIcon);
+
+    const searchLink = document.createElement('a');
+    searchLink.href = '#';
+    searchLink.textContent = 'Incorrect?';
+
+    searchLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      const artist = getArtistNames()[0];
+      const releaseTitle = getReleaseTitle();
+
+      if (artist && releaseTitle) {
+        api.searchAlbum(
+          null,
+          null,
+          { artist, albumTitle: releaseTitle },
+        );
+      }
+    });
+
 
     const elements = [
       listenersSpan,
