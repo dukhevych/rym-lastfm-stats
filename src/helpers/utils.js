@@ -448,6 +448,10 @@ export async function fetchSessionKey(token) {
 
   try {
     const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`HTTP error! Status: ${response.status} ${response.statusText}`);
+      return null;
+    }
     const data = await response.json();
     if (data.session) {
       return data.session.key;
