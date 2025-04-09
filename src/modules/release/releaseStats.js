@@ -53,92 +53,92 @@ function populateReleaseStats(
 ) {
   const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
 
-  if (infoTable) {
-    const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
+  if (!infoTable) return;
 
-    const td = infoTable.querySelector('#lastfm_data');
+  const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
 
-    td.textContent = '';
+  const td = infoTable.querySelector('#lastfm_data');
 
-    const listenersSpan =
-      listeners !== undefined
-        ? utils.createSpan(
-            `${listeners} listeners ${cacheTimeHint}`,
-            `${utils.shortenNumber(parseInt(listeners))} listeners`,
-          )
-        : null;
-    const playcountSpan =
-      playcount !== undefined
-        ? utils.createSpan(
-            `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`,
-            `${utils.shortenNumber(parseInt(playcount))} plays`,
-          )
-        : null;
-    const userplaycountSpan =
-      userplaycount !== undefined
-        ? utils.createStrong(
-            `${userplaycount} scrobbles`,
-            `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`,
-          )
-        : null;
-    // const link = utils.createLink(url, 'View on Last.fm');
+  td.textContent = '';
 
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
+  td.style.display = 'flex';
+  td.style.alignItems = 'center';
 
-    const lastfmIcon = document.createElement('img');
-    lastfmIcon.src = browserAPI.runtime.getURL('images/lastfm.png');
+  const listenersSpan =
+    listeners !== undefined
+      ? utils.createSpan(
+          `${listeners} listeners ${cacheTimeHint}`,
+          `${utils.shortenNumber(parseInt(listeners))} listeners`,
+        )
+      : null;
+  const playcountSpan =
+    playcount !== undefined
+      ? utils.createSpan(
+          `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`,
+          `${utils.shortenNumber(parseInt(playcount))} plays`,
+        )
+      : null;
+  const userplaycountSpan =
+    userplaycount !== undefined
+      ? utils.createStrong(
+          `${userplaycount} scrobbles`,
+          `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`,
+        )
+      : null;
 
-    lastfmIcon.alt = 'Last.fm';
-    lastfmIcon.style.width = 'auto';
-    lastfmIcon.style.height = '16px';
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.title = 'View on Last.fm';
 
-    link.appendChild(lastfmIcon);
+  const lastfmIcon = document.createElement('img');
+  lastfmIcon.src = browserAPI.runtime.getURL('images/lastfm-pic.png');
 
-    const searchLink = document.createElement('a');
-    searchLink.href = '#';
-    searchLink.textContent = 'Incorrect?';
+  lastfmIcon.alt = 'Last.fm';
+  lastfmIcon.style.width = 'auto';
+  lastfmIcon.style.height = '20px';
+  lastfmIcon.style.display = 'block';
 
-    searchLink.addEventListener('click', (event) => {
-      event.preventDefault();
-      const artist = getArtistNames()[0];
-      const releaseTitle = getReleaseTitle();
+  link.appendChild(lastfmIcon);
 
-      if (artist && releaseTitle) {
-        api.searchAlbum(
-          null,
-          null,
-          { artist, albumTitle: releaseTitle },
-        );
-      }
-    });
+  const elements = [
+    listenersSpan,
+    playcountSpan,
+    userplaycountSpan,
+    link,
+  ].filter((x) => x);
 
+  elements.forEach((element, index) => {
+    if (index > 0) {
+      const separator = document.createElement('span');
+      separator.textContent = '\u00A0\u00A0|\u00A0\u00A0';
+      td.appendChild(separator);
+    }
+    td.appendChild(element);
+  });
 
-    const elements = [
-      listenersSpan,
-      playcountSpan,
-      userplaycountSpan,
-      link,
-    ].filter((x) => x);
-
-    elements.forEach((element, index) => {
-      if (index > 0) {
-        const separator = document.createElement('span');
-        separator.textContent = '\u00A0\u00A0|\u00A0\u00A0';
-        td.appendChild(separator);
-      }
-      td.appendChild(element);
-    });
-  }
+  return td;
 }
 
 async function render(config) {
   if (!config) return;
 
   const artistNames = getArtistNames();
-  const artist = artistNames[0];
-  const releaseTitle = getReleaseTitle();
+  const detectedArtist = artistNames[0];
+  const detectedReleaseTitle = getReleaseTitle();
+
+  const override = await utils.storageGet(window.location.href);
+
+  let artist;
+  let releaseTitle;
+
+  if (override) {
+    artist = override.artist;
+    releaseTitle = override.releaseTitle;
+  } else {
+    artist = detectedArtist;
+    releaseTitle = detectedReleaseTitle;
+  }
 
   if (!artist || !releaseTitle) {
     console.error('No artist or release title found.');
@@ -202,7 +202,87 @@ async function render(config) {
     localStorage.setItem(storageKey, JSON.stringify({ timestamp: Date.now(), data: stats }));
   }
 
-  populateReleaseStats(stats);
+  const td = populateReleaseStats(stats);
+
+  if (td && config.lastfmApiKey) {
+    const incorrectStatsWrapper = document.createElement('div');
+    incorrectStatsWrapper.style.position = 'relative';
+    incorrectStatsWrapper.style.marginLeft = 'auto';
+
+    const searchLink = document.createElement('a');
+    searchLink.href = '#';
+    searchLink.textContent = 'Incorrect stats?';
+
+    incorrectStatsWrapper.appendChild(searchLink);
+    td.appendChild(incorrectStatsWrapper);
+
+    const incorrectStatsPopup = document.createElement('div');
+    incorrectStatsPopup.style.position = 'absolute';
+    incorrectStatsPopup.style.top = '100%';
+    incorrectStatsPopup.style.right = '0';
+    incorrectStatsPopup.style.backgroundColor = 'black';
+    incorrectStatsPopup.style.color = 'white';
+    // incorrectStatsPopup.style.border = '1px solid #ccc';
+    incorrectStatsPopup.style.padding = '10px';
+    incorrectStatsPopup.style.display = 'none';
+    incorrectStatsPopup.style.zIndex = '1000';
+    incorrectStatsPopup.style.minWidth = '250px';
+
+    incorrectStatsWrapper.appendChild(incorrectStatsPopup);
+
+    searchLink.addEventListener('click', async (event) => {
+      event.preventDefault();
+
+      if (detectedArtist && detectedReleaseTitle) {
+        const albums = await api.searchAlbum(
+          config.lastfmApiKey,
+          { artist: detectedArtist, albumTitle: detectedReleaseTitle },
+        );
+
+        if (albums && albums.results && albums.results.albummatches) {
+          const { albummatches } = albums.results;
+          const albumList = document.createElement('ul');
+          albumList.style.listStyleType = 'none';
+          albumList.style.padding = '0';
+          albumList.style.margin = '0';
+
+          albummatches.album.forEach((album) => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${album.artist} - ${album.name}`;
+            listItem.style.cursor = 'pointer';
+            listItem.dataset.artist = album.artist;
+            listItem.dataset.album = album.name;
+            listItem.style.marginBottom = '5px';
+            albumList.appendChild(listItem);
+          });
+
+          albumList.addEventListener('click', async (e) => {
+            const selectedArtist = e.target.dataset.artist;
+            const selectedAlbum = e.target.dataset.album;
+
+            if (selectedArtist && selectedAlbum) {
+              await utils.storageSet({
+                [window.location.href]: {
+                  artist: selectedArtist,
+                  releaseTitle: selectedAlbum,
+                },
+              });
+              alert('Saved!');
+
+            }
+            incorrectStatsPopup.style.display = 'none';
+          });
+
+          incorrectStatsPopup.innerHTML = '';
+          incorrectStatsPopup.appendChild(albumList);
+          incorrectStatsPopup.style.display = 'block';
+        }
+
+        console.log('Last.fm search results:', albums);
+      }
+    });
+  }
+
 }
 
 export default {

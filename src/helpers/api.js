@@ -218,7 +218,6 @@ export function fetchArtistStats(username, apiKey, { artist }) {
 }
 
 export function searchAlbum(
-  username,
   apiKey,
   { artist, albumTitle },
 ) {
@@ -232,9 +231,24 @@ export function searchAlbum(
     return Promise.reject(new Error('No album title provided.'));
   }
 
-  return fetch(
-    `https://ws.audioscrobbler.com/2.0/?method=album.search&album=${artist} ${albumTitle}&api_key=${apiKey}&limit=5&format=json`)
-    .then((response) => response.json());
+  const _params = {
+    method: 'album.search',
+    album: `${artist} ${albumTitle}`,
+    api_key: apiKey,
+    limit: 5,
+    format: 'json',
+  };
+
+  const params = new URLSearchParams(_params);
+
+  const url = `${BASE_URL}?${params.toString()}`;
+
+  return fetch(url)
+    .then((response) => response.json())
+    .catch((error) => {
+      console.error('Error:', error);
+      throw error;
+    });
 }
 
 export function fetchReleaseStats(
