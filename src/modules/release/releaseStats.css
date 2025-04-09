@@ -1,0 +1,17 @@
+.list-search-albums {
+  display: flex;
+  flex-direction: column;
+
+  a {
+    display: block;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    color: #fff;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+  }
+}
