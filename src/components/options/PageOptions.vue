@@ -665,8 +665,11 @@ const openAuthPage = async () => {
     };
 
     userData.value = normalizedData;
-    browserAPI.storage.sync.set({ userData: normalizedData });
-    await utils.storageSet({ lastfmSession: sessionKey });
+
+    await utils.storageSet({
+      userData: normalizedData,
+      lastfmSession: sessionKey,
+    });
 
     signinInProgress.value = false;
   } catch (err) {
@@ -769,6 +772,7 @@ init();
   transform: translateY(100%);
 }
 
+/* fix for Chrome default extension font style */
 body {
   font-size: inherit;
   font-family: inherit;
