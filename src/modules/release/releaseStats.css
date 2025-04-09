@@ -1,3 +1,18 @@
+#lastfm_data {
+  &:before {
+    content: 'Loading...';
+    display: none;
+  }
+  &.is-loading {
+    & > * {
+      display: none;
+    }
+    &:before {
+      display: block;
+    }
+  }
+}
+
 .incorrect-stats-popup {
   position: absolute;
   top: 100%;
@@ -12,7 +27,7 @@
   background-color: rgba(0, 0, 0, 0.8);
   color: #fff;
   min-width: 250px;
-  max-width: 400px;
+  max-width: 600px;
   text-align: center;
 
   &:before {
