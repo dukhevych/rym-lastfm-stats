@@ -7,6 +7,10 @@ const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 let lastfmStatsCell;
 let config;
+let artistNames;
+let detectedArtist;
+let detectedReleaseTitle;
+let releaseType;
 
 const INFO_CONTAINER_SELECTOR = '.album_info tbody';
 const INFO_ARTISTS_SELECTOR = '.album_info [itemprop="byArtist"] a';
@@ -119,39 +123,54 @@ function populateReleaseStats(
   });
 }
 
+async function getArtistAndReleaseTitle() {
+  const result = {
+    override: {},
+    original: {},
+  };
+
+  const override = await utils.storageGet(window.location.href);
+
+  if (override) {
+    result.override.artist = override.artist;
+    result.override.releaseTitle = override.releaseTitle;
+  }
+
+  artistNames = artistNames ?? getArtistNames();
+  detectedArtist = detectedArtist ?? artistNames[0];
+  detectedReleaseTitle = detectedReleaseTitle ?? getReleaseTitle();
+
+  result.original.artist = detectedArtist;
+  result.original.releaseTitle = detectedReleaseTitle;
+
+  return result;
+}
+
+function getReleaseType() {
+  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
+  if (!infoTable) return null;
+  const releaseType = infoTable
+    .querySelector('tr:nth-child(2) td')
+    .textContent.toLowerCase().split(', ')[0];
+  return releaseType;
+}
 
 async function render(_config) {
   if (!_config) return;
 
   config = _config;
 
-  const artistNames = getArtistNames();
-  const detectedArtist = artistNames[0];
-  const detectedReleaseTitle = getReleaseTitle();
-
-  const override = await utils.storageGet(window.location.href);
-
-  let artist;
-  let releaseTitle;
-
-  if (override) {
-    artist = override.artist;
-    releaseTitle = override.releaseTitle;
-  } else {
-    artist = detectedArtist;
-    releaseTitle = detectedReleaseTitle;
-  }
-
-  if (!artist || !releaseTitle) {
-    console.error('No artist or release title found.');
-    return;
-  }
-
   const userData = await utils.getSyncedUserData();
   const userName = userData?.name;
+
+  const { original, override } = await getArtistAndReleaseTitle();
+
+  const artist = override.artist || original.artist;
+  const releaseTitle = override.releaseTitle || original.releaseTitle;
+
   const storageKey = `releaseStats_${artist}`;
 
-  lastfmStatsCell = prepareReleaseStatsUI();
+  lastfmStatsCell = lastfmStatsCell ?? prepareReleaseStatsUI();
 
   if (!config.lastfmApiKey) {
     const cachedData = localStorage.getItem(storageKey);
@@ -170,11 +189,7 @@ async function render(_config) {
     }
   }
 
-  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
-
-  const releaseType = infoTable
-    .querySelector('tr:nth-child(2) td')
-    .textContent.toLowerCase().split(', ')[0];
+  releaseType = releaseType || getReleaseType();
 
   const data = await api.fetchReleaseStats(
     userName,
@@ -219,16 +234,7 @@ async function render(_config) {
     lastfmStatsCell.appendChild(incorrectStatsWrapper);
 
     const incorrectStatsPopup = document.createElement('div');
-    incorrectStatsPopup.style.position = 'absolute';
-    incorrectStatsPopup.style.top = '100%';
-    incorrectStatsPopup.style.right = '0';
-    incorrectStatsPopup.style.backgroundColor = 'black';
-    incorrectStatsPopup.style.color = 'white';
-    // incorrectStatsPopup.style.border = '1px solid #ccc';
-    incorrectStatsPopup.style.padding = '10px';
-    incorrectStatsPopup.style.display = 'none';
-    incorrectStatsPopup.style.zIndex = '1000';
-    incorrectStatsPopup.style.minWidth = '250px';
+    incorrectStatsPopup.classList.add('incorrect-stats-popup');
 
     incorrectStatsWrapper.appendChild(incorrectStatsPopup);
 
@@ -241,64 +247,62 @@ async function render(_config) {
     searchLink.addEventListener('click', async (event) => {
       event.preventDefault();
 
-      if (detectedArtist && detectedReleaseTitle) {
-        const albums = await api.searchAlbum(
-          config.lastfmApiKey,
-          { artist: detectedArtist, albumTitle: detectedReleaseTitle },
-        );
+      const albums = await api.searchAlbum(
+        config.lastfmApiKey,
+        { artist: original.artist, albumTitle: original.releaseTitle },
+      );
 
-        if (albums && albums.results && albums.results.albummatches) {
-          const { albummatches } = albums.results;
-          const albumList = document.createElement('ul');
-          albumList.classList.add('list-search-albums')
-          albumList.style.listStyleType = 'none';
-          albumList.style.padding = '0';
-          albumList.style.margin = '0';
+      if (albums && albums.results && albums.results.albummatches) {
+        const { albummatches } = albums.results;
+        const albumList = document.createElement('ul');
+        albumList.classList.add('list-search-albums')
+        albumList.style.listStyleType = 'none';
+        albumList.style.padding = '0';
+        albumList.style.margin = '0';
 
-          albummatches.album.forEach((album) => {
-            if (override) {
-              if (override.artist + override.releaseTitle === album.artist + album.name) return;
-            } else {
-              if (album.artist + album.name === detectedArtist + detectedReleaseTitle) return;
-            }
+        albummatches.album.forEach((album) => {
+          if (override) {
+            if (override.artist + override.releaseTitle === album.artist + album.name) return;
+          } else {
+            if (album.artist + album.name === original.artist + original.releaseTitle) return;
+          }
 
-            const listItem = document.createElement('li');
+          const listItem = document.createElement('li');
 
-            const link = document.createElement('a');
-            link.href = '#';
-            link.textContent = `${album.artist} - ${album.name}`;
-            link.style.cursor = 'pointer';
-            listItem.appendChild(link);
+          const link = document.createElement('a');
+          link.href = '#';
+          link.textContent = `${album.artist} - ${album.name}`;
+          link.style.cursor = 'pointer';
+          listItem.appendChild(link);
 
-            link.dataset.artist = album.artist;
-            link.dataset.album = album.name;
+          link.dataset.artist = album.artist;
+          link.dataset.album = album.name;
 
-            albumList.appendChild(listItem);
-          });
+          albumList.appendChild(listItem);
+        });
 
-          albumList.addEventListener('click', async (e) => {
-            const selectedArtist = e.target.dataset.artist;
-            const selectedAlbum = e.target.dataset.album;
+        albumList.addEventListener('click', async (e) => {
+          const selectedArtist = e.target.dataset.artist;
+          const selectedAlbum = e.target.dataset.album;
 
-            if (selectedArtist && selectedAlbum) {
-              await utils.storageSet({
-                [window.location.href]: {
-                  artist: selectedArtist,
-                  releaseTitle: selectedAlbum,
-                },
-              });
-              render(config)
-            }
-            incorrectStatsPopup.style.display = 'none';
-          });
+          if (selectedArtist && selectedAlbum) {
+            await utils.storageSet({
+              [window.location.href]: {
+                artist: selectedArtist,
+                releaseTitle: selectedAlbum,
+              },
+            });
+            render(config)
+          }
+          incorrectStatsPopup.classList.remove('is-active');
+        });
 
-          incorrectStatsPopup.innerHTML = '';
-          incorrectStatsPopup.appendChild(albumList);
-          incorrectStatsPopup.style.display = 'block';
-        }
-
-        console.log('Last.fm search results:', albums);
+        incorrectStatsPopup.innerHTML = '';
+        incorrectStatsPopup.appendChild(albumList);
+        incorrectStatsPopup.classList.add('is-active');
       }
+
+      console.log('Last.fm search results:', albums);
     });
   }
 

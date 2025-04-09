@@ -1,3 +1,33 @@
+.incorrect-stats-popup {
+  position: absolute;
+  top: 100%;
+  right: 9999px;
+  opacity: 0;
+  transition-duration: .15s;
+  transition-timing-function: ease-in-out;
+  transition-property: transform, opacity;
+  transform: translateY(-10px);
+  pointer-events: none;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  min-width: 250px;
+  max-width: 400px;
+  text-align: center;
+
+  &:before {
+    content: 'Choose correct album';
+    border-bottom: 1px solid currentColor;
+  }
+
+  &.is-active {
+    right: 0;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
 .list-search-albums {
   display: flex;
   flex-direction: column;
