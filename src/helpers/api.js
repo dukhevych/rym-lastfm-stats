@@ -1,4 +1,5 @@
-const CACHE_LIFETIME = 86400000;
+import * as utils from '@/helpers/utils.js';
+import * as constants from '@/helpers/constants.js';
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
@@ -146,7 +147,7 @@ export function fetchUserTopArtists(
     .catch((error) => console.error('Error:', error));
 }
 
-export function fetchArtistStats(username, apiKey, { artist }) {
+export async function fetchArtistStats(username, apiKey, { artist }) {
   if (!apiKey) {
     return Promise.reject(new Error('No API key provided.'));
   }
@@ -169,55 +170,41 @@ export function fetchArtistStats(username, apiKey, { artist }) {
   const params = new URLSearchParams(_params);
   const url = `${BASE_URL}?${params.toString()}`;
 
-  if (username) {
-    return fetch(url)
-    .then((response) => response.json())
-    .catch((error) => {
-      console.error('Error:', error);
-      throw error;
-    });
-  }
-
   const cacheKey = `artistStats_${artist}`;
   const now = new Date().getTime();
 
-  return new Promise((resolve, reject) => {
-    browserAPI.storage.local.get([cacheKey], (result) => {
-      if (browserAPI.runtime.lastError) {
-        return reject(browserAPI.runtime.lastError);
-      }
+  const cachedData = await utils.storageGet(cacheKey, 'local');
 
-      const cachedData = result[cacheKey];
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        const cacheAge = now - parsedData.lastDate;
+  if (cachedData) {
+    const parsedData = JSON.parse(cachedData);
+    const cacheAge = now - parsedData.lastDate;
 
-        if (cacheAge < CACHE_LIFETIME) {
-          return resolve(parsedData.data);
-        }
-      }
+    if (
+      (username && cacheAge < constants.STATS_CACHE_LIFETIME_MS)
+      || cacheAge < constants.STATS_CACHE_LIFETIME_GUEST_MS
+    ) {
+      console.log('Using cached data');
+      return parsedData.data;
+    } else {
+      await utils.storageRemove(cacheKey, 'local');
+    }
+  }
 
-      fetch(url)
-        .then((response) => response.json())
-        .then((data) => {
-          const cacheObject = {};
-          cacheObject[cacheKey] = JSON.stringify({ data, lastDate: now });
-          browserAPI.storage.local.set(cacheObject, () => {
-            if (browserAPI.runtime.lastError) {
-              return reject(browserAPI.runtime.lastError);
-            }
-            resolve(data);
-          });
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-          reject(error);
-        });
-    });
-  });
+  console.log('Fetching new data');
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  const cacheObject = {};
+
+  cacheObject[cacheKey] = JSON.stringify({ data, lastDate: now });
+
+  await utils.storageSet(cacheObject, 'local');
+
+  return data;
 }
 
-export function fetchReleaseStats(
+export async function fetchReleaseStats(
   username,
   apiKey,
   { artist, releaseTitle, releaseType },
@@ -264,50 +251,36 @@ export function fetchReleaseStats(
 
   const url = `${BASE_URL}?${params.toString()}`;
 
-  if (username) {
-    return fetch(url)
-      .then((response) => response.json())
-      .catch((error) => {
-        console.error('Error:', error);
-        throw error;
-      });
-  }
-
   const cacheKey = `releaseStats_${artist}_${releaseTitle}`;
   const now = new Date().getTime();
 
-  return new Promise((resolve, reject) => {
-    browserAPI.storage.local.get([cacheKey], (result) => {
-      if (browserAPI.runtime.lastError) {
-        return reject(browserAPI.runtime.lastError);
-      }
+  const cachedData = await utils.storageGet(cacheKey, 'local');
 
-      const cachedData = result[cacheKey];
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        const cacheAge = now - parsedData.lastDate;
+  if (cachedData) {
+    const parsedData = JSON.parse(cachedData);
+    const cacheAge = now - parsedData.lastDate;
 
-        if (cacheAge < CACHE_LIFETIME) {
-          return resolve(parsedData.data);
-        }
-      }
+    if (
+      (username && cacheAge < constants.STATS_CACHE_LIFETIME_MS)
+      || cacheAge < constants.STATS_CACHE_LIFETIME_GUEST_MS
+    ) {
+      console.log('Using cached data');
+      return parsedData.data;
+    } else {
+      await utils.storageRemove(cacheKey, 'local');
+    }
+  }
 
-      fetch(url)
-        .then((response) => response.json())
-        .then((data) => {
-          const cacheObject = {};
-          cacheObject[cacheKey] = JSON.stringify({ data, lastDate: now });
-          browserAPI.storage.local.set(cacheObject, () => {
-            if (browserAPI.runtime.lastError) {
-              return reject(browserAPI.runtime.lastError);
-            }
-            resolve(data);
-          });
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-          reject(error);
-        });
-    });
-  });
+  console.log('Fetching new data');
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  const cacheObject = {};
+
+  cacheObject[cacheKey] = JSON.stringify({ data, lastDate: now });
+
+  await utils.storageSet(cacheObject, 'local');
+
+  return data;
 }

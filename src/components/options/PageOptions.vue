@@ -606,7 +606,7 @@ const submit = async () => {
     }
   });
 
-  await browserAPI.storage.sync.set(newConfig);
+  await utils.storageSet(newConfig);
 
   config.value = newConfig;
   saved.value = true;

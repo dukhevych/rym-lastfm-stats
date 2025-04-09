@@ -1,3 +1,5 @@
+export const isDev = process.env.NODE_ENV === 'development';
+
 export const LASTFM_COLOR = '#f71414';
 
 export const LIGHT_THEME_CLASSES = [
@@ -98,3 +100,6 @@ export const TOP_ALBUMS_INTERVAL_MS = 120000;
 export const TOP_ARTISTS_INTERVAL_MS = 120000;
 
 export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = 60000;
+
+export const STATS_CACHE_LIFETIME_GUEST_MS = 24 * 60 * 60 * 1000; // 24 hours
+export const STATS_CACHE_LIFETIME_MS = 5 * 1000; // 5 minutes
