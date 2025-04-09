@@ -6,10 +6,12 @@ const browserSpecificConfigs = {
       "service_worker": "background.js"
     },
     "oauth2": {
+      "client_id": "dummy",
+      "scopes": ["dummy"],
       "redirect_uris": [
-        "https://dukhevych.github.io/lastfm-oauth-redirect/oauth-callback.html"
+        "https://dummy"
       ]
-    },
+    }
   },
   firefox: {
     "background": {

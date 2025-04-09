@@ -637,24 +637,21 @@ const openAuthPage = async () => {
   signinInProgress.value = true;
 
   try {
-    console.log(0);
+    const redirectUri = browserAPI.identity.getRedirectURL();
+
+    const authUrl = `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&cb=${encodeURIComponent(redirectUri)}`;
+
     const redirectUrl = await browserAPI.identity.launchWebAuthFlow({
-      url: `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&cb=https://dukhevych.github.io/lastfm-oauth-redirect/oauth-callback.html`,
-      interactive: true,
+      url: authUrl,
+      interactive: true
     });
 
-    console.log(1);
-
-    const url = new URL(redirectUrl);
-    console.log(2);
-    const token = url.searchParams.get('token');
-    console.log(3);
+    const finalUrl = new URL(redirectUrl);
+    const token = finalUrl.searchParams.get("token");
 
     if (!token) {
       throw new Error('No token returned');
     }
-
-    console.log(4);
 
     const sessionKey = await utils.fetchSessionKey(token);
     if (!sessionKey) throw new Error('Invalid session key');

@@ -11,7 +11,8 @@
     "https://rateyourmusic.com/artist/*",
     "https://rateyourmusic.com/release/*",
     "https://rateyourmusic.com/~*",
-    "https://ws.audioscrobbler.com/"
+    "https://ws.audioscrobbler.com/",
+    "https://www.last.fm/*"
   ],
   "content_scripts": [
     {
