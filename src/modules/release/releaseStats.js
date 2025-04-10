@@ -54,17 +54,21 @@ const searchOptions = computed(() => {
   const result = [];
 
   searchData.value.forEach((album) => {
-    if (album.artist === artist.value && album.name === releaseTitle.value) {
-      return;
-    }
-
-    result.push({
+    const item = {
       label: `${album.artist} - ${album.name}`,
       value: {
         artist: album.artist,
         releaseTitle: album.name,
       },
-    });
+    };
+
+    if (album.artist.toLowerCase() === parsedArtist.value.toLowerCase()
+      && album.name.toLowerCase() === parsedReleaseTitle.value.toLowerCase()
+    ) {
+      result.unshift(item);
+    } else {
+      result.push(item);
+    }
   });
 
   return result;
@@ -99,64 +103,51 @@ function prepareReleaseStatsUI() {
   if (!infoTable) return;
 
   const tr = document.createElement('tr');
+
   const th = document.createElement('th');
-
-  const td = document.createElement('td');
-  td.classList.add('is-loading');
-  td.id = 'lastfm_data';
-
   th.classList.add('info_hdr');
   th.textContent = 'Last.fm';
-  td.classList.add('release_pri_descriptors');
+
+  const td = document.createElement('td');
+  td.classList.add('release_pri_descriptors', 'lastfm-stats-cell', 'is-loading');
   td.colspan = '2';
-  td.textContent = 'Loading...';
 
   tr.appendChild(th);
   tr.appendChild(td);
-
   infoTable.appendChild(tr);
 
-  td.textContent = '';
-  td.style.display = 'flex';
-  td.style.alignItems = 'center';
+  const statsList = document.createElement('ul');
+  statsList.classList.add('list-stats');
 
-  lastfmListenersElement = document.createElement('span');
-  lastfmListenersElement.id = 'lastfm_listeners';
+  lastfmListenersElement = document.createElement('li');
+  lastfmListenersElement.classList.add('is-listeners');
 
-  lastfmPlaycountElement = document.createElement('span');
-  lastfmPlaycountElement.id = 'lastfm_playcount';
+  lastfmPlaycountElement = document.createElement('li');
+  lastfmPlaycountElement.classList.add('is-playcount');
 
-  lastfmUserplaycountElement = document.createElement('strong');
-  lastfmUserplaycountElement.id = 'lastfm_userplaycount';
+  lastfmUserplaycountElement = document.createElement('li');
+  lastfmUserplaycountElement.classList.add('is-user-playcount');
+
+  statsList.appendChild(lastfmListenersElement);
+  statsList.appendChild(lastfmPlaycountElement);
+  statsList.appendChild(lastfmUserplaycountElement);
+
+  const linkWrapper = document.createElement('li');
 
   lastfmLinkElement = document.createElement('a');
+  lastfmLinkElement.classList.add('lastfm-link');
   lastfmLinkElement.target = '_blank';
   lastfmLinkElement.title = 'View on Last.fm';
-  lastfmLinkElement.id = 'lastfm_link';
 
   const lastfmIcon = document.createElement('img');
   lastfmIcon.src = browserAPI.runtime.getURL('images/lastfm-pic.png');
-
   lastfmIcon.alt = 'Last.fm';
-  lastfmIcon.style.width = 'auto';
-  lastfmIcon.style.height = '20px';
-  lastfmIcon.style.display = 'block';
 
   lastfmLinkElement.appendChild(lastfmIcon);
+  linkWrapper.appendChild(lastfmLinkElement);
+  statsList.appendChild(linkWrapper);
 
-  [
-    lastfmListenersElement,
-    lastfmPlaycountElement,
-    lastfmUserplaycountElement,
-    lastfmLinkElement,
-  ].forEach((element, index) => {
-    if (index > 0) {
-      const separator = document.createElement('span');
-      separator.textContent = '\u00A0\u00A0|\u00A0\u00A0';
-      td.appendChild(separator);
-    }
-    td.appendChild(element);
-  });
+  td.appendChild(statsList);
 
   return td;
 }
@@ -323,8 +314,7 @@ async function render(_config) {
 
   if (config.lastfmApiKey) {
     const incorrectStatsWrapper = document.createElement('div');
-    incorrectStatsWrapper.style.position = 'relative';
-    incorrectStatsWrapper.style.marginLeft = 'auto';
+    incorrectStatsWrapper.classList.add('incorrect-stats-wrapper');
 
     const searchLink = document.createElement('a');
     searchLink.href = '#';
@@ -340,13 +330,11 @@ async function render(_config) {
 
     const albumList = document.createElement('ul');
     albumList.classList.add('list-search-albums')
-    albumList.style.listStyleType = 'none';
-    albumList.style.padding = '0';
-    albumList.style.margin = '0';
 
     incorrectStatsPopup.appendChild(albumList);
 
     watch([artist, releaseTitle], async () => {
+      lastfmStatsCell.classList.add('is-updating');
       const data = await api.fetchReleaseStats(
         userName, // can be empty
         config.lastfmApiKey || process.env.LASTFM_API_KEY,
@@ -367,45 +355,82 @@ async function render(_config) {
       };
 
       populateReleaseStats(stats);
+      lastfmStatsCell.classList.remove('is-updating');
     });
 
-    watchEffect(() => {
-      if (searchOptions.value.length === 0) return;
+    if (searchOptions.value.length === 0) {
+      const noResults = document.createElement('div');
+      noResults.classList.add('incorrect-stats-popup-warning');
+      noResults.textContent = 'No results';
+      incorrectStatsPopup.appendChild(noResults);
+    } else if (searchOptions.value.length === 1) {
+      const noResults = document.createElement('div');
+      noResults.classList.add('incorrect-stats-popup-warning');
+      noResults.textContent = 'No alternative albums found';
+      incorrectStatsPopup.appendChild(noResults);
+    } else {
+      const title = document.createElement('h3');
+      title.classList.add('incorrect-stats-popup-title');
+      title.innerText = 'Select the correct album:';
+      incorrectStatsPopup.insertBefore(title, albumList);
 
-      albumList.innerHTML = '';
-
-      searchOptions.value.forEach(({ label, value }) => {
-        if (value.artist === artist.value && value.releaseTitle === releaseTitle.value) {
-          return;
+      watchEffect(() => {
+        while (albumList.firstChild) {
+          albumList.removeChild(albumList.firstChild);
         }
 
-        const listItem = document.createElement('li');
+        searchOptions.value.forEach(({ label, value }) => {
+          const isCurrent = value.artist.toLowerCase() === artist.value.toLowerCase()
+            && value.releaseTitle.toLowerCase() === releaseTitle.value.toLowerCase();
 
-        listItem.addEventListener('click', async (e) => {
-          e.stopPropagation();
+          const isCurrentParsed = value.artist.toLowerCase() === parsedArtist.value.toLowerCase()
+            && value.releaseTitle.toLowerCase() === parsedReleaseTitle.value.toLowerCase();
 
-          overrideMetadata.value.artist = value.artist;
-          overrideMetadata.value.releaseTitle = value.releaseTitle;
+          const listItem = document.createElement('li');
 
-          await utils.storageSet({
-            [window.location.href]: {
-              artist: value.artist,
-              releaseTitle: value.releaseTitle,
-            },
-          }, 'local');
+          if (isCurrent) {
+            const span = document.createElement('span');
+            span.classList.add('list-search-albums-item');
+            span.innerText = label;
+            if (isCurrentParsed) {
+              span.innerText += ' (RYM)';
+            }
+            listItem.appendChild(span);
+            albumList.appendChild(listItem);
+            return;
+          }
 
-          incorrectStatsPopup.classList.remove('is-active');
+          listItem.addEventListener('click', async (e) => {
+            e.stopPropagation();
+
+            overrideMetadata.value.artist = value.artist;
+            overrideMetadata.value.releaseTitle = value.releaseTitle;
+
+            await utils.storageSet({
+              [window.location.href]: {
+                artist: value.artist,
+                releaseTitle: value.releaseTitle,
+              },
+            }, 'local');
+
+            incorrectStatsPopup.classList.remove('is-active');
+          });
+
+          const link = document.createElement('a');
+          link.classList.add('list-search-albums-item');
+          link.href = '#';
+          link.textContent = label;
+
+          if (isCurrentParsed) {
+            link.textContent += ' (RYM)';
+          }
+
+          listItem.appendChild(link);
+
+          albumList.appendChild(listItem);
         });
-
-        const link = document.createElement('a');
-        link.href = '#';
-        link.textContent = label;
-        link.style.cursor = 'pointer';
-        listItem.appendChild(link);
-
-        albumList.appendChild(listItem);
       });
-    });
+    }
 
     document.addEventListener(('click'), (event) => {
       if (!incorrectStatsWrapper.contains(event.target)) {
