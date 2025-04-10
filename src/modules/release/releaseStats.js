@@ -109,8 +109,12 @@ function prepareReleaseStatsUI() {
   th.textContent = 'Last.fm';
 
   const td = document.createElement('td');
-  td.classList.add('release_pri_descriptors', 'lastfm-stats-cell', 'is-loading');
-  td.colspan = '2';
+  td.classList.add('release_pri_descriptors');
+  td.setAttribute('colspan', '2');
+
+  const statsWrapper = document.createElement('div');
+  statsWrapper.classList.add('lastfm-stats-cell', 'is-loading');
+  td.appendChild(statsWrapper);
 
   tr.appendChild(th);
   tr.appendChild(td);
@@ -147,9 +151,9 @@ function prepareReleaseStatsUI() {
   linkWrapper.appendChild(lastfmLinkElement);
   statsList.appendChild(linkWrapper);
 
-  td.appendChild(statsList);
+  statsWrapper.appendChild(statsList);
 
-  return td;
+  return statsWrapper;
 }
 
 function populateReleaseStats(
