@@ -136,8 +136,6 @@ function prepareReleaseStatsUI() {
   statsList.appendChild(lastfmPlaycountElement);
   statsList.appendChild(lastfmUserplaycountElement);
 
-  const linkWrapper = document.createElement('li');
-
   lastfmLinkElement = document.createElement('a');
   lastfmLinkElement.classList.add('lastfm-link');
   lastfmLinkElement.target = '_blank';
@@ -148,10 +146,9 @@ function prepareReleaseStatsUI() {
   lastfmIcon.alt = 'Last.fm';
 
   lastfmLinkElement.appendChild(lastfmIcon);
-  linkWrapper.appendChild(lastfmLinkElement);
-  statsList.appendChild(linkWrapper);
 
   statsWrapper.appendChild(statsList);
+  statsWrapper.appendChild(lastfmLinkElement);
 
   return statsWrapper;
 }
@@ -321,6 +318,7 @@ async function render(_config) {
     incorrectStatsWrapper.classList.add('incorrect-stats-wrapper');
 
     const searchLink = document.createElement('a');
+    searchLink.classList.add('incorrect-stats-link');
     searchLink.href = '#';
     searchLink.textContent = 'Incorrect stats?';
 
