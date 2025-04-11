@@ -1,4 +1,3 @@
-import ColorThief from 'colorthief';
 import { formatDistanceToNow } from 'date-fns';
 
 import * as utils from '@/helpers/utils.js';
@@ -9,8 +8,6 @@ import lockSvg from '@/assets/icons/lock.svg?raw';
 import unlockSvg from '@/assets/icons/unlock.svg?raw';
 
 import './recentTracks.css';
-
-const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 let abortController = new AbortController();
 
@@ -266,15 +263,6 @@ function createLastfmButton() {
 
   return button;
 }
-
-// function createRevertButton() {
-//   const button = document.createElement('button');
-//   const playHistoryClasses = ['btn', 'blue_btn', 'btn_small'];
-//   button.classList.add(...playHistoryClasses);
-//   button.textContent = 'Hide';
-
-//   return button;
-// }
 
 function createTracksList(recentTracks, userName) {
   const tracksList = document.createElement('ul');
@@ -558,7 +546,11 @@ async function render(_config, _userName) {
     buttonsContainer.prepend(lockButton);
   }
 
-  const populateRecentTracks = (data, timestamp) => {
+  const populateRecentTracks = ({
+    data,
+    timestamp,
+    colors,
+  }) => {
     if (button) {
       if (data[0].c) {
         button.classList.add("is-now-playing");
@@ -591,6 +583,14 @@ async function render(_config, _userName) {
         },
       );
       playHistoryItem.classList.add('is-loaded');
+
+      if (colors) {
+        const panelContainer = document.querySelector('.profile_listening_container');
+
+        panelContainer.style.setProperty('--clr-bg', colors.bgColor);
+        panelContainer.style.setProperty('--clr-text', colors.textColor);
+        panelContainer.style.setProperty('--clr-accent', colors.accentColor);
+      }
     }
 
     const tracksList = createTracksList(data, userName);
@@ -623,9 +623,7 @@ async function render(_config, _userName) {
         a: item.artist['#text'],
       }));
 
-      // test colors extraction
       const { bgColor, textColor, accentColor } = await utils.getImageColors(normalizedData[0].i, 'dark');
-      console.log('Image colors:', { bgColor, textColor, accentColor });
 
       await utils.storageSet({
         recentTracksCache: {
@@ -635,7 +633,15 @@ async function render(_config, _userName) {
         }
       });
 
-      populateRecentTracks(normalizedData, timestamp);
+      populateRecentTracks({
+        data: normalizedData,
+        timestamp,
+        colors: {
+          bgColor,
+          textColor,
+          accentColor,
+        },
+      });
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error("Failed to fetch recent tracks:", err);
@@ -670,7 +676,11 @@ async function render(_config, _userName) {
     ) {
       await updateAction();
     } else {
-      populateRecentTracks(recentTracksCache.data);
+      const colors = await utils.getImageColors(recentTracksCache.data[0].i, 'dark');
+      populateRecentTracks({
+        data: recentTracksCache.data,
+        colors,
+      });
       tracksWrapper.dataset.timestamp = `Updated at ${new Date(recentTracksCache.timestamp).toLocaleString()}`;
     }
   } else {

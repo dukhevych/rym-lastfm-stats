@@ -10,6 +10,16 @@
 
 .profile_listening_container {
   padding: 1.25rem;
+
+  &:not(.lastfm-tracks-wrapper) {
+    background-color: var(--clr-bg);
+    color: var(--clr-text);
+    transition: background-color 0.3s ease-out, color 0.3s ease-out;
+
+    a {
+      color: inherit;
+    }
+  }
 }
 
 .profile_view_play_history_btn {
@@ -20,7 +30,7 @@
 }
 
 .btn.btn-lastfm {
-  background-color: var(--clr-lastfm) !important;
+  background-color: var(--clr-accent, --clr-lastfm) !important;
   color: white !important;
   margin-right: 0;
 }
