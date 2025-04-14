@@ -1,3 +1,5 @@
+export const isDev = process.env.NODE_ENV === 'development';
+
 export const LASTFM_COLOR = '#f71414';
 
 export const LIGHT_THEME_CLASSES = [
