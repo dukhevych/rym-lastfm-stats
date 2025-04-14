@@ -69,7 +69,7 @@ module.exports = (env) => {
     cache: {
       type: 'filesystem',
     },
-    devtool: process.env.NODE_ENV === 'development' ? 'source-map' : false,
+    devtool: process.env.NODE_ENV === 'production' ? false : 'source-map',
     mode: process.env.NODE_ENV || 'development',
     resolve: {
       alias: {
