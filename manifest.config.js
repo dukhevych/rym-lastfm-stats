@@ -4,6 +4,13 @@ const browserSpecificConfigs = {
   chrome: {
     "background": {
       "service_worker": "background.js"
+    },
+    "oauth2": {
+      "client_id": "dummy",
+      "scopes": ["dummy"],
+      "redirect_uris": [
+        "https://dummy"
+      ]
     }
   },
   firefox: {

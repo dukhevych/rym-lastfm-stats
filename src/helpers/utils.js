@@ -1,4 +1,8 @@
+import { MD5 } from '@/libs/crypto-js.min.js';
 import { remove as removeDiacritics } from 'diacritics';
+
+const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
+const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 import * as constants from './constants.js';
@@ -414,4 +418,65 @@ export function deburr(string) {
     throw new TypeError('Expected a string');
   }
   return removeDiacritics(string);
+}
+
+export async function fetchSessionKey(token) {
+  let apiSig;
+
+  try {
+    apiSig = generateApiSig({
+      method: 'auth.getSession',
+      api_key: SYSTEM_API_KEY,
+      token: token,
+    });
+  } catch (error) {
+    console.error('Error generating API signature:', error);
+    return null;
+  }
+
+  const _params = {
+    method: 'auth.getSession',
+    api_key: SYSTEM_API_KEY,
+    token: token,
+    api_sig: apiSig,
+    format: 'json',
+  };
+
+  const params = new URLSearchParams(_params);
+
+  const url = `https://ws.audioscrobbler.com/2.0/?${params.toString()}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`HTTP error! Status: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    const data = await response.json();
+    if (data.session) {
+      return data.session.key;
+    } else {
+      console.error('Failed to get session:', data);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching session key:', error);
+    return null;
+  }
+};
+
+const generateApiSig = (params) => {
+  const sortedKeys = Object.keys(params).sort();
+  let stringToSign = '';
+
+  sortedKeys.forEach((key) => {
+    stringToSign += key + params[key];
+  });
+
+  stringToSign += SYSTEM_API_SECRET;
+  return generateMd5(stringToSign);
+};
+
+function generateMd5(string) {
+  return MD5(string).toString();
 }
