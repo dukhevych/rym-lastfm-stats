@@ -120,7 +120,7 @@
     }
 
     a {
-      pointer-events: none;
+      pointer-events: auto;
       position: relative;
       z-index: 1;
       display: block;
