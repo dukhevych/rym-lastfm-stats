@@ -14,7 +14,10 @@
         <h1 class="relative cursor-default select-none text-2xl font-bold">
           <span
             class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
-          >{{ appVersion }}</span>
+          >
+            {{ appVersion }}
+            <template v-if="constants.isDev">DEV</template>
+          </span>
           <span class="text-red-600">RYM Last.fm Stats</span>
         </h1>
       </div>
