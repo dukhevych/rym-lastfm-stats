@@ -234,6 +234,7 @@ function prepareRecentTracksUI() {
     if (playHistoryBtn) playHistoryBtn.style.display = 'none';
 
     const currentTrackContainer = panelContainer.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
+    currentTrackContainer.classList.add('recent-tracks-current');
 
     playHistoryItem = createPlayHistoryItem();
 
@@ -403,6 +404,8 @@ function addRecentTracksStyles() {
       }
 
       .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
+        max-width: none;
+
         a {
           position: relative;
 
@@ -435,12 +438,13 @@ function addRecentTracksStyles() {
       }
       .${PLAY_HISTORY_ITEM_CLASSES.infoboxLower} {}
       .${PLAY_HISTORY_ITEM_CLASSES.itemDate} {
+        color: var(--clr-accent);
         &:before {
           content: attr(data-label);
         }
         img {
           display: none;
-          opacity: 0.5;
+          opacity: 1;
           margin-left: 1rem;
         }
       }
@@ -451,8 +455,8 @@ function addRecentTracksStyles() {
       .${PLAY_HISTORY_ITEM_CLASSES.albumLink} {}
       .${PLAY_HISTORY_ITEM_CLASSES.itemArt} {
         display: block;
-        width: 45px;
-        height: 45px;
+        width: 145px;
+        height: 145px;
         max-width: none;
       }
 
@@ -577,7 +581,7 @@ async function render(_config, _userName) {
             trackTitle: data[0].n,
           }, config),
           trackName: data[0].n,
-          coverUrl: data[0].i,
+          coverUrl: data[0].il,
           isNowPlaying: data[0].c,
           timestamp: data[0].d,
         },
@@ -587,9 +591,14 @@ async function render(_config, _userName) {
       if (colors) {
         const panelContainer = document.querySelector('.profile_listening_container');
 
-        panelContainer.style.setProperty('--clr-bg', colors.bgColor);
-        panelContainer.style.setProperty('--clr-text', colors.textColor);
-        panelContainer.style.setProperty('--clr-accent', colors.accentColor);
+        console.log(data[0].ixl);
+
+        panelContainer.style.setProperty('--clr-light-bg', colors.light.bgColor);
+        panelContainer.style.setProperty('--clr-light-text', colors.light.textColor);
+        panelContainer.style.setProperty('--clr-light-accent', colors.light.accentColor);
+        panelContainer.style.setProperty('--clr-dark-bg', colors.dark.bgColor);
+        panelContainer.style.setProperty('--clr-dark-text', colors.dark.textColor);
+        panelContainer.style.setProperty('--clr-dark-accent', colors.dark.accentColor);
       }
     }
 
@@ -617,13 +626,15 @@ async function render(_config, _userName) {
       const normalizedData = data.map((item) => ({
         c: item["@attr"]?.nowplaying ?? null,
         i: item.image[0]['#text'],
+        il: item.image[3]['#text'],
+        ixl: item.image[item.image.length - 1]['#text'],
         n: item.name,
         d: item.date?.uts ?? null,
         r: item.album['#text'],
         a: item.artist['#text'],
       }));
 
-      const { bgColor, textColor, accentColor } = await utils.getImageColors(normalizedData[0].i, 'dark');
+      const colors = await utils.getImageColors(normalizedData[0].il);
 
       await utils.storageSet({
         recentTracksCache: {
@@ -636,11 +647,7 @@ async function render(_config, _userName) {
       populateRecentTracks({
         data: normalizedData,
         timestamp,
-        colors: {
-          bgColor,
-          textColor,
-          accentColor,
-        },
+        colors,
       });
     } catch (err) {
       if (err.name !== 'AbortError') {
@@ -676,7 +683,7 @@ async function render(_config, _userName) {
     ) {
       await updateAction();
     } else {
-      const colors = await utils.getImageColors(recentTracksCache.data[0].i, 'dark');
+      const colors = await utils.getImageColors(recentTracksCache.data[0].il);
       populateRecentTracks({
         data: recentTracksCache.data,
         colors,

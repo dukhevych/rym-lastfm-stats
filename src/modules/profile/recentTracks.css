@@ -12,13 +12,27 @@
   padding: 1.25rem;
 
   &:not(.lastfm-tracks-wrapper) {
-    background-color: var(--clr-bg);
-    color: var(--clr-text);
     transition: background-color 0.3s ease-out, color 0.3s ease-out;
+    border-width: 1px;
+    border-style: solid;
 
-    a {
-      color: inherit;
-    }
+    a { color: inherit; }
+  }
+}
+
+html[data-scheme="light"] {
+  .profile_listening_container:not(.lastfm-tracks-wrapper) {
+    background-color: var(--clr-light-bg);
+    color: var(--clr-light-text);
+    border-color: var(--clr-light-accent);
+  }
+}
+
+html[data-scheme="dark"] {
+  .profile_listening_container:not(.lastfm-tracks-wrapper) {
+    background-color: var(--clr-dark-bg);
+    color: var(--clr-dark-text);
+    border-color: var(--clr-dark-accent);
   }
 }
 
@@ -30,14 +44,27 @@
 }
 
 .btn.btn-lastfm {
-  background-color: var(--clr-accent, --clr-lastfm) !important;
+  background-color: var(--clr-lastfm) !important;
   color: white !important;
   margin-right: 0;
+
+  &:hover {
+    background-color: var(--clr-lastfm-darker) !important;
+  }
 }
 
+html[data-scheme="light"] {
+  .btn.btn-lastfm {
+    background-color: var(--clr-light-accent) !important;
+    color: var(--clr-light-bg) !important;
+  }
+}
 
-.btn.btn-lastfm:hover {
-  background-color: var(--clr-lastfm-darker);
+html[data-scheme="dark"] {
+  .btn.btn-lastfm {
+    background-color: var(--clr-dark-accent) !important;
+    color: var(--clr-dark-bg) !important;
+  }
 }
 
 .btn.btn-lastfm img {

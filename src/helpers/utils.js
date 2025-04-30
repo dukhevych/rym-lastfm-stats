@@ -434,20 +434,53 @@ export async function getImageColors(imageUrl, theme = 'light') {
   return getVibrantUiColors(palette, theme);
 }
 
-export async function getVibrantUiColors(palette, theme = 'light') {
-  const isLight = theme === 'light';
+export function getContrastingColor(hexColor, darkColor = '#000', lightColor = '#fff') {
+  if (!/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(hexColor)) {
+    throw new Error('Invalid hex color format');
+  }
 
-  const bgSwatch = isLight
-    ? palette.LightMuted || palette.Muted || palette.LightVibrant
-    : palette.DarkMuted || palette.Muted || palette.DarkVibrant;
+  const hex = hexColor.slice(1);
+  const parseHex = (hex) => parseInt(hex.length === 1 ? hex + hex : hex, 16);
 
-  const accentSwatch = isLight
-    ? palette.Vibrant || palette.DarkVibrant
-    : palette.Vibrant || palette.LightVibrant;
+  const r = parseHex(hex.length === 3 ? hex[0] : hex.substring(0, 2));
+  const g = parseHex(hex.length === 3 ? hex[1] : hex.substring(2, 4));
+  const b = parseHex(hex.length === 3 ? hex[2] : hex.substring(4, 6));
 
-  const bgColor = bgSwatch?.hex || '#222';
-  const textColor = bgSwatch?.bodyTextColor || '#fff';
-  const accentColor = accentSwatch?.hex || '#ff4081';
+  const relativeLuminance = (r, g, b) => {
+    const [R, G, B] = [r, g, b].map((c) => {
+      c /= 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  };
 
-  return { bgColor, textColor, accentColor };
+  return relativeLuminance(r, g, b) > 0.179 ? darkColor : lightColor;
+}
+
+export async function getVibrantUiColors(palette) {
+  const lightColors = {
+    bgColor: (palette.LightMuted || palette.Muted || palette.LightVibrant)?.hex || '#222',
+    accentColor: (palette.Vibrant || palette.DarkVibrant)?.hex || '#ff4081',
+  };
+
+  const darkColors = {
+    bgColor: (palette.DarkMuted || palette.Muted || palette.DarkVibrant)?.hex || '#222',
+    accentColor: (palette.Vibrant || palette.LightVibrant)?.hex || '#ff4081',
+  };
+
+  return {
+    light: {
+      ...lightColors,
+      get textColor() {
+        return getContrastingColor(this.bgColor);
+      },
+    },
+    dark: {
+      ...darkColors,
+      get textColor() {
+        return getContrastingColor(this.bgColor);
+      },
+    },
+    palette,
+  };
 }

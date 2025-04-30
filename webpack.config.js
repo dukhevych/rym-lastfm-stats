@@ -15,7 +15,7 @@ const packageJson = require('./package.json');
 
 const appVersion = packageJson.version;
 
-const entries = glob.sync('./src/*.{js}').reduce((acc, file) => {
+const entries = glob.sync('./src/*.js').reduce((acc, file) => {
   const name = path.basename(file, path.extname(file));
   acc[name] = path.resolve(__dirname, file);
   return acc;
@@ -167,8 +167,8 @@ module.exports = (env) => {
       minimize: process.env.NODE_ENV === 'production',
       minimizer: [new TerserPlugin({
         parallel: true,
-        sourceMap: true,
         terserOptions: {
+          sourceMap: true,
           compress: {
             drop_console: false,
           },
