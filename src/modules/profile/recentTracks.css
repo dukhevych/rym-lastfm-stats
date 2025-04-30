@@ -57,6 +57,7 @@ html[data-scheme="light"] {
   .btn.btn-lastfm {
     background-color: var(--clr-light-accent) !important;
     color: var(--clr-light-bg) !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 }
 
@@ -64,6 +65,7 @@ html[data-scheme="dark"] {
   .btn.btn-lastfm {
     background-color: var(--clr-dark-accent) !important;
     color: var(--clr-dark-bg) !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   }
 }
 
