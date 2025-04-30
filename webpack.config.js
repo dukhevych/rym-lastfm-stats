@@ -9,17 +9,20 @@ const { DefinePlugin } = require('webpack');
 const dotenv = require('dotenv');
 const dotenvExpand = require('dotenv-expand');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 const generateManifest = require('./manifest.config.js');
 const packageJson = require('./package.json');
 
 const appVersion = packageJson.version;
 
-const entries = glob.sync('./src/*.{js}').reduce((acc, file) => {
+const entries = glob.sync('./src/*.js').reduce((acc, file) => {
   const name = path.basename(file, path.extname(file));
   acc[name] = path.resolve(__dirname, file);
   return acc;
 }, {});
+
+const branchName = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
 
 module.exports = (env) => {
   const browserTarget = env.browser;
@@ -132,6 +135,7 @@ module.exports = (env) => {
         ...envKeys,
         'process.env.APP_VERSION': JSON.stringify(appVersion),
         'process.env.BROWSER_TARGET': JSON.stringify(browserTarget),
+        'process.env.BRANCH_NAME': JSON.stringify(branchName),
       }),
       new VueLoaderPlugin(),
       new CopyPlugin({
@@ -167,8 +171,8 @@ module.exports = (env) => {
       minimize: process.env.NODE_ENV === 'production',
       minimizer: [new TerserPlugin({
         parallel: true,
-        sourceMap: true,
         terserOptions: {
+          sourceMap: true,
           compress: {
             drop_console: false,
           },

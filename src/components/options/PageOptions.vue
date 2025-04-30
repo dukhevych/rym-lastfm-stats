@@ -16,7 +16,9 @@
             class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
           >
             {{ appVersion }}
-            <template v-if="constants.isDev">DEV</template>
+            <template v-if="constants.isDev">
+              DEV | {{ branchName }}
+            </template>
           </span>
           <span class="text-red-600">RYM Last.fm Stats</span>
         </h1>
@@ -585,6 +587,12 @@ import FormCheckbox from '@/components/options/FormCheckbox.vue';
 import FormFieldset from '@/components/options/FormFieldset.vue';
 import FormRange from './FormRange.vue';
 import FormSeparator from './FormSeparator.vue';
+
+let branchName;
+
+if (constants.isDev) {
+  branchName = process.env.BRANCH_NAME;
+}
 
 const appVersion = process.env.APP_VERSION;
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;

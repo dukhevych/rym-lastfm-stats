@@ -17,11 +17,13 @@ import * as utils from '@/helpers/utils.js';
     return;
   }
 
-  await utils.waitForDOMReady();
+  if (config.parseOtherProfiles) {
+    await utils.waitForDOMReady();
 
-  const detectedUsername = utils.detectUserName();
+    const detectedUsername = utils.detectUserName();
 
-  if (detectedUsername) {
-    renderContent(profile, config, detectedUsername);
+    if (detectedUsername) {
+      renderContent(profile, config, detectedUsername);
+    }
   }
 })();
