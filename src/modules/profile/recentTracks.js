@@ -40,6 +40,7 @@ function createPlayHistoryItem() {
   const item = document.createElement('div');
   item.className = PLAY_HISTORY_ITEM_CLASSES.item;
   item.classList.add('is-custom');
+  item.classList.add('is-play-history');
 
   const artbox = document.createElement('div');
   artbox.className = PLAY_HISTORY_ITEM_CLASSES.artbox;
@@ -196,6 +197,7 @@ function createLockButton() {
 function prepareRecentTracksUI() {
   const button = createLastfmButton();
   const lockButton = createLockButton();
+  const profileButton = createProfileButton();
   const tracksWrapper = document.createElement('div');
   let playHistoryItem;
 
@@ -224,9 +226,10 @@ function prepareRecentTracksUI() {
     }
   });
 
-  if (config.recentTracksReplace) {
-    const panelContainer = document.querySelector('.profile_listening_container');
+  const panelContainer = document.querySelector('.profile_listening_container');
+  panelContainer.classList.add('is-play-history');
 
+  if (config.recentTracksReplace) {
     const setToBtn = panelContainer.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
     if (setToBtn) setToBtn.style.display = 'none';
 
@@ -248,6 +251,8 @@ function prepareRecentTracksUI() {
   return {
     button,
     lockButton,
+    profileButton,
+    panelContainer,
     tracksWrapper,
     playHistoryItem,
   };
@@ -260,7 +265,16 @@ function createLastfmButton() {
   button.classList.add(...playHistoryClasses);
   button.textContent = 'Last.fm Recent Tracks';
 
-  button.prepend(gif.cloneNode());
+  return button;
+}
+
+function createProfileButton() {
+  const button = document.createElement('a');
+  button.classList.add('btn-profile');
+  button.target = '_blank';
+  const playHistoryClasses = ['btn', 'blue_btn', 'btn_small'];
+  button.classList.add(...playHistoryClasses);
+  button.textContent = 'Profile';
 
   return button;
 }
@@ -362,15 +376,6 @@ function insertRecentTracksWrapperIntoDOM(tracksWrapper) {
 function addRecentTracksStyles() {
   const style = document.createElement('style');
   style.textContent = `
-    @keyframes rotate {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
     .${PLAY_HISTORY_ITEM_CLASSES.item}.is-custom {
       padding-top: 0;
       left: -9999px;
@@ -417,12 +422,11 @@ function addRecentTracksStyles() {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.95);
             width: 20%;
             height: 20%;
             border-radius: 50%;
             margin: auto;
-            outline: 2px solid rgba(255, 255, 255, 0.5);
+            outline: 2px solid var(--clr-dark-accent);
             opacity: 0;
             transition: opacity .15s ease-in-out, transform .15s ease-in-out;
           }
@@ -436,7 +440,6 @@ function addRecentTracksStyles() {
       .${PLAY_HISTORY_ITEM_CLASSES.infobox} {
         padding: 0;
       }
-      .${PLAY_HISTORY_ITEM_CLASSES.infoboxLower} {}
       .${PLAY_HISTORY_ITEM_CLASSES.itemDate} {
         color: var(--clr-accent);
         &:before {
@@ -448,11 +451,6 @@ function addRecentTracksStyles() {
           margin-left: 1rem;
         }
       }
-      .${PLAY_HISTORY_ITEM_CLASSES.statusSpan} {}
-      .${PLAY_HISTORY_ITEM_CLASSES.release} {}
-      .${PLAY_HISTORY_ITEM_CLASSES.artistSpan} {}
-      .${PLAY_HISTORY_ITEM_CLASSES.separator} {}
-      .${PLAY_HISTORY_ITEM_CLASSES.albumLink} {}
       .${PLAY_HISTORY_ITEM_CLASSES.itemArt} {
         display: block;
         width: 145px;
@@ -463,30 +461,22 @@ function addRecentTracksStyles() {
       &.is-now-playing {
         .${PLAY_HISTORY_ITEM_CLASSES.itemDate} img { display: inline; }
 
-        .${PLAY_HISTORY_ITEM_CLASSES.artbox} a {
-          img {
-            animation: rotate 9s linear infinite;
-            border-radius: 50%;
-            outline: 2px solid rgba(255,255,255, 0.5);
-            outline-offset: -2px;
-          }
+        .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
+          mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="10" fill="black"/></svg>');
+          mask-repeat: no-repeat;
+          mask-size: 100% 100%;
+          mask-mode: luminance;
 
-          &:before { opacity: 1; }
-
-          /*
-          &:hover {
+          a {
             img {
-              border-radius: 0;
-              animation: none;
-              transform: rotate(0);
+              animation: rotate 9s linear infinite;
+              border-radius: 50%;
+              outline: 2px solid rgba(255,255,255, 0.5);
+              outline-offset: -2px;
             }
 
-            &:before {
-              opacity: 0;
-              transform: scale(0);
-            }
+            &:before { opacity: 1; }
           }
-          */
         }
       }
     }
@@ -541,13 +531,15 @@ async function render(_config, _userName) {
 
   addRecentTracksStyles();
 
-  const { button, lockButton, tracksWrapper, playHistoryItem } = prepareRecentTracksUI();
+  const { button, lockButton, profileButton, tracksWrapper, playHistoryItem, panelContainer } = prepareRecentTracksUI();
 
   const buttonsContainer = document.querySelector(
     PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
   );
 
   if (buttonsContainer) {
+    profileButton.href = `https://www.last.fm/user/${userName}`;
+    buttonsContainer.prepend(profileButton);
     buttonsContainer.prepend(button);
     buttonsContainer.prepend(lockButton);
   }
@@ -557,12 +549,10 @@ async function render(_config, _userName) {
     timestamp,
     colors,
   }) => {
-    if (button) {
-      if (data[0].c) {
-        button.classList.add("is-now-playing");
-      } else {
-        button.classList.remove("is-now-playing");
-      }
+    if (data[0].c) {
+      panelContainer.classList.add("is-now-playing");
+    } else {
+      panelContainer.classList.remove("is-now-playing");
     }
 
     if (config.recentTracksReplace) {
@@ -591,7 +581,6 @@ async function render(_config, _userName) {
       playHistoryItem.classList.add('is-loaded');
 
       if (colors) {
-        // const panelContainer = document.querySelector('.profile_listening_container');
         const documentRoot = document.documentElement;
 
         documentRoot.style.setProperty('--clr-light-bg', colors.light.bgColor);
