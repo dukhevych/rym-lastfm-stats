@@ -473,6 +473,7 @@ function addRecentTracksStyles() {
 
           &:before { opacity: 1; }
 
+          /*
           &:hover {
             img {
               border-radius: 0;
@@ -485,6 +486,7 @@ function addRecentTracksStyles() {
               transform: scale(0);
             }
           }
+          */
         }
       }
     }
@@ -589,16 +591,15 @@ async function render(_config, _userName) {
       playHistoryItem.classList.add('is-loaded');
 
       if (colors) {
-        const panelContainer = document.querySelector('.profile_listening_container');
+        // const panelContainer = document.querySelector('.profile_listening_container');
+        const documentRoot = document.documentElement;
 
-        console.log(data[0].ixl);
-
-        panelContainer.style.setProperty('--clr-light-bg', colors.light.bgColor);
-        panelContainer.style.setProperty('--clr-light-text', colors.light.textColor);
-        panelContainer.style.setProperty('--clr-light-accent', colors.light.accentColor);
-        panelContainer.style.setProperty('--clr-dark-bg', colors.dark.bgColor);
-        panelContainer.style.setProperty('--clr-dark-text', colors.dark.textColor);
-        panelContainer.style.setProperty('--clr-dark-accent', colors.dark.accentColor);
+        documentRoot.style.setProperty('--clr-light-bg', colors.light.bgColor);
+        documentRoot.style.setProperty('--clr-light-text', colors.light.textColor);
+        documentRoot.style.setProperty('--clr-light-accent', colors.light.accentColor);
+        documentRoot.style.setProperty('--clr-dark-bg', colors.dark.bgColor);
+        documentRoot.style.setProperty('--clr-dark-text', colors.dark.textColor);
+        documentRoot.style.setProperty('--clr-dark-accent', colors.dark.accentColor);
       }
     }
 
