@@ -62,7 +62,13 @@ html[data-scheme="dark"] {
   transition: background-color 0.3s ease-out, color 0.3s ease-out;
 
   &:hover {
+    background-color: var(--clr-lastfm-lighter) !important;
+  }
+
+  &:active {
     background-color: var(--clr-lastfm-darker) !important;
+    position: relative;
+    top: 2px;
   }
 }
 

@@ -375,7 +375,7 @@ function insertRecentTracksWrapperIntoDOM(tracksWrapper) {
 
 function addRecentTracksStyles() {
   const style = document.createElement('style');
-  style.textContent = `
+  style.textContent = /* css */ `
     .${PLAY_HISTORY_ITEM_CLASSES.item}.is-custom {
       padding-top: 0;
       left: -9999px;
@@ -471,8 +471,27 @@ function addRecentTracksStyles() {
             img {
               animation: rotate 9s linear infinite;
               border-radius: 50%;
-              outline: 2px solid rgba(255,255,255, 0.5);
-              outline-offset: -2px;
+              outline: 4px solid rgba(255,255,255, 0.25);
+              outline-offset: -4px;
+            }
+
+            &:after {
+              content: '';
+              border-radius: 50%;
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: conic-gradient(
+                from 30deg,
+                rgba(255, 255, 255, 0) 0deg,
+                rgba(255, 255, 255, 0.2) 7deg,
+                rgba(255, 255, 255, 0.4) 15deg,
+                rgba(255, 255, 255, 0.2) 22deg,
+                rgba(255, 255, 255, 0) 30deg,
+                transparent 360deg
+              );
             }
 
             &:before { opacity: 1; }
