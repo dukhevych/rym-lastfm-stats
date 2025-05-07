@@ -4,6 +4,7 @@ import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
 
+// import starSvg from '@/assets/icons/star.svg?raw';
 import lockSvg from '@/assets/icons/lock.svg?raw';
 import unlockSvg from '@/assets/icons/unlock.svg?raw';
 
@@ -33,7 +34,10 @@ const PLAY_HISTORY_ITEM_CLASSES = {
   artistSpan: 'play_history_item_artist',
   artistLink: 'artist',
   separator: 'play_history_separator',
-  albumLink: 'album play_history_item_release',
+  trackLink: 'album play_history_item_release',
+
+  customMyRating: 'custom-my-rating',
+  customFromAlbum: 'custom-from-album',
 }
 
 function createPlayHistoryItem() {
@@ -55,6 +59,14 @@ function createPlayHistoryItem() {
 
   const infobox = document.createElement('div');
   infobox.className = PLAY_HISTORY_ITEM_CLASSES.infobox;
+
+  // 1
+  const customMyRating = document.createElement('div');
+  customMyRating.className = PLAY_HISTORY_ITEM_CLASSES.customMyRating;
+  const starIcon = utils.createSvgUse('svg-star-symbol');
+  for (let i = 0; i < 5; i++) {
+    customMyRating.appendChild(starIcon.cloneNode(true));
+  }
 
   const itemDate = document.createElement('div');
   itemDate.className = PLAY_HISTORY_ITEM_CLASSES.itemDate;
@@ -85,16 +97,22 @@ function createPlayHistoryItem() {
   separator.className = PLAY_HISTORY_ITEM_CLASSES.separator;
   separator.textContent = ' - ';
 
-  const albumLink = document.createElement('a');
-  albumLink.className = PLAY_HISTORY_ITEM_CLASSES.albumLink;
+  const trackLink = document.createElement('a');
+  trackLink.className = PLAY_HISTORY_ITEM_CLASSES.trackLink;
+
+  // 2
+  const customFromAlbum = document.createElement('div');
+  customFromAlbum.className = PLAY_HISTORY_ITEM_CLASSES.customFromAlbum;
 
   release.appendChild(artistSpan);
   release.appendChild(separator);
-  release.appendChild(albumLink);
+  release.appendChild(trackLink);
 
   infoboxLower.appendChild(release);
+  infobox.appendChild(customMyRating);
   infobox.appendChild(itemDate);
   infobox.appendChild(infoboxLower);
+  infobox.appendChild(customFromAlbum);
 
   item.appendChild(artbox);
   item.appendChild(infobox);
@@ -155,28 +173,43 @@ function populatePlayHistoryItem(
         itemDate.title = date.toLocaleString();
       }
     }
-  }
 
-  const infoboxLower = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.infoboxLower}`);
-  if (infoboxLower) {
-    const release = infoboxLower.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.release}`);
-    if (release) {
-      const releaseLink = release.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.release}`);
-      if (releaseLink) {
-        releaseLink.href = trackUrl;
-        releaseLink.title = `Search for "${artistName} - ${trackName}" on RateYourMusic`;
-        releaseLink.textContent = trackName;
-      }
+    const infoboxLower = item.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.infoboxLower}`);
+    if (infoboxLower) {
+      const release = infoboxLower.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.release}`);
+      if (release) {
+        const releaseLink = release.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.release}`);
+        if (releaseLink) {
+          releaseLink.href = trackUrl;
+          releaseLink.title = `Search for "${artistName} - ${trackName}" on RateYourMusic`;
+          releaseLink.textContent = trackName;
+        }
 
-      const artistSpan = infoboxLower.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artistSpan}`);
-      if (artistSpan) {
-        const artistLink = artistSpan.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artistSpan} a`);
-        if (artistLink) {
-          artistLink.href = artistUrl;
-          artistLink.title = `Search for "${artistName}" on RateYourMusic`;
-          artistLink.textContent = artistName;
+        const artistSpan = infoboxLower.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artistSpan}`);
+        if (artistSpan) {
+          const artistLink = artistSpan.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.artistSpan} a`);
+          if (artistLink) {
+            artistLink.href = artistUrl;
+            artistLink.title = `Search for "${artistName}" on RateYourMusic`;
+            artistLink.textContent = artistName;
+          }
         }
       }
+    }
+
+    const customMyRating = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customMyRating}`);
+    if (customMyRating) {
+      // customMyRating.textContent = 'My Rating: TODO';
+    }
+
+    const customFromAlbum = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customFromAlbum}`);
+    if (customFromAlbum) {
+      customFromAlbum.textContent = 'Album: ';
+      const albumLink = document.createElement('a');
+      albumLink.href = albumUrl;
+      albumLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+      albumLink.textContent = albumName;
+      customFromAlbum.appendChild(albumLink);
     }
   }
 }
@@ -439,6 +472,7 @@ function addRecentTracksStyles() {
       }
       .${PLAY_HISTORY_ITEM_CLASSES.infobox} {
         padding: 0;
+        overflow: visible;
       }
       .${PLAY_HISTORY_ITEM_CLASSES.itemDate} {
         color: var(--clr-accent);
@@ -458,43 +492,94 @@ function addRecentTracksStyles() {
         max-width: none;
       }
 
+      .${PLAY_HISTORY_ITEM_CLASSES.customMyRating} {
+        font-size: 0.7em;
+        width: fit-content;
+        margin-bottom: 1.5em;
+
+        display: flex;
+        gap: 1px;
+        align-items: center;
+
+        svg {
+          color: currentColor;
+          fill: var(--clr-dark-accent);
+          width: 2em;
+          height: 2em;
+        }
+      }
+
+      .${PLAY_HISTORY_ITEM_CLASSES.customFromAlbum} {
+        font-size: 0.7em;
+        width: fit-content;
+        margin-top: 1.5em;
+
+        a {
+          font-weight: bold;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+
       &.is-now-playing {
         .${PLAY_HISTORY_ITEM_CLASSES.itemDate} img { display: inline; }
 
         .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
-          mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="10" fill="black"/></svg>');
-          mask-repeat: no-repeat;
-          mask-size: 100% 100%;
-          mask-mode: luminance;
+          box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.5);
+          border-radius: 50%;
 
           a {
+            mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="10" fill="black"/></svg>');
+            mask-repeat: no-repeat;
+            mask-size: 100% 100%;
+            mask-mode: luminance;
+
             img {
               animation: rotate 9s linear infinite;
               border-radius: 50%;
-              outline: 4px solid rgba(255,255,255, 0.25);
+              outline: 4px solid color-mix(in lab, var(--clr-dark-accent), transparent 10%);
               outline-offset: -4px;
+              pointer-events: none;
             }
 
+            pointer-events: none;
+
             &:after {
+              pointer-events: auto;
               content: '';
               border-radius: 50%;
               position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
+              inset: 4px;
               background: conic-gradient(
                 from 30deg,
                 rgba(255, 255, 255, 0) 0deg,
-                rgba(255, 255, 255, 0.2) 7deg,
-                rgba(255, 255, 255, 0.4) 15deg,
-                rgba(255, 255, 255, 0.2) 22deg,
+                rgba(255, 255, 255, 0.1) calc(15deg - 7deg),
+                rgba(255, 255, 255, 0.2) calc(15deg),
+                rgba(255, 255, 255, 0.1) calc(15deg + 7deg),
                 rgba(255, 255, 255, 0) 30deg,
+
+                rgba(255, 255, 255, 0) calc(15deg + 180deg - 50deg),
+                rgba(255, 255, 255, 0.05) calc(15deg + 180deg - 40deg),
+                rgba(255, 255, 255, 0.1) calc(15deg + 180deg - 30deg),
+                rgba(255, 255, 255, 0.15) calc(15deg + 180deg - 20deg),
+                rgba(255, 255, 255, 0.2) calc(15deg + 180deg - 10deg),
+                rgba(255, 255, 255, 0.25) calc(15deg + 180deg),
+                rgba(255, 255, 255, 0.2) calc(15deg + 180deg + 10deg),
+                rgba(255, 255, 255, 0.15) calc(15deg + 180deg + 20deg),
+                rgba(255, 255, 255, 0.1) calc(15deg + 180deg + 30deg),
+                rgba(255, 255, 255, 0.05) calc(15deg + 180deg + 40deg),
+                rgba(255, 255, 255, 0) calc(15deg + 180deg + 50deg),
+
                 transparent 360deg
               );
             }
 
-            &:before { opacity: 1; }
+            &:before {
+              opacity: 1;
+              pointer-events: none;
+            }
           }
         }
       }
@@ -506,13 +591,6 @@ function addRecentTracksStyles() {
           a::before {
             background-color: rgba(255, 255, 255, 0.95);
             outline-color: rgba(0, 0, 0, 0.5);
-          }
-        }
-        &.is-now-playing {
-          .${PLAY_HISTORY_ITEM_CLASSES.artbox} a {
-            img {
-              outline: 2px solid rgba(0, 0, 0, 0.5);
-            }
           }
         }
       }
@@ -598,16 +676,25 @@ async function render(_config, _userName) {
         },
       );
       playHistoryItem.classList.add('is-loaded');
+      panelContainer.style.setProperty('--bg-image', `url(${data[0].ixl})`);
 
       if (colors) {
         const documentRoot = document.documentElement;
 
         documentRoot.style.setProperty('--clr-light-bg', colors.light.bgColor);
-        documentRoot.style.setProperty('--clr-light-text', colors.light.textColor);
+        documentRoot.style.setProperty('--clr-light-bg-contrast', colors.light.bgColorContrast);
         documentRoot.style.setProperty('--clr-light-accent', colors.light.accentColor);
+        documentRoot.style.setProperty('--clr-light-accent-contrast', colors.light.accentColorContrast);
         documentRoot.style.setProperty('--clr-dark-bg', colors.dark.bgColor);
-        documentRoot.style.setProperty('--clr-dark-text', colors.dark.textColor);
+        documentRoot.style.setProperty('--clr-dark-bg-contrast', colors.dark.bgColorContrast);
         documentRoot.style.setProperty('--clr-dark-accent', colors.dark.accentColor);
+        documentRoot.style.setProperty('--clr-dark-accent-contrast', colors.dark.accentColorContrast);
+
+        Object.keys(colors.palette).forEach((key) => {
+          if (colors.palette[key]?.hex) {
+            documentRoot.style.setProperty(`--clr-palette-${key.toLowerCase()}`, colors.palette[key].hex);
+          }
+        });
       }
     }
 

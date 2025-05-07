@@ -7,10 +7,26 @@
   }
 }
 
+@keyframes image-shift {
+  0% {
+    transform: translateY(-50%);
+  }
+  25% {
+    transform: translateY(-75%);
+  }
+  50% {
+    transform: translateY(-50%);
+  }
+  75% {
+    transform: translateY(-25%);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
 :root {
   --clr-lastfm: #f71414;
-  --clr-lastfm-darker: color-mix(in lab, var(--clr-lastfm) 80%, black);
-  --clr-lastfm-lighter: color-mix(in lab, var(--clr-lastfm) 80%, white);
 }
 
 #profile_play_history_container {
@@ -21,7 +37,35 @@
   /* padding: 1.25rem; */
 
   &.is-play-history {
+    background-color: var(--bg-color);
+    color: color-contrast(var(--bg-color) vs #fff, #000);
     transition: background-color 0.3s ease-out, color 0.3s ease-out;
+    position: relative;
+
+    &:before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: var(--bg-image);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.2;
+    }
+
+    &:after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(5px);
+      z-index: 1;
+    }
+
+    & > * {
+      position: relative;
+      z-index: 2;
+    }
+
 
     a { color: inherit; }
 
@@ -33,16 +77,14 @@
 
 html[data-scheme="light"] {
   .profile_listening_container.is-play-history {
-    background-color: var(--clr-light-bg);
-    color: var(--clr-light-text);
+    --bg-color: var(--clr-light-bg);
     border-color: var(--clr-light-accent);
   }
 }
 
 html[data-scheme="dark"] {
   .profile_listening_container.is-play-history {
-    background-color: var(--clr-dark-bg);
-    color: var(--clr-dark-text);
+    --bg-color: var(--clr-dark-bg);
     border-color: var(--clr-dark-accent);
   }
 }
@@ -56,35 +98,43 @@ html[data-scheme="dark"] {
 
 .btn.btn-lastfm,
 .btn.btn-profile {
-  background-color: var(--clr-lastfm) !important;
-  color: white !important;
+  --bg-color: var(--clr-lastfm);
+  --bg-color-hover: color-mix(in lab, var(--bg-color) 90%, white);
+  --bg-color-active: color-mix(in lab, var(--bg-color) 90%, black);
+  --color: #fff;
+  background-color: var(--bg-color) !important;
+  color: var(--color) !important;
   margin-right: 0;
   transition: background-color 0.3s ease-out, color 0.3s ease-out;
 
   &:hover {
-    background-color: var(--clr-lastfm-lighter) !important;
+    background-color: var(--bg-color-hover) !important;
   }
 
   &:active {
-    background-color: var(--clr-lastfm-darker) !important;
+    background-color: var(--bg-color-active) !important;
     position: relative;
     top: 2px;
   }
 }
 
 html[data-scheme="light"] {
-  .btn.btn-lastfm {
-    background-color: var(--clr-light-accent) !important;
-    color: var(--clr-light-bg) !important;
-    text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.5);
+  .btn.btn-lastfm,
+  .btn.btn-profile {
+    --bg-color: var(--clr-light-accent);
+    --color: var(--clr-light-accent-contrast);
+    /* --bg-color: #000; */
+    /* text-shadow: 0 0 2px rgba(0, 0, 0, 0.5); */
   }
 }
 
 html[data-scheme="dark"] {
-  .btn.btn-lastfm {
-    background-color: var(--clr-dark-accent) !important;
-    color: var(--clr-dark-bg) !important;
-    text-shadow: 0 -1px 1px rgba(255, 255, 255, 0.5);
+  .btn.btn-lastfm,
+  .btn.btn-profile {
+    --bg-color: var(--clr-dark-accent);
+    --color: var(--clr-dark-accent-contrast);
+    /* --bg-color: #fff; */
+    /* text-shadow: 0 0 2px rgba(255, 255, 255, 0.5); */
   }
 }
 

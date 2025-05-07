@@ -301,20 +301,19 @@ export const getFullConfig = async () => {
 }
 
 import svgLoader from '@/assets/icons/loader.svg?raw';
+import starSvg from '@/assets/icons/star2.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 let svgSprite = null;
 
 export const createSVGSprite = function() {
-  const loader = document.createElement('div');
-  loader.classList.add('loader');
-
   svgSprite = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svgSprite.setAttribute('id', svgSpriteId);
   svgSprite.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   svgSprite.setAttribute('style', 'display:none;');
 
   addIconToSVGSprite(svgLoader, 'svg-loader-symbol');
+  addIconToSVGSprite(starSvg, 'svg-star-symbol');
 
   return svgSprite;
 }
@@ -368,7 +367,7 @@ export const addIconToSVGSprite = function(iconRaw, iconName) {
   svgSprite.appendChild(symbolElement);
 }
 
-export const createSvgUse = function(iconName, viewBox) {
+export const createSvgUse = function(iconName, viewBox = '0 0 24 24') {
   const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   wrapper.setAttribute('viewBox', viewBox);
   const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
@@ -471,14 +470,20 @@ export async function getVibrantUiColors(palette) {
   return {
     light: {
       ...lightColors,
-      get textColor() {
+      get bgColorContrast() {
         return getContrastingColor(this.bgColor);
+      },
+      get accentColorContrast() {
+        return getContrastingColor(this.accentColor);
       },
     },
     dark: {
       ...darkColors,
-      get textColor() {
+      get bgColorContrast() {
         return getContrastingColor(this.bgColor);
+      },
+      get accentColorContrast() {
+        return getContrastingColor(this.accentColor);
       },
     },
     palette,
