@@ -296,7 +296,10 @@ function createLastfmButton() {
   button.classList.add('btn-lastfm');
   const playHistoryClasses = ['btn', 'blue_btn', 'btn_small'];
   button.classList.add(...playHistoryClasses);
-  button.textContent = 'Last.fm Recent Tracks';
+  // button.textContent = 'Last.fm Recent Tracks';
+
+  const playlistIcon = utils.createSvgUse('svg-playlist-symbol');
+  button.appendChild(playlistIcon);
 
   return button;
 }
@@ -308,6 +311,9 @@ function createProfileButton() {
   const playHistoryClasses = ['btn', 'blue_btn', 'btn_small'];
   button.classList.add(...playHistoryClasses);
   button.textContent = 'Profile';
+
+  const lastfmIcon = utils.createSvgUse('svg-lastfm-symbol');
+  button.appendChild(lastfmIcon);
 
   return button;
 }
@@ -502,7 +508,7 @@ function addRecentTracksStyles() {
         align-items: center;
 
         svg {
-          color: currentColor;
+          color: color-mix(in lab, currentColor, transparent 50%);
           fill: var(--clr-dark-accent);
           width: 2em;
           height: 2em;

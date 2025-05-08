@@ -301,7 +301,9 @@ export const getFullConfig = async () => {
 }
 
 import svgLoader from '@/assets/icons/loader.svg?raw';
-import starSvg from '@/assets/icons/star2.svg?raw';
+import starSvg from '@/assets/icons/star4.svg?raw';
+import lastfmSvg from '@/assets/icons/lastfm.svg?raw';
+import playlistSvg from '@/assets/icons/playlist.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 let svgSprite = null;
@@ -314,6 +316,8 @@ export const createSVGSprite = function() {
 
   addIconToSVGSprite(svgLoader, 'svg-loader-symbol');
   addIconToSVGSprite(starSvg, 'svg-star-symbol');
+  addIconToSVGSprite(lastfmSvg, 'svg-lastfm-symbol');
+  addIconToSVGSprite(playlistSvg, 'svg-playlist-symbol');
 
   return svgSprite;
 }

@@ -34,7 +34,7 @@
 }
 
 .profile_listening_container {
-  /* padding: 1.25rem; */
+  padding-right: 1rem;
 
   &.is-play-history {
     background-color: var(--bg-color);
@@ -90,7 +90,7 @@ html[data-scheme="dark"] {
 }
 
 .profile_view_play_history_btn {
-  gap: 2rem;
+  gap: 1rem;
   min-height: 45px;
   align-items: center;
   flex: 1 0 auto;
@@ -100,7 +100,7 @@ html[data-scheme="dark"] {
 .btn.btn-profile {
   --bg-color: var(--clr-lastfm);
   --bg-color-hover: color-mix(in lab, var(--bg-color) 90%, white);
-  --bg-color-active: color-mix(in lab, var(--bg-color) 90%, black);
+  --bg-color-active: color-mix(in lab, var(--bg-color) 80%, black);
   --color: #fff;
   background-color: var(--bg-color) !important;
   color: var(--color) !important;
@@ -115,6 +115,20 @@ html[data-scheme="dark"] {
     background-color: var(--bg-color-active) !important;
     position: relative;
     top: 2px;
+  }
+
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 41.15px;
+  padding-block: 0 !important;
+
+  svg {
+    order: -1;
+    width: 1.75em;
+    height: 1.75em;
   }
 }
 
@@ -270,11 +284,16 @@ html[data-scheme="dark"] {
   appearance: none;
   padding: 0;
   margin: 0;
-  margin-right: -1rem;
   cursor: pointer;
   color: currentColor;
   opacity: 0.75;
   padding: 10px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
 
   svg {
     width: 16px;
