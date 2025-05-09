@@ -72,12 +72,11 @@ function createPlayHistoryItem() {
   itemDate.className = PLAY_HISTORY_ITEM_CLASSES.itemDate;
 
   const statusSpan = document.createElement('span');
-  statusSpan.id = 'current-track-status';
 
-  const nowPlayingImg = gif.cloneNode();
+  const volumeIcon = utils.createSvgUse('svg-volume-symbol', '0 0 40 40');
 
   itemDate.appendChild(statusSpan);
-  itemDate.appendChild(nowPlayingImg);
+  itemDate.appendChild(volumeIcon);
 
   const infoboxLower = document.createElement('div');
   infoboxLower.className = PLAY_HISTORY_ITEM_CLASSES.infoboxLower;
@@ -461,12 +460,13 @@ function addRecentTracksStyles() {
             left: 0;
             right: 0;
             bottom: 0;
-            width: 20%;
-            height: 20%;
+            width: 12.5%;
+            height: 12.5%;
             border-radius: 50%;
             margin: auto;
-            outline: 2px solid var(--clr-dark-accent);
+            outline: 12px solid color-mix(in lab, var(--clr-dark-accent), white 10%);
             opacity: 0;
+            z-index: 100;
             transition: opacity .15s ease-in-out, transform .15s ease-in-out;
           }
 
@@ -485,8 +485,10 @@ function addRecentTracksStyles() {
         &:before {
           content: attr(data-label);
         }
-        img {
+        svg {
           display: none;
+          width: 12px;
+          height: 12px;
           opacity: 1;
           margin-left: 1rem;
         }
@@ -499,9 +501,10 @@ function addRecentTracksStyles() {
       }
 
       .${PLAY_HISTORY_ITEM_CLASSES.customMyRating} {
-        font-size: 0.7em;
+        font-size: 0.8em;
         width: fit-content;
         margin-bottom: 1.5em;
+        visibility: hidden;
 
         display: flex;
         gap: 1px;
@@ -516,7 +519,7 @@ function addRecentTracksStyles() {
       }
 
       .${PLAY_HISTORY_ITEM_CLASSES.customFromAlbum} {
-        font-size: 0.7em;
+        font-size: 0.8em;
         width: fit-content;
         margin-top: 1.5em;
 
@@ -530,30 +533,26 @@ function addRecentTracksStyles() {
       }
 
       &.is-now-playing {
-        .${PLAY_HISTORY_ITEM_CLASSES.itemDate} img { display: inline; }
+        .${PLAY_HISTORY_ITEM_CLASSES.itemDate} svg { display: inline; }
 
         .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
-          box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.5);
+          box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
           border-radius: 50%;
+          position: relative;
+          mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="9" fill="black"/></svg>');
+          mask-repeat: no-repeat;
+          mask-size: 100% 100%;
+          mask-mode: luminance;
 
           a {
-            mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="10" fill="black"/></svg>');
-            mask-repeat: no-repeat;
-            mask-size: 100% 100%;
-            mask-mode: luminance;
-
             img {
               animation: rotate 9s linear infinite;
               border-radius: 50%;
-              outline: 4px solid color-mix(in lab, var(--clr-dark-accent), transparent 10%);
+              outline: 4px solid color-mix(in lab, var(--clr-dark-accent), white 10%);
               outline-offset: -4px;
-              pointer-events: none;
             }
 
-            pointer-events: none;
-
             &:after {
-              pointer-events: auto;
               content: '';
               border-radius: 50%;
               position: absolute;
@@ -569,11 +568,11 @@ function addRecentTracksStyles() {
                 rgba(255, 255, 255, 0) calc(15deg + 180deg - 50deg),
                 rgba(255, 255, 255, 0.05) calc(15deg + 180deg - 40deg),
                 rgba(255, 255, 255, 0.1) calc(15deg + 180deg - 30deg),
-                rgba(255, 255, 255, 0.15) calc(15deg + 180deg - 20deg),
-                rgba(255, 255, 255, 0.2) calc(15deg + 180deg - 10deg),
-                rgba(255, 255, 255, 0.25) calc(15deg + 180deg),
-                rgba(255, 255, 255, 0.2) calc(15deg + 180deg + 10deg),
-                rgba(255, 255, 255, 0.15) calc(15deg + 180deg + 20deg),
+                rgba(255, 255, 255, 0.125) calc(15deg + 180deg - 20deg),
+                rgba(255, 255, 255, 0.15) calc(15deg + 180deg - 10deg),
+                rgba(255, 255, 255, 0.175) calc(15deg + 180deg),
+                rgba(255, 255, 255, 0.15) calc(15deg + 180deg + 10deg),
+                rgba(255, 255, 255, 0.125) calc(15deg + 180deg + 20deg),
                 rgba(255, 255, 255, 0.1) calc(15deg + 180deg + 30deg),
                 rgba(255, 255, 255, 0.05) calc(15deg + 180deg + 40deg),
                 rgba(255, 255, 255, 0) calc(15deg + 180deg + 50deg),
@@ -584,7 +583,6 @@ function addRecentTracksStyles() {
 
             &:before {
               opacity: 1;
-              pointer-events: none;
             }
           }
         }

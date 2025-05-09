@@ -304,6 +304,7 @@ import svgLoader from '@/assets/icons/loader.svg?raw';
 import starSvg from '@/assets/icons/star4.svg?raw';
 import lastfmSvg from '@/assets/icons/lastfm.svg?raw';
 import playlistSvg from '@/assets/icons/playlist.svg?raw';
+import volumeSvg from '@/assets/icons/volume.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 let svgSprite = null;
@@ -318,6 +319,7 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(starSvg, 'svg-star-symbol');
   addIconToSVGSprite(lastfmSvg, 'svg-lastfm-symbol');
   addIconToSVGSprite(playlistSvg, 'svg-playlist-symbol');
+  addIconToSVGSprite(volumeSvg, 'svg-volume-symbol');
 
   return svgSprite;
 }
@@ -436,6 +438,8 @@ export async function getImageColors(imageUrl, theme = 'light') {
 
   return getVibrantUiColors(palette, theme);
 }
+
+
 
 export function getContrastingColor(hexColor, darkColor = '#000', lightColor = '#fff') {
   if (!/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(hexColor)) {

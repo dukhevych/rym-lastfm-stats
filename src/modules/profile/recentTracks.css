@@ -59,6 +59,30 @@
       inset: 0;
       backdrop-filter: blur(5px);
       z-index: 1;
+
+      background: linear-gradient(
+        45deg,
+        var(--clr-palette-vibrant),
+        var(--clr-palette-darkvibrant),
+        var(--clr-palette-lightvibrant),
+        var(--clr-palette-muted),
+        var(--clr-palette-darkmuted),
+        var(--clr-palette-lightmuted),
+      );
+      background-size: 300% 300%;
+      animation: gradient-shift 6s ease infinite;
+
+      @keyframes gradient-shift {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
     }
 
     & > * {
@@ -106,6 +130,7 @@ html[data-scheme="dark"] {
   color: var(--color) !important;
   margin-right: 0;
   transition: background-color 0.3s ease-out, color 0.3s ease-out;
+  border: 2px solid color-mix(in lab, var(--bg-color) 80%, white);
 
   &:hover {
     background-color: var(--bg-color-hover) !important;
