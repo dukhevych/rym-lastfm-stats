@@ -389,14 +389,6 @@
               :disabled="options.recentTracks === false"
             />
 
-            <!-- RECENT TRACKS REPLACE -->
-            <FormCheckbox
-              v-model="options.recentTracksCoverMode"
-              name="recentTracksCoverMode"
-              label="Use Cover Mode"
-              :disabled="options.recentTracks === false"
-            />
-
             <FormSeparator />
 
             <!-- TOP ALBUMS -->
