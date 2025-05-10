@@ -1,3 +1,15 @@
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 @keyframes rotate {
   from {
     transform: rotate(0deg);
@@ -33,69 +45,66 @@
   position: relative;
 }
 
-.profile_listening_container {
+[data-element="rymstats-track-panel"] {
   padding-right: 1rem;
+  /* background-color: var(--bg-color); */
+  color: color-contrast(var(--bg-color) vs #fff, #000);
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+  position: relative;
 
-  &.is-play-history {
-    background-color: var(--bg-color);
-    color: color-contrast(var(--bg-color) vs #fff, #000);
-    transition: background-color 0.3s ease-out, color 0.3s ease-out;
+  &:before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(4px);
+    opacity: 0.2;
+  }
+
+  &:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+
+    --stripe-width: 40px;
+
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--clr-palette-vibrant) 0px,
+      var(--clr-palette-vibrant) calc(var(--stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--stripe-width) * 6)
+    );
+
+    background-position: 0% 50%;
+
+    opacity: 0.1;
+
+    animation: gradient-shift 5s linear infinite;
+  }
+
+  & > * {
     position: relative;
-
-    &:before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: var(--bg-image);
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      opacity: 0.2;
-    }
-
-    &:after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      backdrop-filter: blur(5px);
-      z-index: 1;
-
-      background: linear-gradient(
-        45deg,
-        var(--clr-palette-vibrant),
-        var(--clr-palette-darkvibrant),
-        var(--clr-palette-lightvibrant),
-        var(--clr-palette-muted),
-        var(--clr-palette-darkmuted),
-        var(--clr-palette-lightmuted),
-      );
-      background-size: 300% 300%;
-      animation: gradient-shift 6s ease infinite;
-
-      @keyframes gradient-shift {
-        0% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-    }
-
-    & > * {
-      position: relative;
-      z-index: 2;
-    }
+    z-index: 2;
+  }
 
 
-    a { color: inherit; }
+  a { color: inherit; }
 
-    &.is-now-playing {
-      border-radius: 9999px 0 0 9999px;
-    }
+  &.is-now-playing {
+    border-radius: 9999px 0 0 9999px;
   }
 }
 

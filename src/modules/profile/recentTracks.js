@@ -231,6 +231,7 @@ function prepareRecentTracksUI() {
   const lockButton = createLockButton();
   const profileButton = createProfileButton();
   const tracksWrapper = document.createElement('div');
+
   let playHistoryItem;
 
   tracksWrapper.classList.add(
@@ -259,6 +260,8 @@ function prepareRecentTracksUI() {
   });
 
   const panelContainer = document.querySelector('.profile_listening_container');
+
+  panelContainer.dataset['element'] = 'rymstats-track-panel';
   panelContainer.classList.add('is-play-history');
 
   if (config.recentTracksReplace) {
@@ -460,19 +463,16 @@ function addRecentTracksStyles() {
             left: 0;
             right: 0;
             bottom: 0;
-            width: 12.5%;
-            height: 12.5%;
+            width: 33%;
+            height: 33%;
             border-radius: 50%;
             margin: auto;
-            outline: 12px solid color-mix(in lab, var(--clr-dark-accent), white 10%);
+            background-color: color-mix(in lab, var(--clr-dark-accent), transparent 40%);
+            outline: 2px solid color-mix(in lab, var(--clr-dark-accent), white 10%);
+            outline-offset: -2px;
             opacity: 0;
             z-index: 100;
             transition: opacity .15s ease-in-out, transform .15s ease-in-out;
-          }
-
-          img {
-            transition: all .15s ease-in-out;
-            transition-property: border-radius;
           }
         }
       }
@@ -539,17 +539,19 @@ function addRecentTracksStyles() {
           box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
           border-radius: 50%;
           position: relative;
-          mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="9" fill="black"/></svg>');
-          mask-repeat: no-repeat;
-          mask-size: 100% 100%;
-          mask-mode: luminance;
 
           a {
+            mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="9" fill="black"/></svg>');
+            mask-repeat: no-repeat;
+            mask-size: 100% 100%;
+            mask-mode: luminance;
+
             img {
               animation: rotate 9s linear infinite;
               border-radius: 50%;
-              outline: 4px solid color-mix(in lab, var(--clr-dark-accent), white 10%);
+              outline: 4px solid color-mix(in lab, var(--clr-dark-accent), transparent 50%);
               outline-offset: -4px;
+              border: 2px solid color-mix(in lab, var(--clr-dark-accent), white 50%);
             }
 
             &:after {
@@ -632,7 +634,14 @@ async function render(_config, _userName) {
 
   addRecentTracksStyles();
 
-  const { button, lockButton, profileButton, tracksWrapper, playHistoryItem, panelContainer } = prepareRecentTracksUI();
+  const {
+    button,
+    lockButton,
+    profileButton,
+    tracksWrapper,
+    playHistoryItem,
+    panelContainer,
+  } = prepareRecentTracksUI();
 
   const buttonsContainer = document.querySelector(
     PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR,
@@ -734,7 +743,13 @@ async function render(_config, _userName) {
         a: item.artist['#text'],
       }));
 
-      const colors = await utils.getImageColors(normalizedData[0].il);
+      let colors = null;
+
+      try {
+        colors = await utils.getImageColors(normalizedData[0].il);
+      } catch {
+        console.warn('Failed to get image colors, using cached data without colors');
+      }
 
       await utils.storageSet({
         recentTracksCache: {
@@ -783,7 +798,14 @@ async function render(_config, _userName) {
     ) {
       await updateAction();
     } else {
-      const colors = await utils.getImageColors(recentTracksCache.data[0].il);
+      let colors = null;
+
+      try {
+        colors = await utils.getImageColors(recentTracksCache.data[0].il);
+      } catch {
+        console.warn('Failed to get image colors, using cached data without colors');
+      }
+
       populateRecentTracks({
         data: recentTracksCache.data,
         colors,
