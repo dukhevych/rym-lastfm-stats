@@ -554,7 +554,7 @@ html[data-scheme="light"] {
     background-blend-mode: hard-light; */
 
     /* OPTION 14 */
-    background-image:
+    /* background-image:
       repeating-linear-gradient(to right,
         var(--clr-palette-darkvibrant) 0,
         var(--clr-palette-darkvibrant) 12px,
@@ -566,7 +566,7 @@ html[data-scheme="light"] {
         transparent 8px,
         transparent 12px);
     background-blend-mode: screen;
-    filter: saturate(150%) brightness(0.9);
+    filter: saturate(150%) brightness(0.9); */
 
     /* animation: track-panel-rotate-gradient 5s linear infinite; */
     background-position: center center;
