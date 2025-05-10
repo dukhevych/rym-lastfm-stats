@@ -195,11 +195,11 @@ async function render(config) {
     }
   }
 
-  let url = !data1.error ? data1.artist : null;
+  let url = !data1.error ? data1.artist.url : null;
   let urlOriginal = null;
 
   if (data2) {
-    urlOriginal = !data2.error ? data2.artist : urlOriginal;
+    urlOriginal = !data2.error ? data2.artist.url : urlOriginal;
   }
 
   const stats = {
