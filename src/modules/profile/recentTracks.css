@@ -41,8 +41,235 @@
   --clr-lastfm: #f71414;
 }
 
+[data-element="rymstats-track-artist-link"],
+[data-element="rymstats-track-link"] {
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+[data-element="rymstats-track-item"] {
+  padding-top: 0;
+  left: -9999px;
+  right: -9999px;
+  position: relative;
+  align-items: center;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all .15s ease-in-out;
+  transition-property: opacity, transform;
+
+  &.is-loaded {
+    left: auto;
+    right: auto;
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  & + .loader {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    width: 45px;
+    height: 45px;
+    color: var(--clr-lastfm);
+  }
+
+  &.is-loaded + .loader {
+    display: none;
+  }
+
+  [data-element="rymstats-track-artbox"] {
+    max-width: none;
+
+    a {
+      position: relative;
+
+      &:before {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 33%;
+        height: 33%;
+        border-radius: 50%;
+        margin: auto;
+        background-color: color-mix(in lab, var(--clr-dark-accent), transparent 40%);
+        outline: 2px solid color-mix(in lab, var(--clr-dark-accent), white 10%);
+        outline-offset: -2px;
+        opacity: 0;
+        z-index: 100;
+        transition: opacity .15s ease-in-out, transform .15s ease-in-out;
+      }
+    }
+  }
+  [data-element="rymstats-track-infobox"] {
+    padding: 0;
+    overflow: visible;
+  }
+  [data-element="rymstats-track-item-date"] {
+    color: var(--clr-accent);
+    &:before {
+      content: attr(data-label);
+    }
+    svg {
+      display: none;
+      width: 12px;
+      height: 12px;
+      opacity: 1;
+      margin-left: 1rem;
+    }
+  }
+  [data-element="rymstats-track-item-art"] {
+    display: block;
+    width: 145px;
+    height: 145px;
+    max-width: none;
+  }
+
+  [data-element="rymstats-track-rating"] {
+    font-size: 0.8em;
+    width: fit-content;
+    margin-bottom: 1.5em;
+    visibility: hidden;
+
+    display: flex;
+    gap: 1px;
+    align-items: center;
+
+    svg {
+      color: color-mix(in lab, currentColor, transparent 50%);
+      fill: var(--clr-dark-accent);
+      width: 2em;
+      height: 2em;
+    }
+  }
+
+  [data-element="rymstats-from-album"] {
+    font-size: 0.8em;
+    width: fit-content;
+    margin-top: 1.5em;
+
+    a {
+      font-weight: bold;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &.is-now-playing {
+    [data-element="rymstats-track-item-date"] svg { display: inline; }
+
+    [data-element="rymstats-track-artbox"] {
+      box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
+      border-radius: 50%;
+      position: relative;
+
+      a {
+        mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="9" fill="black"/></svg>');
+        mask-repeat: no-repeat;
+        mask-size: 100% 100%;
+        mask-mode: luminance;
+
+        img {
+          animation: rotate 9s linear infinite;
+          border-radius: 50%;
+          outline: 4px solid color-mix(in lab, var(--clr-dark-accent), transparent 50%);
+          outline-offset: -4px;
+          border: 2px solid color-mix(in lab, var(--clr-dark-accent), white 50%);
+        }
+
+        &:after {
+          content: '';
+          border-radius: 50%;
+          position: absolute;
+          inset: 4px;
+          background: conic-gradient(
+            from 30deg,
+            rgba(255, 255, 255, 0) 0deg,
+            rgba(255, 255, 255, 0.1) calc(15deg - 7deg),
+            rgba(255, 255, 255, 0.2) calc(15deg),
+            rgba(255, 255, 255, 0.1) calc(15deg + 7deg),
+            rgba(255, 255, 255, 0) 30deg,
+
+            rgba(255, 255, 255, 0) calc(15deg + 180deg - 50deg),
+            rgba(255, 255, 255, 0.05) calc(15deg + 180deg - 40deg),
+            rgba(255, 255, 255, 0.1) calc(15deg + 180deg - 30deg),
+            rgba(255, 255, 255, 0.125) calc(15deg + 180deg - 20deg),
+            rgba(255, 255, 255, 0.15) calc(15deg + 180deg - 10deg),
+            rgba(255, 255, 255, 0.175) calc(15deg + 180deg),
+            rgba(255, 255, 255, 0.15) calc(15deg + 180deg + 10deg),
+            rgba(255, 255, 255, 0.125) calc(15deg + 180deg + 20deg),
+            rgba(255, 255, 255, 0.1) calc(15deg + 180deg + 30deg),
+            rgba(255, 255, 255, 0.05) calc(15deg + 180deg + 40deg),
+            rgba(255, 255, 255, 0) calc(15deg + 180deg + 50deg),
+
+            transparent 360deg
+          );
+        }
+
+        &:before {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+html[data-scheme="light"] {
+  [data-element="rymstats-track-item"] {
+    [data-element="rymstats-track-artbox"] {
+      a::before {
+        background-color: rgba(255, 255, 255, 0.95);
+        outline-color: rgba(0, 0, 0, 0.5);
+      }
+    }
+  }
+}
+
 #profile_play_history_container {
   position: relative;
+}
+
+@property --track-panel-gradient-stripe-width {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 40px;
+}
+
+@property --track-panel-gradient-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 90deg;
+}
+
+@keyframes track-panel-rotate-gradient {
+  0% {
+    /* --track-panel-gradient-angle: -45deg; */
+    --track-panel-gradient-stripe-width: 40px;
+  }
+  25% {
+    /* --track-panel-gradient-angle: -30deg; */
+    --track-panel-gradient-stripe-width: 20px;
+  }
+  50% {
+    /* --track-panel-gradient-angle: -45deg; */
+    --track-panel-gradient-stripe-width: 40px;
+  }
+  75% {
+    /* --track-panel-gradient-angle: -60deg; */
+    --track-panel-gradient-stripe-width: 60px;
+  }
+  100% {
+    /* --track-panel-gradient-angle: -45deg; */
+    --track-panel-gradient-stripe-width: 40px;
+  }
 }
 
 [data-element="rymstats-track-panel"] {
@@ -70,29 +297,27 @@
     inset: 0;
     z-index: 1;
 
-    --stripe-width: 40px;
+    --track-panel-gradient-stripe-width: 40px;
+    --track-panel-gradient-angle: -45deg;
 
     background-image: repeating-linear-gradient(
-      -45deg,
+      var(--track-panel-gradient-angle),
       var(--clr-palette-vibrant) 0px,
-      var(--clr-palette-vibrant) calc(var(--stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--stripe-width) * 6)
+      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6)
     );
-
-    background-position: 0% 50%;
-
+    /* animation: track-panel-rotate-gradient 5s linear infinite; */
+    background-position: center center;
     opacity: 0.1;
-
-    animation: gradient-shift 5s linear infinite;
   }
 
   & > * {
@@ -109,15 +334,15 @@
 }
 
 html[data-scheme="light"] {
-  .profile_listening_container.is-play-history {
-    --bg-color: var(--clr-light-bg);
+  [data-element="rymstats-track-panel"] {
+    /* --bg-color: var(--clr-light-bg); */
     border-color: var(--clr-light-accent);
   }
 }
 
 html[data-scheme="dark"] {
-  .profile_listening_container.is-play-history {
-    --bg-color: var(--clr-dark-bg);
+  [data-element="rymstats-track-panel"] {
+    /* --bg-color: var(--clr-dark-bg); */
     border-color: var(--clr-dark-accent);
   }
 }
@@ -288,7 +513,11 @@ html[data-scheme="dark"] {
   .track-date {
     text-align: right;
 
-    img { margin-right: 0.5em; }
+    svg {
+      margin-right: 0.5em;
+      width: 12px;
+      height: 12px;
+    }
   }
 
   .track-image a { background: var(--color); }

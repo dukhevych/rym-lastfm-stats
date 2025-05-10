@@ -4,7 +4,6 @@ import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
 
-// import starSvg from '@/assets/icons/star.svg?raw';
 import lockSvg from '@/assets/icons/lock.svg?raw';
 import unlockSvg from '@/assets/icons/unlock.svg?raw';
 
@@ -17,8 +16,7 @@ const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_containe
 const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
 
-const gif = document.createElement('img');
-gif.src = 'https://www.last.fm/static/images/icons/now_playing_grey_12.b4158f8790d0.gif';
+let volumeIcon;
 
 let config = null;
 
@@ -43,26 +41,31 @@ const PLAY_HISTORY_ITEM_CLASSES = {
 function createPlayHistoryItem() {
   const item = document.createElement('div');
   item.className = PLAY_HISTORY_ITEM_CLASSES.item;
+  item.dataset.element = 'rymstats-track-item';
+
   item.classList.add('is-custom');
-  item.classList.add('is-play-history');
 
   const artbox = document.createElement('div');
   artbox.className = PLAY_HISTORY_ITEM_CLASSES.artbox;
+  artbox.dataset.element = 'rymstats-track-artbox';
 
   const artLink = document.createElement('a');
 
   const img = document.createElement('img');
   img.className = PLAY_HISTORY_ITEM_CLASSES.itemArt;
+  img.dataset.element = 'rymstats-track-item-art';
 
   artLink.appendChild(img);
   artbox.appendChild(artLink);
 
   const infobox = document.createElement('div');
   infobox.className = PLAY_HISTORY_ITEM_CLASSES.infobox;
+  infobox.dataset.element = 'rymstats-track-infobox';
 
-  // 1
   const customMyRating = document.createElement('div');
   customMyRating.className = PLAY_HISTORY_ITEM_CLASSES.customMyRating;
+  customMyRating.dataset.element = 'rymstats-track-rating';
+
   const starIcon = utils.createSvgUse('svg-star-symbol');
   for (let i = 0; i < 5; i++) {
     customMyRating.appendChild(starIcon.cloneNode(true));
@@ -70,25 +73,30 @@ function createPlayHistoryItem() {
 
   const itemDate = document.createElement('div');
   itemDate.className = PLAY_HISTORY_ITEM_CLASSES.itemDate;
+  itemDate.dataset.element = 'rymstats-track-item-date';
 
   const statusSpan = document.createElement('span');
 
-  const volumeIcon = utils.createSvgUse('svg-volume-symbol', '0 0 40 40');
+  volumeIcon = utils.createSvgUse('svg-volume-symbol', '0 0 40 40');
 
   itemDate.appendChild(statusSpan);
-  itemDate.appendChild(volumeIcon);
+  itemDate.appendChild(volumeIcon.cloneNode(true));
 
   const infoboxLower = document.createElement('div');
   infoboxLower.className = PLAY_HISTORY_ITEM_CLASSES.infoboxLower;
+  infoboxLower.dataset.element = 'rymstats-track-infobox-lower';
 
   const release = document.createElement('div');
   release.className = PLAY_HISTORY_ITEM_CLASSES.release;
+  release.dataset.element = 'rymstats-track-release';
 
   const artistSpan = document.createElement('span');
   artistSpan.className = PLAY_HISTORY_ITEM_CLASSES.artistSpan;
+  artistSpan.dataset.element = 'rymstats-track-artist';
 
   const artistLink = document.createElement('a');
   artistLink.className = PLAY_HISTORY_ITEM_CLASSES.artistLink;
+  artistLink.dataset.element = 'rymstats-track-artist-link';
 
   artistSpan.appendChild(artistLink);
 
@@ -98,10 +106,11 @@ function createPlayHistoryItem() {
 
   const trackLink = document.createElement('a');
   trackLink.className = PLAY_HISTORY_ITEM_CLASSES.trackLink;
+  trackLink.dataset.element = 'rymstats-track-link';
 
-  // 2
   const customFromAlbum = document.createElement('div');
   customFromAlbum.className = PLAY_HISTORY_ITEM_CLASSES.customFromAlbum;
+  customFromAlbum.dataset.element = 'rymstats-from-album';
 
   release.appendChild(artistSpan);
   release.appendChild(separator);
@@ -262,7 +271,6 @@ function prepareRecentTracksUI() {
   const panelContainer = document.querySelector('.profile_listening_container');
 
   panelContainer.dataset['element'] = 'rymstats-track-panel';
-  panelContainer.classList.add('is-play-history');
 
   if (config.recentTracksReplace) {
     const setToBtn = panelContainer.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
@@ -396,7 +404,7 @@ function createTrackDate(track) {
   date.classList.add('track-date');
   if (track.c) {
     date.textContent = 'Scrobbling now';
-    const icon = gif.cloneNode();
+    const icon = volumeIcon.cloneNode(true);
     date.prepend(icon);
   } else {
     date.textContent = formatDistanceToNow(new Date(track.d * 1000), {
@@ -412,198 +420,6 @@ function insertRecentTracksWrapperIntoDOM(tracksWrapper) {
     '.profile_listening_container',
   );
   listeningContainer.insertAdjacentElement('afterend', tracksWrapper);
-}
-
-function addRecentTracksStyles() {
-  const style = document.createElement('style');
-  style.textContent = /* css */ `
-    .${PLAY_HISTORY_ITEM_CLASSES.item}.is-custom {
-      padding-top: 0;
-      left: -9999px;
-      right: -9999px;
-      position: relative;
-      align-items: center;
-      opacity: 0;
-      transform: translateX(-20px);
-      transition: all .15s ease-in-out;
-      transition-property: opacity, transform;
-
-      &.is-loaded {
-        left: auto;
-        right: auto;
-        opacity: 1;
-        transform: translateX(0);
-      }
-
-      & + .loader {
-        position: absolute;
-        top: 50%;
-        left: 15px;
-        transform: translateY(-50%);
-        width: 45px;
-        height: 45px;
-        color: var(--clr-lastfm);
-      }
-
-      &.is-loaded + .loader {
-        display: none;
-      }
-
-      .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
-        max-width: none;
-
-        a {
-          position: relative;
-
-          &:before {
-            content: '';
-            position: absolute;
-            z-index: 1;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 33%;
-            height: 33%;
-            border-radius: 50%;
-            margin: auto;
-            background-color: color-mix(in lab, var(--clr-dark-accent), transparent 40%);
-            outline: 2px solid color-mix(in lab, var(--clr-dark-accent), white 10%);
-            outline-offset: -2px;
-            opacity: 0;
-            z-index: 100;
-            transition: opacity .15s ease-in-out, transform .15s ease-in-out;
-          }
-        }
-      }
-      .${PLAY_HISTORY_ITEM_CLASSES.infobox} {
-        padding: 0;
-        overflow: visible;
-      }
-      .${PLAY_HISTORY_ITEM_CLASSES.itemDate} {
-        color: var(--clr-accent);
-        &:before {
-          content: attr(data-label);
-        }
-        svg {
-          display: none;
-          width: 12px;
-          height: 12px;
-          opacity: 1;
-          margin-left: 1rem;
-        }
-      }
-      .${PLAY_HISTORY_ITEM_CLASSES.itemArt} {
-        display: block;
-        width: 145px;
-        height: 145px;
-        max-width: none;
-      }
-
-      .${PLAY_HISTORY_ITEM_CLASSES.customMyRating} {
-        font-size: 0.8em;
-        width: fit-content;
-        margin-bottom: 1.5em;
-        visibility: hidden;
-
-        display: flex;
-        gap: 1px;
-        align-items: center;
-
-        svg {
-          color: color-mix(in lab, currentColor, transparent 50%);
-          fill: var(--clr-dark-accent);
-          width: 2em;
-          height: 2em;
-        }
-      }
-
-      .${PLAY_HISTORY_ITEM_CLASSES.customFromAlbum} {
-        font-size: 0.8em;
-        width: fit-content;
-        margin-top: 1.5em;
-
-        a {
-          font-weight: bold;
-
-          &:hover {
-            text-decoration: underline;
-          }
-        }
-      }
-
-      &.is-now-playing {
-        .${PLAY_HISTORY_ITEM_CLASSES.itemDate} svg { display: inline; }
-
-        .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
-          box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
-          border-radius: 50%;
-          position: relative;
-
-          a {
-            mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="9" fill="black"/></svg>');
-            mask-repeat: no-repeat;
-            mask-size: 100% 100%;
-            mask-mode: luminance;
-
-            img {
-              animation: rotate 9s linear infinite;
-              border-radius: 50%;
-              outline: 4px solid color-mix(in lab, var(--clr-dark-accent), transparent 50%);
-              outline-offset: -4px;
-              border: 2px solid color-mix(in lab, var(--clr-dark-accent), white 50%);
-            }
-
-            &:after {
-              content: '';
-              border-radius: 50%;
-              position: absolute;
-              inset: 4px;
-              background: conic-gradient(
-                from 30deg,
-                rgba(255, 255, 255, 0) 0deg,
-                rgba(255, 255, 255, 0.1) calc(15deg - 7deg),
-                rgba(255, 255, 255, 0.2) calc(15deg),
-                rgba(255, 255, 255, 0.1) calc(15deg + 7deg),
-                rgba(255, 255, 255, 0) 30deg,
-
-                rgba(255, 255, 255, 0) calc(15deg + 180deg - 50deg),
-                rgba(255, 255, 255, 0.05) calc(15deg + 180deg - 40deg),
-                rgba(255, 255, 255, 0.1) calc(15deg + 180deg - 30deg),
-                rgba(255, 255, 255, 0.125) calc(15deg + 180deg - 20deg),
-                rgba(255, 255, 255, 0.15) calc(15deg + 180deg - 10deg),
-                rgba(255, 255, 255, 0.175) calc(15deg + 180deg),
-                rgba(255, 255, 255, 0.15) calc(15deg + 180deg + 10deg),
-                rgba(255, 255, 255, 0.125) calc(15deg + 180deg + 20deg),
-                rgba(255, 255, 255, 0.1) calc(15deg + 180deg + 30deg),
-                rgba(255, 255, 255, 0.05) calc(15deg + 180deg + 40deg),
-                rgba(255, 255, 255, 0) calc(15deg + 180deg + 50deg),
-
-                transparent 360deg
-              );
-            }
-
-            &:before {
-              opacity: 1;
-            }
-          }
-        }
-      }
-    }
-
-    html[data-scheme="light"] {
-      .${PLAY_HISTORY_ITEM_CLASSES.item}.is-custom {
-        .${PLAY_HISTORY_ITEM_CLASSES.artbox} {
-          a::before {
-            background-color: rgba(255, 255, 255, 0.95);
-            outline-color: rgba(0, 0, 0, 0.5);
-          }
-        }
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
 }
 
 async function render(_config, _userName) {
@@ -631,8 +447,6 @@ async function render(_config, _userName) {
     console.log('No Last.fm username found. Recent Tracks can\'t be displayed.');
     return;
   }
-
-  addRecentTracksStyles();
 
   const {
     button,
