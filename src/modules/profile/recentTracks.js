@@ -43,8 +43,6 @@ function createPlayHistoryItem() {
   item.className = PLAY_HISTORY_ITEM_CLASSES.item;
   item.dataset.element = 'rymstats-track-item';
 
-  item.classList.add('is-custom');
-
   const artbox = document.createElement('div');
   artbox.className = PLAY_HISTORY_ITEM_CLASSES.artbox;
   artbox.dataset.element = 'rymstats-track-artbox';
@@ -66,10 +64,10 @@ function createPlayHistoryItem() {
   customMyRating.className = PLAY_HISTORY_ITEM_CLASSES.customMyRating;
   customMyRating.dataset.element = 'rymstats-track-rating';
 
-  const starIcon = utils.createSvgUse('svg-star-symbol');
-  for (let i = 0; i < 5; i++) {
-    customMyRating.appendChild(starIcon.cloneNode(true));
-  }
+  // const starIcon = utils.createSvgUse('svg-star-symbol');
+  // for (let i = 0; i < 5; i++) {
+  //   customMyRating.appendChild(starIcon.cloneNode(true));
+  // }
 
   const itemDate = document.createElement('div');
   itemDate.className = PLAY_HISTORY_ITEM_CLASSES.itemDate;
