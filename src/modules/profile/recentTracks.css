@@ -181,7 +181,6 @@
     }
 
     [data-element="rymstats-track-artbox"] {
-      box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
       border-radius: 50%;
       position: relative;
 
@@ -196,7 +195,8 @@
           border-radius: 50%;
           outline: 4px solid color-mix(in lab, var(--clr-dark-accent), transparent 50%);
           outline-offset: -4px;
-          border: 2px solid color-mix(in lab, var(--clr-dark-accent), white 50%);
+          border-width: 2px;
+          border-style: solid;
         }
 
         &:after {
@@ -234,12 +234,37 @@
   }
 }
 
+html[data-scheme="dark"] {
+  [data-element="rymstats-track-item"] {
+    &.is-now-playing {
+      [data-element="rymstats-track-artbox"] {
+        box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
+      }
+
+      [data-element="rymstats-track-artbox"] {
+        a {
+          img {
+            border-color: color-mix(in lab, var(--clr-dark-accent), white 50%);
+          }
+        }
+      }
+    }
+  }
+}
+
 html[data-scheme="light"] {
   [data-element="rymstats-track-item"] {
-    [data-element="rymstats-track-artbox"] {
-      a::before {
-        background-color: rgba(255, 255, 255, 0.95);
-        outline-color: rgba(0, 0, 0, 0.5);
+    &.is-now-playing {
+      [data-element="rymstats-track-artbox"] {
+        box-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
+      }
+
+      [data-element="rymstats-track-artbox"] {
+        a {
+          img {
+            border-color: color-mix(in lab, var(--clr-light-accent), black 50%);
+          }
+        }
       }
     }
   }
