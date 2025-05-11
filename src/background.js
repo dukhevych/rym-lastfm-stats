@@ -1,6 +1,8 @@
 import * as utils from './helpers/utils.js';
 import * as api from './helpers/api.js';
 
+import './background/fetchImage.js';
+
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 const currentVersion = browserAPI.runtime.getManifest().version;

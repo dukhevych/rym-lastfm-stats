@@ -14,7 +14,8 @@ const SEARCH_TYPES = {
 };
 
 let searchItems;
-let searchItemsMore = [];
+const searchItemsMore = [];
+const searchItemsFiltered = [];
 
 const SEARCH_HEADER_SELECTOR = '.page_search_results h3';
 const SEARCH_ITEMS_SELECTOR = SEARCH_HEADER_SELECTOR + ' ~ table';
@@ -47,25 +48,21 @@ function injectShowAllButton() {
   });
 }
 
-async function render(config) {
-  if (!config) return;
+const validationRules = {
+  a: {
+    name: 'artist',
+    selectors: {
+      artistNameSelector: 'a.searchpage.artist',
+      artistNameLocalizedSelector: 'a.searchpage.artist + span.smallgray',
+      artistAkaSelector: '.subinfo',
+    },
+    validate: function (item, query) {
+      const {
+        artistNameSelector,
+        artistNameLocalizedSelector,
+        artistAkaSelector,
+      } = this.selectors;
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const strict = urlParams.get('strict');
-  const searchType = urlParams.get('searchtype');
-
-  if (strict !== 'true' || !Object.keys(SEARCH_TYPES).includes(searchType)) return;
-
-  const searchTerm = utils.deburr(urlParams.get('searchterm').toLowerCase());
-
-  searchItems = document.querySelectorAll(SEARCH_ITEMS_SELECTOR);
-
-  if (searchType === 'a') {
-    const artistNameSelector = 'a.searchpage.artist';
-    const artistNameLocalizedSelector = 'a.searchpage.artist + span.smallgray';
-    const artistAkaSelector = '.subinfo';
-
-    searchItems.forEach((item) => {
       const artistName = (item.querySelector(artistNameSelector)?.textContent || '')
         .trim()
         .toLowerCase();
@@ -81,30 +78,33 @@ async function render(config) {
         getNodeDirectTextContent(
           item.querySelector(artistAkaSelector),
         ).trim() || '';
-      const akaValues = artistAka
+      const akaValues = utils.deburr(artistAka
         .toLowerCase()
         .trim()
-        .replace(/^a\.k\.a:\s*/, '')
+        .replace(/^a\.k\.a:\s*/, ''))
         .split(', ')
         .map((aka) => aka.trim())
-        .filter(Boolean)
-        .join(', ');
+        .filter(Boolean);
 
-      if (
-        // artistName !== searchTerm &&
-        // artistNameLocalized !== searchTerm &&
-        artistNameDeburred !== searchTerm &&
-        artistNameLocalizedDeburred !== searchTerm &&
-        !utils.deburr(akaValues).includes(searchTerm)
-      ) {
-        searchItemsMore.push(item);
-      }
-    });
-  } else if (searchType === 'l') {
-    const artistNameSelector = 'a.artist';
-    const releaseTitleSelector = 'a.searchpage';
+      return !(
+        artistNameDeburred !== query &&
+        artistNameLocalizedDeburred !== query &&
+        !akaValues.includes(query)
+      );
+    },
+  },
+  l: {
+    name: 'release',
+    selectors: {
+      artistNameSelector: 'a.artist',
+      releaseTitleSelector: 'a.searchpage',
+    },
+    validate: function (item, query) {
+      const {
+        artistNameSelector,
+        releaseTitleSelector,
+      } = this.selectors;
 
-    searchItems.forEach((item) => {
       let artistName = (item.querySelector(artistNameSelector)?.textContent || '')
         .trim()
         .toLowerCase();
@@ -127,56 +127,84 @@ async function render(config) {
       const releaseTitleDeburred = utils
         .deburr(item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '');
 
-      let query = utils.deburr(searchTerm);
+      let _query = utils.deburr(query);
 
       let hasArtist = false;
       let hasReleaseTitle = false;
 
       if (
-        query.includes(artistNameDeburred)
-        || query.includes(artistNameLocalizedDeburred)
+        _query.includes(artistNameDeburred)
+        || _query.includes(artistNameLocalizedDeburred)
       ) {
         hasArtist = true;
-        query = searchTerm.replace(artistNameDeburred, '').trim();
+        _query = query.replace(artistNameDeburred, '').trim();
       }
 
-      if (query.includes(releaseTitleDeburred)) {
+      if (_query.includes(releaseTitleDeburred)) {
         hasReleaseTitle = true;
-        query = searchTerm.replace(releaseTitleDeburred, '').trim();
+        _query = query.replace(releaseTitleDeburred, '').trim();
       }
 
-      if (!hasArtist || !hasReleaseTitle) {
-        searchItemsMore.push(item);
-      }
-    });
-  } else if (searchType === 'z') {
-    const artistNameSelector = '.infobox td:nth-child(2) > span .ui_name_locale';
-    const trackNameSelector = '.infobox td:nth-child(2) > table .ui_name_locale_original';
+      return hasArtist && hasReleaseTitle;
+    },
+  },
+  z: {
+    name: 'song',
+    selectors: {
+      artistNameSelector: '.infobox td:nth-child(2) > span .ui_name_locale',
+      trackNameSelector: '.infobox td:nth-child(2) > table .ui_name_locale_original',
+    },
+    validate: function (item, query) {
+      const {
+        artistNameSelector,
+        trackNameSelector,
+      } = this.selectors;
 
-    searchItems.forEach(item => {
       const artistName = utils.deburr(item.querySelector(artistNameSelector)?.textContent.trim().toLowerCase() || '');
       const trackName = utils.deburr(item.querySelector(trackNameSelector)?.textContent.trim().toLowerCase() || '');
 
-      let query = utils.deburr(searchTerm);
+      let _query = utils.deburr(query);
 
       let hasArtist = false;
       let hasTrackName = false;
 
-      if (query.includes(artistName)) {
+      if (_query.includes(artistName)) {
         hasArtist = true;
-        query = searchTerm.replace(artistName, '').trim();
+        _query = query.replace(artistName, '').trim();
       }
 
-      if (query.includes(trackName)) {
+      if (_query.includes(trackName)) {
         hasTrackName = true;
-        query = searchTerm.replace(trackName, '').trim();
+        _query = query.replace(trackName, '').trim();
       }
 
-      if (!hasArtist || !hasTrackName) {
-        searchItemsMore.push(item);
-      }
-    });
-  }
+      return hasArtist && hasTrackName;
+    },
+  },
+}
+
+async function render(config) {
+  if (!config) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const strict = urlParams.get('strict');
+  const searchType = urlParams.get('searchtype');
+
+  if (strict !== 'true' || !Object.keys(SEARCH_TYPES).includes(searchType)) return;
+
+  const searchTerm = utils.deburr(urlParams.get('searchterm').toLowerCase());
+
+  searchItems = document.querySelectorAll(SEARCH_ITEMS_SELECTOR);
+
+  if (!searchItems.length) return;
+
+  Array.from(searchItems).forEach((item) => {
+    if (validationRules[searchType].validate(item, searchTerm)) {
+      searchItemsFiltered.push(item);
+    } else {
+      searchItemsMore.push(item);
+    }
+  });
 
   const searchMoreLink = document.querySelector('#search_morelink');
 

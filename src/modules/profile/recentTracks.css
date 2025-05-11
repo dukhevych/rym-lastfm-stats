@@ -1,42 +1,694 @@
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes image-shift {
+  0% {
+    transform: translateY(-50%);
+  }
+
+  25% {
+    transform: translateY(-75%);
+  }
+
+  50% {
+    transform: translateY(-50%);
+  }
+
+  75% {
+    transform: translateY(-25%);
+  }
+
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
 :root {
   --clr-lastfm: #f71414;
-  --clr-lastfm-darker: color-mix(in lab, var(--clr-lastfm) 80%, black);
-  --clr-lastfm-lighter: color-mix(in lab, var(--clr-lastfm) 80%, white);
+}
+
+[data-element="rymstats-track-artist-link"],
+[data-element="rymstats-track-link"] {
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+[data-element="rymstats-track-item"] {
+  padding-top: 0;
+  left: -9999px;
+  right: -9999px;
+  position: relative;
+  align-items: center;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all .15s ease-in-out;
+  transition-property: opacity, transform;
+
+  &.is-loaded {
+    left: auto;
+    right: auto;
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  & + .loader {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    width: 45px;
+    height: 45px;
+    color: var(--clr-lastfm);
+  }
+
+  &.is-loaded + .loader {
+    display: none;
+  }
+
+  [data-element="rymstats-track-artbox"] {
+    max-width: none;
+
+    a {
+      position: relative;
+
+      &:before {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 33%;
+        height: 33%;
+        border-radius: 50%;
+        margin: auto;
+        background-color: color-mix(in lab, var(--clr-dark-accent), transparent 40%);
+        outline: 2px solid color-mix(in lab, var(--clr-dark-accent), white 10%);
+        outline-offset: -2px;
+        opacity: 0;
+        z-index: 100;
+        transition: opacity .15s ease-in-out, transform .15s ease-in-out;
+      }
+    }
+  }
+
+  [data-element="rymstats-track-infobox"] {
+    padding: 0;
+    overflow: visible;
+  }
+
+  [data-element="rymstats-track-item-date"] {
+    color: var(--clr-accent);
+
+    &:before {
+      content: attr(data-label);
+    }
+
+    svg {
+      display: none;
+      width: 12px;
+      height: 12px;
+      opacity: 1;
+      margin-left: 1rem;
+    }
+  }
+
+  [data-element="rymstats-track-item-art"] {
+    display: block;
+    width: 145px;
+    height: 145px;
+    max-width: none;
+  }
+
+  [data-element="rymstats-track-rating"] {
+    font-size: 0.8em;
+    width: fit-content;
+    margin-bottom: 1.5em;
+    visibility: hidden;
+
+    display: flex;
+    gap: 1px;
+    align-items: center;
+
+    svg {
+      color: color-mix(in lab, currentColor, transparent 50%);
+      fill: var(--clr-dark-accent);
+      width: 2em;
+      height: 2em;
+    }
+  }
+
+  [data-element="rymstats-from-album"] {
+    font-size: 0.8em;
+    width: fit-content;
+    margin-top: 1.5em;
+
+    a {
+      font-weight: bold;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &.is-now-playing {
+    [data-element="rymstats-track-item-date"] svg {
+      display: inline;
+    }
+
+    [data-element="rymstats-track-artbox"] {
+      border-radius: 50%;
+      position: relative;
+
+      a {
+        mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="white"/><circle cx="50" cy="50" r="9" fill="black"/></svg>');
+        mask-repeat: no-repeat;
+        mask-size: 100% 100%;
+        mask-mode: luminance;
+
+        img {
+          animation: rotate 9s linear infinite;
+          border-radius: 50%;
+          outline: 4px solid color-mix(in lab, var(--clr-dark-accent), transparent 50%);
+          outline-offset: -4px;
+          border-width: 2px;
+          border-style: solid;
+        }
+
+        &:after {
+          content: '';
+          border-radius: 50%;
+          position: absolute;
+          inset: 4px;
+          background: conic-gradient(from 30deg,
+              rgba(255, 255, 255, 0) 0deg,
+              rgba(255, 255, 255, 0.1) calc(15deg - 7deg),
+              rgba(255, 255, 255, 0.2) calc(15deg),
+              rgba(255, 255, 255, 0.1) calc(15deg + 7deg),
+              rgba(255, 255, 255, 0) 30deg,
+
+              rgba(255, 255, 255, 0) calc(15deg + 180deg - 50deg),
+              rgba(255, 255, 255, 0.05) calc(15deg + 180deg - 40deg),
+              rgba(255, 255, 255, 0.1) calc(15deg + 180deg - 30deg),
+              rgba(255, 255, 255, 0.125) calc(15deg + 180deg - 20deg),
+              rgba(255, 255, 255, 0.15) calc(15deg + 180deg - 10deg),
+              rgba(255, 255, 255, 0.175) calc(15deg + 180deg),
+              rgba(255, 255, 255, 0.15) calc(15deg + 180deg + 10deg),
+              rgba(255, 255, 255, 0.125) calc(15deg + 180deg + 20deg),
+              rgba(255, 255, 255, 0.1) calc(15deg + 180deg + 30deg),
+              rgba(255, 255, 255, 0.05) calc(15deg + 180deg + 40deg),
+              rgba(255, 255, 255, 0) calc(15deg + 180deg + 50deg),
+
+              transparent 360deg);
+        }
+
+        &:before {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+html[data-scheme="dark"] {
+  [data-element="rymstats-track-item"] {
+    &.is-now-playing {
+      [data-element="rymstats-track-artbox"] {
+        box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
+      }
+
+      [data-element="rymstats-track-artbox"] {
+        a {
+          img {
+            border-color: color-mix(in lab, var(--clr-dark-accent), white 50%);
+          }
+        }
+      }
+    }
+  }
+}
+
+html[data-scheme="light"] {
+  [data-element="rymstats-track-item"] {
+    &.is-now-playing {
+      [data-element="rymstats-track-artbox"] {
+        box-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
+      }
+
+      [data-element="rymstats-track-artbox"] {
+        a {
+          img {
+            border-color: color-mix(in lab, var(--clr-light-accent), black 50%);
+          }
+        }
+      }
+    }
+  }
 }
 
 #profile_play_history_container {
   position: relative;
 }
 
-.profile_listening_container {
-  padding: 1.25rem;
+@property --track-panel-gradient-stripe-width {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 40px;
+}
+
+@property --track-panel-gradient-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 90deg;
+}
+
+@keyframes track-panel-rotate-gradient {
+  0% {
+    /* --track-panel-gradient-angle: -45deg; */
+    --track-panel-gradient-stripe-width: 40px;
+  }
+
+  25% {
+    /* --track-panel-gradient-angle: -30deg; */
+    --track-panel-gradient-stripe-width: 20px;
+  }
+
+  50% {
+    /* --track-panel-gradient-angle: -45deg; */
+    --track-panel-gradient-stripe-width: 40px;
+  }
+
+  75% {
+    /* --track-panel-gradient-angle: -60deg; */
+    --track-panel-gradient-stripe-width: 60px;
+  }
+
+  100% {
+    /* --track-panel-gradient-angle: -45deg; */
+    --track-panel-gradient-stripe-width: 40px;
+  }
+}
+
+[data-element="rymstats-track-panel"] {
+  padding-right: 1rem;
+  /* background-color: var(--bg-color); */
+  color: color-contrast(var(--bg-color) vs #fff, #000);
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+  position: relative;
+
+  &:before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(4px);
+    opacity: 0.2;
+  }
+
+  &:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+
+    --track-panel-gradient-stripe-width: 40px;
+    --track-panel-gradient-angle: -45deg;
+
+    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
+        var(--clr-palette-vibrant) 0px,
+        var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
+        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
+        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
+        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
+        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
+
+    /* OPTION 2 */
+    /* background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--clr-palette-vibrant) 0,
+        var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 2),
+        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 3)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-lightmuted) 0,
+        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 2),
+        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 3)
+      );
+      background-blend-mode: multiply; */
+
+    /* OPTION 3 */
+    /* background-image: repeating-radial-gradient(
+      circle,
+      var(--clr-palette-vibrant) 0,
+      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6)
+    ); */
+
+    /* OPTION 4 */
+    /* background-image:
+      repeating-linear-gradient(
+        var(--track-panel-gradient-angle),
+        var(--clr-palette-muted) 0,
+        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2)
+      ),
+      repeating-linear-gradient(
+        calc(var(--track-panel-gradient-angle) + 90deg),
+        var(--clr-palette-darkvibrant) 0,
+        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
+        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 2)
+      );
+    background-blend-mode: soft-light; */
+
+    /* OPTION 5 */
+    /* background-image: repeating-linear-gradient(
+      180deg,
+      var(--clr-palette-darkmuted) 0,
+      var(--clr-palette-darkmuted) 1px,
+      transparent 1px,
+      transparent 2px
+    ); */
+
+    /* OPTION 6 */
+    /* background-image:
+      repeating-linear-gradient(
+        45deg,
+        var(--clr-palette-lightmuted) 0,
+        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
+        transparent calc(var(--track-panel-gradient-stripe-width) * 1),
+        transparent calc(var(--track-panel-gradient-stripe-width) * 2)
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        var(--clr-palette-darkmuted) 0,
+        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
+        transparent calc(var(--track-panel-gradient-stripe-width) * 1),
+        transparent calc(var(--track-panel-gradient-stripe-width) * 2)
+      );
+    background-blend-mode: screen; */
+
+    /* Option 7 */
+    /* background-image:
+      repeating-conic-gradient(
+        from 0deg,
+        var(--clr-palette-vibrant) 0deg 30deg,
+        var(--clr-palette-muted) 30deg 60deg,
+        var(--clr-palette-lightvibrant) 60deg 90deg,
+        var(--clr-palette-darkvibrant) 90deg 120deg,
+        var(--clr-palette-lightmuted) 120deg 150deg,
+        var(--clr-palette-darkmuted) 150deg 180deg
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-darkmuted) 0,
+        var(--clr-palette-darkmuted) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    background-blend-mode: difference;
+    background-position: center, 0 2px; */
+
+    /* OPTION 8 */
+    /* background-image:
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-darkmuted) 0px,
+        var(--clr-palette-darkmuted) 1px,
+        transparent 1px,
+        transparent 2px
+      ),
+      repeating-linear-gradient(
+        to right,
+        var(--clr-palette-vibrant) 0,
+        var(--clr-palette-vibrant) 4px,
+        var(--clr-palette-lightvibrant) 4px,
+        var(--clr-palette-lightvibrant) 8px
+      );
+    background-blend-mode: overlay;
+    filter: contrast(200%) brightness(80%); */
+
+    /* OPTION 9 */
+    /* background-image: repeating-linear-gradient(
+      to right,
+      var(--clr-palette-vibrant) 0,
+      var(--clr-palette-vibrant) 3px,
+      var(--clr-palette-muted) 3px,
+      var(--clr-palette-muted) 7px,
+      var(--clr-palette-lightvibrant) 7px,
+      var(--clr-palette-lightvibrant) 12px,
+      var(--clr-palette-darkvibrant) 12px,
+      var(--clr-palette-darkvibrant) 18px,
+      var(--clr-palette-lightmuted) 18px,
+      var(--clr-palette-lightmuted) 25px
+    ); */
+
+    /* OPTION 10 */
+    /* background-image: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      var(--clr-palette-vibrant) 0deg 10deg,
+      var(--clr-palette-darkvibrant) 10deg 20deg,
+      var(--clr-palette-muted) 20deg 30deg,
+      var(--clr-palette-lightmuted) 30deg 40deg,
+      var(--clr-palette-darkmuted) 40deg 50deg,
+      var(--clr-palette-lightvibrant) 50deg 60deg
+    );
+    transform: scale(2) rotate(1deg);
+    mix-blend-mode: exclusion;
+    filter: blur(0.3px) contrast(200%); */
+
+    /* OPTION 11 */
+    /* background-image:
+      repeating-linear-gradient(
+        90deg,
+        var(--clr-palette-vibrant) 0px,
+        var(--clr-palette-vibrant) 3px,
+        var(--clr-palette-darkmuted) 3px,
+        var(--clr-palette-darkmuted) 6px
+      ),
+      repeating-linear-gradient(
+        91deg,
+        var(--clr-palette-lightvibrant) 0px,
+        var(--clr-palette-lightvibrant) 3px,
+        transparent 3px,
+        transparent 6px
+      ),
+      repeating-linear-gradient(
+        89deg,
+        var(--clr-palette-muted) 0px,
+        var(--clr-palette-muted) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+    background-blend-mode: difference;
+    filter: hue-rotate(90deg) brightness(120%); */
+
+
+    /* OPTION 12 */
+    /* background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--clr-palette-muted) 0,
+        var(--clr-palette-muted) 10px,
+        var(--clr-palette-darkmuted) 10px,
+        var(--clr-palette-darkmuted) 20px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-vibrant) 0,
+        var(--clr-palette-vibrant) 10px,
+        var(--clr-palette-lightvibrant) 10px,
+        var(--clr-palette-lightvibrant) 20px
+      );
+    background-blend-mode: multiply; */
+
+    /* OPTION 13 */
+    /* background-image:
+      repeating-linear-gradient(
+        45deg,
+        var(--clr-palette-darkvibrant) 0,
+        var(--clr-palette-darkvibrant) 5px,
+        transparent 5px,
+        transparent 10px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        var(--clr-palette-lightmuted) 0,
+        var(--clr-palette-lightmuted) 5px,
+        transparent 5px,
+        transparent 10px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        var(--clr-palette-muted) 0,
+        var(--clr-palette-muted) 2px,
+        transparent 2px,
+        transparent 6px
+      );
+    background-blend-mode: hard-light; */
+
+    /* OPTION 14 */
+    /* background-image:
+      repeating-linear-gradient(to right,
+        var(--clr-palette-darkvibrant) 0,
+        var(--clr-palette-darkvibrant) 12px,
+        transparent 12px,
+        transparent 16px),
+      repeating-linear-gradient(to bottom,
+        var(--clr-palette-lightvibrant) 0,
+        var(--clr-palette-lightvibrant) 8px,
+        transparent 8px,
+        transparent 12px);
+    background-blend-mode: screen;
+    filter: saturate(150%) brightness(0.9); */
+
+    /* animation: track-panel-rotate-gradient 5s linear infinite; */
+    background-position: center center;
+    opacity: 0.1;
+  }
+
+  & > * {
+    position: relative;
+    z-index: 2;
+  }
+
+
+  a {
+    color: inherit;
+  }
+
+  &.is-now-playing {
+    border-radius: 9999px 0 0 9999px;
+  }
+}
+
+html[data-scheme="light"] {
+  [data-element="rymstats-track-panel"] {
+    /* --bg-color: var(--clr-light-bg); */
+    border-color: var(--clr-light-accent);
+  }
+}
+
+html[data-scheme="dark"] {
+  [data-element="rymstats-track-panel"] {
+    /* --bg-color: var(--clr-dark-bg); */
+    border-color: var(--clr-dark-accent);
+  }
 }
 
 .profile_view_play_history_btn {
-  gap: 2rem;
+  gap: 1rem;
   min-height: 45px;
   align-items: center;
   flex: 1 0 auto;
 }
 
-.btn.btn-lastfm {
-  background-color: var(--clr-lastfm) !important;
-  color: white !important;
+.btn.btn-lastfm,
+.btn.btn-profile {
+  --bg-color: var(--clr-lastfm);
+  --bg-color-hover: color-mix(in lab, var(--bg-color) 90%, white);
+  --bg-color-active: color-mix(in lab, var(--bg-color) 80%, black);
+  --color: #fff;
+  background-color: var(--bg-color) !important;
+  color: var(--color) !important;
   margin-right: 0;
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+  border: 2px solid color-mix(in lab, var(--bg-color) 80%, white);
+
+  &:hover {
+    background-color: var(--bg-color-hover) !important;
+  }
+
+  &:active {
+    background-color: var(--bg-color-active) !important;
+    position: relative;
+    top: 2px;
+  }
+
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 41.15px;
+  padding-block: 0 !important;
+
+  svg {
+    order: -1;
+    width: 1.75em;
+    height: 1.75em;
+  }
 }
 
-
-.btn.btn-lastfm:hover {
-  background-color: var(--clr-lastfm-darker);
+html[data-scheme="light"] {
+  .btn.btn-lastfm,
+  .btn.btn-profile {
+    --bg-color: var(--clr-light-accent);
+    --color: var(--clr-light-accent-contrast);
+    /* --bg-color: #000; */
+    /* text-shadow: 0 0 2px rgba(0, 0, 0, 0.5); */
+  }
 }
 
-.btn.btn-lastfm img {
-  display: none;
-  margin-right: 0.5em;
-}
-
-.btn.btn-lastfm.is-now-playing img {
-  display: inline;
+html[data-scheme="dark"] {
+  .btn.btn-lastfm,
+  .btn.btn-profile {
+    --bg-color: var(--clr-dark-accent);
+    --color: var(--clr-dark-accent-contrast);
+    /* --bg-color: #fff; */
+    /* text-shadow: 0 0 2px rgba(255, 255, 255, 0.5); */
+  }
 }
 
 .lastfm-tracks-wrapper {
@@ -87,7 +739,9 @@
   li {
     display: table-row;
 
-    & + li { border-top: 1px solid; }
+    & + li {
+      border-top: 1px solid;
+    }
 
     & > * {
       display: table-cell;
@@ -141,37 +795,37 @@
   .track-date {
     text-align: right;
 
-    img {
+    svg {
       margin-right: 0.5em;
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  .track-image a {
+    background: var(--color);
+  }
+
+  li {
+    & + li {
+      border-color: var(--color);
+    }
+
+    &.is-now-playing {
+      background: var(--color);
     }
   }
 }
 
 html[data-scheme="light"] {
   .lastfm-tracks-wrapper {
-    .track-image a { background: rgba(0, 0, 0, 0.1); }
-    li {
-      & + li {
-        border-color: rgba(0, 0, 0, 0.1);
-      }
-      &.is-now-playing {
-        background: rgba(0, 0, 0, 0.1);
-      }
-    }
+    --color: rgba(0, 0, 0, 0.1);
   }
 }
 
 html[data-scheme="dark"] {
   .lastfm-tracks-wrapper {
-  .track-image a { background: rgba(255, 255, 255, 0.1); }
-    li {
-      & + li {
-        border-color: rgba(255, 255, 255, 0.1);
-      }
-      &.is-now-playing {
-        background: rgba(255, 255, 255, 0.1);
-      }
-    }
+    --color: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -182,27 +836,36 @@ html[data-scheme="dark"] {
   appearance: none;
   padding: 0;
   margin: 0;
-  margin-right: -1rem;
   cursor: pointer;
   color: currentColor;
   opacity: 0.75;
   padding: 10px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
 
   svg {
     width: 16px;
     height: 16px;
+
     &:first-child {
       display: block;
     }
+
     &:last-child {
       display: none;
     }
   }
+
   &.is-locked {
     svg {
       &:first-child {
         display: none;
       }
+
       &:last-child {
         display: block;
       }
