@@ -5,8 +5,8 @@
   "description": "Display Last.fm stats on RYM pages",
   "permissions": [
     "storage",
-    "tabs",
-    "scripting"
+    "scripting",
+    "identity"
   ],
   "host_permissions": [
     "https://rateyourmusic.com/artist/*",
@@ -15,7 +15,7 @@
     "https://rateyourmusic.com/~*",
     "https://rateyourmusic.com/music_export?sync*",
     "https://ws.audioscrobbler.com/",
-    "https://dukhevych.github.io/lastfm-oauth-redirect/*"
+    "https://www.last.fm/*"
   ],
   "web_accessible_resources": [
     {

@@ -3,7 +3,6 @@ const CopyPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const glob = require('glob');
 const { VueLoaderPlugin } = require('vue-loader');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const { DefinePlugin } = require('webpack');
@@ -24,10 +23,14 @@ const entries = glob.sync('./src/*.js').reduce((acc, file) => {
 
 module.exports = (env) => {
   const browserTarget = env.browser;
+
+  if (!browserTarget) {
+    throw new Error('Missing required env.browser value (e.g., --env browser=chrome)');
+  }
+
   const isLocalDev = env.local === 'true';
   const outputPath = path.resolve(__dirname, `dist/${browserTarget}`);
 
-  // Load environment variables from .env files
   const loadEnv = (envPath) => {
     if (fs.existsSync(envPath)) {
       const envConfig = dotenv.config({ path: envPath });
@@ -37,14 +40,13 @@ module.exports = (env) => {
     return {};
   };
 
-  // Load environment variables in order of precedence
   const envRoot = loadEnv(!isLocalDev ? '.env' : '.env.local');
   const envBrowser = loadEnv(!isLocalDev ? `.env.${browserTarget}` : `.env.${browserTarget}.local`);
 
   const combinedEnv = {
-    ...process.env,     // System environment variables
-    ...envRoot,         // .env variables
-    ...envBrowser,      // .env.[browser] variables
+    ...process.env,
+    ...envRoot,
+    ...envBrowser,
   };
 
   console.log(process.env.NODE_ENV);
@@ -53,10 +55,15 @@ module.exports = (env) => {
   console.log('System api key:', combinedEnv.LASTFM_API_KEY ? '✅' : '❌');
   console.log('System secret key:', combinedEnv.LASTFM_API_SECRET ? '✅' : '❌');
 
-  // Convert to format suitable for DefinePlugin
-  const envKeys = Object.keys(combinedEnv).reduce((prev, next) => {
-    prev[`process.env.${next}`] = JSON.stringify(combinedEnv[next]);
-    return prev;
+  const publicEnvVars = [
+    'LASTFM_API_KEY',
+    'LASTFM_API_SECRET',
+    'NODE_ENV',
+  ];
+
+  const envKeys = publicEnvVars.reduce((acc, key) => {
+    acc[`process.env.${key}`] = JSON.stringify(combinedEnv[key]);
+    return acc;
   }, {});
 
   return {
@@ -70,8 +77,8 @@ module.exports = (env) => {
     cache: {
       type: 'filesystem',
     },
-    devtool: 'source-map',
-    mode: process.env.NODE_ENV || 'production',
+    devtool: process.env.NODE_ENV === 'production' ? false : 'source-map',
+    mode: process.env.NODE_ENV || 'development',
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
@@ -128,9 +135,6 @@ module.exports = (env) => {
         'process.env.BROWSER_TARGET': JSON.stringify(browserTarget),
       }),
       new VueLoaderPlugin(),
-      new MiniCssExtractPlugin({
-        filename: '[name].css',
-      }),
       new CopyPlugin({
         patterns: [
           { from: 'public', to: '.' },
@@ -165,9 +169,9 @@ module.exports = (env) => {
       minimizer: [new TerserPlugin({
         parallel: true,
         terserOptions: {
-          sourceMap: true, // Ensure Terser generates source maps
+          sourceMap: true,
           compress: {
-            drop_console: false, // Keep console logs for debugging if needed
+            drop_console: false,
           },
         },
       })],

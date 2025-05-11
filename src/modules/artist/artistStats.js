@@ -33,7 +33,7 @@ function prepareReleaseStatsUI() {
 }
 
 function populateArtistStats(
-  { playcount, listeners, userplaycount, url, urlOriginal, artistName, artistNameLocalized },
+  { playcount, listeners, userplaycount, url, urlOriginal, artistName, artistNameLocalized, error },
   timestamp,
 ) {
   const infoBlock = document.querySelector(ARTIST_CONTAINER_SELECTOR);
@@ -49,6 +49,11 @@ function populateArtistStats(
 
     const content = infoBlock.querySelector('#lastfm_data');
     content.textContent = '';
+
+    if (error) {
+      content.textContent = error;
+      return;
+    }
 
     const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
 
@@ -76,8 +81,12 @@ function populateArtistStats(
           )
         : null;
 
-    const link = utils.createLink(url, 'View on Last.fm');
-    link.title = `View ${artistNameLocalized} on Last.fm`;
+    let link = null;
+
+    if (url) {
+      link = utils.createLink(url, 'View on Last.fm');
+      link.title = `View ${artistNameLocalized} on Last.fm`;
+    }
 
     let link2 = null;
 
@@ -164,26 +173,34 @@ async function render(config) {
   let listeners = 0;
   let userplaycount;
 
-  playcount += +data1.artist.stats.playcount;
-  listeners += +data1.artist.stats.listeners;
+  if (data1 && !data1.error) {
+    playcount += +data1.artist.stats.playcount;
+    listeners += +data1.artist.stats.listeners;
 
-  if (data1.artist.stats.userplaycount) {
-    userplaycount = 0;
-    userplaycount += +data1.artist.stats.userplaycount;
-  }
-
-  if (data2 && data2.artist) {
-    playcount += +data2.artist.stats.playcount;
-    listeners += +data2.artist.stats.listeners;
-
-    if (data2.artist.stats.userplaycount) {
-      userplaycount = userplaycount || 0;
-      userplaycount += +data2.artist.stats.userplaycount;
+    if (data1.artist.stats.userplaycount) {
+      userplaycount = 0;
+      userplaycount += +data1.artist.stats.userplaycount;
     }
   }
 
-  const { url } = data1.artist;
-  const { url: urlOriginal = null } = data2?.artist || {};
+  if (data2 && !data2.error) {
+    if (data2.artist) {
+      playcount += +data2.artist.stats.playcount;
+      listeners += +data2.artist.stats.listeners;
+
+      if (data2.artist.stats.userplaycount) {
+        userplaycount = userplaycount || 0;
+        userplaycount += +data2.artist.stats.userplaycount;
+      }
+    }
+  }
+
+  let url = !data1.error ? data1.artist.url : null;
+  let urlOriginal = null;
+
+  if (data2) {
+    urlOriginal = !data2.error ? data2.artist.url : urlOriginal;
+  }
 
   const stats = {
     playcount,
@@ -193,6 +210,7 @@ async function render(config) {
     urlOriginal,
     artistName,
     artistNameLocalized,
+    error: data1?.error ?? data2?.error,
   };
 
   if (!config.lastfmApiKey) {

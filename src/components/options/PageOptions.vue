@@ -14,7 +14,10 @@
         <h1 class="relative cursor-default select-none text-2xl font-bold">
           <span
             class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
-          >{{ appVersion }}</span>
+          >
+            {{ appVersion }}
+            <template v-if="constants.isDev">DEV</template>
+          </span>
           <span class="text-red-600">RYM Last.fm Stats</span>
         </h1>
       </div>
@@ -606,7 +609,7 @@ const submit = async () => {
     }
   });
 
-  await browserAPI.storage.sync.set(newConfig);
+  await utils.storageSet(newConfig);
 
   config.value = newConfig;
   saved.value = true;
@@ -628,7 +631,7 @@ const reset = async () => {
   await submit();
 };
 
-const openAuthPage = () => {
+const openAuthPage = async () => {
   if (!SYSTEM_API_KEY) {
     alert('API Key is not set');
     return;
@@ -636,29 +639,46 @@ const openAuthPage = () => {
 
   signinInProgress.value = true;
 
-  browserAPI.windows.create({
-    url: `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&source=rym-lastfm-stats`,
-    type: 'popup',
-    width: 500,
-    height: 600,
-  });
+  try {
+    const redirectUri = browserAPI.identity.getRedirectURL();
 
-  browserAPI.runtime.onMessage.addListener((message) => {
-    if (message.type === `${constants.APP_NAME_SLUG}:lastfm_auth`) {
-      api.fetchUserData(message.value, SYSTEM_API_KEY).then((data) => {
-        const normalizedData = {
-          name: data.name,
-          url: data.url,
-          image: data.image[0]?.['#text'],
-        };
-        userData.value = normalizedData;
-        browserAPI.storage.sync.set({
-          userData: normalizedData,
-        });
-        signinInProgress.value = false;
-      });
+    const authUrl = `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&cb=${encodeURIComponent(redirectUri)}`;
+
+    const redirectUrl = await browserAPI.identity.launchWebAuthFlow({
+      url: authUrl,
+      interactive: true
+    });
+
+    const finalUrl = new URL(redirectUrl);
+    const token = finalUrl.searchParams.get("token");
+
+    if (!token) {
+      throw new Error('No token returned');
     }
-  });
+
+    const sessionKey = await utils.fetchSessionKey(token);
+    if (!sessionKey) throw new Error('Invalid session key');
+
+    const data = await api.fetchUserData(sessionKey, SYSTEM_API_KEY);
+
+    const normalizedData = {
+      name: data.name,
+      url: data.url,
+      image: data.image[0]?.['#text'],
+    };
+
+    userData.value = normalizedData;
+
+    await utils.storageSet({
+      userData: normalizedData,
+      lastfmSession: sessionKey,
+    });
+
+    signinInProgress.value = false;
+  } catch (err) {
+    console.error('Auth failed:', err);
+    signinInProgress.value = false;
+  }
 };
 
 const closeModalHandler = (e) => {
@@ -755,6 +775,7 @@ init();
   transform: translateY(100%);
 }
 
+/* fix for Chrome default extension font style */
 body {
   font-size: inherit;
   font-family: inherit;

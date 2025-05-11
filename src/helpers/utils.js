@@ -1,5 +1,10 @@
+import { Vibrant } from "node-vibrant/browser";
+import { MD5 } from '@/libs/crypto-js.min.js';
 import { remove as removeDiacritics } from 'diacritics';
 import * as constants from './constants.js';
+
+const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
+const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
@@ -298,20 +303,25 @@ export const getFullConfig = async () => {
 }
 
 import svgLoader from '@/assets/icons/loader.svg?raw';
+import starSvg from '@/assets/icons/star4.svg?raw';
+import lastfmSvg from '@/assets/icons/lastfm.svg?raw';
+import playlistSvg from '@/assets/icons/playlist.svg?raw';
+import volumeSvg from '@/assets/icons/volume.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 let svgSprite = null;
 
 export const createSVGSprite = function() {
-  const loader = document.createElement('div');
-  loader.classList.add('loader');
-
   svgSprite = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svgSprite.setAttribute('id', svgSpriteId);
   svgSprite.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   svgSprite.setAttribute('style', 'display:none;');
 
   addIconToSVGSprite(svgLoader, 'svg-loader-symbol');
+  addIconToSVGSprite(starSvg, 'svg-star-symbol');
+  addIconToSVGSprite(lastfmSvg, 'svg-lastfm-symbol');
+  addIconToSVGSprite(playlistSvg, 'svg-playlist-symbol');
+  addIconToSVGSprite(volumeSvg, 'svg-volume-symbol');
 
   return svgSprite;
 }
@@ -365,7 +375,7 @@ export const addIconToSVGSprite = function(iconRaw, iconName) {
   svgSprite.appendChild(symbolElement);
 }
 
-export const createSvgUse = function(iconName, viewBox) {
+export const createSvgUse = function(iconName, viewBox = '0 0 24 24') {
   const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   wrapper.setAttribute('viewBox', viewBox);
   const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
@@ -454,3 +464,137 @@ export function getAndWatchObjectField(propName, fieldName, onChange) {
   });
 }
 
+export async function getImageColors(imageUrl, theme = 'light') {
+  const dataUrl = await new Promise((resolve, reject) => {
+    browserAPI.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl }, (response) => {
+      if (!response?.success) {
+        return reject(new Error(response?.error || 'Failed to fetch image'));
+      }
+      resolve(response.dataUrl);
+    });
+  });
+
+  const v = new Vibrant(dataUrl);
+
+  const palette = await v.getPalette();
+
+  return getVibrantUiColors(palette, theme);
+}
+
+export function getContrastingColor(hexColor, darkColor = '#000', lightColor = '#fff') {
+  if (!/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(hexColor)) {
+    throw new Error('Invalid hex color format');
+  }
+
+  const hex = hexColor.slice(1);
+  const parseHex = (hex) => parseInt(hex.length === 1 ? hex + hex : hex, 16);
+
+  const r = parseHex(hex.length === 3 ? hex[0] : hex.substring(0, 2));
+  const g = parseHex(hex.length === 3 ? hex[1] : hex.substring(2, 4));
+  const b = parseHex(hex.length === 3 ? hex[2] : hex.substring(4, 6));
+
+  const relativeLuminance = (r, g, b) => {
+    const [R, G, B] = [r, g, b].map((c) => {
+      c /= 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  };
+
+  return relativeLuminance(r, g, b) > 0.179 ? darkColor : lightColor;
+}
+
+export async function getVibrantUiColors(palette) {
+  const lightColors = {
+    bgColor: (palette.LightMuted || palette.Muted || palette.LightVibrant)?.hex || '#222',
+    accentColor: (palette.Vibrant || palette.DarkVibrant)?.hex || '#ff4081',
+  };
+
+  const darkColors = {
+    bgColor: (palette.DarkMuted || palette.Muted || palette.DarkVibrant)?.hex || '#222',
+    accentColor: (palette.Vibrant || palette.LightVibrant)?.hex || '#ff4081',
+  };
+
+  return {
+    light: {
+      ...lightColors,
+      get bgColorContrast() {
+        return getContrastingColor(this.bgColor);
+      },
+      get accentColorContrast() {
+        return getContrastingColor(this.accentColor);
+      },
+    },
+    dark: {
+      ...darkColors,
+      get bgColorContrast() {
+        return getContrastingColor(this.bgColor);
+      },
+      get accentColorContrast() {
+        return getContrastingColor(this.accentColor);
+      },
+    },
+    palette,
+  };
+}
+
+export async function fetchSessionKey(token) {
+  let apiSig;
+
+  try {
+    apiSig = generateApiSig({
+      method: 'auth.getSession',
+      api_key: SYSTEM_API_KEY,
+      token: token,
+    });
+  } catch (error) {
+    console.error('Error generating API signature:', error);
+    return null;
+  }
+
+  const _params = {
+    method: 'auth.getSession',
+    api_key: SYSTEM_API_KEY,
+    token: token,
+    api_sig: apiSig,
+    format: 'json',
+  };
+
+  const params = new URLSearchParams(_params);
+
+  const url = `https://ws.audioscrobbler.com/2.0/?${params.toString()}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`HTTP error! Status: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    const data = await response.json();
+    if (data.session) {
+      return data.session.key;
+    } else {
+      console.error('Failed to get session:', data);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching session key:', error);
+    return null;
+  }
+};
+
+const generateApiSig = (params) => {
+  const sortedKeys = Object.keys(params).sort();
+  let stringToSign = '';
+
+  sortedKeys.forEach((key) => {
+    stringToSign += key + params[key];
+  });
+
+  stringToSign += SYSTEM_API_SECRET;
+  return generateMd5(stringToSign);
+};
+
+function generateMd5(string) {
+  return MD5(string).toString();
+}
