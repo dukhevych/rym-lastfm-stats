@@ -1,4 +1,3 @@
-import { MD5 } from '@/libs/crypto-js.min.js';
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 import * as constants from '@/helpers/constants.js';
