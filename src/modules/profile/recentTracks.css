@@ -112,6 +112,11 @@
         z-index: 100;
         transition: opacity .15s ease-in-out, transform .15s ease-in-out;
       }
+
+      img {
+        outline: 2px solid color-mix(in lab, var(--clr-dark-accent), transparent 50%);
+        outline-offset: -2px;
+      }
     }
   }
 
@@ -236,11 +241,11 @@
 
 html[data-scheme="dark"] {
   [data-element="rymstats-track-item"] {
-    &.is-now-playing {
-      [data-element="rymstats-track-artbox"] {
-        box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
-      }
+    [data-element="rymstats-track-artbox"] {
+      box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.75);
+    }
 
+    &.is-now-playing {
       [data-element="rymstats-track-artbox"] {
         a {
           img {
@@ -254,11 +259,11 @@ html[data-scheme="dark"] {
 
 html[data-scheme="light"] {
   [data-element="rymstats-track-item"] {
-    &.is-now-playing {
-      [data-element="rymstats-track-artbox"] {
-        box-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
-      }
+    [data-element="rymstats-track-artbox"] {
+      box-shadow: 0 0 0.5em rgba(255, 255, 255, 0.75);
+    }
 
+    &.is-now-playing {
       [data-element="rymstats-track-artbox"] {
         a {
           img {
