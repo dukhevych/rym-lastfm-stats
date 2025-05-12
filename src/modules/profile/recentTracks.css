@@ -152,15 +152,35 @@
     font-size: 0.8em;
     width: fit-content;
     margin-bottom: 1.5em;
-    visibility: hidden;
+    /* visibility: hidden; */
 
     display: flex;
     gap: 1px;
     align-items: center;
 
+    [data-element="rymstats-track-rating-stars"] {
+      position: relative;
+    }
+    .stars-filled {
+      position: absolute;
+      overflow: hidden;
+      white-space: nowrap;
+      inset: 0;
+
+      svg {
+        color: color-mix(in lab, currentColor, transparent 50%);
+        fill: var(--clr-dark-accent);
+      }
+    }
+
+    .stars-empty {
+      svg {
+        color: color-mix(in lab, currentColor, transparent 50%);
+        fill: transparent;
+      }
+    }
+
     svg {
-      color: color-mix(in lab, currentColor, transparent 50%);
-      fill: var(--clr-dark-accent);
       width: 2em;
       height: 2em;
     }
@@ -346,44 +366,50 @@ html[data-scheme="light"] {
     --track-panel-gradient-stripe-width: 40px;
     --track-panel-gradient-angle: -45deg;
 
+    /* animation: track-panel-rotate-gradient 5s linear infinite; */
+    background-position: center center;
+    opacity: 0.1;
+  }
+
+  &.bg-option-1:after {
     background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
-        var(--clr-palette-vibrant) 0px,
-        var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
-        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
-        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
-        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
-        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
-
-    /* OPTION 2 */
-    /* background-image:
-      repeating-linear-gradient(
-        to right,
-        var(--clr-palette-vibrant) 0,
-        var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 2),
-        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 3)
-      ),
-      repeating-linear-gradient(
-        to bottom,
-        var(--clr-palette-lightmuted) 0,
-        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 2),
-        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 3)
-      );
-      background-blend-mode: multiply; */
-
-    /* OPTION 3 */
-    /* background-image: repeating-radial-gradient(
+      var(--clr-palette-vibrant) 0px,
+      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
+  }
+  &.bg-option-2:after {
+    background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--clr-palette-vibrant) 0,
+      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 3)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--clr-palette-lightmuted) 0,
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 3)
+    );
+    background-blend-mode: multiply;
+  }
+  &.bg-option-3:after {
+    background-image: repeating-radial-gradient(
       circle,
       var(--clr-palette-vibrant) 0,
       var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
@@ -397,10 +423,10 @@ html[data-scheme="light"] {
       var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
       var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
       var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6)
-    ); */
-
-    /* OPTION 4 */
-    /* background-image:
+    );
+  }
+  &.bg-option-4:after {
+    background-image:
       repeating-linear-gradient(
         var(--track-panel-gradient-angle),
         var(--clr-palette-muted) 0,
@@ -415,77 +441,77 @@ html[data-scheme="light"] {
         var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
         var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 2)
       );
-    background-blend-mode: soft-light; */
-
-    /* OPTION 5 */
-    /* background-image: repeating-linear-gradient(
+    background-blend-mode: soft-light;
+  }
+  &.bg-option-5:after {
+    background-image: repeating-linear-gradient(
       180deg,
       var(--clr-palette-darkmuted) 0,
       var(--clr-palette-darkmuted) 1px,
       transparent 1px,
       transparent 2px
-    ); */
-
-    /* OPTION 6 */
-    /* background-image:
-      repeating-linear-gradient(
-        45deg,
-        var(--clr-palette-lightmuted) 0,
-        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
-        transparent calc(var(--track-panel-gradient-stripe-width) * 1),
-        transparent calc(var(--track-panel-gradient-stripe-width) * 2)
-      ),
-      repeating-linear-gradient(
-        -45deg,
-        var(--clr-palette-darkmuted) 0,
-        var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
-        transparent calc(var(--track-panel-gradient-stripe-width) * 1),
-        transparent calc(var(--track-panel-gradient-stripe-width) * 2)
-      );
-    background-blend-mode: screen; */
-
-    /* Option 7 */
-    /* background-image:
-      repeating-conic-gradient(
-        from 0deg,
-        var(--clr-palette-vibrant) 0deg 30deg,
-        var(--clr-palette-muted) 30deg 60deg,
-        var(--clr-palette-lightvibrant) 60deg 90deg,
-        var(--clr-palette-darkvibrant) 90deg 120deg,
-        var(--clr-palette-lightmuted) 120deg 150deg,
-        var(--clr-palette-darkmuted) 150deg 180deg
-      ),
-      repeating-linear-gradient(
-        to bottom,
-        var(--clr-palette-darkmuted) 0,
-        var(--clr-palette-darkmuted) 1px,
-        transparent 1px,
-        transparent 3px
-      );
+    );
+  }
+  &.bg-option-6:after {
+    background-image:
+    repeating-linear-gradient(
+      45deg,
+      var(--clr-palette-lightmuted) 0,
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
+      transparent calc(var(--track-panel-gradient-stripe-width) * 1),
+      transparent calc(var(--track-panel-gradient-stripe-width) * 2)
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      var(--clr-palette-darkmuted) 0,
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
+      transparent calc(var(--track-panel-gradient-stripe-width) * 1),
+      transparent calc(var(--track-panel-gradient-stripe-width) * 2)
+    );
+    background-blend-mode: screen;
+  }
+  &.bg-option-7:after {
+    background-image:
+    repeating-conic-gradient(
+      from 0deg,
+      var(--clr-palette-vibrant) 0deg 30deg,
+      var(--clr-palette-muted) 30deg 60deg,
+      var(--clr-palette-lightvibrant) 60deg 90deg,
+      var(--clr-palette-darkvibrant) 90deg 120deg,
+      var(--clr-palette-lightmuted) 120deg 150deg,
+      var(--clr-palette-darkmuted) 150deg 180deg
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--clr-palette-darkmuted) 0,
+      var(--clr-palette-darkmuted) 1px,
+      transparent 1px,
+      transparent 3px
+    );
     background-blend-mode: difference;
-    background-position: center, 0 2px; */
-
-    /* OPTION 8 */
-    /* background-image:
-      repeating-linear-gradient(
-        to bottom,
-        var(--clr-palette-darkmuted) 0px,
-        var(--clr-palette-darkmuted) 1px,
-        transparent 1px,
-        transparent 2px
-      ),
-      repeating-linear-gradient(
-        to right,
-        var(--clr-palette-vibrant) 0,
-        var(--clr-palette-vibrant) 4px,
-        var(--clr-palette-lightvibrant) 4px,
-        var(--clr-palette-lightvibrant) 8px
-      );
+    background-position: center, 0 2px;
+  }
+  &.bg-option-8:after {
+    background-image:
+    repeating-linear-gradient(
+      to bottom,
+      var(--clr-palette-darkmuted) 0px,
+      var(--clr-palette-darkmuted) 1px,
+      transparent 1px,
+      transparent 2px
+    ),
+    repeating-linear-gradient(
+      to right,
+      var(--clr-palette-vibrant) 0,
+      var(--clr-palette-vibrant) 4px,
+      var(--clr-palette-lightvibrant) 4px,
+      var(--clr-palette-lightvibrant) 8px
+    );
     background-blend-mode: overlay;
-    filter: contrast(200%) brightness(80%); */
-
-    /* OPTION 9 */
-    /* background-image: repeating-linear-gradient(
+    filter: contrast(200%) brightness(80%);
+  }
+  &.bg-option-9:after {
+    background-image: repeating-linear-gradient(
       to right,
       var(--clr-palette-vibrant) 0,
       var(--clr-palette-vibrant) 3px,
@@ -497,10 +523,10 @@ html[data-scheme="light"] {
       var(--clr-palette-darkvibrant) 18px,
       var(--clr-palette-lightmuted) 18px,
       var(--clr-palette-lightmuted) 25px
-    ); */
-
-    /* OPTION 10 */
-    /* background-image: repeating-conic-gradient(
+    );
+  }
+  &.bg-option-10:after {
+    background-image: repeating-conic-gradient(
       from 0deg at 50% 50%,
       var(--clr-palette-vibrant) 0deg 10deg,
       var(--clr-palette-darkvibrant) 10deg 20deg,
@@ -511,10 +537,10 @@ html[data-scheme="light"] {
     );
     transform: scale(2) rotate(1deg);
     mix-blend-mode: exclusion;
-    filter: blur(0.3px) contrast(200%); */
-
-    /* OPTION 11 */
-    /* background-image:
+    filter: blur(0.3px) contrast(200%);
+  }
+  &.bg-option-11:after {
+    background-image:
       repeating-linear-gradient(
         90deg,
         var(--clr-palette-vibrant) 0px,
@@ -537,11 +563,10 @@ html[data-scheme="light"] {
         transparent 4px
       );
     background-blend-mode: difference;
-    filter: hue-rotate(90deg) brightness(120%); */
-
-
-    /* OPTION 12 */
-    /* background-image:
+    filter: hue-rotate(90deg) brightness(120%);
+  }
+  &.bg-option-12:after {
+    background-image:
       repeating-linear-gradient(
         to right,
         var(--clr-palette-muted) 0,
@@ -556,10 +581,10 @@ html[data-scheme="light"] {
         var(--clr-palette-lightvibrant) 10px,
         var(--clr-palette-lightvibrant) 20px
       );
-    background-blend-mode: multiply; */
-
-    /* OPTION 13 */
-    /* background-image:
+    background-blend-mode: multiply;
+  }
+  &.bg-option-13:after {
+    background-image:
       repeating-linear-gradient(
         45deg,
         var(--clr-palette-darkvibrant) 0,
@@ -581,10 +606,10 @@ html[data-scheme="light"] {
         transparent 2px,
         transparent 6px
       );
-    background-blend-mode: hard-light; */
-
-    /* OPTION 14 */
-    /* background-image:
+    background-blend-mode: hard-light;
+  }
+  &.bg-option-14:after {
+    background-image:
       repeating-linear-gradient(to right,
         var(--clr-palette-darkvibrant) 0,
         var(--clr-palette-darkvibrant) 12px,
@@ -596,11 +621,7 @@ html[data-scheme="light"] {
         transparent 8px,
         transparent 12px);
     background-blend-mode: screen;
-    filter: saturate(150%) brightness(0.9); */
-
-    /* animation: track-panel-rotate-gradient 5s linear infinite; */
-    background-position: center center;
-    opacity: 0.1;
+    filter: saturate(150%) brightness(0.9);
   }
 
   & > * {

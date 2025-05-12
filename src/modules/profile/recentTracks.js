@@ -1,4 +1,4 @@
-// import { getRymAlbumByTitle } from '@/helpers/rymSync';
+import { getRymAlbumByTitle } from '@/helpers/rymSync';
 import { formatDistanceToNow } from 'date-fns';
 
 import * as utils from '@/helpers/utils.js';
@@ -65,10 +65,23 @@ function createPlayHistoryItem() {
   customMyRating.className = PLAY_HISTORY_ITEM_CLASSES.customMyRating;
   customMyRating.dataset.element = 'rymstats-track-rating';
 
-  // const starIcon = utils.createSvgUse('svg-star-symbol');
-  // for (let i = 0; i < 5; i++) {
-  //   customMyRating.appendChild(starIcon.cloneNode(true));
-  // }
+  const starsWrapper = document.createElement('div');
+  starsWrapper.dataset.element = 'rymstats-track-rating-stars';
+  const starsFilled = document.createElement('div');
+  starsFilled.className = 'stars-filled';
+  starsFilled.dataset.element = 'rymstats-track-rating-stars-filled';
+  const starsEmpty = document.createElement('div');
+  starsEmpty.className = 'stars-empty';
+  starsEmpty.dataset.element = 'rymstats-track-rating-stars-empty';
+  starsWrapper.appendChild(starsEmpty);
+  starsWrapper.appendChild(starsFilled);
+  customMyRating.appendChild(starsWrapper);
+
+  const starIcon = utils.createSvgUse('svg-star-symbol');
+  for (let i = 0; i < 5; i++) {
+    starsFilled.appendChild(starIcon.cloneNode(true));
+    starsEmpty.appendChild(starIcon.cloneNode(true));
+  }
 
   const itemDate = document.createElement('div');
   itemDate.className = PLAY_HISTORY_ITEM_CLASSES.itemDate;
@@ -127,7 +140,7 @@ function createPlayHistoryItem() {
   return item;
 }
 
-function populatePlayHistoryItem(
+async function populatePlayHistoryItem(
   item,
   {
     artistName,
@@ -205,8 +218,15 @@ function populatePlayHistoryItem(
     }
 
     const customMyRating = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customMyRating}`);
+    const starsFilled = customMyRating.querySelector('.stars-filled');
     if (customMyRating) {
-      // customMyRating.textContent = 'My Rating: TODO';
+      const albumFromDB = await getRymAlbumByTitle(artistName + ' - ' + albumName);
+      if (albumFromDB) {
+        const rating = albumFromDB.rating;
+        starsFilled.style.width = `${rating * 10}%`;
+      } else {
+        starsFilled.style.width = `0%`;
+      }
     }
 
     const customFromAlbum = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customFromAlbum}`);
@@ -268,7 +288,7 @@ function prepareRecentTracksUI() {
   });
 
   const panelContainer = document.querySelector('.profile_listening_container');
-
+  panelContainer.classList.add(`bg-option-${config.recentTracksReplaceBackground}`)
   panelContainer.dataset['element'] = 'rymstats-track-panel';
 
   if (config.recentTracksReplace) {
@@ -305,7 +325,6 @@ function createLastfmButton() {
   button.classList.add('btn-lastfm');
   const playHistoryClasses = ['btn', 'blue_btn', 'btn_small'];
   button.classList.add(...playHistoryClasses);
-  // button.textContent = 'Last.fm Recent Tracks';
 
   const playlistIcon = utils.createSvgUse('svg-playlist-symbol');
   button.appendChild(playlistIcon);
@@ -421,7 +440,7 @@ function insertRecentTracksWrapperIntoDOM(tracksWrapper) {
   listeningContainer.insertAdjacentElement('afterend', tracksWrapper);
 }
 
-async function render(_config, _userName) {
+async function render(_config) {
   config = _config;
 
   if (!config) return;
@@ -435,8 +454,8 @@ async function render(_config, _userName) {
 
   let userName;
 
-  if (_userName) {
-    userName = _userName;
+  if (config.userName) {
+    userName = config.userName;
   } else {
     const userData = await utils.getSyncedUserData();
     userName = userData?.name;
@@ -467,7 +486,7 @@ async function render(_config, _userName) {
     buttonsContainer.prepend(lockButton);
   }
 
-  const populateRecentTracks = ({
+  const populateRecentTracks = async ({
     data,
     timestamp,
     colors,
@@ -479,7 +498,7 @@ async function render(_config, _userName) {
     }
 
     if (config.recentTracksReplace) {
-      populatePlayHistoryItem(
+      await populatePlayHistoryItem(
         playHistoryItem,
         {
           artistName: data[0].a,
@@ -572,7 +591,7 @@ async function render(_config, _userName) {
         }
       });
 
-      populateRecentTracks({
+      await populateRecentTracks({
         data: normalizedData,
         timestamp,
         colors,
@@ -619,7 +638,7 @@ async function render(_config, _userName) {
         console.warn('Failed to get image colors, using cached data without colors');
       }
 
-      populateRecentTracks({
+      await populateRecentTracks({
         data: recentTracksCache.data,
         colors,
       });

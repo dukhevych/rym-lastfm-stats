@@ -9,6 +9,69 @@ export async function getRymDBName() {
   return `${constants.RYM_DB_NAME}_${userName}`;
 }
 
+export async function getRymAlbumsQty() {
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
+
+  return new Promise((resolve, reject) => {
+    const dbRequest = indexedDB.open(dbName);
+
+    dbRequest.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction(storeName, 'readonly');
+      const store = transaction.objectStore(storeName);
+
+      const countRequest = store.count();
+
+      countRequest.onsuccess = function () {
+        resolve(countRequest.result);
+      };
+
+      countRequest.onerror = function (event) {
+        reject(event.target.error);
+      };
+    };
+
+    dbRequest.onerror = function (event) {
+      reject(event.target.error);
+    };
+  });
+}
+
+export async function getAllAlbumsByArtist(artist) {
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
+
+  return new Promise((resolve, reject) => {
+    const dbRequest = indexedDB.open(dbName);
+
+    dbRequest.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction(storeName, 'readonly');
+      const store = transaction.objectStore(storeName);
+
+      console.log('store', store);
+      console.log('artist', artist);
+      const index = store.index('artistNameIndex');
+      console.log('index', index);
+      const getAllRequest = index.getAll(artist);
+      console.log('getAllRequest', getAllRequest);
+
+      getAllRequest.onsuccess = function () {
+        resolve(getAllRequest.result);
+      };
+
+      getAllRequest.onerror = function (event) {
+        reject(event.target.error);
+      };
+    };
+
+    dbRequest.onerror = function (event) {
+      reject(event.target.error);
+    };
+  });
+}
+
 export async function getRymAlbum(id) {
   const dbName = await getRymDBName();
   const storeName = getStoreName();
@@ -241,6 +304,7 @@ export async function upgradeRymDB(parsedData) {
       const store = db.createObjectStore(storeName, { keyPath: 'id' });
       store.createIndex('idIndex', 'id', { unique: true });
       store.createIndex('releaseNameIndex', 'releaseName', { unique: false });
+      store.createIndex('artistNameIndex', 'artistName', { unique: false });
     };
 
     dbRequest.onsuccess = function (event) {

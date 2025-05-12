@@ -41,10 +41,6 @@ browserAPI.runtime.onInstalled.addListener(async (details) => {
   }
 });
 
-browserAPI.action.onClicked.addListener(() => {
-  browserAPI.runtime.openOptionsPage();
-});
-
 browserAPI.runtime.onMessage.addListener((message, sender) => {
   if (
     message?.type === "get-and-watch-object-field" &&

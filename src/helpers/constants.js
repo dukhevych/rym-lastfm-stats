@@ -83,6 +83,7 @@ export const PROFILE_OPTIONS_DEFAULT = {
   recentTracks: true,
   recentTracksShowOnLoad: false,
   recentTracksReplace: true,
+  recentTracksReplaceBackground: 1,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
   topArtists: true,
   topArtistsLimit: TOP_ARTISTS_LIMIT_DEFAULT,
