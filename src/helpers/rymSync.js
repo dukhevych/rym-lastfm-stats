@@ -101,7 +101,7 @@ export async function getRymAlbum(id) {
   });
 }
 
-export async function getRymAlbumByTitle(fullTitle) {
+export async function getAllRymAlbums() {
   const dbName = await getRymDBName();
   const storeName = getStoreName();
 
@@ -113,14 +113,13 @@ export async function getRymAlbumByTitle(fullTitle) {
       const transaction = db.transaction(storeName, 'readonly');
       const store = transaction.objectStore(storeName);
 
-      const index = store.index('releaseNameIndex');
-      const getRequest = index.get(fullTitle);
+      const getAllRequest = store.getAll();
 
-      getRequest.onsuccess = function () {
-        resolve(getRequest.result);
+      getAllRequest.onsuccess = function () {
+        resolve(getAllRequest.result);
       };
 
-      getRequest.onerror = function (event) {
+      getAllRequest.onerror = function (event) {
         reject(event.target.error);
       };
     };
@@ -129,6 +128,52 @@ export async function getRymAlbumByTitle(fullTitle) {
       reject(event.target.error);
     };
   });
+}
+
+export async function getRymAlbumByTitle(fullTitle) {
+  const dbName = await getRymDBName();
+  const storeName = getStoreName();
+  const queryNormalized = utils.deburr(fullTitle).toLowerCase().trim();
+
+  const tryGet = (title) =>
+    new Promise((resolve, reject) => {
+      const dbRequest = indexedDB.open(dbName);
+
+      dbRequest.onsuccess = function (event) {
+        const db = event.target.result;
+        const transaction = db.transaction(storeName, 'readonly');
+        const store = transaction.objectStore(storeName);
+        const index = store.index('releaseNameNormalizedIndex');
+        const getRequest = index.get(title);
+
+        getRequest.onsuccess = () => resolve(getRequest.result || null);
+        getRequest.onerror = (event) => reject(event.target.error);
+      };
+
+      dbRequest.onerror = (event) => reject(event.target.error);
+    });
+
+  // Try original title
+  let result = await tryGet(queryNormalized);
+  if (result) return result;
+
+  // Generate alternative variants
+  const variants = new Set();
+
+  // If queryNormalized contains " & ", try replacing it with " and "
+  if (queryNormalized.includes(' & ')) variants.add(queryNormalized.replace(/ & /g, ' and '));
+
+  // If queryNormalized contains " and ", try replacing it with " & "
+  if (queryNormalized.includes(' and ')) variants.add(queryNormalized.replace(/ and /g, ' & '));
+
+  // Try all variants
+  for (const variant of variants) {
+    result = await tryGet(variant);
+    if (result) return result;
+  }
+
+  // Still nothing found
+  return null;
 }
 
 export async function getMultipleRymAlbums(ids, asObject = false) {
@@ -303,7 +348,7 @@ export async function upgradeRymDB(parsedData) {
 
       const store = db.createObjectStore(storeName, { keyPath: 'id' });
       store.createIndex('idIndex', 'id', { unique: true });
-      store.createIndex('releaseNameIndex', 'releaseName', { unique: false });
+      store.createIndex('releaseNameNormalizedIndex', 'releaseNameNormalized', { unique: false });
       store.createIndex('artistNameIndex', 'artistName', { unique: false });
     };
 

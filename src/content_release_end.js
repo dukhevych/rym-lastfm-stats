@@ -18,6 +18,8 @@ import { getRymAlbum, updateRymAlbum, addRymAlbum, deleteRymAlbum } from '@/help
     },
   );
 
+  console.log('initialValue', initialValue);
+
   ratingValue = initialValue;
 
   async function updateRymSync(value) {
@@ -33,6 +35,7 @@ import { getRymAlbum, updateRymAlbum, addRymAlbum, deleteRymAlbum } from '@/help
           rating: String(value),
         });
       } else {
+        console.log('updateRymAlbum', rymAlbumData, value);
         await updateRymAlbum(releaseId, { rating: String(value) });
       }
     }

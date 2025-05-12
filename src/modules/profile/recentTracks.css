@@ -1,3 +1,59 @@
+@keyframes bg-option-20-animation {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 30px 60px, -20px 40px; }
+}
+
+@keyframes bg-option-24-animation {
+  0% {
+    --height-1: 20%;
+    --height-2: 50%;
+    --height-3: 90%;
+    --height-4: 40%;
+    --height-5: 60%;
+  }
+  25% {
+    --height-1: 80%;
+    --height-2: 30%;
+    --height-3: 60%;
+    --height-4: 100%;
+    --height-5: 20%;
+  }
+  50% {
+    --height-1: 40%;
+    --height-2: 90%;
+    --height-3: 20%;
+    --height-4: 60%;
+    --height-5: 30%;
+  }
+  75% {
+    --height-1: 100%;
+    --height-2: 70%;
+    --height-3: 40%;
+    --height-4: 30%;
+    --height-5: 90%;
+  }
+  100% {
+    --height-1: 20%;
+    --height-2: 50%;
+    --height-3: 90%;
+    --height-4: 40%;
+    --height-5: 60%;
+  }
+}
+
+@keyframes bg-option-23-animation {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      100px 100px,
+      -100px -100px;
+  }
+}
+
 @keyframes gradient-shift {
   0% {
     background-position: 0% 50%;
@@ -108,6 +164,7 @@
         background-color: color-mix(in lab, var(--clr-dark-accent), transparent 40%);
         outline: 2px solid color-mix(in lab, var(--clr-dark-accent), white 10%);
         outline-offset: -2px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         opacity: 0;
         z-index: 100;
         transition: opacity .15s ease-in-out, transform .15s ease-in-out;
@@ -158,9 +215,23 @@
     gap: 1px;
     align-items: center;
 
+    &.no-rating {
+      &:before {
+        content: 'No rating found.';
+      }
+
+      .stars-filled {
+        display: none;
+      }
+      .stars-empty {
+        display: none;
+      }
+    }
+
     [data-element="rymstats-track-rating-stars"] {
       position: relative;
     }
+
     .stars-filled {
       position: absolute;
       overflow: hidden;
@@ -371,6 +442,10 @@ html[data-scheme="light"] {
     opacity: 0.1;
   }
 
+  &.bg-option-0:after {
+    opacity: 0.2;
+  }
+
   &.bg-option-1:after {
     background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
       var(--clr-palette-vibrant) 0px,
@@ -444,15 +519,6 @@ html[data-scheme="light"] {
     background-blend-mode: soft-light;
   }
   &.bg-option-5:after {
-    background-image: repeating-linear-gradient(
-      180deg,
-      var(--clr-palette-darkmuted) 0,
-      var(--clr-palette-darkmuted) 1px,
-      transparent 1px,
-      transparent 2px
-    );
-  }
-  &.bg-option-6:after {
     background-image:
     repeating-linear-gradient(
       45deg,
@@ -470,7 +536,7 @@ html[data-scheme="light"] {
     );
     background-blend-mode: screen;
   }
-  &.bg-option-7:after {
+  &.bg-option-6:after {
     background-image:
     repeating-conic-gradient(
       from 0deg,
@@ -491,7 +557,7 @@ html[data-scheme="light"] {
     background-blend-mode: difference;
     background-position: center, 0 2px;
   }
-  &.bg-option-8:after {
+  &.bg-option-7:after {
     background-image:
     repeating-linear-gradient(
       to bottom,
@@ -510,22 +576,7 @@ html[data-scheme="light"] {
     background-blend-mode: overlay;
     filter: contrast(200%) brightness(80%);
   }
-  &.bg-option-9:after {
-    background-image: repeating-linear-gradient(
-      to right,
-      var(--clr-palette-vibrant) 0,
-      var(--clr-palette-vibrant) 3px,
-      var(--clr-palette-muted) 3px,
-      var(--clr-palette-muted) 7px,
-      var(--clr-palette-lightvibrant) 7px,
-      var(--clr-palette-lightvibrant) 12px,
-      var(--clr-palette-darkvibrant) 12px,
-      var(--clr-palette-darkvibrant) 18px,
-      var(--clr-palette-lightmuted) 18px,
-      var(--clr-palette-lightmuted) 25px
-    );
-  }
-  &.bg-option-10:after {
+  &.bg-option-8:after {
     background-image: repeating-conic-gradient(
       from 0deg at 50% 50%,
       var(--clr-palette-vibrant) 0deg 10deg,
@@ -539,7 +590,7 @@ html[data-scheme="light"] {
     mix-blend-mode: exclusion;
     filter: blur(0.3px) contrast(200%);
   }
-  &.bg-option-11:after {
+  &.bg-option-9:after {
     background-image:
       repeating-linear-gradient(
         90deg,
@@ -565,7 +616,7 @@ html[data-scheme="light"] {
     background-blend-mode: difference;
     filter: hue-rotate(90deg) brightness(120%);
   }
-  &.bg-option-12:after {
+  &.bg-option-10:after {
     background-image:
       repeating-linear-gradient(
         to right,
@@ -583,7 +634,7 @@ html[data-scheme="light"] {
       );
     background-blend-mode: multiply;
   }
-  &.bg-option-13:after {
+  &.bg-option-11:after {
     background-image:
       repeating-linear-gradient(
         45deg,
@@ -608,20 +659,213 @@ html[data-scheme="light"] {
       );
     background-blend-mode: hard-light;
   }
+  &.bg-option-12:after {
+    --track-panel-gradient-stripe-width: 120px;
+    --track-panel-gradient-angle: -45deg;
+
+    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
+      var(--clr-palette-vibrant) 0px,
+      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
+  }
+  &.bg-option-13:after {
+    --track-panel-gradient-stripe-width: 5px;
+    --track-panel-gradient-angle: 15deg;
+
+    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
+      var(--clr-palette-vibrant) 0px,
+      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
+  }
   &.bg-option-14:after {
+    --track-panel-gradient-stripe-width: 15px;
+    --track-panel-gradient-angle: 90deg;
+
+    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
+      var(--clr-palette-vibrant) 0px,
+      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
+  }
+  &.bg-option-15:after {
     background-image:
-      repeating-linear-gradient(to right,
-        var(--clr-palette-darkvibrant) 0,
-        var(--clr-palette-darkvibrant) 12px,
-        transparent 12px,
-        transparent 16px),
-      repeating-linear-gradient(to bottom,
+      repeating-linear-gradient(
+        135deg,
+        var(--clr-palette-vibrant) 0,
+        var(--clr-palette-vibrant) 10px,
+        var(--clr-palette-darkvibrant) 10px,
+        var(--clr-palette-darkvibrant) 20px
+      ),
+      repeating-linear-gradient(
+        225deg,
         var(--clr-palette-lightvibrant) 0,
-        var(--clr-palette-lightvibrant) 8px,
-        transparent 8px,
-        transparent 12px);
-    background-blend-mode: screen;
-    filter: saturate(150%) brightness(0.9);
+        var(--clr-palette-lightvibrant) 10px,
+        transparent 10px,
+        transparent 20px
+      );
+    background-blend-mode: difference;
+  }
+  &.bg-option-16:after {
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--clr-palette-muted) 0,
+        var(--clr-palette-muted) 20px,
+        var(--clr-palette-lightmuted) 20px,
+        var(--clr-palette-lightmuted) 40px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-darkvibrant) 0,
+        var(--clr-palette-darkvibrant) 20px,
+        var(--clr-palette-lightvibrant) 20px,
+        var(--clr-palette-lightvibrant) 40px
+      );
+    background-blend-mode: difference;
+  }
+  &.bg-option-17:after {
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--clr-palette-vibrant) 0,
+        var(--clr-palette-vibrant) 30px,
+        transparent 30px,
+        transparent 60px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-muted) 0,
+        var(--clr-palette-muted) 10px,
+        var(--clr-palette-lightmuted) 10px,
+        var(--clr-palette-lightmuted) 20px
+      );
+    background-blend-mode: overlay;
+    background-size: 100% 40px;
+    background-position: 0 20px;
+  }
+  &.bg-option-18:after {
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        var(--clr-palette-muted) 0px,
+        var(--clr-palette-muted) 5px,
+        var(--clr-palette-darkmuted) 5px,
+        var(--clr-palette-darkmuted) 10px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        var(--clr-palette-lightvibrant) 0px,
+        var(--clr-palette-lightvibrant) 5px,
+        var(--clr-palette-darkvibrant) 5px,
+        var(--clr-palette-darkvibrant) 10px
+      );
+    background-size: 100% 100%, 100% 100%;
+    /* background-blend-mode: difference; */
+    animation: bg-option-23-animation 0.2s infinite steps(1);
+  }
+  &.bg-option-19:after {
+    --stripe-width: 8px;
+    --stripe-gap: 4px;
+    --height-1: 20%;
+    --height-2: 40%;
+    --height-3: 60%;
+    --height-4: 80%;
+    --height-5: 100%;
+
+    background-image:
+      linear-gradient(to top,
+        var(--clr-palette-vibrant) 0%,
+        var(--clr-palette-vibrant) var(--height-1),
+        transparent var(--height-1),
+        transparent 100%
+      ),
+      linear-gradient(to top,
+        var(--clr-palette-darkvibrant) 0%,
+        var(--clr-palette-darkvibrant) var(--height-2),
+        transparent var(--height-2),
+        transparent 100%
+      ),
+      linear-gradient(to top,
+        var(--clr-palette-lightvibrant) 0%,
+        var(--clr-palette-lightvibrant) var(--height-3),
+        transparent var(--height-3),
+        transparent 100%
+      ),
+      linear-gradient(to top,
+        var(--clr-palette-muted) 0%,
+        var(--clr-palette-muted) var(--height-4),
+        transparent var(--height-4),
+        transparent 100%
+      ),
+      linear-gradient(to top,
+        var(--clr-palette-lightmuted) 0%,
+        var(--clr-palette-lightmuted) var(--height-5),
+        transparent var(--height-5),
+        transparent 100%
+      );
+
+    background-size:
+      var(--stripe-width) 100%,
+      var(--stripe-width) 100%,
+      var(--stripe-width) 100%,
+      var(--stripe-width) 100%,
+      var(--stripe-width) 100%;
+
+    background-position:
+      0 0,
+      calc(var(--stripe-width) + var(--stripe-gap)) 0,
+      calc((var(--stripe-width) + var(--stripe-gap)) * 2) 0,
+      calc((var(--stripe-width) + var(--stripe-gap)) * 3) 0,
+      calc((var(--stripe-width) + var(--stripe-gap)) * 4) 0;
+
+    background-repeat: no-repeat;
+    animation: bg-option-24-animation 1s infinite steps(1);
+  }
+  &.bg-option-20:after {
+    background-image:
+      repeating-linear-gradient(
+        60deg,
+        var(--clr-palette-darkvibrant) 0,
+        var(--clr-palette-darkvibrant) 3px,
+        transparent 3px,
+        transparent 6px
+      ),
+      repeating-linear-gradient(
+        120deg,
+        var(--clr-palette-lightvibrant) 0,
+        var(--clr-palette-lightvibrant) 2px,
+        transparent 2px,
+        transparent 5px
+      );
+    background-blend-mode: overlay;
+    animation: bg-option-20-animation 2s infinite linear alternate;
+    opacity: 0.2;
   }
 
   & > * {
@@ -896,5 +1140,37 @@ html[data-scheme="dark"] {
         display: block;
       }
     }
+  }
+}
+
+.btn-bg-switcher {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 3px;
+  width: 30px;
+  height: 30px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: currentColor;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+
+  &:hover {
+    opacity: 1 !important;
+  }
+
+  svg {
+    fill: currentColor;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+[data-element="rymstats-track-panel"]:hover {
+  .btn-bg-switcher {
+    opacity: .3;
   }
 }

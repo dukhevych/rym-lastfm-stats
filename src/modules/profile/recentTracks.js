@@ -1,4 +1,4 @@
-import { getRymAlbumByTitle } from '@/helpers/rymSync';
+import { getRymAlbumByTitle, getAllRymAlbums } from '@/helpers/rymSync';
 import { formatDistanceToNow } from 'date-fns';
 
 import * as utils from '@/helpers/utils.js';
@@ -16,6 +16,30 @@ const PROFILE_LISTENING_SET_TO_SELECTOR = '.profile_set_listening_box';
 const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_container';
 const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
+
+const replaceKeywords = [
+  'deluxe',
+  'version',
+  'digipack',
+  'edition',
+  'bonus',
+  'expanded',
+  'remaster',
+  'remastered',
+  'reissue',
+  'redux',
+  'limited',
+  'exclusive',
+  'special',
+  'legacy',
+  'collector',
+  'anniversary',
+];
+
+const mappingReplacePattern = new RegExp(
+  `\\s*[\\[(]([^\\])]*\\b(?:${replaceKeywords.join('|')})\\b[^\\])]*)[\\])]$`,
+  'i'
+);
 
 let volumeIcon;
 
@@ -220,12 +244,21 @@ async function populatePlayHistoryItem(
     const customMyRating = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customMyRating}`);
     const starsFilled = customMyRating.querySelector('.stars-filled');
     if (customMyRating) {
-      const albumFromDB = await getRymAlbumByTitle(artistName + ' - ' + albumName);
+      let fullTitle = artistName + ' - ' + albumName;
+
+      fullTitle = fullTitle.replace(mappingReplacePattern, '');
+
+      const albumFromDB = await getRymAlbumByTitle(fullTitle);
+
       if (albumFromDB) {
         const rating = albumFromDB.rating;
+
+        customMyRating.classList.remove('no-rating');
         starsFilled.style.width = `${rating * 10}%`;
+        customMyRating.title = '';
       } else {
-        starsFilled.style.width = `0%`;
+        customMyRating.classList.add('no-rating');
+        customMyRating.title = 'Rating may be not available due to RYM and Last.fm metadata mismatch';
       }
     }
 
@@ -290,6 +323,23 @@ function prepareRecentTracksUI() {
   const panelContainer = document.querySelector('.profile_listening_container');
   panelContainer.classList.add(`bg-option-${config.recentTracksReplaceBackground}`)
   panelContainer.dataset['element'] = 'rymstats-track-panel';
+  const panelBgSwitcher = document.createElement('button');
+  const playlistIcon = utils.createSvgUse('svg-brush-symbol');
+  panelBgSwitcher.appendChild(playlistIcon);
+  panelBgSwitcher.classList.add('btn-bg-switcher');
+  panelBgSwitcher.addEventListener('click', async () => {
+    panelContainer.classList.remove(`bg-option-${config.recentTracksReplaceBackground}`);
+    let newBgOption;
+    if (config.recentTracksReplaceBackground === 20) newBgOption = 0;
+    else newBgOption = config.recentTracksReplaceBackground + 1;
+    config.recentTracksReplaceBackground = newBgOption;
+    await utils.storageSet({
+      recentTracksReplaceBackground: newBgOption,
+    });
+    panelContainer.classList.add(`bg-option-${newBgOption}`);
+    panelBgSwitcher.title = `Background option ${newBgOption}`;
+  });
+  panelContainer.appendChild(panelBgSwitcher);
 
   if (config.recentTracksReplace) {
     const setToBtn = panelContainer.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);

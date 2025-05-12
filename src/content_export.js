@@ -1,3 +1,4 @@
+import * as utils from '@/helpers/utils';
 import { LASTFM_COLOR } from '@/helpers/constants.js';
 import { upgradeRymDB } from '@/helpers/rymSync.js';
 
@@ -64,11 +65,13 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
           rating: columns[7]?.replace(/"/g, '').trim(),
         };
 
-        const releaseName = `${item.artistNameLocalized || item.artistName} - ${item.title}`;
+        const releaseName = utils.deburr(
+          `${item.artistNameLocalized || item.artistName} - ${item.title}`
+        ).toLowerCase();
 
         return {
           ...item,
-          releaseName,
+          releaseNameNormalized: releaseName,
         }
       }).filter(item => item.id);
 
