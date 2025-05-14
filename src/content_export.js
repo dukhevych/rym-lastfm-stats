@@ -1,4 +1,5 @@
 import * as utils from '@/helpers/utils';
+import * as constants from '@/helpers/constants';
 import { LASTFM_COLOR } from '@/helpers/constants.js';
 import { upgradeRymDB } from '@/helpers/rymSync.js';
 
@@ -41,41 +42,61 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
       // Parse the CSV data
       const rows = exportData.split('\n').slice(1);
 
-      const parsedData = rows.map(row => {
-        const columns = row.split(',');
-        const firstName = columns[1]?.replace(/"/g, '').trim();
-        const lastName = columns[2]?.replace(/"/g, '').trim();
-        const firstNameLocalized = columns[3]?.replace(/"/g, '').trim();
-        const lastNameLocalized = columns[4]?.replace(/"/g, '').trim();
+      const parsedData = [];
 
-        let artistName = lastName;
+      rows.forEach(row => {
+        const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, ''));
+
+        if (columns.length !== 11) return;
+
+        const id = columns[0];
+
+        if (!id) return;
+
+        const firstName = columns[1];
+        const lastName = columns[2];
+        const firstNameLocalized = columns[3];
+        const lastNameLocalized = columns[4];
+        const title = columns[5];
+        const releaseDate = +columns[6];
+        const rating = +columns[7];
+        // const ownership = columns[8];
+        // const purchaseDate = columns[9];
+        // const mediaType = columns[10];
+
+        const artists = new Set();
+
+        let fullArtistName = lastName;
         if (firstName) {
-          artistName = `${firstName} ${artistName}`;
+          fullArtistName = `${firstName} ${fullArtistName}`;
         }
 
-        let artistNameLocalized = lastNameLocalized;
-        if (firstNameLocalized) {
-          artistNameLocalized = `${firstNameLocalized} ${artistNameLocalized}`;
-        }
+        fullArtistName.split(/(,\s|\s&amp\s)/).forEach(artist => {
+          const artistName = artist.trim();
+
+          if (artistName) {
+            artists.add(artistName);
+          }
+        });
 
         const item = {
-          id: columns[0]?.replace(/"/g, '').trim(),
-          artistName,
-          artistNameLocalized,
-          title: columns[5]?.replace(/"/g, '').trim(),
-          releaseDate: columns[6]?.replace(/"/g, '').trim(),
-          rating: columns[7]?.replace(/"/g, '').trim(),
+          id,
+          firstName,
+          lastName,
+          firstNameLocalized,
+          lastNameLocalized,
+          title,
+          releaseDate,
+          rating,
+          $artists: Array.from(artists),
         };
 
-        const releaseName = utils.deburr(
-          `${item.artistNameLocalized || item.artistName} - ${item.title}`
-        ).toLowerCase();
-
-        return {
-          ...item,
-          releaseNameNormalized: releaseName,
+        if (constants.isDev) {
+          item._raw = row;
         }
-      }).filter(item => item.id);
+
+        parsedData.push(item);
+      });
 
       await upgradeRymDB(parsedData);
       alert('RYM data successfully synced!');

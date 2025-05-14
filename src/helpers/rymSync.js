@@ -336,20 +336,17 @@ export async function upgradeRymDB(parsedData) {
   const storeName = getStoreName();
 
   return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open(dbName, 2); // Bump version if needed
+    const dbRequest = indexedDB.open(dbName, 2);
 
     dbRequest.onupgradeneeded = function (event) {
       const db = event.target.result;
 
-      // If store already exists, delete and recreate to ensure indexes are correct
       if (db.objectStoreNames.contains(storeName)) {
         db.deleteObjectStore(storeName);
       }
 
       const store = db.createObjectStore(storeName, { keyPath: 'id' });
       store.createIndex('idIndex', 'id', { unique: true });
-      store.createIndex('releaseNameNormalizedIndex', 'releaseNameNormalized', { unique: false });
-      store.createIndex('artistNameIndex', 'artistName', { unique: false });
     };
 
     dbRequest.onsuccess = function (event) {
