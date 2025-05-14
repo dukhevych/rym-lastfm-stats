@@ -52,6 +52,8 @@ export async function render(_config) {
       topArtistsPeriod: selectedPeriod,
     });
 
+    config.topArtistsPeriod = selectedPeriod;
+
     topArtistsPeriodSaveButton.style.display = 'none';
   });
 
@@ -109,6 +111,7 @@ export async function render(_config) {
       topArtistsCache: {
         data: topArtists,
         timestamp: Date.now(),
+        period: config.topArtistsPeriod,
         userName,
       },
     });
@@ -123,8 +126,8 @@ export async function render(_config) {
     && topArtistsCache.userName === userName
   ) {
     if (
-      Date.now() - topArtistsCache.timestamp >
-      constants.TOP_ARTISTS_INTERVAL_MS
+      ((Date.now() - topArtistsCache.timestamp) > constants.TOP_ARTISTS_INTERVAL_MS)
+      || topArtistsCache.period !== config.topArtistsPeriod
     ) {
       await updateAction();
     } else {

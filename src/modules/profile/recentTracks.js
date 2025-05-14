@@ -1,4 +1,4 @@
-import { getRymAlbumByTitle, getAllRymAlbums } from '@/helpers/rymSync';
+import { getRymAlbumByTitle } from '@/helpers/rymSync';
 import { formatDistanceToNow } from 'date-fns';
 
 import * as utils from '@/helpers/utils.js';

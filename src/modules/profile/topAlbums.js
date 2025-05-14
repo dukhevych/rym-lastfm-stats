@@ -65,6 +65,8 @@ export async function render(_config) {
       topAlbumsPeriod: selectedPeriod,
     });
 
+    config.topAlbumsPeriod = selectedPeriod;
+
     topAlbumsPeriodSaveButton.style.display = 'none';
   });
 
@@ -113,6 +115,7 @@ export async function render(_config) {
         data: topAlbums,
         timestamp: Date.now(),
         userName,
+        topAlbumsPeriod: config.topAlbumsPeriod,
       },
     });
   }
@@ -126,8 +129,8 @@ export async function render(_config) {
     && topAlbumsCache.userName === userName
   ) {
     if (
-      Date.now() - topAlbumsCache.timestamp >
-      constants.TOP_ALBUMS_INTERVAL_MS
+      ((Date.now() - topAlbumsCache.timestamp) > constants.TOP_ALBUMS_INTERVAL_MS)
+      || topAlbumsCache.topAlbumsPeriod !== config.topAlbumsPeriod
     ) {
       await updateAction();
     } else {

@@ -20,6 +20,8 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
   formSyncButton.addEventListener('click', async function (e) {
     e.preventDefault();
 
+    formSubmitButton.setAttribute('disabled', 'true');
+
     const formData = new FormData(form);
 
     if (formData.get('g-recaptcha-response') === '') return;
@@ -80,6 +82,8 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
     } catch (error) {
       console.error('Error:', error);
       alert('An error occurred while syncing data with RYM.');
+    } finally {
+      formSubmitButton.setAttribute('disabled', 'true');
     }
   });
 })();

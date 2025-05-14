@@ -18,8 +18,6 @@ import { getRymAlbum, updateRymAlbum, addRymAlbum, deleteRymAlbum } from '@/help
     },
   );
 
-  console.log('initialValue', initialValue);
-
   ratingValue = initialValue;
 
   async function updateRymSync(value) {

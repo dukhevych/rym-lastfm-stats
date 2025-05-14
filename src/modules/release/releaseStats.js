@@ -1,9 +1,11 @@
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 
-const INFO_CONTAINER_SELECTOR = '.album_info tbody';
-const INFO_ARTISTS_SELECTOR = '.album_info [itemprop="byArtist"] a.artist';
-const INFO_ALBUM_TITLE_SELECTOR = '.album_title';
+import {
+  INFO_CONTAINER_SELECTOR,
+  INFO_ARTISTS_SELECTOR,
+  INFO_ALBUM_TITLE_SELECTOR,
+} from './targets.js';
 
 function getArtistNames() {
   const artists = document.querySelectorAll(INFO_ARTISTS_SELECTOR);
