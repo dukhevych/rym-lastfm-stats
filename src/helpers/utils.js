@@ -600,3 +600,11 @@ const generateApiSig = (params) => {
 function generateMd5(string) {
   return MD5(string).toString();
 }
+
+export function getDirectInnerText(element) {
+  return Array.from(element.childNodes)
+    .filter(node => node.nodeType === Node.TEXT_NODE)
+    .map(node => node.textContent.trim())
+    .join(' ')
+    .trim();
+}

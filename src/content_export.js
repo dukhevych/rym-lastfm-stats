@@ -81,10 +81,10 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
 
         const item = {
           id,
-          firstName,
-          lastName,
-          firstNameLocalized,
-          lastNameLocalized,
+          // firstName,
+          // lastName,
+          // firstNameLocalized,
+          // lastNameLocalized,
           title,
           releaseDate,
           rating,

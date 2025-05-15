@@ -1,6 +1,17 @@
+import * as utils from '@/helpers/utils.js';
+
 export const INFO_CONTAINER_SELECTOR = '.album_info tbody';
 export const INFO_ARTISTS_SELECTOR = '.album_info [itemprop="byArtist"] a.artist';
 export const INFO_ALBUM_TITLE_SELECTOR = '.album_title';
+export const INFO_ALBUM_RELEASE_YEAR_SELECTOR = '.album_info a[href^="/charts/top/"] b';
+
+export function getReleaseYear() {
+  const yearElement = document.querySelector(INFO_ALBUM_RELEASE_YEAR_SELECTOR);
+  if (!yearElement) return null;
+  const yearText = yearElement.textContent.trim();
+  const match = yearText.match(/^\d{4}/);
+  return match ? match[0] : null;
+}
 
 export function getArtistNames() {
   const artists = document.querySelectorAll(INFO_ARTISTS_SELECTOR);
@@ -12,7 +23,7 @@ export function getArtistNames() {
       }
       return {
         artistNameLocalized: localizedName,
-        artistName: artist.textContent,
+        artistName: utils.getDirectInnerText(artist),
       };
     });
 }

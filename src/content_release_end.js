@@ -1,5 +1,10 @@
 import * as utils from '@/helpers/utils.js';
 import { getRymAlbum, updateRymAlbum, addRymAlbum, deleteRymAlbum } from '@/helpers/rymSync.js';
+import {
+  getReleaseYear,
+  getReleaseTitle,
+  getArtistNames,
+} from './modules/release/targets.js';
 
 (async function () {
   const releaseId = document.querySelectorAll('.album_shortcut')[0].value.replace('[Album', '').replace(']', '');
@@ -24,15 +29,17 @@ import { getRymAlbum, updateRymAlbum, addRymAlbum, deleteRymAlbum } from '@/help
     const rymAlbumData = await getRymAlbum(releaseId);
     if (value > 0) {
       if (!rymAlbumData) {
-        await addRymAlbum({
+        const data = {
           id: releaseId,
-          artistName: '', // TODO - get artist name
-          artistNameLocalized: '', // TODO - get artist name localized
-          title: '', // TODO - get album title
-          releaseDate: '', // TODO - get release date
+          title: getReleaseTitle(),
+          releaseDate: getReleaseYear(),
           rating: String(value),
-        });
-      } else {
+          $artists: getArtistNames(),
+        };
+
+        console.log('addRymAlbum', data);
+        await addRymAlbum(data);
+      } else if (rymAlbumData.rating !== String(value)) {
         console.log('updateRymAlbum', rymAlbumData, value);
         await updateRymAlbum(releaseId, { rating: String(value) });
       }

@@ -207,18 +207,37 @@ export async function fetchArtistStats(username, apiKey, { artist }) {
 export async function fetchReleaseStats(
   username,
   apiKey,
-  { artist, releaseTitle, releaseType },
+  { artists, releaseTitle, releaseType },
 ) {
   if (!apiKey) {
     return Promise.reject(new Error('No API key provided.'));
   }
 
-  if (!artist) {
-    return Promise.reject(new Error('No artist provided.'));
+  if (!artists || artists.length === 0) {
+    return Promise.reject(new Error('No artists provided.'));
   }
 
   if (!releaseTitle) {
     return Promise.reject(new Error('No release title provided.'));
+  }
+
+  const cacheKeys = artists.map((artist) => `releaseStats_${artist}_${releaseTitle}`);
+  const cachedData = await utils.storageGet(cacheKeys, 'local');
+  const cacheKey = Object.keys(cachedData).find((key) => cachedData[key] !== undefined);
+
+  if (cachedData && cacheKey) {
+    const now = new Date().getTime();
+    const parsedData = JSON.parse(cachedData[cacheKey]);
+    const cacheAge = now - parsedData.lastDate;
+
+    if (
+      (username && cacheAge < constants.STATS_CACHE_LIFETIME_MS)
+      || cacheAge < constants.STATS_CACHE_LIFETIME_GUEST_MS
+    ) {
+      return parsedData.data;
+    } else {
+      await utils.storageRemove(cacheKey, 'local');
+    }
   }
 
   const methods = {
@@ -230,7 +249,6 @@ export async function fetchReleaseStats(
 
   const _params = {
     method,
-    artist: artist,
     api_key: apiKey,
     format: 'json',
   };
@@ -247,38 +265,50 @@ export async function fetchReleaseStats(
     _params.user = username;
   }
 
-  const params = new URLSearchParams(_params);
+  let data = null;
+  let matchedArtist = null;
 
-  const url = `${BASE_URL}?${params.toString()}`;
+  const artistVariants = new Set(artists);
 
-  const cacheKey = `releaseStats_${artist}_${releaseTitle}`;
-  const now = new Date().getTime();
+  artists.forEach((artist) => {
+    artistVariants.add(artist.split(' & ').join(' and '));
+    artistVariants.add(artist.split(' and ').join(' & '));
+  });
 
-  const cachedData = await utils.storageGet(cacheKey, 'local');
+  for (const artist of Array.from(artistVariants)) {
+    try {
+      const params = new URLSearchParams({
+        ..._params,
+        artist,
+      });
+      const url = `${BASE_URL}?${params.toString()}`;
+      const response = await fetch(url);
+      data = await response.json();
 
-  if (cachedData) {
-    const parsedData = JSON.parse(cachedData);
-    const cacheAge = now - parsedData.lastDate;
+      if (data.error) {
+        console.warn(`Error fetching data for ${artist}`, data.error, data.message);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        continue;
+      }
 
-    if (
-      (username && cacheAge < constants.STATS_CACHE_LIFETIME_MS)
-      || cacheAge < constants.STATS_CACHE_LIFETIME_GUEST_MS
-    ) {
-      console.log('Using cached data');
-      return parsedData.data;
-    } else {
-      await utils.storageRemove(cacheKey, 'local');
+      matchedArtist = artist;
+      break;
+    } catch (error) {
+      console.error(`Error fetching data for artist: ${artist}`, error);
     }
   }
 
-  console.log('Fetching new data');
+  if (data.error) {
+    console.error('No data found for any artist.');
+    return null;
+  }
 
-  const response = await fetch(url);
-  const data = await response.json();
+  const newCacheKey = `releaseStats_${matchedArtist}_${releaseTitle}`;
+  const now = new Date().getTime();
 
   const cacheObject = {};
 
-  cacheObject[cacheKey] = JSON.stringify({ data, lastDate: now });
+  cacheObject[newCacheKey] = JSON.stringify({ data, lastDate: now });
 
   await utils.storageSet(cacheObject, 'local');
 
