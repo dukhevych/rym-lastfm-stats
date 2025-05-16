@@ -1,4 +1,4 @@
-import { getMultipleRymAlbums } from '@/helpers/rymSync';
+import { getRecords } from '@/helpers/db';
 
 let config = null;
 
@@ -16,7 +16,7 @@ function getIds() {
 }
 
 async function readAlbumData(ids) {
-  return getMultipleRymAlbums(ids);
+  return getRecords(ids);
 }
 
 function addUserRating(album) {

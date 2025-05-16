@@ -1,5 +1,5 @@
 import * as utils from '@/helpers/utils.js';
-import { getRymAlbum, updateRymAlbum, addRymAlbum, deleteRymAlbum } from '@/helpers/rymSync.js';
+import { getRecord, updateRecord, addRecord, deleteRecord } from '@/helpers/db.js';
 import {
   getReleaseYear,
   getReleaseTitle,
@@ -71,16 +71,16 @@ import {
 
     async function updateRymSync(value) {
       let rymAlbumData = null;
-      rymAlbumData = await getRymAlbum(releaseId);
+      rymAlbumData = await getRecord(releaseId);
       console.log('DB DATA', rymAlbumData);
       if (value > 0) {
         if (!rymAlbumData) {
           const data = prepareItem(value);
           console.log('PARSED DATA', data);
-          await addRymAlbum(data);
+          await addRecord(data);
         } else if (rymAlbumData.rating !== Number(value)) {
           console.log('UPDATED RATING', rymAlbumData.rating, Number(value));
-          await updateRymAlbum(releaseId, { rating: Number(value) });
+          await updateRecord(releaseId, { rating: Number(value) });
         } else {
           console.log('NOTHING TO UPDATE');
         }
@@ -88,7 +88,7 @@ import {
 
       if (value === 0) {
         if (rymAlbumData) {
-          await deleteRymAlbum(releaseId);
+          await deleteRecord(releaseId);
         }
       }
     }

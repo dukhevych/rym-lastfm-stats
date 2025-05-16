@@ -1,9 +1,264 @@
-// import * as utils from '@/helpers/utils.js';
-// import * as api from '@/helpers/api.js';
-// import * as constants from '@/helpers/constants.js';
+import FlexSearch from 'flexsearch';
+import * as db from '@/helpers/db';
+import * as utils from '@/helpers/utils.js';
 
 import './background/runtime/onInstalled.js';
-import './background/fetchImage.js';
-import './background/runtime/onMessage/get-and-watch-object-field.js';
 
-// const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+const dbMessageTypes = new Set([
+  'GET_RECORD_BY_ID',
+  'GET_RECORDS_BY_IDS',
+  'GET_ALL_RECORDS',
+  'GET_RECORDS_BY_ARTIST',
+  'GET_RECORD_BY_ARTIST_AND_TITLE',
+  'ADD_RECORD',
+  'UPDATE_RECORD',
+  'UPDATE_RECORD_RATING',
+  'DELETE_RECORD',
+  'GET_RECORDS_QTY',
+  'SET_RECORDS',
+  'SEARCH',
+]);
+
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
+const flexIndex = new FlexSearch.Index({ tokenize: 'forward', cache: true });
+let recordMap = new Map();
+
+async function buildSearchIndex() {
+  const records = await db.getAllRecords();
+
+  recordMap.clear();
+  flexIndex.clear();
+
+  records.forEach((record) => {
+    const searchable = [
+      record.$title,
+      record.$artistName,
+      record.$artistNameLocalized,
+    ].join(' ').toLowerCase();
+
+    flexIndex.add(record.id, searchable);
+    recordMap.set(record.id, record);
+  });
+  console.log(`[FlexSearch] Indexed ${records.length} records`);
+}
+
+buildSearchIndex();
+
+async function handleDatabaseMessages(message, sender, sendResponse) {
+  const { type, payload } = message;
+
+  try {
+    let result;
+    switch (type) {
+      case 'GET_RECORD_BY_ID': {
+        result = recordMap.get(payload.id) || null;
+        break;
+      }
+
+      case 'GET_RECORDS_BY_IDS': {
+        const results = payload.ids.map(id => recordMap.get(id)).filter(Boolean);
+        result = payload.asObject
+          ? Object.fromEntries(results.map(record => [record.id, record]))
+          : results;
+        break;
+      }
+
+      case 'GET_ALL_RECORDS': {
+        result = Array.from(recordMap.values());
+        break;
+      }
+
+      case 'GET_RECORDS_BY_ARTIST': {
+        // For consistency replace "and" with "&" for any artist name
+        const query = payload.artist.toLowerCase().trim().replace(/\sand\s/g, ' & ');
+        const hits = flexIndex.search(query, { limit: 100 });
+
+        result = hits
+          .map(id => recordMap.get(id))
+          .filter(record => {
+            return record.$artistName.includes(query) || record.$artistNameLocalized.includes(query);
+          });
+        break;
+      }
+
+      case 'GET_RECORD_BY_ARTIST_AND_TITLE': {
+        const artistQuery = utils.deburr(payload.artist).toLowerCase().trim();
+        const titleQuery = utils.deburr(payload.title).toLowerCase().trim();
+        const query = `${artistQuery} ${titleQuery}`;
+        const hits = flexIndex.search(query, { limit: 50 });
+
+        result = hits
+          .map(id => recordMap.get(id))
+          .find(record => {
+            if (record.$title !== titleQuery) return false;
+            return record.$artistName.includes(artistQuery) || record.$artistNameLocalized.includes(artistQuery);
+          }) || null;
+
+        break;
+      }
+
+      case 'ADD_RECORD': {
+        const record = payload.record;
+        await db.addRecord(record);
+        recordMap.set(record.id, record);
+        flexIndex.add(
+          record.id,
+          [
+            record.$title,
+            record.$artistName,
+            record.$artistNameLocalized
+          ].join(' ').toLowerCase(),
+        );
+        result = true;
+        break;
+      }
+
+      case 'UPDATE_RECORD': {
+        const existing = recordMap.get(payload.id);
+        if (!existing) throw new Error(`No record with id ${payload.id}`);
+        const updated = { ...existing, ...payload.updatedData };
+        await db.updateRecord(payload.id, payload.updatedData);
+        recordMap.set(payload.id, updated);
+        flexIndex.update(
+          payload.id,
+          [
+            updated.$title,
+            updated.$artistName,
+            updated.$artistNameLocalized
+          ].join(' ').toLowerCase());
+        result = true;
+        break;
+      }
+
+      case 'UPDATE_RECORD_RATING': {
+        const existing = recordMap.get(payload.id);
+        if (!existing) throw new Error(`No record with id ${payload.id}`);
+        existing.rating = payload.rating;
+        await db.updateRecordRating(payload.id, payload.rating);
+        recordMap.set(payload.id, existing);
+        result = true;
+        break;
+      }
+
+      case 'DELETE_RECORD': {
+        await db.deleteRecord(payload.id);
+        recordMap.delete(payload.id);
+        flexIndex.remove(payload.id);
+        result = true;
+        break;
+      }
+
+      case 'GET_RECORDS_QTY': {
+        console.log('Fetching records quantity');
+        result = recordMap.size;
+        console.log('Records quantity:', result);
+        break;
+      }
+
+      case 'SET_RECORDS': {
+        result = await db.setRecords(payload.payload);
+        await buildSearchIndex();
+        break;
+      }
+
+      case 'SEARCH': {
+        const queryParts = [payload.artistName, payload.title]
+          .filter(Boolean)
+          .map(s => s.toLowerCase().trim());
+
+        const searchQuery = queryParts.join(' ');
+        const hits = flexIndex.search(searchQuery, { limit: 30 });
+
+        result = hits.map(id => recordMap.get(id));
+        break;
+      }
+
+      default:
+        console.warn('Unhandled message type:', type);
+    }
+    sendResponse({ success: true, result });
+  } catch (error) {
+    console.error(error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const { type } = message;
+
+  if (dbMessageTypes.has(type)) {
+    (async () => {
+      await handleDatabaseMessages(message, sender, sendResponse);
+    })();
+    return true;
+  }
+
+  switch (type) {
+    case 'FETCH_IMAGE': {
+      fetch(message.url, { mode: 'cors' })
+        .then((response) => response.blob())
+        .then((blob) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            sendResponse({ success: true, dataUrl: reader.result });
+          };
+          reader.onerror = (e) => {
+            console.error(e);
+            sendResponse({ success: false, error: 'Failed to read blob' });
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch((err) => {
+          sendResponse({ success: false, error: err.message || 'Fetch error' });
+        });
+      return true;
+    }
+
+    case 'get-and-watch-object-field': {
+      if (
+        sender.tab?.id &&
+        typeof message.propName === "string" &&
+        typeof message.fieldName === "string"
+      ) {
+        browserAPI.scripting.executeScript({
+          target: { tabId: sender.tab.id },
+          world: "MAIN",
+          args: [message.propName, message.fieldName],
+          func: (propName, fieldName) => {
+            function dispatch(value) {
+              window.dispatchEvent(new CustomEvent("my-extension:field-update", {
+                detail: { prop: propName, field: fieldName, value }
+              }));
+            }
+
+            const target = window[propName];
+            if (!target || typeof target !== "object") return;
+
+            let currentValue = target[fieldName];
+
+            Object.defineProperty(target, fieldName, {
+              configurable: true,
+              enumerable: true,
+              get() {
+                return currentValue;
+              },
+              set(newVal) {
+                currentValue = newVal;
+                dispatch(newVal);
+              }
+            });
+
+            if (currentValue !== undefined) {
+              dispatch(currentValue);
+            }
+          }
+        });
+      }
+      return false;
+    }
+
+    default:
+      console.warn('Unhandled message type:', type);
+  }
+});

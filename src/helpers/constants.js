@@ -1,3 +1,5 @@
+export const RYM_DB_VERSION = 2;
+
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 export const isDev = process.env.NODE_ENV === 'development';

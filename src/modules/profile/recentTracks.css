@@ -1,3 +1,66 @@
+@property --bg-option-21-bar-1  { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-2  { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-3  { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-4  { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-5  { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-6  { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-7  { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-8  { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-9  { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-10 { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-11 { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --bg-option-21-bar-12 { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+
+@keyframes bg-option-21-animation {
+  0% {
+    --bg-option-21-bar-1: 40%; --bg-option-21-bar-2: 70%; --bg-option-21-bar-3: 50%; --bg-option-21-bar-4: 90%;
+    --bg-option-21-bar-5: 30%; --bg-option-21-bar-6: 80%; --bg-option-21-bar-7: 60%; --bg-option-21-bar-8: 50%;
+    --bg-option-21-bar-9: 70%; --bg-option-21-bar-10: 30%; --bg-option-21-bar-11: 90%; --bg-option-21-bar-12: 40%;
+  }
+
+  10% {
+    --bg-option-21-bar-1: 60%; --bg-option-21-bar-2: 40%; --bg-option-21-bar-3: 80%; --bg-option-21-bar-4: 30%;
+    --bg-option-21-bar-5: 70%; --bg-option-21-bar-6: 50%; --bg-option-21-bar-7: 90%; --bg-option-21-bar-8: 30%;
+    --bg-option-21-bar-9: 40%; --bg-option-21-bar-10: 80%; --bg-option-21-bar-11: 60%; --bg-option-21-bar-12: 50%;
+  }
+
+  25% {
+    --bg-option-21-bar-1: 30%; --bg-option-21-bar-2: 90%; --bg-option-21-bar-3: 60%; --bg-option-21-bar-4: 70%;
+    --bg-option-21-bar-5: 50%; --bg-option-21-bar-6: 20%; --bg-option-21-bar-7: 70%; --bg-option-21-bar-8: 80%;
+    --bg-option-21-bar-9: 20%; --bg-option-21-bar-10: 60%; --bg-option-21-bar-11: 30%; --bg-option-21-bar-12: 90%;
+  }
+
+  40% {
+    --bg-option-21-bar-1: 70%; --bg-option-21-bar-2: 30%; --bg-option-21-bar-3: 90%; --bg-option-21-bar-4: 40%;
+    --bg-option-21-bar-5: 80%; --bg-option-21-bar-6: 20%; --bg-option-21-bar-7: 90%; --bg-option-21-bar-8: 60%;
+    --bg-option-21-bar-9: 30%; --bg-option-21-bar-10: 80%; --bg-option-21-bar-11: 50%; --bg-option-21-bar-12: 70%;
+  }
+
+  60% {
+    --bg-option-21-bar-1: 50%; --bg-option-21-bar-2: 60%; --bg-option-21-bar-3: 30%; --bg-option-21-bar-4: 80%;
+    --bg-option-21-bar-5: 20%; --bg-option-21-bar-6: 90%; --bg-option-21-bar-7: 40%; --bg-option-21-bar-8: 70%;
+    --bg-option-21-bar-9: 90%; --bg-option-21-bar-10: 20%; --bg-option-21-bar-11: 70%; --bg-option-21-bar-12: 60%;
+  }
+
+  75% {
+    --bg-option-21-bar-1: 80%; --bg-option-21-bar-2: 20%; --bg-option-21-bar-3: 70%; --bg-option-21-bar-4: 50%;
+    --bg-option-21-bar-5: 90%; --bg-option-21-bar-6: 30%; --bg-option-21-bar-7: 20%; --bg-option-21-bar-8: 90%;
+    --bg-option-21-bar-9: 60%; --bg-option-21-bar-10: 40%; --bg-option-21-bar-11: 20%; --bg-option-21-bar-12: 80%;
+  }
+
+  90% {
+    --bg-option-21-bar-1: 60%; --bg-option-21-bar-2: 40%; --bg-option-21-bar-3: 50%; --bg-option-21-bar-4: 60%;
+    --bg-option-21-bar-5: 40%; --bg-option-21-bar-6: 60%; --bg-option-21-bar-7: 80%; --bg-option-21-bar-8: 40%;
+    --bg-option-21-bar-9: 70%; --bg-option-21-bar-10: 50%; --bg-option-21-bar-11: 60%; --bg-option-21-bar-12: 30%;
+  }
+
+  100% {
+    --bg-option-21-bar-1: 40%; --bg-option-21-bar-2: 70%; --bg-option-21-bar-3: 50%; --bg-option-21-bar-4: 90%;
+    --bg-option-21-bar-5: 30%; --bg-option-21-bar-6: 80%; --bg-option-21-bar-7: 60%; --bg-option-21-bar-8: 50%;
+    --bg-option-21-bar-9: 70%; --bg-option-21-bar-10: 30%; --bg-option-21-bar-11: 90%; --bg-option-21-bar-12: 40%;
+  }
+}
+
 @keyframes bg-option-20-animation {
   0% { background-position: 0 0, 0 0; }
   100% { background-position: 30px 60px, -20px 40px; }
@@ -866,6 +929,65 @@ html[data-scheme="light"] {
     background-blend-mode: overlay;
     animation: bg-option-20-animation 2s infinite linear alternate;
     opacity: 0.2;
+  }
+  &.bg-option-21:after,
+  &.bg-option-22:after {
+    --n: 12;
+    --bar-width: calc(100% / var(--n));
+    --clr-1: var(--clr-palette-vibrant);
+    --clr-2: var(--clr-palette-darkvibrant);
+    --clr-3: var(--clr-palette-lightvibrant);
+    --clr-4: var(--clr-palette-muted);
+    --clr-5: var(--clr-palette-lightmuted);
+    --clr-6: var(--clr-palette-darkmuted);
+
+    background:
+      linear-gradient(to top, var(--clr-1) var(--bg-option-21-bar-1), transparent var(--bg-option-21-bar-1))
+        calc(((0 + (0 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-2) var(--bg-option-21-bar-2), transparent var(--bg-option-21-bar-2))
+        calc(((1 + (1 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-3) var(--bg-option-21-bar-3), transparent var(--bg-option-21-bar-3))
+        calc(((2 + (2 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-4) var(--bg-option-21-bar-4), transparent var(--bg-option-21-bar-4))
+        calc(((3 + (3 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-5) var(--bg-option-21-bar-5), transparent var(--bg-option-21-bar-5))
+        calc(((4 + (4 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-6) var(--bg-option-21-bar-6), transparent var(--bg-option-21-bar-6))
+        calc(((5 + (5 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-1) var(--bg-option-21-bar-7), transparent var(--bg-option-21-bar-7))
+        calc(((6 + (6 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-2) var(--bg-option-21-bar-8), transparent var(--bg-option-21-bar-8))
+        calc(((7 + (7 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-3) var(--bg-option-21-bar-9), transparent var(--bg-option-21-bar-9))
+        calc(((8 + (8 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-4) var(--bg-option-21-bar-10), transparent var(--bg-option-21-bar-10))
+        calc(((9 + (9 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-5) var(--bg-option-21-bar-11), transparent var(--bg-option-21-bar-11))
+        calc(((10 + (10 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+
+      linear-gradient(to top, var(--clr-6) var(--bg-option-21-bar-12), transparent var(--bg-option-21-bar-12))
+        calc(((11 + (11 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat;
+
+    animation: bg-option-21-animation 1.5s linear infinite;
+    opacity: 0.2;
+  }
+  &.bg-option-22:after {
+    width: 20%;
+    height: 50%;
+    left: 50%;
+    transform: translateX(-50%) scaleY(-1);
+    bottom: auto;
+    opacity: 0.4;
   }
 
   & > * {

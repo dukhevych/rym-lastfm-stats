@@ -1,4 +1,5 @@
-import { getRymAlbumByTitle } from '@/helpers/rymSync';
+// import { getRymAlbumByTitle } from '@/helpers/rymSync';
+import { RecordsAPI } from '@/helpers/records-api';
 import { formatDistanceToNow } from 'date-fns';
 
 import * as utils from '@/helpers/utils.js';
@@ -244,11 +245,7 @@ async function populatePlayHistoryItem(
     const customMyRating = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customMyRating}`);
     const starsFilled = customMyRating.querySelector('.stars-filled');
     if (customMyRating) {
-      let fullTitle = artistName + ' - ' + albumName;
-
-      fullTitle = fullTitle.replace(mappingReplacePattern, '');
-
-      const albumFromDB = await getRymAlbumByTitle(fullTitle);
+      const albumFromDB = await RecordsAPI.getByArtistAndTitle(artistName, albumName);
 
       if (albumFromDB) {
         const rating = albumFromDB.rating;
@@ -330,7 +327,7 @@ function prepareRecentTracksUI() {
   panelBgSwitcher.addEventListener('click', async () => {
     panelContainer.classList.remove(`bg-option-${config.recentTracksReplaceBackground}`);
     let newBgOption;
-    if (config.recentTracksReplaceBackground === 20) newBgOption = 0;
+    if (config.recentTracksReplaceBackground === 22) newBgOption = 0;
     else newBgOption = config.recentTracksReplaceBackground + 1;
     config.recentTracksReplaceBackground = newBgOption;
     await utils.storageSet({

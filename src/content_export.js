@@ -1,7 +1,7 @@
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import { LASTFM_COLOR } from '@/helpers/constants.js';
-import { upgradeRymDB } from '@/helpers/rymSync.js';
+import { RecordsAPI } from '@/helpers/records-api.js';
 import data from '@/data.csv?raw';
 
 (async function () {
@@ -96,10 +96,6 @@ import data from '@/data.csv?raw';
           $title: getNormalizedString(title),
         };
 
-        // if (["8796541", "14296064", "1078761", "13652180", "11311758"].includes(id)) {
-        //   console.log(item);
-        // }
-
         if (constants.isDev) {
           item._raw = row;
         }
@@ -107,7 +103,8 @@ import data from '@/data.csv?raw';
         parsedData.push(item);
       });
 
-      await upgradeRymDB(parsedData);
+      await RecordsAPI.setBulk(parsedData);
+      // alert('Data synced successfully with RYM Last.fm Stats!');
     } catch (error) {
       console.error('Error:', error);
       alert('An error occurred while syncing data with RYM.');
