@@ -141,13 +141,41 @@ export async function getRymAlbumByTitle(fullTitle) {
 
       dbRequest.onsuccess = function (event) {
         const db = event.target.result;
-        const transaction = db.transaction(storeName, 'readonly');
+
+        // Check if object store exists
+        if (!db.objectStoreNames.contains(storeName)) {
+          db.close();
+          return resolve(null);
+        }
+
+        let transaction;
+        try {
+          transaction = db.transaction(storeName, 'readonly');
+        } catch {
+          db.close();
+          return resolve(null);
+        }
+
         const store = transaction.objectStore(storeName);
+
+        // Check if index exists
+        if (!store.indexNames.contains('releaseNameNormalizedIndex')) {
+          db.close();
+          return resolve(null);
+        }
+
         const index = store.index('releaseNameNormalizedIndex');
         const getRequest = index.get(title);
 
-        getRequest.onsuccess = () => resolve(getRequest.result || null);
-        getRequest.onerror = (event) => reject(event.target.error);
+        getRequest.onsuccess = () => {
+          db.close();
+          resolve(getRequest.result || null);
+        };
+
+        getRequest.onerror = (event) => {
+          db.close();
+          reject(event.target.error);
+        };
       };
 
       dbRequest.onerror = (event) => reject(event.target.error);
@@ -160,10 +188,7 @@ export async function getRymAlbumByTitle(fullTitle) {
   // Generate alternative variants
   const variants = new Set();
 
-  // If queryNormalized contains " & ", try replacing it with " and "
   if (queryNormalized.includes(' & ')) variants.add(queryNormalized.replace(/ & /g, ' and '));
-
-  // If queryNormalized contains " and ", try replacing it with " & "
   if (queryNormalized.includes(' and ')) variants.add(queryNormalized.replace(/ and /g, ' & '));
 
   // Try all variants

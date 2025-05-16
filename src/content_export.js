@@ -46,7 +46,6 @@ import data from '@/data.csv?raw';
       // const rows = exportData.split('\n');
 
       const parsedData = [];
-      let q = [];
 
       rows.forEach(row => {
         const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, ''));
@@ -79,10 +78,10 @@ import data from '@/data.csv?raw';
         const artistName = getCombinedName(firstName, lastName);
         const artistNameLocalized = getCombinedName(firstNameLocalized, lastNameLocalized);
 
-        const getNormalizedName = (name) => {
-          if (!name) return '';
+        const getNormalizedString = (string) => {
+          if (!string) return '';
 
-          return utils.deburr(name.toLowerCase());
+          return utils.deburr(string.toLowerCase());
         };
 
         const item = {
@@ -92,8 +91,9 @@ import data from '@/data.csv?raw';
           rating,
           artistName,
           artistNameLocalized,
-          $artistName: getNormalizedName(artistName),
-          $artistNameLocalized: getNormalizedName(artistNameLocalized),
+          $artistName: getNormalizedString(artistName),
+          $artistNameLocalized: getNormalizedString(artistNameLocalized),
+          $title: getNormalizedString(title),
         };
 
         // if (["8796541", "14296064", "1078761", "13652180", "11311758"].includes(id)) {

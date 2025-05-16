@@ -249,7 +249,6 @@ async function populatePlayHistoryItem(
       fullTitle = fullTitle.replace(mappingReplacePattern, '');
 
       const albumFromDB = await getRymAlbumByTitle(fullTitle);
-      console.log('albumFromDB', albumFromDB);
 
       if (albumFromDB) {
         const rating = albumFromDB.rating;

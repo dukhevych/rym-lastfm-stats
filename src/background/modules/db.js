@@ -4,20 +4,21 @@ import * as db from '@/helpers/rym-db';
 import * as utils from '@/helpers/utils.js';
 
 const flexIndex = new FlexSearch.Index({ tokenize: 'forward', cache: true });
-let albumMap = new Map();
+let recordMap = new Map();
 
 async function buildSearchIndex() {
-  const albums = await db.getAllRymAlbums();
-  albums.forEach((album, i) => {
+  const records = await db.getAllRymAlbums();
+  records.forEach((record) => {
     const searchable = [
-      album.title,
-      ...(Array.isArray(album.$artists) ? album.$artists : [])
+      record.$title,
+      record.$artistName,
+      record.$artistNameLocalized,
     ].join(' ').toLowerCase();
 
-    flexIndex.add(album.id, searchable);
-    albumMap.set(album.id, album);
+    flexIndex.add(record.id, searchable);
+    recordMap.set(record.id, record);
   });
-  console.log(`[FlexSearch] Indexed ${albums.length} albums`);
+  console.log(`[FlexSearch] Indexed ${records.length} records`);
 }
 
 // Initial load
@@ -30,93 +31,104 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
       let result;
       switch (type) {
-        case 'GET_RELEASES_BY_ID': {
-          result = albumMap.get(payload.id) || null;
+        case 'GET_RECORD_BY_ID': {
+          result = recordMap.get(payload.id) || null;
           break;
         }
 
-        case 'GET_ALL_RELEASES': {
-          result = Array.from(albumMap.values());
+        case 'GET_ALL_RECORDS': {
+          result = Array.from(recordMap.values());
           break;
         }
 
-        case 'GET_RELEASES_BY_ARTIST': {
-          const artistLower = payload.artist.toLowerCase().trim();
-          const hits = flexIndex.search(artistLower, { limit: 100 });
+        case 'GET_RECORD_BY_ARTIST': {
+          const query = payload.artist.toLowerCase().trim().replace(/\sand\s/g, ' & ');
+          const hits = flexIndex.search(query, { limit: 100 });
+
           result = hits
-            .map(id => albumMap.get(id))
-            .filter(album =>
-              (album.$artists || []).some(name => name.toLowerCase().trim() === artistLower)
-            );
+            .map(id => recordMap.get(id))
+            .filter(record => {
+              return record.$artistName.includes(query) || record.$artistNameLocalized.includes(query);
+            });
           break;
         }
 
-        case 'GET_RELEASE_BY_ARTIST_AND_TITLE': {
-          const artistNorm = utils.deburr(payload.artist).toLowerCase().trim();
-          const titleNorm = utils.deburr(payload.title).toLowerCase().trim();
-          const query = `${artistNorm} ${titleNorm}`;
+        case 'GET_RECORD_BY_ARTIST_AND_TITLE': {
+          const artistQuery = utils.deburr(payload.artist).toLowerCase().trim();
+          const titleQuery = utils.deburr(payload.title).toLowerCase().trim();
+          const query = `${artistQuery} ${titleQuery}`;
           const hits = flexIndex.search(query, { limit: 50 });
 
           result = hits
-            .map(id => albumMap.get(id))
-            .find(album => {
-              const normalizedTitle = utils.deburr(album.title).toLowerCase().trim();
-              const normalizedArtists = (album.$artists || []).map(a =>
-                utils.deburr(a).toLowerCase().trim()
-              );
-              return normalizedTitle === titleNorm && normalizedArtists.includes(artistNorm);
+            .map(id => recordMap.get(id))
+            .find(record => {
+              if (record.$title !== titleQuery) return false;
+              return record.$artistName.includes(query) || record.$artistNameLocalized.includes(query);
             }) || null;
           break;
         }
 
-        case 'GET_RYM_ALBUMS_BY_ID': {
-          const results = payload.ids.map(id => albumMap.get(id)).filter(Boolean);
+        case 'GET_RECORDS_BY_ID': {
+          const results = payload.ids.map(id => recordMap.get(id)).filter(Boolean);
           result = payload.asObject
-            ? Object.fromEntries(results.map(album => [album.id, album]))
+            ? Object.fromEntries(results.map(record => [record.id, record]))
             : results;
           break;
         }
 
-        case 'ADD_RYM_ALBUM': {
-          const album = payload.album;
-          await db.addRymAlbum(album);
-          albumMap.set(album.id, album);
-          flexIndex.add(album.id, [album.title, ...(album.$artists || [])].join(' ').toLowerCase());
+        case 'ADD_RECORD': {
+          const record = payload.record;
+          await db.addRymAlbum(record);
+          recordMap.set(record.id, record);
+          flexIndex.add(
+            record.id,
+            [
+              record.$title,
+              record.$artistName,
+              record.$artistNameLocalized
+            ].join(' ').toLowerCase(),
+          );
           result = true;
           break;
         }
 
-        case 'UPDATE_RYM_ALBUM': {
-          const existing = albumMap.get(payload.id);
-          if (!existing) throw new Error(`No album with id ${payload.id}`);
+        case 'UPDATE_RECORD': {
+          const existing = recordMap.get(payload.id);
+          if (!existing) throw new Error(`No record with id ${payload.id}`);
           const updated = { ...existing, ...payload.updatedData };
           await db.updateRymAlbum(payload.id, payload.updatedData);
-          albumMap.set(payload.id, updated);
-          flexIndex.update(payload.id, [updated.title, ...(updated.$artists || [])].join(' ').toLowerCase());
+          recordMap.set(payload.id, updated);
+          flexIndex.update(
+            payload.id,
+            [
+              updated.$title,
+              updated.$artistName,
+              updated.$artistNameLocalized
+            ].join(' ').toLowerCase());
           result = true;
           break;
         }
 
-        case 'UPDATE_RYM_ALBUM_RATING': {
-          const existing = albumMap.get(payload.id);
-          if (!existing) throw new Error(`No album with id ${payload.id}`);
+        case 'UPDATE_RECORD_RATING': {
+          const existing = recordMap.get(payload.id);
+          if (!existing) throw new Error(`No record with id ${payload.id}`);
           existing.rating = payload.rating;
           await db.updateRymAlbumRating(payload.id, payload.rating);
-          albumMap.set(payload.id, existing);
+          recordMap.set(payload.id, existing);
           result = true;
           break;
         }
 
         case 'DELETE_RYM_ALBUM': {
           await db.deleteRymAlbum(payload.id);
-          albumMap.delete(payload.id);
+          recordMap.delete(payload.id);
           flexIndex.remove(payload.id);
           result = true;
           break;
         }
 
         case 'GET_RYM_ALBUMS_QTY': {
-          result = albumMap.size;
+          result = recordMap.size;
           break;
         }
 
@@ -132,7 +144,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             .map(s => s.toLowerCase().trim());
           const searchQuery = queryParts.join(' ');
           const hits = flexIndex.search(searchQuery, { limit: 30 });
-          result = hits.map(id => albumMap.get(id));
+          result = hits.map(id => recordMap.get(id));
           break;
         }
 
