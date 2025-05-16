@@ -25,23 +25,63 @@ import {
 
   ratingValue = initialValue;
 
+  console.log('iniial value', initialValue);
+
+  const prepareItem = (value) => {
+    const artistNames = getArtistNames();
+    let lastArtistNames;
+
+    if (artistNames.length > 1) {
+      lastArtistNames = artistNames.pop();
+    }
+
+    let artistName = '';
+
+    if (lastArtistNames) {
+      artistName = ' & ' + lastArtistNames.artistName;
+    }
+    artistName = `${artistNames.map((name) => name.artistName).join(', ')}${artistName}`;
+
+    let artistNameLocalized = '';
+
+    if (
+      lastArtistNames
+        && (
+          artistNames.some((name => name.artistNameLocalized))
+          || lastArtistNames.artistNameLocalized
+        )
+    ) {
+      artistNameLocalized = ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
+      artistNameLocalized = `${artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ')}${artistNameLocalized}`;
+    }
+
+    return {
+      id: releaseId,
+      title: getReleaseTitle(),
+      releaseDate: getReleaseYear(),
+      rating: Number(value),
+      artistName,
+      artistNameLocalized: artistNameLocalized,
+      $artistName: utils.deburr(artistName.toLowerCase()),
+      $artistNameLocalized: utils.deburr(artistNameLocalized.toLowerCase()),
+    };
+  };
+
   async function updateRymSync(value) {
-    const rymAlbumData = await getRymAlbum(releaseId);
+    let rymAlbumData = null;
+    rymAlbumData = await getRymAlbum(releaseId);
+    console.log('rymAlbumData', rymAlbumData);
     if (value > 0) {
       if (!rymAlbumData) {
-        const data = {
-          id: releaseId,
-          title: getReleaseTitle(),
-          releaseDate: getReleaseYear(),
-          rating: String(value),
-          $artists: getArtistNames(),
-        };
-
-        console.log('addRymAlbum', data);
+        const data = prepareItem(value);
+        console.log(data);
         await addRymAlbum(data);
+        console.log('added');
       } else if (rymAlbumData.rating !== String(value)) {
-        console.log('updateRymAlbum', rymAlbumData, value);
         await updateRymAlbum(releaseId, { rating: String(value) });
+        console.log('updated');
+      } else {
+        console.log('nothing to update');
       }
     }
 

@@ -608,3 +608,4 @@ export function getDirectInnerText(element) {
     .join(' ')
     .trim();
 }
+

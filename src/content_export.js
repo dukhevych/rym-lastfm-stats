@@ -2,6 +2,7 @@ import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import { LASTFM_COLOR } from '@/helpers/constants.js';
 import { upgradeRymDB } from '@/helpers/rymSync.js';
+import data from '@/data.csv?raw';
 
 (async function () {
   const form = document.querySelector('form.music_export');
@@ -23,26 +24,29 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
 
     formSubmitButton.setAttribute('disabled', 'true');
 
-    const formData = new FormData(form);
+    // const formData = new FormData(form);
 
-    if (formData.get('g-recaptcha-response') === '') return;
+    // if (formData.get('g-recaptcha-response') === '') return;
 
     try {
-      const response = await fetch(form.action, {
-        method: "POST",
-        body: formData,
-      });
+      // const response = await fetch(form.action, {
+      //   method: "POST",
+      //   body: formData,
+      // });
 
-      if (!response.ok) {
-        throw new Error("Request failed: " + response.status);
-      }
+      // if (!response.ok) {
+      //   throw new Error("Request failed: " + response.status);
+      // }
 
-      const exportData = await response.text();
+      // const exportData = await response.text();
+      const exportData = data;
 
       // Parse the CSV data
       const rows = exportData.split('\n').slice(1);
+      // const rows = exportData.split('\n');
 
       const parsedData = [];
+      let q = [];
 
       rows.forEach(row => {
         const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, ''));
@@ -57,6 +61,7 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
         const lastName = columns[2];
         const firstNameLocalized = columns[3];
         const lastNameLocalized = columns[4];
+
         const title = columns[5];
         const releaseDate = +columns[6];
         const rating = +columns[7];
@@ -64,32 +69,36 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
         // const purchaseDate = columns[9];
         // const mediaType = columns[10];
 
-        const artists = new Set();
+        const getCombinedName = (firstName, lastName) => [firstName, lastName]
+          .filter(Boolean)
+          .join(' ')
+          .trim()
+          .replace(/\s&amp;\s/g, ' & ')
+          .replace(/\sand\s/g, ' & ');
 
-        let fullArtistName = lastName;
-        if (firstName) {
-          fullArtistName = `${firstName} ${fullArtistName}`;
-        }
+        const artistName = getCombinedName(firstName, lastName);
+        const artistNameLocalized = getCombinedName(firstNameLocalized, lastNameLocalized);
 
-        fullArtistName.split(/(,\s|\s&amp\s)/).forEach(artist => {
-          const artistName = artist.trim();
+        const getNormalizedName = (name) => {
+          if (!name) return '';
 
-          if (artistName) {
-            artists.add(artistName);
-          }
-        });
+          return utils.deburr(name.toLowerCase());
+        };
 
         const item = {
           id,
-          // firstName,
-          // lastName,
-          // firstNameLocalized,
-          // lastNameLocalized,
           title,
           releaseDate,
           rating,
-          $artists: Array.from(artists),
+          artistName,
+          artistNameLocalized,
+          $artistName: getNormalizedName(artistName),
+          $artistNameLocalized: getNormalizedName(artistNameLocalized),
         };
+
+        // if (["8796541", "14296064", "1078761", "13652180", "11311758"].includes(id)) {
+        //   console.log(item);
+        // }
 
         if (constants.isDev) {
           item._raw = row;
@@ -99,7 +108,6 @@ import { upgradeRymDB } from '@/helpers/rymSync.js';
       });
 
       await upgradeRymDB(parsedData);
-      alert('RYM data successfully synced!');
     } catch (error) {
       console.error('Error:', error);
       alert('An error occurred while syncing data with RYM.');

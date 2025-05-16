@@ -120,6 +120,11 @@ module.exports = (env) => {
           resourceQuery: /raw/,
           use: 'raw-loader',
         },
+        {
+          test: /\.csv$/i,
+          resourceQuery: /raw/,
+          use: 'raw-loader',
+        },
       ],
     },
     plugins: [

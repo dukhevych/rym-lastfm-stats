@@ -36,6 +36,7 @@ browserAPI.runtime.onMessage.addListener((message, sender) => {
         });
 
         if (currentValue !== undefined) {
+          console.log(currentValue);
           dispatch(currentValue);
         }
       }

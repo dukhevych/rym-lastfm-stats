@@ -10,7 +10,7 @@ export function getReleaseYear() {
   if (!yearElement) return null;
   const yearText = yearElement.textContent.trim();
   const match = yearText.match(/^\d{4}/);
-  return match ? match[0] : null;
+  return match ? Number(match[0]) : null;
 }
 
 export function getArtistNames() {
