@@ -1,4 +1,3 @@
-// import { getRymAlbumByTitle } from '@/helpers/rymSync';
 import { RecordsAPI } from '@/helpers/records-api';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -245,7 +244,12 @@ async function populatePlayHistoryItem(
     const customMyRating = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customMyRating}`);
     const starsFilled = customMyRating.querySelector('.stars-filled');
     if (customMyRating) {
-      const albumFromDB = await RecordsAPI.getByArtistAndTitle(artistName, albumName);
+      const albumNameFallback = albumName.replace(mappingReplacePattern, '').trim();
+      const albumFromDB = await RecordsAPI.getByArtistAndTitle(
+        artistName.replace(/\sand\s/g, ' & '),
+        albumName,
+        albumNameFallback,
+      );
 
       if (albumFromDB) {
         const rating = albumFromDB.rating;

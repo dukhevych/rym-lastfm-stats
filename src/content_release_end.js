@@ -63,9 +63,9 @@ import {
         rating: Number(value),
         artistName,
         artistNameLocalized: artistNameLocalized,
-        $artistName: utils.deburr(artistName.toLowerCase()),
-        $artistNameLocalized: utils.deburr(artistNameLocalized.toLowerCase()),
-        $title: utils.deburr(title.toLowerCase()),
+        $artistName: utils.normalizeForSearch(artistName),
+        $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
+        $title: utils.normalizeForSearch(title),
       };
     };
 

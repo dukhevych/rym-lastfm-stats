@@ -609,3 +609,12 @@ export function getDirectInnerText(element) {
     .trim();
 }
 
+export function normalizeForSearch(str) {
+  return deburr(str
+    .toLowerCase()
+    .replace('.', '')
+    .replace(':', '')
+    .replace(',', '')
+    .replace(/\s+/g, ' ')
+    .trim());
+}

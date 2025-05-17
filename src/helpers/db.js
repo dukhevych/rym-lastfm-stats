@@ -127,6 +127,8 @@ export async function addRecord(payload) {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
 
+  console.log(`[addRecord] DB Name: ${dbName}, Version: ${constants.RYM_DB_VERSION}`);
+
   return new Promise((resolve, reject) => {
     const dbRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
 
@@ -138,10 +140,14 @@ export async function addRecord(payload) {
       const putRequest = store.put(payload);
 
       putRequest.onsuccess = function () {
+        console.log(`[addRecord] Record added: ${payload.id}`);
+        db.close();
         resolve(true);
       };
 
       putRequest.onerror = function (event) {
+        console.error(`[addRecord] Error adding record: ${event.target.error}`);
+        db.close();
         reject(event.target.error);
       };
     };
@@ -155,6 +161,8 @@ export async function addRecord(payload) {
 export async function updateRecord(id, payload) {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
+
+  console.log(`[updateRecord] DB Name: ${dbName}, Version: ${constants.RYM_DB_VERSION}`);
 
   return new Promise((resolve, reject) => {
     const dbRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
@@ -173,10 +181,14 @@ export async function updateRecord(id, payload) {
           const updateRequest = store.put(updatedRecord);
 
           updateRequest.onsuccess = function () {
+            console.log(`[updateRecord] Record updated: ${id}`);
+            db.close();
             resolve(true);
           };
 
           updateRequest.onerror = function (event) {
+            console.error(`[updateRecord] Error updating record: ${event.target.error}`);
+            db.close();
             reject(event.target.error);
           };
         } else {

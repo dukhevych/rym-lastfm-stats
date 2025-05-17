@@ -935,48 +935,67 @@ html[data-scheme="light"] {
     --n: 12;
     --bar-width: calc(100% / var(--n));
     --clr-1: var(--clr-palette-vibrant);
-    --clr-2: var(--clr-palette-darkvibrant);
-    --clr-3: var(--clr-palette-lightvibrant);
-    --clr-4: var(--clr-palette-muted);
-    --clr-5: var(--clr-palette-lightmuted);
-    --clr-6: var(--clr-palette-darkmuted);
+    --clr-3: var(--clr-palette-darkvibrant);
+    --clr-5: var(--clr-palette-lightvibrant);
+    --clr-7: var(--clr-palette-muted);
+    --clr-9: var(--clr-palette-lightmuted);
+    --clr-11: var(--clr-palette-darkmuted);
+    --clr-2: color-mix(in lch, var(--clr-1) 50%, var(--clr-3));
+    --clr-4: color-mix(in lch, var(--clr-3) 50%, var(--clr-5));
+    --clr-6: color-mix(in lch, var(--clr-5) 50%, var(--clr-7));
+    --clr-8: color-mix(in lch, var(--clr-7) 50%, var(--clr-9));
+    --clr-10: color-mix(in lch, var(--clr-9) 50%, var(--clr-11));
+    --clr-12: color-mix(in lch, var(--clr-11) 20%, var(--clr-1));
+
+    --bar-1-x: calc(((0 + (0 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-2-x: calc(((1 + (1 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-3-x: calc(((2 + (2 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-4-x: calc(((3 + (3 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-5-x: calc(((4 + (4 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-6-x: calc(((5 + (5 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-7-x: calc(((6 + (6 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-8-x: calc(((7 + (7 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-9-x: calc(((8 + (8 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-10-x: calc(((9 + (9 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-11-x: calc(((10 + (10 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-12-x: calc(((11 + (11 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
 
     background:
       linear-gradient(to top, var(--clr-1) var(--bg-option-21-bar-1), transparent var(--bg-option-21-bar-1))
-        calc(((0 + (0 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+        var(--bar-1-x) 0 / var(--bar-width) 100% no-repeat,
 
       linear-gradient(to top, var(--clr-2) var(--bg-option-21-bar-2), transparent var(--bg-option-21-bar-2))
-        calc(((1 + (1 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+        var(--bar-2-x) 0 / var(--bar-width) 100% no-repeat,
 
       linear-gradient(to top, var(--clr-3) var(--bg-option-21-bar-3), transparent var(--bg-option-21-bar-3))
-        calc(((2 + (2 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+        var(--bar-3-x) 0 / var(--bar-width) 100% no-repeat,
 
       linear-gradient(to top, var(--clr-4) var(--bg-option-21-bar-4), transparent var(--bg-option-21-bar-4))
-        calc(((3 + (3 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+        var(--bar-4-x) 0 / var(--bar-width) 100% no-repeat,
 
       linear-gradient(to top, var(--clr-5) var(--bg-option-21-bar-5), transparent var(--bg-option-21-bar-5))
-        calc(((4 + (4 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+        var(--bar-5-x) 0 / var(--bar-width) 100% no-repeat,
 
       linear-gradient(to top, var(--clr-6) var(--bg-option-21-bar-6), transparent var(--bg-option-21-bar-6))
-        calc(((5 + (5 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+        var(--bar-6-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-1) var(--bg-option-21-bar-7), transparent var(--bg-option-21-bar-7))
-        calc(((6 + (6 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+      linear-gradient(to top, var(--clr-7) var(--bg-option-21-bar-7), transparent var(--bg-option-21-bar-7))
+        var(--bar-7-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-2) var(--bg-option-21-bar-8), transparent var(--bg-option-21-bar-8))
-        calc(((7 + (7 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+      linear-gradient(to top, var(--clr-8) var(--bg-option-21-bar-8), transparent var(--bg-option-21-bar-8))
+        var(--bar-8-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-3) var(--bg-option-21-bar-9), transparent var(--bg-option-21-bar-9))
-        calc(((8 + (8 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+      linear-gradient(to top, var(--clr-9) var(--bg-option-21-bar-9), transparent var(--bg-option-21-bar-9))
+        var(--bar-9-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-4) var(--bg-option-21-bar-10), transparent var(--bg-option-21-bar-10))
-        calc(((9 + (9 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+      linear-gradient(to top, var(--clr-10) var(--bg-option-21-bar-10), transparent var(--bg-option-21-bar-10))
+        var(--bar-10-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-5) var(--bg-option-21-bar-11), transparent var(--bg-option-21-bar-11))
-        calc(((10 + (10 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat,
+      linear-gradient(to top, var(--clr-11) var(--bg-option-21-bar-11), transparent var(--bg-option-21-bar-11))
+        var(--bar-11-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-6) var(--bg-option-21-bar-12), transparent var(--bg-option-21-bar-12))
-        calc(((11 + (11 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)) 0 / var(--bar-width) 100% no-repeat;
+      linear-gradient(to top, var(--clr-12) var(--bg-option-21-bar-12), transparent var(--bg-option-21-bar-12))
+        var(--bar-12-x) 0 / var(--bar-width) 100% no-repeat;
 
     animation: bg-option-21-animation 1.5s linear infinite;
     opacity: 0.2;
@@ -988,6 +1007,15 @@ html[data-scheme="light"] {
     transform: translateX(-50%) scaleY(-1);
     bottom: auto;
     opacity: 0.4;
+
+    --bar-width: calc((100% / var(--n)) - 2%);
+
+    --clr-1: color-mix(in lch, var(--clr-palette-vibrant) 50%, var(--clr-palette-lightvibrant) 50%);
+    --clr-2: color-mix(in lch, var(--clr-palette-lightvibrant) 50%, var(--clr-palette-darkvibrant) 50%);
+    --clr-3: color-mix(in lch, var(--clr-palette-darkvibrant) 50%, var(--clr-palette-muted) 50%);
+    --clr-4: color-mix(in lch, var(--clr-palette-muted) 50%, var(--clr-palette-lightmuted) 50%);
+    --clr-5: color-mix(in lch, var(--clr-palette-lightmuted) 50%, var(--clr-palette-darkmuted) 50%);
+    --clr-6: color-mix(in lch, var(--clr-palette-darkmuted) 50%, var(--clr-palette-vibrant) 50%);
   }
 
   & > * {

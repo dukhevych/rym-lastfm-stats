@@ -78,12 +78,6 @@ import data from '@/data.csv?raw';
         const artistName = getCombinedName(firstName, lastName);
         const artistNameLocalized = getCombinedName(firstNameLocalized, lastNameLocalized);
 
-        const getNormalizedString = (string) => {
-          if (!string) return '';
-
-          return utils.deburr(string.toLowerCase());
-        };
-
         const item = {
           id,
           title,
@@ -91,9 +85,9 @@ import data from '@/data.csv?raw';
           rating,
           artistName,
           artistNameLocalized,
-          $artistName: getNormalizedString(artistName),
-          $artistNameLocalized: getNormalizedString(artistNameLocalized),
-          $title: getNormalizedString(title),
+          $artistName: utils.normalizeForSearch(artistName),
+          $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
+          $title: utils.normalizeForSearch(title),
         };
 
         if (constants.isDev) {
