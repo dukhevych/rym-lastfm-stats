@@ -83,8 +83,8 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       }
 
       case 'GET_RECORD_BY_ARTIST_AND_TITLE': {
-        const artistQuery = utils.deburr(payload.artist).toLowerCase().trim();
-        const titleQuery = utils.deburr(payload.title).toLowerCase().trim();
+        const artistQuery = utils.normalizeForSearch(payload.artist);
+        const titleQuery = utils.normalizeForSearch(payload.title);
         const query = `${artistQuery} ${titleQuery}`;
         const hits = flexIndex.search(query, { limit: 50 });
 
@@ -95,11 +95,24 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
             return record.$artistName.includes(artistQuery) || record.$artistNameLocalized.includes(artistQuery);
           }) || null;
 
+        if (!result && payload.titleFallback) {
+          const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
+          const queryFallback = `${artistQuery} ${titleFallbackQuery}`;
+          const hitsFallback = flexIndex.search(queryFallback, { limit: 50 });
+
+          result = hitsFallback
+            .map(id => recordMap.get(id))
+            .find(record => {
+              if (record.$title !== titleFallbackQuery) return false;
+              return record.$artistName.includes(artistQuery) || record.$artistNameLocalized.includes(artistQuery);
+            }) || null;
+        }
+
         break;
       }
 
       case 'ADD_RECORD': {
-        const record = payload.record;
+        const { record } = payload;
         await db.addRecord(record);
         recordMap.set(record.id, record);
         flexIndex.add(
@@ -150,9 +163,7 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       }
 
       case 'GET_RECORDS_QTY': {
-        console.log('Fetching records quantity');
         result = recordMap.size;
-        console.log('Records quantity:', result);
         break;
       }
 
