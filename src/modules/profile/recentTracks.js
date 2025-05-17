@@ -246,9 +246,9 @@ async function populatePlayHistoryItem(
     if (customMyRating) {
       const albumNameFallback = albumName.replace(mappingReplacePattern, '').trim();
       const albumFromDB = await RecordsAPI.getByArtistAndTitle(
-        artistName.replace(/\sand\s/g, ' & '),
-        albumName,
-        albumNameFallback,
+        utils.normalizeForSearch(artistName),
+        utils.normalizeForSearch(albumName),
+        utils.normalizeForSearch(albumNameFallback),
       );
 
       if (albumFromDB) {

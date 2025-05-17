@@ -612,6 +612,7 @@ export function getDirectInnerText(element) {
 export function normalizeForSearch(str) {
   return deburr(str
     .toLowerCase()
+    .replace(/\sand\s/g, ' & ')
     .replace('.', '')
     .replace(':', '')
     .replace(',', '')

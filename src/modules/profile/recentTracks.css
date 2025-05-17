@@ -500,7 +500,6 @@ html[data-scheme="light"] {
     --track-panel-gradient-stripe-width: 40px;
     --track-panel-gradient-angle: -45deg;
 
-    /* animation: track-panel-rotate-gradient 5s linear infinite; */
     background-position: center center;
     opacity: 0.1;
   }
@@ -933,12 +932,13 @@ html[data-scheme="light"] {
   &.bg-option-21:after,
   &.bg-option-22:after {
     --n: 12;
-    --bar-width: calc(100% / var(--n));
-    --clr-1: var(--clr-palette-vibrant);
-    --clr-3: var(--clr-palette-darkvibrant);
-    --clr-5: var(--clr-palette-lightvibrant);
-    --clr-7: var(--clr-palette-muted);
-    --clr-9: var(--clr-palette-lightmuted);
+    --bar-width: calc((100% / var(--n)) - 2%);
+
+    --clr-1: var(--clr-palette-lightvibrant);
+    --clr-3: var(--clr-palette-vibrant);
+    --clr-5: var(--clr-palette-darkvibrant);
+    --clr-7: var(--clr-palette-lightmuted);
+    --clr-9: var(--clr-palette-muted);
     --clr-11: var(--clr-palette-darkmuted);
     --clr-2: color-mix(in lch, var(--clr-1) 50%, var(--clr-3));
     --clr-4: color-mix(in lch, var(--clr-3) 50%, var(--clr-5));
@@ -947,7 +947,7 @@ html[data-scheme="light"] {
     --clr-10: color-mix(in lch, var(--clr-9) 50%, var(--clr-11));
     --clr-12: color-mix(in lch, var(--clr-11) 20%, var(--clr-1));
 
-    --bar-1-x: calc(((0 + (0 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    /* --bar-1-x: calc(((0 + (0 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
     --bar-2-x: calc(((1 + (1 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
     --bar-3-x: calc(((2 + (2 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
     --bar-4-x: calc(((3 + (3 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
@@ -958,7 +958,20 @@ html[data-scheme="light"] {
     --bar-9-x: calc(((8 + (8 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
     --bar-10-x: calc(((9 + (9 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
     --bar-11-x: calc(((10 + (10 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
-    --bar-12-x: calc(((11 + (11 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n));
+    --bar-12-x: calc(((11 + (11 * (var(--n) / (var(--n) - 1)) * (1 / var(--n)))) * 100%) / var(--n)); */
+
+    --bar-1-x: calc((0 * 100%) / (var(--n) - 1));
+    --bar-2-x: calc((1 * 100%) / (var(--n) - 1));
+    --bar-3-x: calc((2 * 100%) / (var(--n) - 1));
+    --bar-4-x: calc((3 * 100%) / (var(--n) - 1));
+    --bar-5-x: calc((4 * 100%) / (var(--n) - 1));
+    --bar-6-x: calc((5 * 100%) / (var(--n) - 1));
+    --bar-7-x: calc((6 * 100%) / (var(--n) - 1));
+    --bar-8-x: calc((7 * 100%) / (var(--n) - 1));
+    --bar-9-x: calc((8 * 100%) / (var(--n) - 1));
+    --bar-10-x: calc((9 * 100%) / (var(--n) - 1));
+    --bar-11-x: calc((10 * 100%) / (var(--n) - 1));
+    --bar-12-x: calc((11 * 100%) / (var(--n) - 1));
 
     background:
       linear-gradient(to top, var(--clr-1) var(--bg-option-21-bar-1), transparent var(--bg-option-21-bar-1))
@@ -997,8 +1010,20 @@ html[data-scheme="light"] {
       linear-gradient(to top, var(--clr-12) var(--bg-option-21-bar-12), transparent var(--bg-option-21-bar-12))
         var(--bar-12-x) 0 / var(--bar-width) 100% no-repeat;
 
-    animation: bg-option-21-animation 1.5s linear infinite;
     opacity: 0.2;
+
+    --bg-option-21-bar-1: 0%;
+    --bg-option-21-bar-2: 10%;
+    --bg-option-21-bar-3: 20%;
+    --bg-option-21-bar-4: 30%;
+    --bg-option-21-bar-5: 40%;
+    --bg-option-21-bar-6: 50%;
+    --bg-option-21-bar-7: 55%;
+    --bg-option-21-bar-8: 40%;
+    --bg-option-21-bar-9: 30%;
+    --bg-option-21-bar-10: 20%;
+    --bg-option-21-bar-11: 10%;
+    --bg-option-21-bar-12: 0%;
   }
   &.bg-option-22:after {
     width: 20%;
@@ -1017,12 +1042,15 @@ html[data-scheme="light"] {
     --clr-5: color-mix(in lch, var(--clr-palette-lightmuted) 50%, var(--clr-palette-darkmuted) 50%);
     --clr-6: color-mix(in lch, var(--clr-palette-darkmuted) 50%, var(--clr-palette-vibrant) 50%);
   }
+  &.is-now-playing.bg-option-21:after,
+  &.is-now-playing.bg-option-22:after {
+    animation: bg-option-21-animation 1.5s linear infinite;
+  }
 
   & > * {
     position: relative;
     z-index: 2;
   }
-
 
   a {
     color: inherit;
