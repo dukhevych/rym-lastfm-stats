@@ -480,7 +480,7 @@ export async function getImageColors(imageUrl, theme = 'light') {
 
   const palette = await v.getPalette();
 
-  return getVibrantUiColors(palette, theme);
+  return getVibrantUiColors(palette);
 }
 
 export function getContrastingColor(hexColor, darkColor = '#000', lightColor = '#fff') {
@@ -510,11 +510,13 @@ export async function getVibrantUiColors(palette) {
   const lightColors = {
     bgColor: (palette.LightMuted || palette.Muted || palette.LightVibrant)?.hex || '#222',
     accentColor: (palette.Vibrant || palette.DarkVibrant)?.hex || '#ff4081',
+    accentColorHSL: (palette.Vibrant || palette.DarkVibrant)?.hsl || [0.9444444, 1, 0.63],
   };
 
   const darkColors = {
     bgColor: (palette.DarkMuted || palette.Muted || palette.DarkVibrant)?.hex || '#222',
     accentColor: (palette.Vibrant || palette.LightVibrant)?.hex || '#ff4081',
+    accentColorHSL: (palette.Vibrant || palette.LightVibrant)?.hsl || [0.9444444, 1, 0.63],
   };
 
   return {
