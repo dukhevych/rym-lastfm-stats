@@ -447,34 +447,28 @@ html[data-scheme="light"] {
 
 @keyframes track-panel-rotate-gradient {
   0% {
-    /* --track-panel-gradient-angle: -45deg; */
     --track-panel-gradient-stripe-width: 40px;
   }
 
   25% {
-    /* --track-panel-gradient-angle: -30deg; */
     --track-panel-gradient-stripe-width: 20px;
   }
 
   50% {
-    /* --track-panel-gradient-angle: -45deg; */
     --track-panel-gradient-stripe-width: 40px;
   }
 
   75% {
-    /* --track-panel-gradient-angle: -60deg; */
     --track-panel-gradient-stripe-width: 60px;
   }
 
   100% {
-    /* --track-panel-gradient-angle: -45deg; */
     --track-panel-gradient-stripe-width: 40px;
   }
 }
 
 [data-element="rymstats-track-panel"] {
   padding-right: 1rem;
-  /* background-color: var(--bg-color); */
   color: color-contrast(var(--bg-color) vs #fff, #000);
   transition: background-color 0.3s ease-out, color 0.3s ease-out;
   position: relative;
@@ -1024,31 +1018,18 @@ html[data-scheme="light"] {
 
     --bar-width: calc((100% / var(--n)) - 4%);
 
-    /* --clr-1: color-mix(in lch, var(--clr-palette-vibrant) 50%, var(--clr-palette-lightvibrant) 50%);
-    --clr-2: color-mix(in lch, var(--clr-palette-lightvibrant) 50%, var(--clr-palette-darkvibrant) 50%);
-    --clr-3: color-mix(in lch, var(--clr-palette-darkvibrant) 50%, var(--clr-palette-muted) 50%);
-    --clr-4: color-mix(in lch, var(--clr-palette-muted) 50%, var(--clr-palette-lightmuted) 50%);
-    --clr-5: color-mix(in lch, var(--clr-palette-lightmuted) 50%, var(--clr-palette-darkmuted) 50%);
-    --clr-6: color-mix(in lch, var(--clr-palette-darkmuted) 50%, var(--clr-palette-vibrant) 50%); */
-
-    /* --clr-1: var(--clr-light-accent); */
-    --clr-1: hsla(calc((0.5 * var(--bg-option-21-bar-1)) * 1deg), calc(var(--bg-option-21-bar-1) * 1%), 50%, calc(var(--bg-option-21-bar-1) / 100));
-    --clr-2: hsla(calc((0.5 * var(--bg-option-21-bar-2)) * 1deg), calc(var(--bg-option-21-bar-2) * 1%), 50%, calc(var(--bg-option-21-bar-2) / 100));
-    --clr-3: hsla(calc((0.5 * var(--bg-option-21-bar-3)) * 1deg), calc(var(--bg-option-21-bar-3) * 1%), 50%, calc(var(--bg-option-21-bar-3) / 100));
-    --clr-4: hsla(calc((0.5 * var(--bg-option-21-bar-4)) * 1deg), calc(var(--bg-option-21-bar-4) * 1%), 50%, calc(var(--bg-option-21-bar-4) / 100));
-    --clr-5: hsla(calc((0.5 * var(--bg-option-21-bar-5)) * 1deg), calc(var(--bg-option-21-bar-5) * 1%), 50%, calc(var(--bg-option-21-bar-5) / 100));
-    --clr-6: hsla(calc((0.5 * var(--bg-option-21-bar-6)) * 1deg), calc(var(--bg-option-21-bar-6) * 1%), 50%, calc(var(--bg-option-21-bar-6) / 100));
-    --clr-7: hsla(calc((0.5 * var(--bg-option-21-bar-7)) * 1deg), calc(var(--bg-option-21-bar-7) * 1%), 50%, calc(var(--bg-option-21-bar-7) / 100));
-    --clr-8: hsla(calc((0.5 * var(--bg-option-21-bar-8)) * 1deg), calc(var(--bg-option-21-bar-8) * 1%), 50%, calc(var(--bg-option-21-bar-8) / 100));
-    --clr-9: hsla(calc((0.5 * var(--bg-option-21-bar-9)) * 1deg), calc(var(--bg-option-21-bar-9) * 1%), 50%, calc(var(--bg-option-21-bar-9) / 100));
-    --clr-10: hsla(calc((0.5 * var(--bg-option-21-bar-10)) * 1deg), calc(var(--bg-option-21-bar-10) * 1%), 50%, calc(var(--bg-option-21-bar-10) / 100));
-    --clr-11: hsla(calc((0.5 * var(--bg-option-21-bar-11)) * 1deg), calc(var(--bg-option-21-bar-11) * 1%), 50%, calc(var(--bg-option-21-bar-11) / 100));
-    --clr-12: hsla(calc((0.5 * var(--bg-option-21-bar-12)) * 1deg), calc(var(--bg-option-21-bar-12) * 1%), 50%, calc(var(--bg-option-21-bar-12) / 100));
-    /* --clr-3: var(--clr-dark-accent);
-    --clr-5: var(--clr-light-accent);
-    --clr-7: var(--clr-dark-accent);
-    --clr-9: var(--clr-light-accent);
-    --clr-11: var(--clr-dark-accent); */
+    --clr-1: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-1) * 0.5%), calc(var(--bg-option-21-bar-1) / 100));
+    --clr-2: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-2) * 0.5%), calc(var(--bg-option-21-bar-2) / 100));
+    --clr-3: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-3) * 0.5%), calc(var(--bg-option-21-bar-3) / 100));
+    --clr-4: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-4) * 0.5%), calc(var(--bg-option-21-bar-4) / 100));
+    --clr-5: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-5) * 0.5%), calc(var(--bg-option-21-bar-5) / 100));
+    --clr-6: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-6) * 0.5%), calc(var(--bg-option-21-bar-6) / 100));
+    --clr-7: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-7) * 0.5%), calc(var(--bg-option-21-bar-7) / 100));
+    --clr-8: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-8) * 0.5%), calc(var(--bg-option-21-bar-8) / 100));
+    --clr-9: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-9) * 0.5%), calc(var(--bg-option-21-bar-9) / 100));
+    --clr-10: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-10) * 0.5%), calc(var(--bg-option-21-bar-10) / 100));
+    --clr-11: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-11) * 0.5%), calc(var(--bg-option-21-bar-11) / 100));
+    --clr-12: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-12) * 0.5%), calc(var(--bg-option-21-bar-12) / 100));
   }
   &.is-now-playing.bg-option-21:after,
   &.is-now-playing.bg-option-22:after {
@@ -1071,14 +1052,12 @@ html[data-scheme="light"] {
 
 html[data-scheme="light"] {
   [data-element="rymstats-track-panel"] {
-    /* --bg-color: var(--clr-light-bg); */
     border-color: var(--clr-light-accent);
   }
 }
 
 html[data-scheme="dark"] {
   [data-element="rymstats-track-panel"] {
-    /* --bg-color: var(--clr-dark-bg); */
     border-color: var(--clr-dark-accent);
   }
 }
@@ -1132,8 +1111,6 @@ html[data-scheme="light"] {
   .btn.btn-profile {
     --bg-color: var(--clr-light-accent);
     --color: var(--clr-light-accent-contrast);
-    /* --bg-color: #000; */
-    /* text-shadow: 0 0 2px rgba(0, 0, 0, 0.5); */
   }
 }
 
@@ -1142,8 +1119,6 @@ html[data-scheme="dark"] {
   .btn.btn-profile {
     --bg-color: var(--clr-dark-accent);
     --color: var(--clr-dark-accent-contrast);
-    /* --bg-color: #fff; */
-    /* text-shadow: 0 0 2px rgba(255, 255, 255, 0.5); */
   }
 }
 
@@ -1358,5 +1333,24 @@ html[data-scheme="dark"] {
 [data-element="rymstats-track-panel"]:hover {
   .btn-bg-switcher {
     opacity: .3;
+  }
+}
+
+@property --progress  { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+
+.btn.btn-lastfm {
+  position: relative;
+
+  &:before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    z-index: -1;
+    opacity: 0.75;
+    background: conic-gradient(
+      var(--bg-color) var(--progress),
+      transparent 0deg
+    );
+    border-radius: inherit;
   }
 }

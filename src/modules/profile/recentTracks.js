@@ -587,13 +587,13 @@ async function render(_config) {
         documentRoot.style.setProperty('--clr-dark-accent', colors.dark.accentColor);
         documentRoot.style.setProperty('--clr-dark-accent-contrast', colors.dark.accentColorContrast);
 
-        documentRoot.style.setProperty('--clr-light-accent-hue', colors.light.accentColorHSL[0] * 360);
-        documentRoot.style.setProperty('--clr-light-accent-saturation', colors.light.accentColorHSL[1] * 100);
-        documentRoot.style.setProperty('--clr-light-accent-lightness', colors.light.accentColorHSL[2] * 100);
+        documentRoot.style.setProperty('--clr-light-accent-hue', parseInt(colors.light.accentColorHSL[0] * 360));
+        documentRoot.style.setProperty('--clr-light-accent-saturation', (colors.light.accentColorHSL[1] * 100).toFixed(2));
+        documentRoot.style.setProperty('--clr-light-accent-lightness', (colors.light.accentColorHSL[2] * 100).toFixed(2));
 
-        documentRoot.style.setProperty('--clr-dark-accent-hue', colors.dark.accentColorHSL[0] * 360);
-        documentRoot.style.setProperty('--clr-dark-accent-saturation', colors.dark.accentColorHSL[1] * 100);
-        documentRoot.style.setProperty('--clr-dark-accent-lightness', colors.dark.accentColorHSL[2] * 100);
+        documentRoot.style.setProperty('--clr-dark-accent-hue', parseInt(colors.dark.accentColorHSL[0] * 360));
+        documentRoot.style.setProperty('--clr-dark-accent-saturation', (colors.dark.accentColorHSL[1] * 100).toFixed(2));
+        documentRoot.style.setProperty('--clr-dark-accent-lightness', (colors.dark.accentColorHSL[2] * 100).toFixed(2));
 
         Object.keys(colors.palette).forEach((key) => {
           if (colors.palette[key]?.hex) {
@@ -665,14 +665,44 @@ async function render(_config) {
 
   insertRecentTracksWrapperIntoDOM(tracksWrapper);
 
-  let intervalId;
+  let intervalId = null;
+  let lastTick = null;
+  let progressLoopActive = false;
+
+  function getPollingProgress() {
+    if (!lastTick) return 0;
+    const elapsed = Date.now() - lastTick;
+    return Math.min(elapsed / constants.RECENT_TRACKS_INTERVAL_MS, 1);
+  }
+
+  function updateProgressVisual() {
+    const progress = getPollingProgress();
+    const angle = parseInt(progress * 360);
+    button.style.setProperty('--progress', `${angle}deg`);
+  }
+
+  function startProgressLoop() {
+    if (progressLoopActive) return;
+    progressLoopActive = true;
+
+    const loop = () => {
+      if (!progressLoopActive) return;
+      updateProgressVisual();
+      requestAnimationFrame(loop);
+    };
+
+    requestAnimationFrame(loop);
+  }
 
   const startInterval = () => {
     if (!intervalId) {
-      intervalId = setInterval(
-        updateAction,
-        constants.RECENT_TRACKS_INTERVAL_MS,
-      );
+      lastTick = Date.now();
+      intervalId = setInterval(async () => {
+        await updateAction();
+        lastTick = Date.now();
+      }, constants.RECENT_TRACKS_INTERVAL_MS);
+
+      startProgressLoop();
     }
   };
 
