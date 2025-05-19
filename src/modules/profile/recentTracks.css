@@ -279,20 +279,45 @@
     align-items: center;
 
     &.no-rating {
-      &:before {
-        content: 'No rating found.';
+      [data-element="rymstats-track-no-rating"] {
+        display: block;
+        line-height: 23px;
+        min-height: 24px;
       }
 
-      .stars-filled {
-        display: none;
-      }
-      .stars-empty {
+      [data-element="rymstats-track-rating-stars"] {
         display: none;
       }
     }
 
     [data-element="rymstats-track-rating-stars"] {
       position: relative;
+    }
+
+    [data-element="rymstats-track-no-rating"] {
+      display: none;
+
+      [data-element="rymstats-track-no-rating-help-icon"] {
+        border-radius: 50%;
+        display: inline-block;
+        text-align: center;
+        margin-left: 0.5em;
+        line-height: 21px;
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+    }
+
+    .stars-filled,
+    .stars-empty {
+      display: flex;
+      flex-wrap: nowrap;
+
+      & > * {
+        flex-shrink: 0;
+      }
     }
 
     .stars-filled {
@@ -469,7 +494,6 @@ html[data-scheme="light"] {
 
 [data-element="rymstats-track-panel"] {
   padding-right: 1rem;
-  color: color-contrast(var(--bg-color) vs #fff, #000);
   transition: background-color 0.3s ease-out, color 0.3s ease-out;
   position: relative;
 
@@ -1347,6 +1371,7 @@ html[data-scheme="dark"] {
     inset: -5px;
     z-index: -1;
     opacity: 0.75;
+    pointer-events: none;
     background: conic-gradient(
       var(--bg-color) var(--progress),
       transparent 0deg

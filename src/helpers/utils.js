@@ -303,7 +303,7 @@ export const getFullConfig = async () => {
 }
 
 import svgLoader from '@/assets/icons/loader.svg?raw';
-import starSvg from '@/assets/icons/star4.svg?raw';
+import starSvg from '@/assets/icons/star.svg?raw';
 import lastfmSvg from '@/assets/icons/lastfm.svg?raw';
 import playlistSvg from '@/assets/icons/playlist.svg?raw';
 import volumeSvg from '@/assets/icons/volume.svg?raw';
