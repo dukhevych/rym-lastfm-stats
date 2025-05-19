@@ -85,20 +85,41 @@ function createPlayHistoryItem() {
   infobox.className = PLAY_HISTORY_ITEM_CLASSES.infobox;
   infobox.dataset.element = 'rymstats-track-infobox';
 
+  // RATING WRAPPER
   const customMyRating = document.createElement('div');
   customMyRating.className = PLAY_HISTORY_ITEM_CLASSES.customMyRating;
   customMyRating.dataset.element = 'rymstats-track-rating';
 
+  // NO RATING
+  const noRating = document.createElement('div');
+  noRating.dataset.element = 'rymstats-track-no-rating';
+  noRating.textContent = 'No rating available';
+
+  // NO RATING HELP ICON
+  const noRatingHelpIcon = document.createElement('span');
+  noRatingHelpIcon.className = 'help-icon';
+  noRatingHelpIcon.dataset.element = 'rymstats-track-no-rating-help-icon';
+  noRatingHelpIcon.textContent = '?';
+  noRatingHelpIcon.title = 'Rating may be not available due to RYM and Last.fm metadata mismatch';
+  noRating.appendChild(noRatingHelpIcon);
+
+  // STARS WRAPPER
   const starsWrapper = document.createElement('div');
   starsWrapper.dataset.element = 'rymstats-track-rating-stars';
+
+  // STARS FILLED
   const starsFilled = document.createElement('div');
   starsFilled.className = 'stars-filled';
   starsFilled.dataset.element = 'rymstats-track-rating-stars-filled';
+
+  // STARS EMPTY
   const starsEmpty = document.createElement('div');
   starsEmpty.className = 'stars-empty';
   starsEmpty.dataset.element = 'rymstats-track-rating-stars-empty';
+
   starsWrapper.appendChild(starsEmpty);
   starsWrapper.appendChild(starsFilled);
+  customMyRating.appendChild(noRating);
   customMyRating.appendChild(starsWrapper);
 
   const starIcon = utils.createSvgUse('svg-star-symbol');
@@ -243,12 +264,13 @@ async function populatePlayHistoryItem(
 
     const customMyRating = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customMyRating}`);
     const starsFilled = customMyRating.querySelector('.stars-filled');
+
     if (customMyRating) {
       const albumNameFallback = albumName.replace(mappingReplacePattern, '').trim();
       const albumFromDB = await RecordsAPI.getByArtistAndTitle(
-        utils.normalizeForSearch(artistName),
-        utils.normalizeForSearch(albumName),
-        utils.normalizeForSearch(albumNameFallback),
+        artistName,
+        albumName,
+        albumNameFallback,
       );
 
       if (albumFromDB) {
