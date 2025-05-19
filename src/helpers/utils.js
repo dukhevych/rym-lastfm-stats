@@ -466,7 +466,7 @@ export function getAndWatchObjectField(propName, fieldName, onChange) {
   });
 }
 
-export async function getImageColors(imageUrl, theme = 'light') {
+export async function getImageColors(imageUrl) {
   const dataUrl = await new Promise((resolve, reject) => {
     browserAPI.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl }, (response) => {
       if (!response?.success) {

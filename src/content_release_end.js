@@ -51,7 +51,8 @@ import {
           )
       ) {
         artistNameLocalized = ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
-        artistNameLocalized = `${artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ')}${artistNameLocalized}`;
+        const combinedArtistNames = artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ');
+        artistNameLocalized = `${combinedArtistNames}${artistNameLocalized}`;
       }
 
       const title = getReleaseTitle();

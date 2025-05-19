@@ -28,6 +28,9 @@ export const RecordsAPI = {
   getByArtist: (artist) =>
     sendMessage('GET_RECORDS_BY_ARTIST', { artist }),
 
+  getByArtists: (artists) =>
+    sendMessage('GET_RECORDS_BY_ARTISTS', { artists }),
+
   getByArtistAndTitle: (artist, title, titleFallback) =>
     sendMessage('GET_RECORD_BY_ARTIST_AND_TITLE', { artist, title, titleFallback }),
 

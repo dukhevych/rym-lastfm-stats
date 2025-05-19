@@ -9,6 +9,7 @@ const dbMessageTypes = new Set([
   'GET_RECORDS_BY_IDS',
   'GET_ALL_RECORDS',
   'GET_RECORDS_BY_ARTIST',
+  'GET_RECORDS_BY_ARTISTS',
   'GET_RECORD_BY_ARTIST_AND_TITLE',
   'ADD_RECORD',
   'UPDATE_RECORD',
@@ -40,6 +41,7 @@ async function buildSearchIndex() {
     flexIndex.add(record.id, searchable);
     recordMap.set(record.id, record);
   });
+
   console.log(`[FlexSearch] Indexed ${records.length} records`);
 }
 
@@ -49,7 +51,8 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
   const { type, payload } = message;
 
   try {
-    let result;
+    let result = null;
+
     switch (type) {
       case 'GET_RECORD_BY_ID': {
         result = recordMap.get(payload.id) || null;
@@ -58,9 +61,12 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
 
       case 'GET_RECORDS_BY_IDS': {
         const results = payload.ids.map(id => recordMap.get(id)).filter(Boolean);
-        result = payload.asObject
-          ? Object.fromEntries(results.map(record => [record.id, record]))
-          : results;
+
+        if (payload.asObject) {
+          if (results.length) result = Object.fromEntries(results.map(record => [record.id, record]));
+        } else {
+          result = results;
+        }
         break;
       }
 
@@ -78,6 +84,25 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
           .filter(record => {
             return record.$artistName.includes(query) || record.$artistNameLocalized.includes(query);
           });
+        break;
+      }
+
+      case 'GET_RECORDS_BY_ARTISTS': {
+        payload.artists.forEach(artist => {
+          const query = utils.normalizeForSearch(artist);
+          const hits = flexIndex.search(query, { limit: 100 });
+
+          const records = hits
+            .map(id => recordMap.get(id))
+            .filter(record => {
+              return record.$artistName.includes(query) || record.$artistNameLocalized.includes(query);
+            });
+
+          if (records.length) {
+            if (!result) result = {};
+            result[artist] = records.slice();
+          }
+        });
         break;
       }
 

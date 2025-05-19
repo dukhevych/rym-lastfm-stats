@@ -588,11 +588,20 @@ async function render(_config) {
         documentRoot.style.setProperty('--clr-dark-accent-contrast', colors.dark.accentColorContrast);
 
         documentRoot.style.setProperty('--clr-light-accent-hue', parseInt(colors.light.accentColorHSL[0] * 360));
-        documentRoot.style.setProperty('--clr-light-accent-saturation', (colors.light.accentColorHSL[1] * 100).toFixed(2));
-        documentRoot.style.setProperty('--clr-light-accent-lightness', (colors.light.accentColorHSL[2] * 100).toFixed(2));
+        documentRoot.style.setProperty(
+          '--clr-light-accent-saturation',
+          (colors.light.accentColorHSL[1] * 100).toFixed(2),
+        );
+        documentRoot.style.setProperty(
+          '--clr-light-accent-lightness',
+          (colors.light.accentColorHSL[2] * 100).toFixed(2),
+        );
 
         documentRoot.style.setProperty('--clr-dark-accent-hue', parseInt(colors.dark.accentColorHSL[0] * 360));
-        documentRoot.style.setProperty('--clr-dark-accent-saturation', (colors.dark.accentColorHSL[1] * 100).toFixed(2));
+        documentRoot.style.setProperty(
+          '--clr-dark-accent-saturation',
+          (colors.dark.accentColorHSL[1] * 100).toFixed(2),
+        );
         documentRoot.style.setProperty('--clr-dark-accent-lightness', (colors.dark.accentColorHSL[2] * 100).toFixed(2));
 
         Object.keys(colors.palette).forEach((key) => {

@@ -1,8 +1,6 @@
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 
-const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
 export function fetchUserDataByName(username, apiKey) {
