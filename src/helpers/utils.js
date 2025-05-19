@@ -615,9 +615,16 @@ export function normalizeForSearch(str) {
   return deburr(str
     .toLowerCase()
     .replace(/\sand\s/g, ' & ')
-    .replace('.', '')
-    .replace(':', '')
-    .replace(',', '')
+    .replace(/\./g, '')
+    .replace(/_/g, '')
+    .replace(/"/g, '')
+    .replace(/\\/g, '')
+    .replace(/:/g, '')
+    .replace(/,/g, '')
     .replace(/\s+/g, ' ')
     .trim());
 }
+
+export function decodeHtmlEntities(str) {
+  return new DOMParser().parseFromString(str, 'text/html').body.textContent;
+};

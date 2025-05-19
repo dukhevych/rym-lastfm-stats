@@ -70,8 +70,7 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       }
 
       case 'GET_RECORDS_BY_ARTIST': {
-        // For consistency replace "and" with "&" for any artist name
-        const query = payload.artist.toLowerCase().trim().replace(/\sand\s/g, ' & ');
+        const query = utils.normalizeForSearch(payload.artist);
         const hits = flexIndex.search(query, { limit: 100 });
 
         result = hits
@@ -88,24 +87,23 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
         const query = `${artistQuery} ${titleQuery}`;
         const hits = flexIndex.search(query, { limit: 50 });
 
-        result = hits
-          .map(id => recordMap.get(id))
-          .find(record => {
-            if (record.$title !== titleQuery) return false;
-            return record.$artistName.includes(artistQuery) || record.$artistNameLocalized.includes(artistQuery);
-          }) || null;
+        const matchedRecords = hits.map(id => recordMap.get(id));
+
+        result = matchedRecords.find(record => {
+          if (record.$title !== titleQuery) return false;
+          return record.$artistName.includes(artistQuery) || record.$artistNameLocalized.includes(artistQuery);
+        }) || null;
 
         if (!result && payload.titleFallback) {
           const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
           const queryFallback = `${artistQuery} ${titleFallbackQuery}`;
           const hitsFallback = flexIndex.search(queryFallback, { limit: 50 });
+          const matchedRecordsFallback = hitsFallback.map(id => recordMap.get(id));
 
-          result = hitsFallback
-            .map(id => recordMap.get(id))
-            .find(record => {
-              if (record.$title !== titleFallbackQuery) return false;
-              return record.$artistName.includes(artistQuery) || record.$artistNameLocalized.includes(artistQuery);
-            }) || null;
+          result = matchedRecordsFallback.find(record => {
+            if (record.$title !== titleFallbackQuery) return false;
+            return record.$artistName.includes(artistQuery) || record.$artistNameLocalized.includes(artistQuery);
+          }) || null;
         }
 
         break;

@@ -1,4 +1,4 @@
-import { getRecords } from '@/helpers/db';
+import { RecordsAPI } from '@/helpers/records-api';
 
 let config = null;
 
@@ -13,10 +13,6 @@ function getIds() {
   }).filter(Boolean);
 
   return ids;
-}
-
-async function readAlbumData(ids) {
-  return getRecords(ids);
 }
 
 function addUserRating(album) {
@@ -49,7 +45,7 @@ function addUserRating(album) {
 async function render(_config) {
   config = _config;
 
-  const albums = await readAlbumData(getIds());
+  const albums = await RecordsAPI.getByIds(getIds());
 
   albums.filter(Boolean).forEach(addUserRating);
 
@@ -59,7 +55,7 @@ async function render(_config) {
     const observer = new MutationObserver(async (mutationsList) => {
       for (const mutation of mutationsList) {
         if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          const albums = await readAlbumData(getIds());
+          const albums = await RecordsAPI.getByIds(getIds());
           albums.filter(Boolean).forEach(addUserRating);
         }
       }

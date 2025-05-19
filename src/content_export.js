@@ -2,7 +2,7 @@ import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import { LASTFM_COLOR } from '@/helpers/constants.js';
 import { RecordsAPI } from '@/helpers/records-api.js';
-import data from '@/data.csv?raw';
+// import data from '@/data.csv?raw';
 
 (async function () {
   const form = document.querySelector('form.music_export');
@@ -24,31 +24,32 @@ import data from '@/data.csv?raw';
 
     formSubmitButton.setAttribute('disabled', 'true');
 
-    // const formData = new FormData(form);
+    const formData = new FormData(form);
 
-    // if (formData.get('g-recaptcha-response') === '') return;
+    if (formData.get('g-recaptcha-response') === '') return;
 
     try {
-      // const response = await fetch(form.action, {
-      //   method: "POST",
-      //   body: formData,
-      // });
+      const response = await fetch(form.action, {
+        method: "POST",
+        body: formData,
+      });
 
-      // if (!response.ok) {
-      //   throw new Error("Request failed: " + response.status);
-      // }
+      if (!response.ok) {
+        throw new Error("Request failed: " + response.status);
+      }
 
-      // const exportData = await response.text();
-      const exportData = data;
+      const exportData = await response.text();
+      // const exportData = data;
 
       // Parse the CSV data
       const rows = exportData.split('\n').slice(1);
-      // const rows = exportData.split('\n');
 
       const parsedData = [];
 
       rows.forEach(row => {
-        const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, ''));
+        const columns = utils.decodeHtmlEntities(row)
+          .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+          .map(s => s.replace(/^"|"$/g, ''));
 
         if (columns.length !== 11) return;
 
@@ -72,7 +73,6 @@ import data from '@/data.csv?raw';
           .filter(Boolean)
           .join(' ')
           .trim()
-          .replace(/\s&amp;\s/g, ' & ')
           .replace(/\sand\s/g, ' & ');
 
         const artistName = getCombinedName(firstName, lastName);
@@ -98,7 +98,8 @@ import data from '@/data.csv?raw';
       });
 
       await RecordsAPI.setBulk(parsedData);
-      // alert('Data synced successfully with RYM Last.fm Stats!');
+      const recordsQty = await RecordsAPI.getQty();
+      alert(`Added ${recordsQty} records to addon database.`);
     } catch (error) {
       console.error('Error:', error);
       alert('An error occurred while syncing data with RYM.');
