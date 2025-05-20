@@ -3,9 +3,15 @@ import { RecordsAPI } from '@/helpers/records-api.js';
 
 (async function () {
   window.addEventListener('load', async () => {
-    const recentItems = Array.from(document.querySelectorAll('#musicrecent tr[id^="page_catalog_item_"]'));
+    const isMyCollection = utils.isMyCollection();
 
-    const parsedData = recentItems.map(item => {
+    if (!isMyCollection) return;
+
+    const collectionPageItems = Array.from(
+      document.querySelectorAll('table.mbgen > tbody > tr[id^="page_catalog_item_"]:has(.or_q_rating_date_s)')
+    );
+
+    const parsedData = collectionPageItems.map(item => {
       const rating = parseInt(item.querySelector('.or_q_rating_date_s img').src.split('/').pop().split('.')[0]);
       const releaseLink = item.querySelector('.or_q_albumartist_td a.album');
       const releaseId = releaseLink.title.replace('[Album', '').replace(']', '');
@@ -43,19 +49,23 @@ import { RecordsAPI } from '@/helpers/records-api.js';
       return itemData;
     });
 
-    const dbData = await RecordsAPI.getByIds(parsedData.map(data => data.id));
+    const dbData = await RecordsAPI.getByIds(parsedData.map(data => data.id), true);
 
     await Promise.all(
-      parsedData.map((data, index) => {
-        const d = dbData[index];
-        delete d._raw;
-        const hasChanges = JSON.stringify(data) !== JSON.stringify(d);
+      parsedData.map((data) => {
+        const dbItem = dbData[data.id];
 
-        if (hasChanges) {
-          return RecordsAPI.update(data.id, data);
-        } else {
-          return Promise.resolve(false);
+        if (!dbItem) {
+          return RecordsAPI.add(data);
         }
+
+        delete dbItem._raw;
+
+        if (dbItem.rating !== data.rating) {
+          return RecordsAPI.updateRating(data.id, data.rating);
+        }
+
+        return Promise.resolve(false);
       })
     );
   });

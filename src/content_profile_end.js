@@ -1,13 +1,12 @@
-import { targetSelectors } from '@/modules/profile/index.js';
 import * as utils from '@/helpers/utils.js';
 import { RecordsAPI } from '@/helpers/records-api.js';
 
 (async function () {
-  const isMyProfile = await utils.checkDOMCondition(targetSelectors, () => utils.isMyProfile());
-
-  if (!isMyProfile) return;
-
   window.addEventListener('load', async () => {
+    const isMyProfile = utils.isMyProfile();
+
+    if (!isMyProfile) return;
+
     const recentItems = Array.from(document.querySelectorAll('#musicrecent tr[id^="page_catalog_item_"]'));
 
     const parsedData = recentItems.map(item => {
@@ -48,19 +47,23 @@ import { RecordsAPI } from '@/helpers/records-api.js';
       return itemData;
     });
 
-    const dbData = await RecordsAPI.getByIds(parsedData.map(data => data.id));
+    const dbData = await RecordsAPI.getByIds(parsedData.map(data => data.id), true);
 
     await Promise.all(
-      parsedData.map((data, index) => {
-        const d = dbData[index];
-        delete d._raw;
-        const hasChanges = JSON.stringify(data) !== JSON.stringify(d);
+      parsedData.map((data) => {
+        const dbItem = dbData[data.id];
 
-        if (hasChanges) {
-          return RecordsAPI.update(data.id, data);
-        } else {
-          return Promise.resolve(false);
+        if (!dbItem) {
+          return RecordsAPI.add(data);
         }
+
+        delete dbItem._raw;
+
+        if (dbItem.rating !== data.rating) {
+          return RecordsAPI.updateRating(data.id, data.rating);
+        }
+
+        return Promise.resolve(false);
       })
     );
   });

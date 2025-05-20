@@ -2,7 +2,6 @@ import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import { LASTFM_COLOR } from '@/helpers/constants.js';
 import { RecordsAPI } from '@/helpers/records-api.js';
-// import data from '@/data.csv?raw';
 
 (async function () {
   const form = document.querySelector('form.music_export');
@@ -12,17 +11,30 @@ import { RecordsAPI } from '@/helpers/records-api.js';
 
   const formSyncButton = document.createElement('button');
 
+  const statusMessage = document.createElement('div');
+  statusMessage.style.display = 'none';
+  statusMessage.style.marginTop = '10px';
+
   formSyncButton.type = 'button';
   formSyncButton.classList.add(...formSubmitButton.classList);
   formSyncButton.style.backgroundColor = LASTFM_COLOR;
-  formSyncButton.textContent = 'Sync with RYM Last.fm Stats';
+  const formSyncButtonText = 'Sync with RYM Last.fm Stats';
+  formSyncButton.textContent = formSyncButtonText;
 
   formSubmitButton.insertAdjacentElement('afterend', formSyncButton);
+  formSyncButton.insertAdjacentElement('afterend', statusMessage);
 
   formSyncButton.addEventListener('click', async function (e) {
     e.preventDefault();
 
-    formSubmitButton.setAttribute('disabled', 'true');
+    statusMessage.textContent = '';
+    statusMessage.style.display = 'none';
+
+    formSyncButton.setAttribute('disabled', 'true');
+
+    formSyncButton.textContent = 'Syncing...';
+
+    statusMessage.style.display = 'block';
 
     const formData = new FormData(form);
 
@@ -39,9 +51,6 @@ import { RecordsAPI } from '@/helpers/records-api.js';
       }
 
       const exportData = await response.text();
-      // const exportData = data;
-
-      // Parse the CSV data
       const rows = exportData.split('\n').slice(1);
 
       const parsedData = [];
@@ -99,12 +108,14 @@ import { RecordsAPI } from '@/helpers/records-api.js';
 
       await RecordsAPI.setBulk(parsedData);
       const recordsQty = await RecordsAPI.getQty();
-      alert(`Added ${recordsQty} records to addon database.`);
+
+      statusMessage.textContent = `✅ Synced successfully ${recordsQty} records.`;
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred while syncing data with RYM.');
+      alert('An error occurred while syncing data with RYM. Please contact addon support.');
     } finally {
-      formSubmitButton.setAttribute('disabled', 'true');
+      formSyncButton.removeAttribute('disabled');
+      formSyncButton.textContent = formSyncButtonText;
     }
   });
 })();

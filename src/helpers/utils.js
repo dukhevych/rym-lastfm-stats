@@ -127,24 +127,26 @@ export function getHeaderUsername() {
   return null;
 }
 
-// export function isMyCollection() {
-//   const breadcrumbItem = document.querySelector('ol#page_breadcrumb li:first-child a.ui_breadcrumb_link[href^="~"]');
+export function isMyCollection() {
+  const currentUrl = window.location.href;
+  const [, urlUsername] = currentUrl.match(/\/collection\/([^/?#]+)(?:\/([^?#]*))?/) || [];
 
-//   const headerUsername = getHeaderUsername();
-// };
+  if (!urlUsername) return false;
+
+  const headerUsername = getHeaderUsername();
+
+  return headerUsername === urlUsername;
+};
 
 export function isMyProfile() {
   const currentUrl = window.location.href;
-  const profileUrlMatch = currentUrl.match(/\/~([^/?#]+)/);
+  const [, urlUsername] = currentUrl.match(/\/~([^/?#]+)/) || [];
 
-  if (!profileUrlMatch) {
-    return false;
-  }
+  if (!urlUsername) return false;
 
-  const urlUserName = profileUrlMatch[1];
   const headerUsername = getHeaderUsername();
 
-  return headerUsername === urlUserName;
+  return headerUsername === urlUsername;
 };
 
 // Depends on the list of dark theme classes that is hardcoded and can be changed by RYM
