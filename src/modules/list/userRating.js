@@ -57,6 +57,9 @@ function getItems() {
 
 function addReleaseRating(item) {
   const wrapper = item.node.querySelector('.main_entry');
+
+  if (!wrapper) return;
+
   const rating = item.rating / 2;
   const ratingElement = document.createElement('span');
   ratingElement.className = 'user_rating';
@@ -68,10 +71,8 @@ function addReleaseRating(item) {
   ratingElement.style.right = '0';
   ratingElement.innerText = `${rating}`;
 
-  if (wrapper) {
-    wrapper.style.position = 'relative';
-    wrapper.appendChild(ratingElement);
-  }
+  wrapper.style.position = 'relative';
+  wrapper.appendChild(ratingElement);
 }
 
 function addArtistStats(item) {
@@ -85,35 +86,41 @@ async function render() {
     artists,
   } = getItems();
 
-  const releaseIds = releases.map(item => item.releaseId).filter(Boolean);
-  const artistNames = artists.map(item => item.artistName).filter(Boolean);
+  const releasesPromises = releases.map(item => {
+    const releaseId = item.releaseId;
 
-  const [releasesData, artistsData = {}] = await Promise.all([
-    RecordsAPI.getByIds(releaseIds, true),
-    RecordsAPI.getByArtists(artistNames),
-  ]);
+    if (item.releaseId) return RecordsAPI.getById(releaseId, true);
+    if (item.artistName && item.title) {
+      return RecordsAPI.getByArtistAndTitle(item.artistName, item.title);
+    }
+    return Promise.resolve(null);
+  });
 
-  if (releasesData) {
-    releases.forEach((item) => {
-      const release = releasesData[item.releaseId];
+  const artistsPromises = artists.map(item => {
+    if (item.artistName) return RecordsAPI.getByArtist(item.artistName);
+    return Promise.resolve(null);
+  });
 
-      if (release) {
-        item.rating = release.rating;
-        addReleaseRating(item);
-      }
-    });
-  }
+  const responseReleases = await Promise.all(releasesPromises);
+  const responseArtists = await Promise.all(artistsPromises);
 
-  if (artistsData) {
-    artists.forEach((item) => {
-      const artistReleases = artistsData[item.artistName];
+  releases.forEach((item, index) => {
+    const release = responseReleases[index];
 
-      if (artistReleases) {
-        item.releases = artistReleases;
-        addArtistStats(item);
-      }
-    });
-  }
+    if (release) {
+      item.rating = release.rating;
+      addReleaseRating(item);
+    }
+  });
+
+  artists.forEach((item, index) => {
+    const artistReleases = responseArtists[index];
+
+    if (artistReleases) {
+      item.releases = artistReleases;
+      addArtistStats(item);
+    }
+  });
 }
 
 
