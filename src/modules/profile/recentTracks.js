@@ -710,6 +710,11 @@ async function render(_config) {
     const progress = getPollingProgress();
     const angle = parseInt(progress * 360);
     button.style.setProperty('--progress', `${angle}deg`);
+    if (progress >= 1) {
+      button.classList.add('is-fetching');
+    } else {
+      button.classList.remove('is-fetching');
+    }
   }
 
   function startProgressLoop() {

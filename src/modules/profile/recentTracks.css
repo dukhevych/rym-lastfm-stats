@@ -1362,6 +1362,18 @@ html[data-scheme="dark"] {
 
 @property --progress  { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
 
+@keyframes progress-animation {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
 .btn.btn-lastfm {
   position: relative;
 
@@ -1377,5 +1389,10 @@ html[data-scheme="dark"] {
       transparent 0deg
     );
     border-radius: inherit;
+    transition: opacity 0.3s ease-out;
+  }
+
+  &.is-fetching:before {
+    animation: progress-animation 1.5s linear infinite;
   }
 }
