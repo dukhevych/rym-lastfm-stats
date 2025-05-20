@@ -1350,7 +1350,7 @@ html[data-scheme="dark"] {
     white-space: nowrap;
     right: 100%;
     transform: translateY(-50%);
-    margin-right: 5px;
+    padding-right: 5px;
   }
 
   &:hover {

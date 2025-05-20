@@ -634,6 +634,8 @@ export function normalizeForSearch(str) {
     .replace(/\./g, '')
     .replace(/_/g, '')
     .replace(/"/g, '')
+    .replace(/'/g, '')
+    .replace(/’/g, '')
     .replace(/\\/g, '')
     .replace(/:/g, '')
     .replace(/,/g, '')
