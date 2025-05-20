@@ -628,3 +628,37 @@ export function normalizeForSearch(str) {
 export function decodeHtmlEntities(str) {
   return new DOMParser().parseFromString(str, 'text/html').body.textContent;
 };
+
+export function combineArtistNames(artistNames) {
+  let lastArtistNames;
+
+  if (artistNames.length > 1) {
+    lastArtistNames = artistNames.pop();
+  }
+
+  let combinedArtistName = '';
+
+  if (lastArtistNames) {
+    combinedArtistName = ' & ' + lastArtistNames.artistName;
+  }
+  combinedArtistName = `${artistNames.map((name) => name.artistName).join(', ')}${combinedArtistName}`;
+
+  let combinedArtistNameLocalized = '';
+
+  if (
+    lastArtistNames
+      && (
+        artistNames.some((name => name.artistNameLocalized))
+        || lastArtistNames.artistNameLocalized
+      )
+  ) {
+    combinedArtistNameLocalized = ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
+    const combinedArtistNames = artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ');
+    combinedArtistNameLocalized = `${combinedArtistNames}${combinedArtistNameLocalized}`;
+  }
+
+  return {
+    artistName: combinedArtistName,
+    artistNameLocalized: combinedArtistNameLocalized,
+  }
+};

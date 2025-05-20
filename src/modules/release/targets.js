@@ -14,8 +14,8 @@ export function getReleaseYear() {
 }
 
 export function getArtistNames() {
-  const artists = document.querySelectorAll(INFO_ARTISTS_SELECTOR);
-  return Array.from(artists)
+  const artistLinks = document.querySelectorAll(INFO_ARTISTS_SELECTOR);
+  return Array.from(artistLinks)
     .map((artist) => {
       let localizedName = artist.querySelector('.subtext')?.textContent || '';
       if (localizedName) {

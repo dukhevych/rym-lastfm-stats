@@ -28,32 +28,7 @@ import {
 
     const prepareItem = (value) => {
       const artistNames = getArtistNames();
-      let lastArtistNames;
-
-      if (artistNames.length > 1) {
-        lastArtistNames = artistNames.pop();
-      }
-
-      let artistName = '';
-
-      if (lastArtistNames) {
-        artistName = ' & ' + lastArtistNames.artistName;
-      }
-      artistName = `${artistNames.map((name) => name.artistName).join(', ')}${artistName}`;
-
-      let artistNameLocalized = '';
-
-      if (
-        lastArtistNames
-          && (
-            artistNames.some((name => name.artistNameLocalized))
-            || lastArtistNames.artistNameLocalized
-          )
-      ) {
-        artistNameLocalized = ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
-        const combinedArtistNames = artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ');
-        artistNameLocalized = `${combinedArtistNames}${artistNameLocalized}`;
-      }
+      const { artistName, artistNameLocalized } = utils.combineArtistNames(artistNames);
 
       const title = getReleaseTitle();
 

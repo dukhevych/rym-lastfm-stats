@@ -46,6 +46,11 @@
       "run_at": "document_start"
     },
     {
+      "matches": ["*://rateyourmusic.com/~*"],
+      "js": ["content_profile_end.js"],
+      "run_at": "document_end"
+    },
+    {
       "matches": ["*://rateyourmusic.com/search?*"],
       "js": ["content_search.js"],
       "run_at": "document_start"
