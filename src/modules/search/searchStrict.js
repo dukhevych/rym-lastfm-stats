@@ -107,7 +107,8 @@ const validationRules = {
 
       let artistName = (item.querySelector(artistNameSelector)?.textContent || '')
         .trim()
-        .toLowerCase();
+        .toLowerCase()
+        .replace(/ & /g, ' and ');
 
       let artistNameLocalized;
 
@@ -127,7 +128,7 @@ const validationRules = {
       const releaseTitleDeburred = utils
         .deburr(item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '');
 
-      let _query = utils.deburr(query);
+      let _query = utils.deburr(query).replace(/ & /g, ' and ');
 
       let hasArtist = false;
       let hasReleaseTitle = false;
@@ -211,6 +212,16 @@ async function render(config) {
   if (searchMoreLink) {
     searchMoreLink.href += '&strict=true';
   }
+
+  // TODO - HIGHLIGHT MASTER RELEASE
+  // if (searchType === 'l' && searchItemsFiltered.length) {
+  //   const links = searchItemsFiltered.map((item) => {
+  //     const url = item.querySelector(validationRules.l.selectors.releaseTitleSelector).href;
+  //     return url;
+  //   }).sort((a, b) => a.length - b.length);
+
+  //   console.log('Links:', links[0]);
+  // }
 
   if (searchItemsMore.length) {
     if (searchItemsMore.length < searchItems.length) {

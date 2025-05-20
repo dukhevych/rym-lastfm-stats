@@ -1,12 +1,12 @@
 import { Vibrant } from "node-vibrant/browser";
 import { MD5 } from '@/libs/crypto-js.min.js';
 import { remove as removeDiacritics } from 'diacritics';
+import * as constants from './constants.js';
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-import * as constants from './constants.js';
 
 export function detectColorScheme() {
   const html = document.querySelector('html');
@@ -117,21 +117,36 @@ export const formatNumber = (number) => {
   return formatter.format(number);
 };
 
-// Can become broken if RYM changes layout and ids
-export function isMyProfile() {
-  const headerProfileUsername = document.querySelector(
-    '#header_profile_username',
-  );
-  const profileName = document.querySelector('#profilename');
+export function getHeaderUsername() {
+  const headerProfileUsername = document.querySelector('#header_profile_username');
 
-  if (headerProfileUsername && profileName) {
-    return (
-      headerProfileUsername.textContent.trim() ===
-      profileName.textContent.trim()
-    );
+  if (headerProfileUsername) {
+    return headerProfileUsername.textContent.trim();
   }
 
-  return false;
+  return null;
+}
+
+export function isMyCollection() {
+  const currentUrl = window.location.href;
+  const [, urlUsername] = currentUrl.match(/\/collection\/([^/?#]+)(?:\/([^?#]*))?/) || [];
+
+  if (!urlUsername) return false;
+
+  const headerUsername = getHeaderUsername();
+
+  return headerUsername === urlUsername;
+};
+
+export function isMyProfile() {
+  const currentUrl = window.location.href;
+  const [, urlUsername] = currentUrl.match(/\/~([^/?#]+)/) || [];
+
+  if (!urlUsername) return false;
+
+  const headerUsername = getHeaderUsername();
+
+  return headerUsername === urlUsername;
 };
 
 // Depends on the list of dark theme classes that is hardcoded and can be changed by RYM
@@ -143,12 +158,11 @@ export function isDarkMode() {
 };
 
 export async function getUserName() {
-  return await browserAPI.storage.local.get('userData').then((items) => {
-    return items?.userData?.lastfmUsername;
-  });
+  const userData = await getSyncedUserData();
+  return userData?.name ?? null;
 };
 
-export function detectUserName() {
+export function detectLastfmUserName() {
   let userName = null;
 
   const firstLastFmLink = Array.from(document.querySelectorAll('a')).find((link) => {
@@ -305,10 +319,11 @@ export const getFullConfig = async () => {
 }
 
 import svgLoader from '@/assets/icons/loader.svg?raw';
-import starSvg from '@/assets/icons/star4.svg?raw';
+import starSvg from '@/assets/icons/star.svg?raw';
 import lastfmSvg from '@/assets/icons/lastfm.svg?raw';
 import playlistSvg from '@/assets/icons/playlist.svg?raw';
 import volumeSvg from '@/assets/icons/volume.svg?raw';
+import brushSvg from '@/assets/icons/brush.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 let svgSprite = null;
@@ -324,6 +339,7 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(lastfmSvg, 'svg-lastfm-symbol');
   addIconToSVGSprite(playlistSvg, 'svg-playlist-symbol');
   addIconToSVGSprite(volumeSvg, 'svg-volume-symbol');
+  addIconToSVGSprite(brushSvg, 'svg-brush-symbol');
 
   return svgSprite;
 }
@@ -426,7 +442,47 @@ export function deburr(string) {
   return removeDiacritics(string);
 }
 
-export async function getImageColors(imageUrl, theme = 'light') {
+export function getAndWatchObjectField(propName, fieldName, onChange) {
+  return new Promise((resolve) => {
+    let resolved = false;
+    let lastValue;
+
+    const handler = (e) => {
+      if (
+        e?.detail?.prop === propName &&
+        e?.detail?.field === fieldName
+      ) {
+        const newVal = e.detail.value;
+
+        // If value hasn't changed, ignore
+        if (newVal === lastValue) return;
+        lastValue = newVal;
+
+        if (!resolved) {
+          resolved = true;
+          resolve({ initialValue: newVal, stopWatching });
+        } else {
+          onChange?.(newVal);
+        }
+      }
+    };
+
+    function stopWatching() {
+      window.removeEventListener("my-extension:field-update", handler);
+    }
+
+    window.addEventListener("my-extension:field-update", handler);
+
+    const browserAPI = typeof browser !== "undefined" ? browser : chrome;
+    browserAPI.runtime.sendMessage({
+      type: "get-and-watch-object-field",
+      propName,
+      fieldName
+    });
+  });
+}
+
+export async function getImageColors(imageUrl) {
   const dataUrl = await new Promise((resolve, reject) => {
     browserAPI.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl }, (response) => {
       if (!response?.success) {
@@ -440,7 +496,7 @@ export async function getImageColors(imageUrl, theme = 'light') {
 
   const palette = await v.getPalette();
 
-  return getVibrantUiColors(palette, theme);
+  return getVibrantUiColors(palette);
 }
 
 export function getContrastingColor(hexColor, darkColor = '#000', lightColor = '#fff') {
@@ -470,11 +526,13 @@ export async function getVibrantUiColors(palette) {
   const lightColors = {
     bgColor: (palette.LightMuted || palette.Muted || palette.LightVibrant)?.hex || '#222',
     accentColor: (palette.Vibrant || palette.DarkVibrant)?.hex || '#ff4081',
+    accentColorHSL: (palette.Vibrant || palette.DarkVibrant)?.hsl || [0.9444444, 1, 0.63],
   };
 
   const darkColors = {
     bgColor: (palette.DarkMuted || palette.Muted || palette.DarkVibrant)?.hex || '#222',
     accentColor: (palette.Vibrant || palette.LightVibrant)?.hex || '#ff4081',
+    accentColorHSL: (palette.Vibrant || palette.LightVibrant)?.hsl || [0.9444444, 1, 0.63],
   };
 
   return {
@@ -560,3 +618,65 @@ const generateApiSig = (params) => {
 function generateMd5(string) {
   return MD5(string).toString();
 }
+
+export function getDirectInnerText(element) {
+  return Array.from(element.childNodes)
+    .filter(node => node.nodeType === Node.TEXT_NODE)
+    .map(node => node.textContent.trim())
+    .join(' ')
+    .trim();
+}
+
+export function normalizeForSearch(str) {
+  return deburr(str
+    .toLowerCase()
+    .replace(/\sand\s/g, ' & ')
+    .replace(/\./g, '')
+    .replace(/_/g, '')
+    .replace(/"/g, '')
+    .replace(/'/g, '')
+    .replace(/’/g, '')
+    .replace(/\\/g, '')
+    .replace(/:/g, '')
+    .replace(/,/g, '')
+    .replace(/\s+/g, ' ')
+    .trim());
+}
+
+export function decodeHtmlEntities(str) {
+  return new DOMParser().parseFromString(str, 'text/html').body.textContent;
+};
+
+export function combineArtistNames(artistNames) {
+  let lastArtistNames;
+
+  if (artistNames.length > 1) {
+    lastArtistNames = artistNames.pop();
+  }
+
+  let combinedArtistName = '';
+
+  if (lastArtistNames) {
+    combinedArtistName = ' & ' + lastArtistNames.artistName;
+  }
+  combinedArtistName = `${artistNames.map((name) => name.artistName).join(', ')}${combinedArtistName}`;
+
+  let combinedArtistNameLocalized = '';
+
+  if (
+    lastArtistNames
+      && (
+        artistNames.some((name => name.artistNameLocalized))
+        || lastArtistNames.artistNameLocalized
+      )
+  ) {
+    combinedArtistNameLocalized = ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
+    const combinedArtistNames = artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ');
+    combinedArtistNameLocalized = `${combinedArtistNames}${combinedArtistNameLocalized}`;
+  }
+
+  return {
+    artistName: combinedArtistName,
+    artistNameLocalized: combinedArtistNameLocalized,
+  }
+};

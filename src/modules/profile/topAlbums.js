@@ -28,7 +28,7 @@ async function handlePeriodChange(period, userName, apiKey, container, label) {
   container.classList.remove('is-loading');
 }
 
-export async function render(_config, _userName) {
+export async function render(_config) {
   config = _config;
   if (!config) return;
 
@@ -36,8 +36,8 @@ export async function render(_config, _userName) {
 
   let userName;
 
-  if (_userName) {
-    userName = _userName;
+  if (config.userName) {
+    userName = config.userName;
   } else {
     const userData = await utils.getSyncedUserData();
     userName = userData?.name;
@@ -64,6 +64,8 @@ export async function render(_config, _userName) {
     await utils.storageSet({
       topAlbumsPeriod: selectedPeriod,
     });
+
+    config.topAlbumsPeriod = selectedPeriod;
 
     topAlbumsPeriodSaveButton.style.display = 'none';
   });
@@ -113,6 +115,7 @@ export async function render(_config, _userName) {
         data: topAlbums,
         timestamp: Date.now(),
         userName,
+        topAlbumsPeriod: config.topAlbumsPeriod,
       },
     });
   }
@@ -126,8 +129,8 @@ export async function render(_config, _userName) {
     && topAlbumsCache.userName === userName
   ) {
     if (
-      Date.now() - topAlbumsCache.timestamp >
-      constants.TOP_ALBUMS_INTERVAL_MS
+      ((Date.now() - topAlbumsCache.timestamp) > constants.TOP_ALBUMS_INTERVAL_MS)
+      || topAlbumsCache.topAlbumsPeriod !== config.topAlbumsPeriod
     ) {
       await updateAction();
     } else {

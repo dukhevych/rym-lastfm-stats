@@ -1,27 +1,15 @@
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
+import * as constants from '@/helpers/constants.js';
 
-const INFO_CONTAINER_SELECTOR = '.album_info tbody';
-const INFO_ARTISTS_SELECTOR = '.album_info [itemprop="byArtist"] a';
-const INFO_ALBUM_TITLE_SELECTOR = '.album_title';
+import {
+  INFO_CONTAINER_SELECTOR,
+  INFO_ARTISTS_SELECTOR,
+  INFO_ALBUM_TITLE_SELECTOR,
+  getArtistNames,
+  getReleaseTitle,
 
-function getArtistNames() {
-  const artists = document.querySelectorAll(INFO_ARTISTS_SELECTOR);
-  return Array.from(artists)
-    .map((artist) => {
-      const localizedName = artist.querySelector('.subtext');
-      return localizedName ? localizedName.textContent.replace(/^\[|\]$/g, '') : artist.textContent;
-    });
-}
-
-function getReleaseTitle() {
-  const title = document.querySelector(INFO_ALBUM_TITLE_SELECTOR);
-  if (!title) return null;
-  return Array.from(title.childNodes)
-    .filter(node => node.nodeType === Node.TEXT_NODE)
-    .map(node => node.textContent.trim())
-    .join('');
-}
+} from './targets.js';
 
 function prepareReleaseStatsUI() {
   const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
@@ -42,6 +30,14 @@ function prepareReleaseStatsUI() {
     tr.appendChild(td);
 
     infoTable.appendChild(tr);
+  }
+}
+
+function setNoFound() {
+  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
+  if (infoTable) {
+    const td = infoTable.querySelector('#lastfm_data');
+    td.textContent = 'No data found';
   }
 }
 
@@ -103,17 +99,24 @@ async function render(config) {
   if (!config) return;
 
   const artistNames = getArtistNames();
-  const artist = artistNames[0];
+
+  if (constants.isDev) console.log('Parsed artists:', artistNames);
+
+  const artists = artistNames.map((artist) => {
+    const { artistName, artistNameLocalized } = artist;
+    return artistNameLocalized || artistName;
+  });
+
   const releaseTitle = getReleaseTitle();
 
-  if (!artist || !releaseTitle) {
+  if (artists.length === 0 || !releaseTitle) {
     console.error('No artist or release title found.');
     return;
   }
 
   const userData = await utils.getSyncedUserData();
   const userName = userData?.name;
-  const storageKey = `releaseStats_${artist}`;
+  const storageKey = `releaseStats_${artists.join('_')}`;
 
   prepareReleaseStatsUI();
 
@@ -126,8 +129,6 @@ async function render(config) {
       const currentDate = new Date().toDateString();
 
       if (cachedDate === currentDate) {
-        console.log('Inserting cached lastfm data:', data);
-
         populateReleaseStats(data, timestamp);
         return;
       }
@@ -138,13 +139,13 @@ async function render(config) {
 
   const releaseType = infoTable
     .querySelector('tr:nth-child(2) td')
-    .textContent.toLowerCase().split(', ')[0];
+    .textContent.toLowerCase().split(', ')?.[0];
 
   const data = await api.fetchReleaseStats(
     userName,
     config.lastfmApiKey || process.env.LASTFM_API_KEY,
     {
-      artist,
+      artists,
       releaseTitle,
       releaseType,
     }
@@ -155,7 +156,20 @@ async function render(config) {
     single: 'track',
   };
 
-  const { playcount, listeners, userplaycount, url } = data[releaseTypeDataMap[releaseType] ?? 'album'];
+  const releaseTypeData = data[releaseTypeDataMap[releaseType] ?? 'album'];
+
+  if (!releaseTypeData) {
+    console.error('No data found for the specified release type:', releaseType);
+    setNoFound();
+    return;
+  }
+
+  const {
+    playcount,
+    listeners,
+    userplaycount,
+    url
+  } = releaseTypeData;
 
   const stats = {
     playcount,

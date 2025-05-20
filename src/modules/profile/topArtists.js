@@ -9,7 +9,7 @@ const PROFILE_CONTAINER_SELECTOR =
 
 let config = null;
 
-export async function render(_config, _userName) {
+export async function render(_config) {
   config = _config;
 
   if (!config) return;
@@ -23,8 +23,8 @@ export async function render(_config, _userName) {
 
   let userName;
 
-  if (_userName) {
-    userName = _userName;
+  if (config.userName) {
+    userName = config.userName;
   } else {
     const userData = await utils.getSyncedUserData();
     userName = userData?.name;
@@ -51,6 +51,8 @@ export async function render(_config, _userName) {
     await utils.storageSet({
       topArtistsPeriod: selectedPeriod,
     });
+
+    config.topArtistsPeriod = selectedPeriod;
 
     topArtistsPeriodSaveButton.style.display = 'none';
   });
@@ -109,6 +111,7 @@ export async function render(_config, _userName) {
       topArtistsCache: {
         data: topArtists,
         timestamp: Date.now(),
+        period: config.topArtistsPeriod,
         userName,
       },
     });
@@ -123,8 +126,8 @@ export async function render(_config, _userName) {
     && topArtistsCache.userName === userName
   ) {
     if (
-      Date.now() - topArtistsCache.timestamp >
-      constants.TOP_ARTISTS_INTERVAL_MS
+      ((Date.now() - topArtistsCache.timestamp) > constants.TOP_ARTISTS_INTERVAL_MS)
+      || topArtistsCache.period !== config.topArtistsPeriod
     ) {
       await updateAction();
     } else {

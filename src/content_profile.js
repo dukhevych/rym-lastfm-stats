@@ -13,15 +13,21 @@ import * as utils from '@/helpers/utils.js';
   const isMyProfile = await utils.checkDOMCondition(targetSelectors, () => utils.isMyProfile());
 
   if (isMyProfile) {
-    renderContent(profile, config);
+    await renderContent(profile, config, 'profile');
     return;
   }
 
+  // Wait for the full profile page to load
+  // This is necessary because last.fm link can be added anywhere on the page
   await utils.waitForDOMReady();
 
-  const detectedUsername = utils.detectUserName();
+  // Parse links on the page to find the last.fm username
+  const userName = utils.detectLastfmUserName();
 
-  if (detectedUsername) {
-    renderContent(profile, config, detectedUsername);
+  if (userName) {
+    await renderContent(profile, {
+      ...config,
+      userName,
+    }, 'profile');
   }
 })();

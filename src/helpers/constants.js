@@ -1,6 +1,14 @@
+export const RYM_DB_VERSION = 2;
+
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 export const isDev = process.env.NODE_ENV === 'development';
 
 export const LASTFM_COLOR = '#f71414';
+
+export const RYM_DB_NAME = 'rymExportDB';
+
+export const RYM_DB_STORE_NAME = 'rymExportStore';
 
 export const LIGHT_THEME_CLASSES = [
   'theme_light',
@@ -77,6 +85,7 @@ export const PROFILE_OPTIONS_DEFAULT = {
   recentTracks: true,
   recentTracksShowOnLoad: false,
   recentTracksReplace: true,
+  recentTracksReplaceBackground: 1,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
   topArtists: true,
   topArtistsLimit: TOP_ARTISTS_LIMIT_DEFAULT,
@@ -95,10 +104,19 @@ export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);
 
 export const RECENT_TRACKS_INTERVAL_MS = isDev ? 10000 : 120000;
 
+export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = RECENT_TRACKS_INTERVAL_MS / 2;
+
 export const TOP_ALBUMS_INTERVAL_MS = 120000;
 
 export const TOP_ARTISTS_INTERVAL_MS = 120000;
 
-export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = RECENT_TRACKS_INTERVAL_MS / 2;
+const manifest = browserAPI.runtime.getManifest();
+
+export const APP_VERSION = manifest.version;
+
+export const APP_NAME = manifest.name;
+
+export const APP_NAME_SLUG = APP_NAME.replace(/\s+/g, '-').toLowerCase();
+
 export const STATS_CACHE_LIFETIME_GUEST_MS = 24 * 60 * 60 * 1000; // 24 hours
 export const STATS_CACHE_LIFETIME_MS = 5 * 60 * 1000; // 5 minutes

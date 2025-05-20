@@ -1,3 +1,4 @@
+import { RecordsAPI } from '@/helpers/records-api';
 import { formatDistanceToNow } from 'date-fns';
 
 import * as utils from '@/helpers/utils.js';
@@ -15,6 +16,30 @@ const PROFILE_LISTENING_SET_TO_SELECTOR = '.profile_set_listening_box';
 const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_container';
 const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
+
+const replaceKeywords = [
+  'deluxe',
+  'version',
+  'digipack',
+  'edition',
+  'bonus',
+  'expanded',
+  'remaster',
+  'remastered',
+  'reissue',
+  'redux',
+  'limited',
+  'exclusive',
+  'special',
+  'legacy',
+  'collector',
+  'anniversary',
+];
+
+const mappingReplacePattern = new RegExp(
+  `\\s*[\\[(]([^\\])]*\\b(?:${replaceKeywords.join('|')})\\b[^\\])]*)[\\])]$`,
+  'i'
+);
 
 let volumeIcon;
 
@@ -60,14 +85,48 @@ function createPlayHistoryItem() {
   infobox.className = PLAY_HISTORY_ITEM_CLASSES.infobox;
   infobox.dataset.element = 'rymstats-track-infobox';
 
+  // RATING WRAPPER
   const customMyRating = document.createElement('div');
   customMyRating.className = PLAY_HISTORY_ITEM_CLASSES.customMyRating;
   customMyRating.dataset.element = 'rymstats-track-rating';
 
-  // const starIcon = utils.createSvgUse('svg-star-symbol');
-  // for (let i = 0; i < 5; i++) {
-  //   customMyRating.appendChild(starIcon.cloneNode(true));
-  // }
+  // NO RATING
+  const noRating = document.createElement('div');
+  noRating.dataset.element = 'rymstats-track-no-rating';
+  noRating.textContent = 'No rating available';
+
+  // NO RATING HELP ICON
+  const noRatingHelpIcon = document.createElement('span');
+  noRatingHelpIcon.className = 'help-icon';
+  noRatingHelpIcon.dataset.element = 'rymstats-track-no-rating-help-icon';
+  noRatingHelpIcon.textContent = '?';
+  noRatingHelpIcon.title = 'Rating may be not available due to RYM and Last.fm metadata mismatch';
+  noRating.appendChild(noRatingHelpIcon);
+
+  // STARS WRAPPER
+  const starsWrapper = document.createElement('div');
+  starsWrapper.dataset.element = 'rymstats-track-rating-stars';
+
+  // STARS FILLED
+  const starsFilled = document.createElement('div');
+  starsFilled.className = 'stars-filled';
+  starsFilled.dataset.element = 'rymstats-track-rating-stars-filled';
+
+  // STARS EMPTY
+  const starsEmpty = document.createElement('div');
+  starsEmpty.className = 'stars-empty';
+  starsEmpty.dataset.element = 'rymstats-track-rating-stars-empty';
+
+  starsWrapper.appendChild(starsEmpty);
+  starsWrapper.appendChild(starsFilled);
+  customMyRating.appendChild(noRating);
+  customMyRating.appendChild(starsWrapper);
+
+  const starIcon = utils.createSvgUse('svg-star-symbol');
+  for (let i = 0; i < 5; i++) {
+    starsFilled.appendChild(starIcon.cloneNode(true));
+    starsEmpty.appendChild(starIcon.cloneNode(true));
+  }
 
   const itemDate = document.createElement('div');
   itemDate.className = PLAY_HISTORY_ITEM_CLASSES.itemDate;
@@ -126,7 +185,7 @@ function createPlayHistoryItem() {
   return item;
 }
 
-function populatePlayHistoryItem(
+async function populatePlayHistoryItem(
   item,
   {
     artistName,
@@ -204,8 +263,26 @@ function populatePlayHistoryItem(
     }
 
     const customMyRating = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customMyRating}`);
+    const starsFilled = customMyRating.querySelector('.stars-filled');
+
     if (customMyRating) {
-      // customMyRating.textContent = 'My Rating: TODO';
+      const albumNameFallback = albumName.replace(mappingReplacePattern, '').trim();
+      const albumFromDB = await RecordsAPI.getByArtistAndTitle(
+        artistName,
+        albumName,
+        albumNameFallback,
+      );
+
+      if (albumFromDB) {
+        const rating = albumFromDB.rating;
+
+        customMyRating.classList.remove('no-rating');
+        starsFilled.style.width = `${rating * 10}%`;
+        customMyRating.title = `${rating / 2} / 5`;
+      } else {
+        customMyRating.classList.add('no-rating');
+        customMyRating.title = 'Rating may be not available due to RYM and Last.fm metadata mismatch';
+      }
     }
 
     const customFromAlbum = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customFromAlbum}`);
@@ -267,8 +344,32 @@ function prepareRecentTracksUI() {
   });
 
   const panelContainer = document.querySelector('.profile_listening_container');
-
+  panelContainer.classList.add(`bg-option-${config.recentTracksReplaceBackground}`)
   panelContainer.dataset['element'] = 'rymstats-track-panel';
+  const panelBgSwitcher = document.createElement('button');
+  const playlistIcon = utils.createSvgUse('svg-brush-symbol');
+  panelBgSwitcher.appendChild(playlistIcon);
+  panelBgSwitcher.classList.add('btn-bg-switcher');
+
+  const bgOptionsQty = 23;
+
+  panelBgSwitcher.dataset.option = `${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
+  panelBgSwitcher.title = `Background option ${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
+
+  panelBgSwitcher.addEventListener('click', async () => {
+    panelContainer.classList.remove(`bg-option-${config.recentTracksReplaceBackground}`);
+    let newBgOption;
+    if (config.recentTracksReplaceBackground === (bgOptionsQty - 1)) newBgOption = 0;
+    else newBgOption = config.recentTracksReplaceBackground + 1;
+    config.recentTracksReplaceBackground = newBgOption;
+    await utils.storageSet({
+      recentTracksReplaceBackground: newBgOption,
+    });
+    panelContainer.classList.add(`bg-option-${newBgOption}`);
+    panelBgSwitcher.title = `Background option ${newBgOption + 1} / ${bgOptionsQty}`;
+    panelBgSwitcher.dataset.option = `${newBgOption + 1} / ${bgOptionsQty}`;
+  });
+  panelContainer.appendChild(panelBgSwitcher);
 
   if (config.recentTracksReplace) {
     const setToBtn = panelContainer.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
@@ -304,7 +405,6 @@ function createLastfmButton() {
   button.classList.add('btn-lastfm');
   const playHistoryClasses = ['btn', 'blue_btn', 'btn_small'];
   button.classList.add(...playHistoryClasses);
-  // button.textContent = 'Last.fm Recent Tracks';
 
   const playlistIcon = utils.createSvgUse('svg-playlist-symbol');
   button.appendChild(playlistIcon);
@@ -420,7 +520,7 @@ function insertRecentTracksWrapperIntoDOM(tracksWrapper) {
   listeningContainer.insertAdjacentElement('afterend', tracksWrapper);
 }
 
-async function render(_config, _userName) {
+async function render(_config) {
   config = _config;
 
   if (!config) return;
@@ -434,8 +534,8 @@ async function render(_config, _userName) {
 
   let userName;
 
-  if (_userName) {
-    userName = _userName;
+  if (config.userName) {
+    userName = config.userName;
   } else {
     const userData = await utils.getSyncedUserData();
     userName = userData?.name;
@@ -466,7 +566,7 @@ async function render(_config, _userName) {
     buttonsContainer.prepend(lockButton);
   }
 
-  const populateRecentTracks = ({
+  const populateRecentTracks = async ({
     data,
     timestamp,
     colors,
@@ -478,7 +578,7 @@ async function render(_config, _userName) {
     }
 
     if (config.recentTracksReplace) {
-      populatePlayHistoryItem(
+      await populatePlayHistoryItem(
         playHistoryItem,
         {
           artistName: data[0].a,
@@ -510,10 +610,28 @@ async function render(_config, _userName) {
         documentRoot.style.setProperty('--clr-light-bg-contrast', colors.light.bgColorContrast);
         documentRoot.style.setProperty('--clr-light-accent', colors.light.accentColor);
         documentRoot.style.setProperty('--clr-light-accent-contrast', colors.light.accentColorContrast);
+
         documentRoot.style.setProperty('--clr-dark-bg', colors.dark.bgColor);
         documentRoot.style.setProperty('--clr-dark-bg-contrast', colors.dark.bgColorContrast);
         documentRoot.style.setProperty('--clr-dark-accent', colors.dark.accentColor);
         documentRoot.style.setProperty('--clr-dark-accent-contrast', colors.dark.accentColorContrast);
+
+        documentRoot.style.setProperty('--clr-light-accent-hue', parseInt(colors.light.accentColorHSL[0] * 360));
+        documentRoot.style.setProperty(
+          '--clr-light-accent-saturation',
+          (colors.light.accentColorHSL[1] * 100).toFixed(2),
+        );
+        documentRoot.style.setProperty(
+          '--clr-light-accent-lightness',
+          (colors.light.accentColorHSL[2] * 100).toFixed(2),
+        );
+
+        documentRoot.style.setProperty('--clr-dark-accent-hue', parseInt(colors.dark.accentColorHSL[0] * 360));
+        documentRoot.style.setProperty(
+          '--clr-dark-accent-saturation',
+          (colors.dark.accentColorHSL[1] * 100).toFixed(2),
+        );
+        documentRoot.style.setProperty('--clr-dark-accent-lightness', (colors.dark.accentColorHSL[2] * 100).toFixed(2));
 
         Object.keys(colors.palette).forEach((key) => {
           if (colors.palette[key]?.hex) {
@@ -571,7 +689,7 @@ async function render(_config, _userName) {
         }
       });
 
-      populateRecentTracks({
+      await populateRecentTracks({
         data: normalizedData,
         timestamp,
         colors,
@@ -585,14 +703,49 @@ async function render(_config, _userName) {
 
   insertRecentTracksWrapperIntoDOM(tracksWrapper);
 
-  let intervalId;
+  let intervalId = null;
+  let lastTick = null;
+  let progressLoopActive = false;
+
+  function getPollingProgress() {
+    if (!lastTick) return 0;
+    const elapsed = Date.now() - lastTick;
+    return Math.min(elapsed / constants.RECENT_TRACKS_INTERVAL_MS, 1);
+  }
+
+  function updateProgressVisual() {
+    const progress = getPollingProgress();
+    const angle = parseInt(progress * 360);
+    button.style.setProperty('--progress', `${angle}deg`);
+    if (progress >= 1) {
+      button.classList.add('is-fetching');
+    } else {
+      button.classList.remove('is-fetching');
+    }
+  }
+
+  function startProgressLoop() {
+    if (progressLoopActive) return;
+    progressLoopActive = true;
+
+    const loop = () => {
+      if (!progressLoopActive) return;
+      updateProgressVisual();
+      requestAnimationFrame(loop);
+    };
+
+    requestAnimationFrame(loop);
+  }
 
   const startInterval = () => {
     if (!intervalId) {
-      intervalId = setInterval(
-        updateAction,
-        constants.RECENT_TRACKS_INTERVAL_MS,
-      );
+      lastTick = Date.now();
+      intervalId = setInterval(async () => {
+        await updateAction();
+        lastTick = Date.now();
+      }, constants.RECENT_TRACKS_INTERVAL_MS);
+
+      startProgressLoop();
     }
   };
 
@@ -618,7 +771,7 @@ async function render(_config, _userName) {
         console.warn('Failed to get image colors, using cached data without colors');
       }
 
-      populateRecentTracks({
+      await populateRecentTracks({
         data: recentTracksCache.data,
         colors,
       });

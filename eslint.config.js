@@ -24,9 +24,7 @@ module.exports = [
       'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
       'max-len': ['warn', { 'code': 120 }],
-
-      // 'readable-tailwind/order': 'warn',
-      // 'readable-tailwind/no-contradicting-classname': 'error',
+      'no-unreachable': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
     },
   },
   {
