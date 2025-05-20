@@ -17,9 +17,12 @@ import * as utils from '@/helpers/utils.js';
     return;
   }
 
+  // Wait for the full profile page to load
+  // This is necessary because last.fm link can be added anywhere on the page
   await utils.waitForDOMReady();
 
-  const userName = utils.detectUserName();
+  // Parse links on the page to find the last.fm username
+  const userName = utils.detectLastfmUserName();
 
   if (userName) {
     await renderContent(profile, {

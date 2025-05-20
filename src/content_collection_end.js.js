@@ -1,12 +1,7 @@
-import { targetSelectors } from '@/modules/profile/index.js';
 import * as utils from '@/helpers/utils.js';
 import { RecordsAPI } from '@/helpers/records-api.js';
 
 (async function () {
-  const isMyProfile = await utils.checkDOMCondition(targetSelectors, () => utils.isMyProfile());
-
-  if (!isMyProfile) return;
-
   window.addEventListener('load', async () => {
     const recentItems = Array.from(document.querySelectorAll('#musicrecent tr[id^="page_catalog_item_"]'));
 

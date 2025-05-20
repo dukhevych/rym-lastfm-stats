@@ -117,20 +117,34 @@ export const formatNumber = (number) => {
   return formatter.format(number);
 };
 
-export function isMyProfile() {
-  const headerProfileUsername = document.querySelector(
-    '#header_profile_username',
-  );
-  const profileName = document.querySelector('#profilename');
+export function getHeaderUsername() {
+  const headerProfileUsername = document.querySelector('#header_profile_username');
 
-  if (headerProfileUsername && profileName) {
-    return (
-      headerProfileUsername.textContent.trim() ===
-      profileName.textContent.trim()
-    );
+  if (headerProfileUsername) {
+    return headerProfileUsername.textContent.trim();
   }
 
-  return false;
+  return null;
+}
+
+// export function isMyCollection() {
+//   const breadcrumbItem = document.querySelector('ol#page_breadcrumb li:first-child a.ui_breadcrumb_link[href^="~"]');
+
+//   const headerUsername = getHeaderUsername();
+// };
+
+export function isMyProfile() {
+  const currentUrl = window.location.href;
+  const profileUrlMatch = currentUrl.match(/\/~([^/?#]+)/);
+
+  if (!profileUrlMatch) {
+    return false;
+  }
+
+  const urlUserName = profileUrlMatch[1];
+  const headerUsername = getHeaderUsername();
+
+  return headerUsername === urlUserName;
 };
 
 // Depends on the list of dark theme classes that is hardcoded and can be changed by RYM
@@ -146,7 +160,7 @@ export async function getUserName() {
   return userData?.name ?? null;
 };
 
-export function detectUserName() {
+export function detectLastfmUserName() {
   let userName = null;
 
   const firstLastFmLink = Array.from(document.querySelectorAll('a')).find((link) => {

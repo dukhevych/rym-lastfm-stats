@@ -278,7 +278,7 @@ async function populatePlayHistoryItem(
 
         customMyRating.classList.remove('no-rating');
         starsFilled.style.width = `${rating * 10}%`;
-        customMyRating.title = '';
+        customMyRating.title = `${rating / 2} / 5`;
       } else {
         customMyRating.classList.add('no-rating');
         customMyRating.title = 'Rating may be not available due to RYM and Last.fm metadata mismatch';
