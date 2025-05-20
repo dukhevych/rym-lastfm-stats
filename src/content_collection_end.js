@@ -51,22 +51,29 @@ import { RecordsAPI } from '@/helpers/records-api.js';
 
     const dbData = await RecordsAPI.getByIds(parsedData.map(data => data.id), true);
 
+    let addedQty = 0;
+    let updatedQty = 0;
+
     await Promise.all(
       parsedData.map((data) => {
         const dbItem = dbData[data.id];
 
         if (!dbItem) {
+          addedQty++;
           return RecordsAPI.add(data);
         }
 
         delete dbItem._raw;
 
         if (dbItem.rating !== data.rating) {
+          updatedQty++;
           return RecordsAPI.updateRating(data.id, data.rating);
         }
 
         return Promise.resolve(false);
       })
     );
+
+    console.log(`[content_collection_end] Added ${addedQty} items, updated ${updatedQty} items`);
   });
 })();

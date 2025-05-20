@@ -1342,6 +1342,17 @@ html[data-scheme="dark"] {
   opacity: 0;
   transition: opacity 0.3s ease-out;
 
+  &:before {
+    content: attr(data-option);
+    font-size: 1rem;
+    position: absolute;
+    top: 50%;
+    white-space: nowrap;
+    right: 100%;
+    transform: translateY(-50%);
+    margin-right: 5px;
+  }
+
   &:hover {
     opacity: 1 !important;
   }
@@ -1360,7 +1371,7 @@ html[data-scheme="dark"] {
   }
 }
 
-@property --progress  { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+@property --progress { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
 
 @keyframes progress-animation {
   0% {

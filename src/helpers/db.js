@@ -42,17 +42,22 @@ export async function getAllRecords() {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
 
+  console.log(`[getAllRecords] DB Name: ${dbName}, Version: ${constants.RYM_DB_VERSION}`);
+
   return new Promise((resolve, reject) => {
     const dbRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
+
+    console.log(`[getAllRecords] DB Request: ${dbRequest}`);
 
     dbRequest.onsuccess = function (event) {
       const db = event.target.result;
 
-      // 🔐 Check if the object store exists before using it
+      console.log(`[getAllRecords] DB opened successfully`);
+
       if (!db.objectStoreNames.contains(storeName)) {
         console.warn(`[getAllRecords] Object store '${storeName}' does not exist in DB '${dbName}'`);
         db.close();
-        resolve([]); // Return empty list instead of throwing
+        resolve([]);
         return;
       }
 
@@ -60,7 +65,10 @@ export async function getAllRecords() {
       const store = transaction.objectStore(storeName);
       const getAllRequest = store.getAll();
 
+      console.log(`[getAllRecords] Get all request: ${getAllRequest}`);
+
       getAllRequest.onsuccess = function () {
+        console.log(`[getAllRecords] Get all request successful`, getAllRequest.result);
         db.close();
         resolve(getAllRequest.result);
       };
@@ -242,6 +250,36 @@ export async function deleteRecord(id) {
 
 function getStoreName() {
   return constants.RYM_DB_STORE_NAME || 'rymExportStore';
+}
+
+export async function initDatabase() {
+  const dbName = await getDatabaseName();
+  const storeName = getStoreName();
+  const version = constants.RYM_DB_VERSION;
+
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, version);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+
+      if (!db.objectStoreNames.contains(storeName)) {
+        const store = db.createObjectStore(storeName, { keyPath: 'id' });
+        store.createIndex('idIndex', 'id', { unique: true });
+        console.log(`[initDatabase] Created store and index`);
+      }
+    };
+
+    request.onsuccess = (event) => {
+      event.target.result.close();
+      console.log(`[initDatabase] Database opened successfully`);
+      resolve();
+    };
+
+    request.onerror = (event) => {
+      reject(event.target.error);
+    };
+  });
 }
 
 export async function setRecords(payload) {

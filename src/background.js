@@ -23,6 +23,7 @@ const dbMessageTypes = new Set([
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 const flexIndex = new FlexSearch.Index({ tokenize: 'forward', cache: true });
+
 let recordMap = new Map();
 
 async function buildSearchIndex() {
@@ -45,7 +46,14 @@ async function buildSearchIndex() {
   console.log(`[FlexSearch] Indexed ${records.length} records`);
 }
 
-buildSearchIndex();
+(async () => {
+  try {
+    await db.initDatabase();
+    await buildSearchIndex();
+  } catch (err) {
+    console.error('[Background] Failed to initialize database or build index:', err);
+  }
+})();
 
 async function handleDatabaseMessages(message, sender, sendResponse) {
   const { type, payload } = message;
@@ -63,7 +71,7 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
         const results = payload.ids.map(id => recordMap.get(id)).filter(Boolean);
 
         if (payload.asObject) {
-          if (results.length) result = Object.fromEntries(results.map(record => [record.id, record]));
+          result = Object.fromEntries(results.map(record => [record.id, record]));
         } else {
           result = results;
         }

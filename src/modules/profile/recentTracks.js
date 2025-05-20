@@ -350,17 +350,24 @@ function prepareRecentTracksUI() {
   const playlistIcon = utils.createSvgUse('svg-brush-symbol');
   panelBgSwitcher.appendChild(playlistIcon);
   panelBgSwitcher.classList.add('btn-bg-switcher');
+
+  const bgOptionsQty = 23;
+
+  panelBgSwitcher.dataset.option = `${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
+  panelBgSwitcher.title = `Background option ${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
+
   panelBgSwitcher.addEventListener('click', async () => {
     panelContainer.classList.remove(`bg-option-${config.recentTracksReplaceBackground}`);
     let newBgOption;
-    if (config.recentTracksReplaceBackground === 22) newBgOption = 0;
+    if (config.recentTracksReplaceBackground === (bgOptionsQty - 1)) newBgOption = 0;
     else newBgOption = config.recentTracksReplaceBackground + 1;
     config.recentTracksReplaceBackground = newBgOption;
     await utils.storageSet({
       recentTracksReplaceBackground: newBgOption,
     });
     panelContainer.classList.add(`bg-option-${newBgOption}`);
-    panelBgSwitcher.title = `Background option ${newBgOption}`;
+    panelBgSwitcher.title = `Background option ${newBgOption + 1} / ${bgOptionsQty}`;
+    panelBgSwitcher.dataset.option = `${newBgOption + 1} / ${bgOptionsQty}`;
   });
   panelContainer.appendChild(panelBgSwitcher);
 
