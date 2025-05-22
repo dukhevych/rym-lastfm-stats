@@ -95,6 +95,11 @@ function createPlayHistoryItem() {
   noRating.dataset.element = 'rymstats-track-no-rating';
   noRating.textContent = 'No rating available';
 
+  // OWNERSHIP + MEDIA TYPE
+  const mediaType = document.createElement('div');
+  mediaType.dataset.element = 'rymstats-track-mediatype';
+  mediaType.textContent = '';
+
   // NO RATING HELP ICON
   const noRatingHelpIcon = document.createElement('span');
   noRatingHelpIcon.className = 'help-icon';
@@ -121,6 +126,7 @@ function createPlayHistoryItem() {
   starsWrapper.appendChild(starsFilled);
   customMyRating.appendChild(noRating);
   customMyRating.appendChild(starsWrapper);
+  customMyRating.appendChild(mediaType);
 
   const starIcon = utils.createSvgUse('svg-star-symbol');
   for (let i = 0; i < 5; i++) {
@@ -264,21 +270,43 @@ async function populatePlayHistoryItem(
 
     const customMyRating = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customMyRating}`);
     const starsFilled = customMyRating.querySelector('.stars-filled');
+    const starsWrapper = customMyRating.querySelector('[data-element="rymstats-track-rating-stars"]');
+    const mediaType = customMyRating.querySelector(`[data-element="rymstats-track-mediatype"]`);
 
     if (customMyRating) {
       const albumNameFallback = albumName.replace(mappingReplacePattern, '').trim();
-      const albumFromDB = await RecordsAPI.getByArtistAndTitle(
+
+      const albumsFromDB = await RecordsAPI.getByArtistAndTitle(
         artistName,
         albumName,
         albumNameFallback,
       );
 
-      if (albumFromDB) {
-        const rating = albumFromDB.rating;
+      customMyRating.classList.remove('no-rating');
+      customMyRating.classList.remove('has-ownership');
+      customMyRating.title = '';
 
-        customMyRating.classList.remove('no-rating');
-        starsFilled.style.width = `${rating * 10}%`;
-        customMyRating.title = `${rating / 2} / 5`;
+      if (albumsFromDB.length > 0) {
+        const rating = Math.max(albumsFromDB.map((item) => item.rating || 0));
+
+        let mediaTypes = [];
+
+        albumsFromDB.forEach((item) => {
+          if (item.ownership === 'o' && item.mediaType) {
+            mediaTypes.push(item.mediaType);
+          }
+        });
+
+        if (rating > 0) {
+          starsFilled.style.width = `${rating * 10}%`;
+          starsWrapper.title = `${rating / 2} / 5`;
+        }
+
+        mediaType.textContent = mediaTypes.join(', ');
+
+        if (mediaTypes.length > 0) {
+          customMyRating.classList.add('has-ownership');
+        }
       } else {
         customMyRating.classList.add('no-rating');
         customMyRating.title = 'Rating may be not available due to RYM and Last.fm metadata mismatch';

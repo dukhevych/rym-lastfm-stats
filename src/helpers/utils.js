@@ -264,7 +264,7 @@ export function generateSearchUrl({
     return url;
   } else {
     url += '/search?';
-    url += `searchterm=${encodeURIComponent(searchterm.toLowerCase())}`;
+    url += `searchterm=${encodeURIComponent(normalizeForSearch(searchterm))}`;
   }
 
   if (trackTitle) url += `&searchtype=z`;
@@ -628,18 +628,23 @@ export function getDirectInnerText(element) {
 }
 
 export function normalizeForSearch(str) {
+  if (!str) return '';
+
   return deburr(str
     .toLowerCase()
     .replace(/\sand\s/g, ' & ')
     .replace(/\./g, '')
     .replace(/_/g, '')
     .replace(/"/g, '')
+    .replace(/ - /g, ' ')
     .replace(/'/g, '')
     .replace(/’/g, '')
     .replace(/\\/g, '')
     .replace(/:/g, '')
     .replace(/,/g, '')
     .replace(/\s+/g, ' ')
+    .replace(/ pt /g, ' part ')
+    .replace(/ vol /g, ' volume ')
     .trim());
 }
 
@@ -680,3 +685,7 @@ export function combineArtistNames(artistNames) {
     artistNameLocalized: combinedArtistNameLocalized,
   }
 };
+
+export function checkPartialStringsMatch(str1, str2) {
+  return str1 === str2 || str1.includes(str2) || str2.includes(str1);
+}

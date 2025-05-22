@@ -33,7 +33,7 @@ function addUserRating(album) {
   userRating.style.fontWeight = 'bold';
   userRating.style.color = '#383';
 
-  userRating.innerText = `${album.rating / 2}`;
+  userRating.innerText = `${rating} / 5`;
 
   container.appendChild(userRating);
 }

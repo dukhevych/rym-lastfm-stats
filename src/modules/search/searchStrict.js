@@ -78,17 +78,19 @@ const validationRules = {
         getNodeDirectTextContent(
           item.querySelector(artistAkaSelector),
         ).trim() || '';
-      const akaValues = utils.deburr(artistAka
-        .toLowerCase()
-        .trim()
-        .replace(/^a\.k\.a:\s*/, ''))
-        .split(', ')
-        .map((aka) => aka.trim())
-        .filter(Boolean);
+
+      const akaValues = utils.deburr(
+        artistAka
+          .toLowerCase()
+          .trim()
+          .replace(/^a\.k\.a:\s*/, ''))
+          .split(', ')
+          .map((aka) => utils.normalizeForSearch(aka)
+        ).filter(Boolean);
 
       return !(
-        artistNameDeburred !== query &&
-        artistNameLocalizedDeburred !== query &&
+        utils.normalizeForSearch(artistNameDeburred) !== query &&
+        utils.normalizeForSearch(artistNameLocalizedDeburred) !== query &&
         !akaValues.includes(query)
       );
     },
@@ -122,28 +124,29 @@ const validationRules = {
         }
       }
 
-      const artistNameDeburred = utils.deburr(artistName);
-      const artistNameLocalizedDeburred = artistNameLocalized ? utils.deburr(artistNameLocalized) : artistNameLocalized;
+      const artistNameNormalized = utils.normalizeForSearch(artistName);
+      const artistNameLocalizedNormalized = artistNameLocalized ?
+        utils.normalizeForSearch(artistNameLocalized) : artistNameLocalized;
 
-      const releaseTitleDeburred = utils
-        .deburr(item.querySelector(releaseTitleSelector)?.textContent.toLowerCase() || '');
+      const releaseTitleNormalized = utils
+        .normalizeForSearch(item.querySelector(releaseTitleSelector)?.textContent || '');
 
-      let _query = utils.deburr(query).replace(/ & /g, ' and ');
+      let _query = utils.deburr(query).replace(/ & /g, ' and '); // check
 
       let hasArtist = false;
       let hasReleaseTitle = false;
 
       if (
-        _query.includes(artistNameDeburred)
-        || _query.includes(artistNameLocalizedDeburred)
+        _query.includes(artistNameNormalized)
+        || _query.includes(artistNameLocalizedNormalized)
       ) {
         hasArtist = true;
-        _query = query.replace(artistNameDeburred, '').trim();
+        _query = query.replace(artistNameNormalized, '').trim();
       }
 
-      if (_query.includes(releaseTitleDeburred)) {
+      if (_query.includes(releaseTitleNormalized)) {
         hasReleaseTitle = true;
-        _query = query.replace(releaseTitleDeburred, '').trim();
+        _query = query.replace(releaseTitleNormalized, '').trim();
       }
 
       return hasArtist && hasReleaseTitle;

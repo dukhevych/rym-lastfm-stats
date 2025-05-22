@@ -9,6 +9,9 @@ import { RecordsAPI } from '@/helpers/records-api.js';
   const formSubmitButton = form.querySelector('button[type="submit"]');
   formSubmitButton.style.display = 'none';
 
+  const includeReviewsCheckbox = form.querySelector('label[for="include_reviews"]');
+  includeReviewsCheckbox.style.display = 'none';
+
   const formSyncButton = document.createElement('button');
 
   const statusMessage = document.createElement('div');
@@ -74,9 +77,9 @@ import { RecordsAPI } from '@/helpers/records-api.js';
         const title = columns[5];
         const releaseDate = +columns[6];
         const rating = +columns[7];
-        // const ownership = columns[8];
-        // const purchaseDate = columns[9];
-        // const mediaType = columns[10];
+        const ownership = columns[8];
+        const purchaseDate = columns[9];
+        const mediaType = columns[10];
 
         const getCombinedName = (firstName, lastName) => [firstName, lastName]
           .filter(Boolean)
@@ -94,6 +97,9 @@ import { RecordsAPI } from '@/helpers/records-api.js';
           rating,
           artistName,
           artistNameLocalized,
+          ownership,
+          purchaseDate,
+          mediaType,
           $artistName: utils.normalizeForSearch(artistName),
           $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
           $title: utils.normalizeForSearch(title),

@@ -122,10 +122,13 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
 
         const matchedRecords = hits.map(id => recordMap.get(id));
 
-        result = matchedRecords.find(record => {
-          if (record.$title !== titleQuery) return false;
-          return record.$artistName.includes(artistQuery) || record.$artistNameLocalized.includes(artistQuery);
-        }) || null;
+        result = matchedRecords.filter(record => {
+          const matchTitle = utils.checkPartialStringsMatch(record.$title, titleQuery);
+          const matchArtist = utils.checkPartialStringsMatch(record.$artistName, artistQuery);
+          const matchArtistLocalized = utils.checkPartialStringsMatch(record.$artistNameLocalized, artistQuery);
+
+          return matchTitle && (matchArtist || matchArtistLocalized);
+        });
 
         if (!result && payload.titleFallback) {
           const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
@@ -133,10 +136,13 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
           const hitsFallback = flexIndex.search(queryFallback, { limit: 50 });
           const matchedRecordsFallback = hitsFallback.map(id => recordMap.get(id));
 
-          result = matchedRecordsFallback.find(record => {
-            if (record.$title !== titleFallbackQuery) return false;
-            return record.$artistName.includes(artistQuery) || record.$artistNameLocalized.includes(artistQuery);
-          }) || null;
+          result = matchedRecordsFallback.filter(record => {
+            const matchTitle = utils.checkPartialStringsMatch(record.$title, titleFallbackQuery);
+            const matchArtist = utils.checkPartialStringsMatch(record.$artistName, artistQuery);
+            const matchArtistLocalized = utils.checkPartialStringsMatch(record.$artistNameLocalized, artistQuery);
+
+            return matchTitle && (matchArtist || matchArtistLocalized);
+          });
         }
 
         break;

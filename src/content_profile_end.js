@@ -10,7 +10,8 @@ import { RecordsAPI } from '@/helpers/records-api.js';
     const recentItems = Array.from(document.querySelectorAll('#musicrecent tr[id^="page_catalog_item_"]'));
 
     const parsedData = recentItems.map(item => {
-      const rating = parseInt(item.querySelector('.or_q_rating_date_s img').src.split('/').pop().split('.')[0]);
+      const ratingEl = item.querySelector('.or_q_rating_date_s img');
+      const rating = ratingEl ? parseInt(ratingEl.src.split('/').pop().split('.')[0]) : '';
       const releaseLink = item.querySelector('.or_q_albumartist_td a.album');
       const releaseId = releaseLink.title.replace('[Album', '').replace(']', '');
       const title = releaseLink.innerText;

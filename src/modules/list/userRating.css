@@ -1,0 +1,12 @@
+.rym-lastfm-stats-user-rating {
+  font-size: 1.25em;
+  font-weight: bold;
+  color: #383;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.main_entry {
+  position: relative;
+}

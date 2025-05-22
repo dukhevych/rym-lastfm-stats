@@ -1,19 +1,24 @@
 import { RecordsAPI } from '@/helpers/records-api';
+import './userRating.css';
+
+const USER_RATING_CONTAINER_SELECTOR = '.main_entry';
+const LIST_ITEMS_SELECTOR = '#user_list > tbody > tr';
+const LIST_ITEM_SELECTOR = 'a.list_album';
+const ARTIST_ITEM_SELECTOR = 'a.list_artist';
+const ART_ITEM_SELECTOR = '.list_art img';
 
 function getItems() {
   const releases = [];
   const artists = [];
 
-  Array.from(document.querySelectorAll('#user_list > tbody > tr')).forEach(item => {
-    const albumEl = item.querySelector('a.list_album');
-    const artistEl = item.querySelector('a.list_artist');
-    const artImgEl = item.querySelector('.list_art img');
+  Array.from(document.querySelectorAll(LIST_ITEMS_SELECTOR)).forEach(item => {
+    const albumEl = item.querySelector(LIST_ITEM_SELECTOR);
+    const artistEl = item.querySelector(ARTIST_ITEM_SELECTOR);
+    const artImgEl = item.querySelector(ART_ITEM_SELECTOR);
 
     let itemType = null;
 
-    if (artistEl) {
-      itemType = albumEl ? 'l' : 'a';
-    }
+    if (artistEl) itemType = albumEl ? 'l' : 'a';
 
     if (itemType === 'l') {
       let releaseId = null;
@@ -56,22 +61,21 @@ function getItems() {
 }
 
 function addReleaseRating(item) {
-  const wrapper = item.node.querySelector('.main_entry');
+  const wrapper = item.node.querySelector(USER_RATING_CONTAINER_SELECTOR);
 
   if (!wrapper) return;
 
   const rating = item.rating / 2;
-  const ratingElement = document.createElement('span');
-  ratingElement.className = 'user_rating';
-  ratingElement.style.fontSize = '1.25em';
-  ratingElement.style.fontWeight = 'bold';
-  ratingElement.style.color = '#383';
-  ratingElement.style.position = 'absolute';
-  ratingElement.style.top = '0';
-  ratingElement.style.right = '0';
-  ratingElement.innerText = `${rating}`;
 
-  wrapper.style.position = 'relative';
+  if (rating < 0 || rating > 5) {
+    console.warn('Invalid rating value:', item, rating);
+    return;
+  }
+
+  const ratingElement = document.createElement('span');
+  ratingElement.classList.add('rym-lastfm-stats-user-rating');
+  ratingElement.innerText = `${rating} / 5`;
+
   wrapper.appendChild(ratingElement);
 }
 

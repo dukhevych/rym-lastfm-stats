@@ -32,7 +32,7 @@
 
   40% {
     --bg-option-21-bar-1: 70; --bg-option-21-bar-2: 30; --bg-option-21-bar-3: 90; --bg-option-21-bar-4: 40;
-    --bg-option-21-bar-5: 80; --bg-option-21-bar-6: 20; --bg-option-21-bar-7: 90; --bg-option-21-bar-8: 60;
+    --bg-option-21-bar-5: 80; --bg-option-21-bar-6: 40; --bg-option-21-bar-7: 90; --bg-option-21-bar-8: 60;
     --bg-option-21-bar-9: 30; --bg-option-21-bar-10: 80; --bg-option-21-bar-11: 50; --bg-option-21-bar-12: 70;
   }
 
@@ -275,8 +275,8 @@
     /* visibility: hidden; */
 
     display: flex;
-    gap: 1px;
     align-items: center;
+    gap: 10px;
 
     &.no-rating {
       [data-element="rymstats-track-no-rating"] {
@@ -290,8 +290,20 @@
       }
     }
 
+    &.has-ownership {
+      [data-element="rymstats-track-mediatype"] {
+        display: block;
+      }
+    }
+
     [data-element="rymstats-track-rating-stars"] {
       position: relative;
+    }
+
+    [data-element="rymstats-track-mediatype"] {
+      display: none;
+      font-weight: bold;
+      color: var(--clr-accent);
     }
 
     [data-element="rymstats-track-no-rating"] {
