@@ -31,8 +31,8 @@ export const RecordsAPI = {
   getByArtists: (artists) =>
     sendMessage('GET_RECORDS_BY_ARTISTS', { artists }),
 
-  getByArtistAndTitle: (artist, title, titleFallback) =>
-    sendMessage('GET_RECORD_BY_ARTIST_AND_TITLE', { artist, title, titleFallback }),
+  getByArtistAndTitle: (artist, title, titleFallback, asObject) =>
+    sendMessage('GET_RECORD_BY_ARTIST_AND_TITLE', { artist, title, titleFallback, asObject }),
 
   add: (record) =>
     sendMessage('ADD_RECORD', { record }),

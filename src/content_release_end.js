@@ -10,13 +10,14 @@ import {
   window.addEventListener('load', async () => {
     const releaseId = document.querySelectorAll('.album_shortcut')[0].value.replace('[Album', '').replace(']', '');
 
-    const propName = 'rating_l_' + releaseId;
+    const ratingKey = 'rating_l_' + releaseId;
+    // catalog_l_16456286
     const fieldName = 'rating';
 
     let ratingValue;
 
     const { initialValue } = await utils.getAndWatchObjectField(
-      propName,
+      ratingKey,
       fieldName,
       async (updatedValue) => {
         ratingValue = updatedValue;
@@ -48,19 +49,24 @@ import {
     async function updateRymSync(value) {
       let rymAlbumData = null;
       rymAlbumData = await RecordsAPI.getById(releaseId);
+
       console.log('DB DATA', rymAlbumData);
-      if (value > 0) {
-        if (!rymAlbumData) {
-          const data = prepareItem(value);
-          console.log('PARSED DATA', data);
-          await RecordsAPI.add(data);
-        } else if (rymAlbumData.rating !== Number(value)) {
-          console.log('UPDATED RATING', rymAlbumData.rating, Number(value));
-          await RecordsAPI.update(releaseId, { rating: Number(value) });
-        } else {
-          console.log('NOTHING TO UPDATE');
-        }
-      }
+
+      const data = prepareItem(value);
+      console.log('PARSED DATA', data);
+
+      // if (value > 0) {
+      //   if (!rymAlbumData) {
+      //     const data = prepareItem(value);
+      //     console.log('PARSED DATA', data);
+      //     await RecordsAPI.add(data);
+      //   } else if (rymAlbumData.rating !== Number(value)) {
+      //     console.log('UPDATED RATING', rymAlbumData.rating, Number(value));
+      //     await RecordsAPI.update(releaseId, { rating: Number(value) });
+      //   } else {
+      //     console.log('NOTHING TO UPDATE');
+      //   }
+      // }
 
       if (value === 0) {
         if (rymAlbumData) {

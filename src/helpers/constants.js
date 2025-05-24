@@ -120,3 +120,45 @@ export const APP_NAME_SLUG = APP_NAME.replace(/\s+/g, '-').toLowerCase();
 
 export const STATS_CACHE_LIFETIME_GUEST_MS = 24 * 60 * 60 * 1000; // 24 hours
 export const STATS_CACHE_LIFETIME_MS = 5 * 60 * 1000; // 5 minutes
+
+export const RYM_ENTITY_CODES = {
+  artist: 'a',
+  release: 'l',
+  song: 'z',
+
+  // Uncomment these if needed in the future
+  // y: 'v/a release',
+  // b: 'label',
+  // h: 'genre',
+  // u: 'user',
+  // s: 'list',
+}
+
+export const RYM_ENTITY_CODES_INVERTED = Object.entries(RYM_ENTITY_CODES).reduce((acc, [key, value]) => {
+  acc[value] = key;
+  return acc;
+}, {});
+
+export const REPLACE_KEYWORDS = [
+  'deluxe',
+  'version',
+  'digipack',
+  'edition',
+  'bonus',
+  'expanded',
+  'remaster',
+  'remastered',
+  'reissue',
+  'redux',
+  'limited',
+  'exclusive',
+  'special',
+  'legacy',
+  'collector',
+  'anniversary',
+];
+
+export const KEYWORDS_REPLACE_PATTERN = new RegExp(
+  `\\s*[\\[(]([^\\])]*\\b(?:${REPLACE_KEYWORDS.join('|')})\\b[^\\])]*)[\\])]$`,
+  'i'
+);

@@ -1,42 +1,20 @@
 import * as utils from '@/helpers/utils.js';
+import * as constants from '@/helpers/constants.js';
+import { RecordsAPI } from '@/helpers/records-api';
 
 import './searchStrict.css';
 
-const SEARCH_TYPES = {
-  a: 'artist',
-  l: 'release',
-  z: 'song',
-  // y: 'v/a release',
-  // b: 'label',
-  // h: 'genre',
-  // u: 'user',
-  // s: 'list',
-};
-
 let searchItems;
-const searchItemsMore = [];
+const searchItemsToHide = [];
 const searchItemsFiltered = [];
 
 const SEARCH_HEADER_SELECTOR = '.page_search_results h3';
 const SEARCH_ITEMS_SELECTOR = SEARCH_HEADER_SELECTOR + ' ~ table';
 const LAST_ITEM_SELECTOR = SEARCH_HEADER_SELECTOR + ' ~ table + div';
 
-function getNodeDirectTextContent(item) {
-  if (!item) return '';
-
-  const result = [];
-  item.childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      result.push(node.textContent);
-    }
-  });
-
-  return result.join(' ');
-}
-
 function injectShowAllButton() {
   const button = document.createElement('button');
-  button.textContent = `Show all results (+ ${searchItemsMore.length} more)`;
+  button.textContent = `Show all results (+ ${searchItemsToHide.length} more)`;
   button.classList.add('btn', 'blue_btn', 'btn_small', 'btn-search-strict-show-all');
   const target = document.querySelector('.page_search_results h3');
   target.appendChild(button);
@@ -49,8 +27,7 @@ function injectShowAllButton() {
 }
 
 const validationRules = {
-  a: {
-    name: 'artist',
+  [constants.RYM_ENTITY_CODES.artist]: {
     selectors: {
       artistNameSelector: 'a.searchpage.artist',
       artistNameLocalizedSelector: 'a.searchpage.artist + span.smallgray',
@@ -63,40 +40,30 @@ const validationRules = {
         artistAkaSelector,
       } = this.selectors;
 
-      const artistName = (item.querySelector(artistNameSelector)?.textContent || '')
-        .trim()
-        .toLowerCase();
-      const artistNameDeburred = utils.deburr(artistName);
+      const _query = utils.normalizeForSearch(query);
 
-      const artistNameLocalized = (item.querySelector(artistNameLocalizedSelector)?.textContent || '')
-        .trim()
-        .toLowerCase()
-        .replace(/^\[|\]$/g, '');
-      const artistNameLocalizedDeburred = utils.deburr(artistNameLocalized);
+      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent);
+
+      const artistNameLocalized = utils.normalizeForSearch(
+        item.querySelector(artistNameLocalizedSelector)?.textContent
+      ).replace(/^\[|\]$/g, ''); // remove [ ] brackets
 
       const artistAka =
-        getNodeDirectTextContent(
-          item.querySelector(artistAkaSelector),
-        ).trim() || '';
+        utils.getNodeDirectTextContent(item.querySelector(artistAkaSelector)).trim();
 
-      const akaValues = utils.deburr(
-        artistAka
-          .toLowerCase()
-          .trim()
-          .replace(/^a\.k\.a:\s*/, ''))
-          .split(', ')
-          .map((aka) => utils.normalizeForSearch(aka)
-        ).filter(Boolean);
+      const akaValues = artistAka.replace(/^a\.k\.a:\s*/, '')
+        .split(', ')
+        .map((aka) => utils.normalizeForSearch(aka))
+        .filter(Boolean);
 
-      return !(
-        utils.normalizeForSearch(artistNameDeburred) !== query &&
-        utils.normalizeForSearch(artistNameLocalizedDeburred) !== query &&
-        !akaValues.includes(query)
+      return (
+        utils.checkPartialStringsMatch(artistName, _query)
+        || utils.checkPartialStringsMatch(artistNameLocalized, _query)
+        || akaValues.some((aka) => utils.checkPartialStringsMatch(aka, _query))
       );
     },
   },
-  l: {
-    name: 'release',
+  [constants.RYM_ENTITY_CODES.release]: {
     selectors: {
       artistNameSelector: 'a.artist',
       releaseTitleSelector: 'a.searchpage',
@@ -107,10 +74,9 @@ const validationRules = {
         releaseTitleSelector,
       } = this.selectors;
 
-      let artistName = (item.querySelector(artistNameSelector)?.textContent || '')
-        .trim()
-        .toLowerCase()
-        .replace(/ & /g, ' and ');
+      let _query = utils.normalizeForSearch(query);
+
+      let artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
 
       let artistNameLocalized;
 
@@ -125,35 +91,43 @@ const validationRules = {
       }
 
       const artistNameNormalized = utils.normalizeForSearch(artistName);
-      const artistNameLocalizedNormalized = artistNameLocalized ?
-        utils.normalizeForSearch(artistNameLocalized) : artistNameLocalized;
+      const artistNameLocalizedNormalized = utils.normalizeForSearch(artistNameLocalized || '');
 
       const releaseTitleNormalized = utils
         .normalizeForSearch(item.querySelector(releaseTitleSelector)?.textContent || '');
 
-      let _query = utils.deburr(query).replace(/ & /g, ' and '); // check
-
       let hasArtist = false;
       let hasReleaseTitle = false;
 
-      if (
-        _query.includes(artistNameNormalized)
-        || _query.includes(artistNameLocalizedNormalized)
-      ) {
+      if (utils.checkPartialStringsMatch(artistNameNormalized, _query)) {
         hasArtist = true;
-        _query = query.replace(artistNameNormalized, '').trim();
+        _query = _query.replace(artistNameNormalized, '').trim();
+      } else if (utils.checkPartialStringsMatch(artistNameLocalizedNormalized, _query)) {
+        hasArtist = true;
+        _query = _query.replace(artistNameLocalizedNormalized, '').trim();
       }
 
-      if (_query.includes(releaseTitleNormalized)) {
+      if (hasArtist) {
+        console.log('hasArtist', artistName, _query);
+        console.log('hasArtist', artistNameLocalized, _query);
+      }
+
+      if (utils.checkPartialStringsMatch(releaseTitleNormalized, _query)) {
         hasReleaseTitle = true;
-        _query = query.replace(releaseTitleNormalized, '').trim();
+      }
+
+      if (!hasReleaseTitle) {
+        const _queryCleaned = _query.replace(constants.KEYWORDS_REPLACE_PATTERN, '').trim();
+
+        if (utils.checkPartialStringsMatch(releaseTitleNormalized, _queryCleaned)) {
+          hasReleaseTitle = true;
+        }
       }
 
       return hasArtist && hasReleaseTitle;
     },
   },
-  z: {
-    name: 'song',
+  [constants.RYM_ENTITY_CODES.song]: {
     selectors: {
       artistNameSelector: '.infobox td:nth-child(2) > span .ui_name_locale',
       trackNameSelector: '.infobox td:nth-child(2) > table .ui_name_locale_original',
@@ -164,20 +138,20 @@ const validationRules = {
         trackNameSelector,
       } = this.selectors;
 
-      const artistName = utils.deburr(item.querySelector(artistNameSelector)?.textContent.trim().toLowerCase() || '');
-      const trackName = utils.deburr(item.querySelector(trackNameSelector)?.textContent.trim().toLowerCase() || '');
+      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent);
+      const trackName = utils.normalizeForSearch(item.querySelector(trackNameSelector)?.textContent);
 
-      let _query = utils.deburr(query);
+      let _query = utils.normalizeForSearch(query);
 
       let hasArtist = false;
       let hasTrackName = false;
 
-      if (_query.includes(artistName)) {
+      if (utils.checkPartialStringsMatch(_query, artistName)) {
         hasArtist = true;
         _query = query.replace(artistName, '').trim();
       }
 
-      if (_query.includes(trackName)) {
+      if (utils.checkPartialStringsMatch(_query, trackName)) {
         hasTrackName = true;
         _query = query.replace(trackName, '').trim();
       }
@@ -194,7 +168,7 @@ async function render(config) {
   const strict = urlParams.get('strict');
   const searchType = urlParams.get('searchtype');
 
-  if (strict !== 'true' || !Object.keys(SEARCH_TYPES).includes(searchType)) return;
+  if (strict !== 'true' || !Object.values(constants.RYM_ENTITY_CODES).includes(searchType)) return;
 
   const searchTerm = utils.deburr(urlParams.get('searchterm').toLowerCase());
 
@@ -203,10 +177,19 @@ async function render(config) {
   if (!searchItems.length) return;
 
   Array.from(searchItems).forEach((item) => {
+    item.classList.add('rym-search-strict--item');
+    item.classList.add(`is-${constants.RYM_ENTITY_CODES_INVERTED[searchType]}`);
+
+    if (searchType === constants.RYM_ENTITY_CODES.release) {
+      addReleaseUserRating(item);
+    }
+
     if (validationRules[searchType].validate(item, searchTerm)) {
       searchItemsFiltered.push(item);
+      item.classList.add('rym-search-strict--filtered');
     } else {
-      searchItemsMore.push(item);
+      searchItemsToHide.push(item);
+      item.classList.add('rym-search-strict--hidden');
     }
   });
 
@@ -216,19 +199,56 @@ async function render(config) {
     searchMoreLink.href += '&strict=true';
   }
 
-  // TODO - HIGHLIGHT MASTER RELEASE
-  // if (searchType === 'l' && searchItemsFiltered.length) {
-  //   const links = searchItemsFiltered.map((item) => {
-  //     const url = item.querySelector(validationRules.l.selectors.releaseTitleSelector).href;
-  //     return url;
-  //   }).sort((a, b) => a.length - b.length);
+  function highlightMasterRelease() {
+    const releaseGroups = {};
 
-  //   console.log('Links:', links[0]);
-  // }
+    searchItemsFiltered.forEach((item) => {
+      const artistId = item.querySelector(validationRules.l.selectors.artistNameSelector)?.title;
 
-  if (searchItemsMore.length) {
-    if (searchItemsMore.length < searchItems.length) {
-      searchItemsMore.forEach(item => {
+      if (artistId) {
+        if (!releaseGroups[artistId]) {
+          releaseGroups[artistId] = [];
+        }
+        releaseGroups[artistId].push(item);
+      }
+    });
+
+    Object.values(releaseGroups).forEach((items) => {
+      let minItem = null;
+      let minId = Infinity;
+
+      items.forEach((item) => {
+        const releaseId = item.querySelector(validationRules.l.selectors.releaseTitleSelector).title;
+        const id = +utils.extractIdFromTitle(releaseId);
+
+        if (id && id < minId) {
+          minId = id;
+          minItem = item;
+        }
+      });
+
+      if (minItem) {
+        minItem.classList.add('rym-search-strict--highlight');
+      }
+    });
+  }
+
+  async function addReleaseUserRating(item) {
+    const releaseId = item.querySelector(validationRules.l.selectors.releaseTitleSelector).title;
+    const id = utils.extractIdFromTitle(releaseId);
+
+    if (id) {
+      const record = await RecordsAPI.getById(id);
+
+      if (record && record.rating) {
+        item.dataset.rymRating = record.rating / 2;
+      }
+    }
+  }
+
+  if (searchItemsToHide.length) {
+    if (searchItemsToHide.length < searchItems.length) {
+      searchItemsToHide.forEach(item => {
         item.style.display = 'none';
       });
       injectShowAllButton();
@@ -244,14 +264,14 @@ async function render(config) {
 
         warning.appendChild(utils.createParagraph(`No direct matches found on the #${page} page.`));
 
-        if (searchType === 'a') {
+        if (searchType === constants.RYM_ENTITY_CODES.artist) {
           const p = utils.createParagraph('This artist may not be added yet into RYM database or too obscure.');
           p.appendChild(utils.createLink('/artist/profile_ac', 'Add artist', false));
           warning.appendChild(p);
-        } else if (searchType === 'l') {
+        } else if (searchType === constants.RYM_ENTITY_CODES.release) {
           const p = utils.createParagraph('This release may not be added yet into RYM database or too obscure.');
           warning.appendChild(p);
-        } else if (searchType === 'z') {
+        } else if (searchType === constants.RYM_ENTITY_CODES.song) {
           const p = utils.createParagraph('This song may not be added yet into RYM database or too obscure.');
           warning.appendChild(p);
         }
@@ -267,6 +287,10 @@ async function render(config) {
         }
       }
     }
+  }
+
+  if (searchType === constants.RYM_ENTITY_CODES.release && searchItemsFiltered.length) {
+    highlightMasterRelease();
   }
 }
 

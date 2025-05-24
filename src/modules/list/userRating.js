@@ -1,7 +1,7 @@
+import * as constants from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
 import './userRating.css';
 
-const USER_RATING_CONTAINER_SELECTOR = '.main_entry';
 const LIST_ITEMS_SELECTOR = '#user_list > tbody > tr';
 const LIST_ITEM_SELECTOR = 'a.list_album';
 const ARTIST_ITEM_SELECTOR = 'a.list_artist';
@@ -18,13 +18,15 @@ function getItems() {
 
     let itemType = null;
 
-    if (artistEl) itemType = albumEl ? 'l' : 'a';
+    if (artistEl) itemType = albumEl
+      ? constants.RYM_ENTITY_CODES.release
+      : constants.RYM_ENTITY_CODES.artist;
 
-    if (itemType === 'l') {
+    if (itemType === constants.RYM_ENTITY_CODES.release) {
       let releaseId = null;
 
       if (artImgEl) {
-        releaseId = artImgEl.id.replace('img_l_', '');
+        releaseId = artImgEl.id.replace(`img_${constants.RYM_ENTITY_CODES.release}_`, '');
       }
 
       const itemRelease = {
@@ -38,11 +40,11 @@ function getItems() {
       releases.push(itemRelease);
     }
 
-    if (itemType === 'a') {
+    if (itemType === constants.RYM_ENTITY_CODES.artist) {
       let artistId = null;
 
       if (artImgEl) {
-        artistId = artImgEl.id.replace('img_a_', '');
+        artistId = artImgEl.id.replace(`img_${constants.RYM_ENTITY_CODES.artist}_`, '');
       }
 
       const itemArtist = {
@@ -61,10 +63,6 @@ function getItems() {
 }
 
 function addReleaseRating(item) {
-  const wrapper = item.node.querySelector(USER_RATING_CONTAINER_SELECTOR);
-
-  if (!wrapper) return;
-
   const rating = item.rating / 2;
 
   if (rating < 0 || rating > 5) {
@@ -72,11 +70,8 @@ function addReleaseRating(item) {
     return;
   }
 
-  const ratingElement = document.createElement('span');
-  ratingElement.classList.add('rym-lastfm-stats-user-rating');
-  ratingElement.innerText = `${rating} / 5`;
-
-  wrapper.appendChild(ratingElement);
+  item.node.classList.add('rym-lastfm-stats--item');
+  item.node.dataset.rymRating = `${rating} / 5`;
 }
 
 function addArtistStats(item) {
@@ -111,7 +106,7 @@ async function render() {
   releases.forEach((item, index) => {
     const release = responseReleases[index];
 
-    if (release) {
+    if (release && release.rating) {
       item.rating = release.rating;
       addReleaseRating(item);
     }

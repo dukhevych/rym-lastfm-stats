@@ -1,6 +1,7 @@
 import FlexSearch from 'flexsearch';
 import * as db from '@/helpers/db';
 import * as utils from '@/helpers/utils.js';
+import * as constants from '@/helpers/constants.js';
 
 import './background/runtime/onInstalled.js';
 
@@ -272,10 +273,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
         browserAPI.scripting.executeScript({
           target: { tabId: sender.tab.id },
           world: "MAIN",
-          args: [message.propName, message.fieldName],
-          func: (propName, fieldName) => {
+          args: [message.propName, message.fieldName, constants.APP_NAME_SLUG],
+          func: (propName, fieldName, appNameSlug) => {
             function dispatch(value) {
-              window.dispatchEvent(new CustomEvent("my-extension:field-update", {
+              window.dispatchEvent(new CustomEvent(`${appNameSlug}:field-update`, {
                 detail: { prop: propName, field: fieldName, value }
               }));
             }

@@ -468,14 +468,35 @@ export function getAndWatchObjectField(propName, fieldName, onChange) {
     };
 
     function stopWatching() {
-      window.removeEventListener("my-extension:field-update", handler);
+      window.removeEventListener(`${constants.APP_NAME_SLUG}:field-update`, handler);
     }
 
-    window.addEventListener("my-extension:field-update", handler);
+    window.addEventListener(`${constants.APP_NAME_SLUG}:field-update`, handler);
 
-    const browserAPI = typeof browser !== "undefined" ? browser : chrome;
     browserAPI.runtime.sendMessage({
-      type: "get-and-watch-object-field",
+      type: 'get-and-watch-object-field',
+      propName,
+      fieldName
+    });
+  });
+}
+
+export function getObjectFieldOnce(propName, fieldName) {
+  return new Promise((resolve) => {
+    const handler = (e) => {
+      if (
+        e?.detail?.prop === propName &&
+        e?.detail?.field === fieldName
+      ) {
+        window.removeEventListener(`${constants.APP_NAME_SLUG}:field-once`, handler);
+        resolve(e.detail.value);
+      }
+    };
+
+    window.addEventListener(`${constants.APP_NAME_SLUG}:field-once`, handler);
+
+    browserAPI.runtime.sendMessage({
+      type: 'get-object-field-once',
       propName,
       fieldName
     });
@@ -653,32 +674,31 @@ export function decodeHtmlEntities(str) {
 };
 
 export function combineArtistNames(artistNames) {
-  let lastArtistNames;
+  if (artistNames.length === 1) return artistNames[0];
 
-  if (artistNames.length > 1) {
-    lastArtistNames = artistNames.pop();
-  }
+  if (artistNames.length === 0) return null;
 
-  let combinedArtistName = '';
+  const lastArtistNames = artistNames.pop();
 
-  if (lastArtistNames) {
-    combinedArtistName = ' & ' + lastArtistNames.artistName;
-  }
-  combinedArtistName = `${artistNames.map((name) => name.artistName).join(', ')}${combinedArtistName}`;
+  let combinedArtistName = `${artistNames.map((name) => name.artistName).join(', ')}`;
 
-  let combinedArtistNameLocalized = '';
+  combinedArtistName = ' & ' + lastArtistNames.artistName;
 
-  if (
-    lastArtistNames
-      && (
-        artistNames.some((name => name.artistNameLocalized))
-        || lastArtistNames.artistNameLocalized
-      )
-  ) {
-    combinedArtistNameLocalized = ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
-    const combinedArtistNames = artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ');
-    combinedArtistNameLocalized = `${combinedArtistNames}${combinedArtistNameLocalized}`;
-  }
+  let combinedArtistNameLocalized = `${artistNames.map((name) => name.artistNameLocalized).join(', ')}`;
+
+  combinedArtistNameLocalized = ' & ' + lastArtistNames.artistNameLocalized;
+
+  // if (
+  //   lastArtistNames
+  //     && (
+  //       artistNames.some((name => name.artistNameLocalized))
+  //       || lastArtistNames.artistNameLocalized
+  //     )
+  // ) {
+  //   combinedArtistNameLocalized = ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
+  //   const combinedArtistNames = artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ');
+  //   combinedArtistNameLocalized = `${combinedArtistNames}${combinedArtistNameLocalized}`;
+  // }
 
   return {
     artistName: combinedArtistName,
@@ -687,5 +707,26 @@ export function combineArtistNames(artistNames) {
 };
 
 export function checkPartialStringsMatch(str1, str2) {
+  if (!str1 || !str2) return false;
+
   return str1 === str2 || str1.includes(str2) || str2.includes(str1);
+}
+
+export function getNodeDirectTextContent(item) {
+  if (!item) return '';
+
+  const result = [];
+
+  item.childNodes.forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      result.push(node.textContent);
+    }
+  });
+
+  return result.join(' ');
+}
+
+export function extractIdFromTitle(title) {
+  const idStr = title.match(/\d+/g)?.join('');
+  return idStr || null;
 }

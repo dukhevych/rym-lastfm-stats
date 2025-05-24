@@ -17,30 +17,6 @@ const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_containe
 const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
 
-const replaceKeywords = [
-  'deluxe',
-  'version',
-  'digipack',
-  'edition',
-  'bonus',
-  'expanded',
-  'remaster',
-  'remastered',
-  'reissue',
-  'redux',
-  'limited',
-  'exclusive',
-  'special',
-  'legacy',
-  'collector',
-  'anniversary',
-];
-
-const mappingReplacePattern = new RegExp(
-  `\\s*[\\[(]([^\\])]*\\b(?:${replaceKeywords.join('|')})\\b[^\\])]*)[\\])]$`,
-  'i'
-);
-
 let volumeIcon;
 
 let config = null;
@@ -274,20 +250,40 @@ async function populatePlayHistoryItem(
     const mediaType = customMyRating.querySelector(`[data-element="rymstats-track-mediatype"]`);
 
     if (customMyRating) {
-      const albumNameFallback = albumName.replace(mappingReplacePattern, '').trim();
+      const albumNameFallback = albumName.replace(constants.KEYWORDS_REPLACE_PATTERN, '').trim();
 
       const albumsFromDB = await RecordsAPI.getByArtistAndTitle(
         artistName,
         albumName,
         albumNameFallback,
+        true,
       );
+
+      if (constants.isDev) console.log('Albums from DB:', albumsFromDB);
 
       customMyRating.classList.remove('no-rating');
       customMyRating.classList.remove('has-ownership');
       customMyRating.title = '';
 
       if (albumsFromDB.length > 0) {
-        const rating = Math.max(albumsFromDB.map((item) => item.rating || 0));
+        let masterRelease;
+
+        let minId = Infinity;
+
+        albumsFromDB.forEach((album) => {
+          const id = +album.id;
+
+          if (id && id < minId) {
+            minId = id;
+            masterRelease = album;
+          }
+        });
+
+        let rating = masterRelease.rating;
+
+        // if (!rating) {
+        //   rating = Math.max(albumsFromDB.map((item) => item.rating || 0));
+        // }
 
         let mediaTypes = [];
 
@@ -314,13 +310,18 @@ async function populatePlayHistoryItem(
     }
 
     const customFromAlbum = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customFromAlbum}`);
+
     if (customFromAlbum) {
-      customFromAlbum.textContent = 'Album: ';
-      const albumLink = document.createElement('a');
-      albumLink.href = albumUrl;
-      albumLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
-      albumLink.textContent = albumName;
-      customFromAlbum.appendChild(albumLink);
+      if (albumName && albumUrl) {
+        customFromAlbum.textContent = 'Album: ';
+        const albumLink = document.createElement('a');
+        albumLink.href = albumUrl;
+        albumLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+        albumLink.textContent = albumName;
+        customFromAlbum.appendChild(albumLink);
+      } else {
+        customFromAlbum.textContent = '';
+      }
     }
   }
 }
@@ -669,7 +670,8 @@ async function render(_config) {
       }
     }
 
-    const tracksList = createTracksList(data, userName);
+    const tracklistData = data[0].c ? data.slice(1) : data;
+    const tracksList = createTracksList(tracklistData, userName);
 
     tracksWrapper.replaceChildren(tracksList);
 

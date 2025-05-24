@@ -15,3 +15,41 @@
   position: relative;
   top: -4px;
 }
+
+.rym-search-strict--highlight {
+  position: relative;
+
+  &:before {
+    content: 'Master release';
+    position: absolute;
+    writing-mode: vertical-lr;
+    transform: rotate(-180deg);
+    top: 0;
+    right: 100%;
+    bottom: 0;
+    text-align: center;
+    font-weight: bold;
+    background-color: rgba(255, 255, 0, 0.5);
+    padding: 0.5rem;
+    z-index: 1;
+  }
+}
+
+.rym-search-strict--item {
+  &.is-release[data-rym-rating] {
+    position: relative;
+
+    &:after {
+      content: attr(data-rym-rating);
+      z-ndex: 1;
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: green;
+      color: white;
+      font-weight: bold;
+      padding: 0.5rem;
+    }
+  }
+}
+

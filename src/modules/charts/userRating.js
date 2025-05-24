@@ -1,4 +1,5 @@
 import { RecordsAPI } from '@/helpers/records-api';
+import './userRating.css';
 
 function getItems() {
   return Array.from(document.querySelectorAll('.page_charts_section_charts_item'));
@@ -21,21 +22,11 @@ function addUserRating(album) {
 
   const id = `page_charts_section_charts_item_${album.id}`;
   const item = document.getElementById(id);
+
   if (!item) return;
-  const container = item.querySelector('.page_charts_section_charts_item_info');
-  container.style.position = 'relative';
 
-  const userRating = document.createElement('span');
-  userRating.style.position = 'absolute';
-  userRating.style.top = '0';
-  userRating.style.right = '0';
-  userRating.style.fontSize = '1.25em';
-  userRating.style.fontWeight = 'bold';
-  userRating.style.color = '#383';
-
-  userRating.innerText = `${rating} / 5`;
-
-  container.appendChild(userRating);
+  item.classList.add('rym-lastfm-stats--item');
+  item.dataset.rymRating = `${rating} / 5`;
 }
 
 async function render() {
