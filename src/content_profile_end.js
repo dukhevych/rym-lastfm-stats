@@ -1,3 +1,4 @@
+import * as constants from '@/helpers/constants.js';
 import * as utils from '@/helpers/utils.js';
 import { RecordsAPI } from '@/helpers/records-api.js';
 
@@ -17,6 +18,7 @@ import { RecordsAPI } from '@/helpers/records-api.js';
       const title = releaseLink.innerText;
       const year = item.querySelector('.or_q_albumartist i:has(a.album) + span').innerText
         .replace('(', '').replace(')', '');
+      // const ownershipText = item.querySelector('.or_q_ownership').textContent.trim();
 
       const artistLinks = item.querySelectorAll('.or_q_albumartist_td a.artist');
       const artistNames = Array.from(artistLinks)
@@ -47,6 +49,10 @@ import { RecordsAPI } from '@/helpers/records-api.js';
 
       return itemData;
     });
+
+    if (constants.isDev) {
+      console.log('[content_profile_end] Parsed data:', parsedData);
+    }
 
     const dbData = await RecordsAPI.getByIds(parsedData.map(data => data.id), true);
 
