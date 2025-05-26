@@ -291,7 +291,7 @@
     }
 
     &.has-ownership {
-      [data-element="rymstats-track-mediatype"] {
+      [data-element="rymstats-track-format"] {
         display: block;
       }
     }
@@ -300,7 +300,7 @@
       position: relative;
     }
 
-    [data-element="rymstats-track-mediatype"] {
+    [data-element="rymstats-track-format"] {
       display: none;
       font-weight: bold;
       color: var(--clr-accent);

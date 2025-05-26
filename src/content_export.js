@@ -78,8 +78,8 @@ import { RecordsAPI } from '@/helpers/records-api.js';
         const releaseDate = +columns[6];
         const rating = +columns[7];
         const ownership = columns[8];
-        const purchaseDate = columns[9];
-        const mediaType = columns[10];
+        // const purchaseDate = columns[9];
+        const format = columns[10];
 
         const getCombinedName = (firstName, lastName) => [firstName, lastName]
           .filter(Boolean)
@@ -98,8 +98,8 @@ import { RecordsAPI } from '@/helpers/records-api.js';
           artistName,
           artistNameLocalized,
           ownership,
-          purchaseDate,
-          mediaType,
+          // purchaseDate,
+          format,
           $artistName: utils.normalizeForSearch(artistName),
           $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
           $title: utils.normalizeForSearch(title),

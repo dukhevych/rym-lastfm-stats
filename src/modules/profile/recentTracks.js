@@ -71,10 +71,10 @@ function createPlayHistoryItem() {
   noRating.dataset.element = 'rymstats-track-no-rating';
   noRating.textContent = 'No rating available';
 
-  // OWNERSHIP + MEDIA TYPE
-  const mediaType = document.createElement('div');
-  mediaType.dataset.element = 'rymstats-track-mediatype';
-  mediaType.textContent = '';
+  // OWNERSHIP + FORMAT
+  const format = document.createElement('div');
+  format.dataset.element = 'rymstats-track-format';
+  format.textContent = '';
 
   // NO RATING HELP ICON
   const noRatingHelpIcon = document.createElement('span');
@@ -102,7 +102,7 @@ function createPlayHistoryItem() {
   starsWrapper.appendChild(starsFilled);
   customMyRating.appendChild(noRating);
   customMyRating.appendChild(starsWrapper);
-  customMyRating.appendChild(mediaType);
+  customMyRating.appendChild(format);
 
   const starIcon = utils.createSvgUse('svg-star-symbol');
   for (let i = 0; i < 5; i++) {
@@ -247,7 +247,7 @@ async function populatePlayHistoryItem(
     const customMyRating = infobox.querySelector(`.${PLAY_HISTORY_ITEM_CLASSES.customMyRating}`);
     const starsFilled = customMyRating.querySelector('.stars-filled');
     const starsWrapper = customMyRating.querySelector('[data-element="rymstats-track-rating-stars"]');
-    const mediaType = customMyRating.querySelector(`[data-element="rymstats-track-mediatype"]`);
+    const format = customMyRating.querySelector(`[data-element="rymstats-track-format"]`);
 
     if (customMyRating) {
       const albumNameFallback = albumName.replace(constants.KEYWORDS_REPLACE_PATTERN, '').trim();
@@ -285,11 +285,11 @@ async function populatePlayHistoryItem(
         //   rating = Math.max(albumsFromDB.map((item) => item.rating || 0));
         // }
 
-        let mediaTypes = [];
+        let formats = [];
 
         albumsFromDB.forEach((item) => {
-          if (item.ownership === 'o' && item.mediaType) {
-            mediaTypes.push(item.mediaType);
+          if (item.ownership === 'o' && item.format) {
+            formats.push(item.format);
           }
         });
 
@@ -298,9 +298,9 @@ async function populatePlayHistoryItem(
           starsWrapper.title = `${rating / 2} / 5`;
         }
 
-        mediaType.textContent = mediaTypes.join(', ');
+        format.textContent = formats.join(', ');
 
-        if (mediaTypes.length > 0) {
+        if (formats.length > 0) {
           customMyRating.classList.add('has-ownership');
         }
       } else {

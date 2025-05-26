@@ -741,11 +741,11 @@ export function getWindowData(paths, onChange, options = {}) {
     const nestedMap = {};
     const received = new Set();
 
+    let pending = false;
+
     const handler = (e) => {
-      const field = e.detail.field;
-      const value = e.detail.value;
-      const propName = e.detail.prop;
-      const fullPath = `${propName}.${field}`;
+      const { field, value, prop } = e.detail;
+      const fullPath = `${prop}.${field}`;
 
       if (!paths.includes(fullPath)) return;
       if (flatMap[fullPath] === value) return;
@@ -762,8 +762,15 @@ export function getWindowData(paths, onChange, options = {}) {
         } else {
           resolve({ initialValue: nestedMap, stopWatching });
         }
-      } else if (onChange && resolved) {
-        onChange(nestedMap);
+        return;
+      }
+
+      if (onChange && resolved && !pending) {
+        pending = true;
+        queueMicrotask(() => {
+          pending = false;
+          onChange(nestedMap);
+        });
       }
     };
 
@@ -780,4 +787,35 @@ export function getWindowData(paths, onChange, options = {}) {
 
     window.addEventListener(eventName, handler);
   });
+}
+
+export function shallowEqual(obj1, obj2) {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) {
+    console.warn('Objects have different number of keys:', keys1.length, keys2.length);
+    return false;
+  }
+
+  for (const key of keys1) {
+    if (obj1[key] !== obj2[key]) {
+      console.warn(`Values for key "${key}" are different:`, obj1[key], obj2[key]);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function omit(obj, keysToOmit) {
+  const result = {};
+
+  for (const key in obj) {
+    if (!keysToOmit.includes(key)) {
+      result[key] = obj[key];
+    }
+  }
+
+  return result;
 }

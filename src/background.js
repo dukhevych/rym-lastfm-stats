@@ -283,10 +283,7 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
         }
 
-        console.log('get-window-data paths:', pathMap);
-
         for (const [prop, fieldPaths] of pathMap.entries()) {
-          console.log('get-window-data prop:', prop, 'paths:', fieldPaths);
           browser.scripting.executeScript({
             target: { tabId: sender.tab.id },
             world: 'MAIN',
