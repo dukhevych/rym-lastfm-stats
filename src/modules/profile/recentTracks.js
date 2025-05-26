@@ -266,32 +266,31 @@ async function populatePlayHistoryItem(
       customMyRating.title = '';
 
       if (albumsFromDB.length > 0) {
-        let masterRelease;
-
+        // using `earliestRelease` for the variable name instead of `masterRelease`
+        // user may not have rated the actual master release yet, so a rating of the earliest release will be used
+        let earliestRelease;
         let minId = Infinity;
+        let formats = [];
+        let rating;
 
         albumsFromDB.forEach((album) => {
+          if (item.ownership === 'o' && item.format) {
+            formats.push(item.format);
+          }
+
+          if (!album.rating) return;
+
           const id = +album.id;
 
           if (id && id < minId) {
             minId = id;
-            masterRelease = album;
+            earliestRelease = album;
           }
         });
 
-        let rating = masterRelease.rating;
-
-        // if (!rating) {
-        //   rating = Math.max(albumsFromDB.map((item) => item.rating || 0));
-        // }
-
-        let formats = [];
-
-        albumsFromDB.forEach((item) => {
-          if (item.ownership === 'o' && item.format) {
-            formats.push(item.format);
-          }
-        });
+        if (earliestRelease) {
+          rating = earliestRelease.rating;
+        }
 
         if (rating > 0) {
           starsFilled.style.width = `${rating * 10}%`;
@@ -305,7 +304,7 @@ async function populatePlayHistoryItem(
         }
       } else {
         customMyRating.classList.add('no-rating');
-        customMyRating.title = 'Rating may be not available due to RYM and Last.fm metadata mismatch';
+        customMyRating.title = 'Not rated yet or metadata mismatch';
       }
     }
 
