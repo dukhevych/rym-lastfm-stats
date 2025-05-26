@@ -18,7 +18,20 @@ import { RecordsAPI } from '@/helpers/records-api.js';
       const title = releaseLink.innerText;
       const year = item.querySelector('.or_q_albumartist i:has(a.album) + span').innerText
         .replace('(', '').replace(')', '');
-      // const ownershipText = item.querySelector('.or_q_ownership').textContent.trim();
+      const ownershipText = item.querySelector('.or_q_ownership').textContent.trim();
+
+      let ownership = 'n';
+      let format = '';
+
+      if (ownershipText) {
+        ownership = constants.RYM_OWNERSHIP_TYPES_EXTRA_LABELS[ownershipText] || 'o';
+
+        // Formats for 'Used to Own' and 'Wishlist' are not available on Profile page
+        // Only 'In collection' is used by addon anyway, so we ignore formats for other ownership types
+        if (ownership === 'o') {
+          format = constants.RYM_FORMATS_INVERTED[ownershipText] || '';
+        }
+      }
 
       const artistLinks = item.querySelectorAll('.or_q_albumartist_td a.artist');
       const artistNames = Array.from(artistLinks)
@@ -42,6 +55,8 @@ import { RecordsAPI } from '@/helpers/records-api.js';
         rating: Number(rating),
         artistName,
         artistNameLocalized: artistNameLocalized,
+        ownership,
+        format,
         $artistName: utils.normalizeForSearch(artistName),
         $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
         $title: utils.normalizeForSearch(title),

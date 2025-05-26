@@ -1,3 +1,4 @@
+import * as constants from '@/helpers/constants.js';
 import * as utils from '@/helpers/utils.js';
 import { RecordsAPI } from '@/helpers/records-api.js';
 
@@ -12,12 +13,29 @@ import { RecordsAPI } from '@/helpers/records-api.js';
     );
 
     const parsedData = collectionPageItems.map(item => {
-      const rating = parseInt(item.querySelector('.or_q_rating_date_s img').src.split('/').pop().split('.')[0]);
+      const ratingEl = item.querySelector('.or_q_rating_date_s img');
+      const rating = ratingEl ?
+        parseInt(item.querySelector('.or_q_rating_date_s img').src.split('/').pop().split('.')[0])
+      : 0;
       const releaseLink = item.querySelector('.or_q_albumartist_td a.album');
       const releaseId = releaseLink.title.replace('[Album', '').replace(']', '');
       const title = releaseLink.innerText;
       const year = item.querySelector('.or_q_albumartist i:has(a.album) + span').innerText
         .replace('(', '').replace(')', '');
+      const ownershipText = item.querySelector('.or_q_ownership').textContent.trim();
+
+      let ownership = 'n';
+      let format = '';
+
+      if (ownershipText) {
+        ownership = constants.RYM_OWNERSHIP_TYPES_EXTRA_LABELS[ownershipText] || 'o';
+
+        // Formats for 'Used to Own' and 'Wishlist' are not available on Collection page
+        // Only 'In collection' is used by addon anyway, so we ignore formats for other ownership types
+        if (ownership === 'o') {
+          format = constants.RYM_FORMATS_INVERTED[ownershipText] || '';
+        }
+      }
 
       const artistLinks = item.querySelectorAll('.or_q_albumartist_td a.artist');
       const artistNames = Array.from(artistLinks)
@@ -41,6 +59,8 @@ import { RecordsAPI } from '@/helpers/records-api.js';
         rating: Number(rating),
         artistName,
         artistNameLocalized: artistNameLocalized,
+        ownership,
+        format,
         $artistName: utils.normalizeForSearch(artistName),
         $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
         $title: utils.normalizeForSearch(title),
@@ -48,6 +68,10 @@ import { RecordsAPI } from '@/helpers/records-api.js';
 
       return itemData;
     });
+
+    if (constants.isDev) {
+      console.log('Parsed Data:', parsedData);
+    }
 
     const dbData = await RecordsAPI.getByIds(parsedData.map(data => data.id), true);
 

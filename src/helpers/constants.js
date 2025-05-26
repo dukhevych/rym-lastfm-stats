@@ -162,3 +162,34 @@ export const KEYWORDS_REPLACE_PATTERN = new RegExp(
   `\\s*[\\[(]([^\\])]*\\b(?:${REPLACE_KEYWORDS.join('|')})\\b[^\\])]*)[\\])]$`,
   'i'
 );
+
+export const RYM_FORMATS = {
+  'CD': 'CD',
+  'LP': 'Vinyl',
+  'MP3': 'Digital',
+  'CD-R': 'CD-R',
+  'Cassette': 'Cassette',
+  'DVD-A': 'DVD-A',
+  'SACD': 'SACD',
+  'Minidisc': 'Minidisc',
+  'Multiple': 'Multiple',
+  '8-Track': '8-track',
+  'Other': 'Other',
+};
+
+export const RYM_FORMATS_INVERTED = Object.entries(RYM_FORMATS).reduce((acc, [key, value]) => {
+  acc[value] = key;
+  return acc;
+}, {});
+
+export const RYM_OWNERSHIP_TYPES = {
+  o: 'In collection',
+  w: 'On wishlist',
+  u: 'Used to own',
+  n: '(not cataloged)',
+};
+
+export const RYM_OWNERSHIP_TYPES_EXTRA_LABELS = {
+  'Wishlist': 'w',
+  'Used to Own': 'u',
+};

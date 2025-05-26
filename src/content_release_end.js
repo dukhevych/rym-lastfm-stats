@@ -56,6 +56,11 @@ import {
         format,
       });
 
+      if (constants.isDev) {
+        console.log('DB RECORD', dbRecord);
+        console.log('PARSED RECORD', parsedRecord);
+      }
+
       if (!dbRecord) {
         if (
           rating > 0 ||

@@ -297,7 +297,7 @@ async function populatePlayHistoryItem(
           starsWrapper.title = `${rating / 2} / 5`;
         }
 
-        format.textContent = formats.join(', ');
+        format.textContent = formats.map(key => constants.RYM_FORMATS[key] || key).join(', ');
 
         if (formats.length > 0) {
           customMyRating.classList.add('has-ownership');
