@@ -274,8 +274,8 @@ async function populatePlayHistoryItem(
         let rating;
 
         albumsFromDB.forEach((album) => {
-          if (item.ownership === 'o' && item.format) {
-            formats.push(item.format);
+          if (album.ownership === 'o' && album.format) {
+            formats.push(album.format);
           }
 
           if (!album.rating) return;
