@@ -78,7 +78,6 @@ import { RecordsAPI } from '@/helpers/records-api.js';
         const releaseDate = +columns[6];
         const rating = +columns[7];
         const ownership = columns[8];
-        // const purchaseDate = columns[9];
         const format = columns[10];
 
         const getCombinedName = (firstName, lastName) => [firstName, lastName]
@@ -98,7 +97,6 @@ import { RecordsAPI } from '@/helpers/records-api.js';
           artistName,
           artistNameLocalized,
           ownership,
-          // purchaseDate,
           format,
           $artistName: utils.normalizeForSearch(artistName),
           $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
@@ -112,12 +110,23 @@ import { RecordsAPI } from '@/helpers/records-api.js';
         parsedData.push(item);
       });
 
+      if (constants.isDev) {
+        console.log('Parsed Data:', parsedData);
+      }
+
+      if (parsedData.length === 0) {
+        statusMessage.textContent = 'No records found to sync.';
+        return;
+      }
+
       await RecordsAPI.setBulk(parsedData);
       const recordsQty = await RecordsAPI.getQty();
 
       statusMessage.textContent = `✅ Synced successfully ${recordsQty} records.`;
     } catch (error) {
       console.error('Error:', error);
+      console.log('Copy this error message and contact addon support:');
+      console.log(JSON.stringify(error, null, 2));
       alert('An error occurred while syncing data with RYM. Please contact addon support.');
     } finally {
       formSyncButton.removeAttribute('disabled');
