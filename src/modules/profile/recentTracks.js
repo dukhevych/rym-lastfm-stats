@@ -81,7 +81,7 @@ function createPlayHistoryItem() {
   noRatingHelpIcon.className = 'help-icon';
   noRatingHelpIcon.dataset.element = 'rymstats-track-no-rating-help-icon';
   noRatingHelpIcon.textContent = '?';
-  noRatingHelpIcon.title = 'Rating may be not available due to RYM and Last.fm metadata mismatch';
+  noRatingHelpIcon.title = 'Not rated yet or metadata mismatch';
   noRating.appendChild(noRatingHelpIcon);
 
   // STARS WRAPPER

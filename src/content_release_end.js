@@ -57,9 +57,17 @@ import {
       });
 
       if (!dbRecord) {
-        if (constants.isDev) console.log('ADDING NEW RECORD', parsedRecord);
-        await RecordsAPI.add(parsedRecord);
-        return;
+        if (
+          rating > 0 ||
+          ownership !== 'n'
+        ) {
+          if (constants.isDev) console.log('ADDING NEW RECORD', parsedRecord);
+          await RecordsAPI.add(parsedRecord);
+          return;
+        } else {
+          if (constants.isDev) console.log('NOTHING TO ADD');
+          return;
+        }
       }
 
       if (utils.shallowEqual(utils.omit(dbRecord, ['_raw']), parsedRecord)) {
