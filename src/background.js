@@ -2,6 +2,7 @@ import FlexSearch from 'flexsearch';
 import * as db from '@/helpers/db';
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
+import getWindowDataInjected from '@/background/getWindowDataInjected.js';
 
 import './background/runtime/onInstalled.js';
 
@@ -264,45 +265,35 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
     }
 
-    case 'get-and-watch-object-field': {
+    case 'get-window-data': {
       if (
         sender.tab?.id &&
-        typeof message.propName === "string" &&
-        typeof message.fieldName === "string"
+        Array.isArray(message.paths)
       ) {
-        browserAPI.scripting.executeScript({
-          target: { tabId: sender.tab.id },
-          world: "MAIN",
-          args: [message.propName, message.fieldName, constants.APP_NAME_SLUG],
-          func: (propName, fieldName, appNameSlug) => {
-            function dispatch(value) {
-              window.dispatchEvent(new CustomEvent(`${appNameSlug}:field-update`, {
-                detail: { prop: propName, field: fieldName, value }
-              }));
-            }
+        const { paths, watch, deep } = message;
+        const pathMap = new Map();
 
-            const target = window[propName];
-            if (!target || typeof target !== "object") return;
+        for (const path of paths) {
+          const [root] = path.split('.');
+          const value = path.substring(root.length + 1);
 
-            let currentValue = target[fieldName];
-
-            Object.defineProperty(target, fieldName, {
-              configurable: true,
-              enumerable: true,
-              get() {
-                return currentValue;
-              },
-              set(newVal) {
-                currentValue = newVal;
-                dispatch(newVal);
-              }
-            });
-
-            if (currentValue !== undefined) {
-              dispatch(currentValue);
-            }
+          if (!pathMap.has(root)) pathMap.set(root, []);
+          if (value) {
+            pathMap.get(root).push(value);
           }
-        });
+        }
+
+        console.log('get-window-data paths:', pathMap);
+
+        for (const [prop, fieldPaths] of pathMap.entries()) {
+          console.log('get-window-data prop:', prop, 'paths:', fieldPaths);
+          browser.scripting.executeScript({
+            target: { tabId: sender.tab.id },
+            world: 'MAIN',
+            args: [prop, fieldPaths, constants.APP_NAME_SLUG, watch, deep],
+            func: getWindowDataInjected,
+          });
+        }
       }
       return false;
     }

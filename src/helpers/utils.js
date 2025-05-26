@@ -52,16 +52,6 @@ export function shortenNumber(num) {
   }
 };
 
-export const createButton = (title, attributes = {}) => {
-  const button = document.createElement('button');
-  button.title = title;
-  button.textContent = title;
-  Object.entries(attributes).forEach(([key, value]) => {
-    button.setAttribute(key, value);
-  });
-  return button;
-};
-
 export const createSpan = (title, text) => {
   const span = document.createElement('span');
   span.title = title.trim();
@@ -729,4 +719,65 @@ export function getNodeDirectTextContent(item) {
 export function extractIdFromTitle(title) {
   const idStr = title.match(/\d+/g)?.join('');
   return idStr || null;
+}
+
+function setDeepValue(obj, path, value) {
+  const keys = path.split('.');
+  let current = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!current[keys[i]]) current[keys[i]] = {};
+    current = current[keys[i]];
+  }
+  current[keys[keys.length - 1]] = value;
+}
+
+export function getWindowData(paths, onChange, options = {}) {
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    const slug = constants.APP_NAME_SLUG;
+    const eventName = `${slug}:field-update`;
+    const flatMap = {};
+    const nestedMap = {};
+    const received = new Set();
+
+    const handler = (e) => {
+      const field = e.detail.field;
+      const value = e.detail.value;
+      const propName = e.detail.prop;
+      const fullPath = `${propName}.${field}`;
+
+      if (!paths.includes(fullPath)) return;
+      if (flatMap[fullPath] === value) return;
+
+      flatMap[fullPath] = value;
+      setDeepValue(nestedMap, fullPath, value);
+      received.add(fullPath);
+
+      if (!resolved && received.size === paths.length) {
+        resolved = true;
+        if (!onChange) {
+          window.removeEventListener(eventName, handler);
+          resolve({ initialValue: nestedMap });
+        } else {
+          resolve({ initialValue: nestedMap, stopWatching });
+        }
+      } else if (onChange && resolved) {
+        onChange(nestedMap);
+      }
+    };
+
+    function stopWatching() {
+      window.removeEventListener(eventName, handler);
+    }
+
+    browserAPI.runtime.sendMessage({
+      type: 'get-window-data',
+      paths,
+      watch: !!onChange,
+      deep: options.deep === true,
+    });
+
+    window.addEventListener(eventName, handler);
+  });
 }

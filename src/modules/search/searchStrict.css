@@ -9,11 +9,39 @@
 
 .rym-warning p + p { margin-top: 0.5em; }
 
+h3:has(.btn-search-strict-show-all) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .btn-search-strict-show-all {
-  margin-left: 10px;
   font-size: 0.5em;
   position: relative;
   top: -4px;
+}
+
+td:has(> .rym-search-strict--item) {
+  display: flex;
+  flex-direction: column;
+
+  & > * {
+    order: 2;
+
+    &:not(table) {
+      order: 0;
+    }
+
+    &.rym-search-strict--item {
+      & + *:not(table) {
+        order: 3;
+      }
+
+      &.rym-search-strict--highlight {
+        order: 1;
+      }
+    }
+  }
 }
 
 .rym-search-strict--highlight {
