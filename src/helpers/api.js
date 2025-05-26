@@ -222,9 +222,9 @@ export async function fetchReleaseStats(
   const cacheKeys = artists.map((artist) => `releaseStats_${artist}_${releaseTitle}`);
   const cachedData = await utils.storageGet(cacheKeys, 'local');
   const cacheKey = Object.keys(cachedData).find((key) => cachedData[key] !== undefined);
+  let now = new Date().getTime();
 
   if (cachedData && cacheKey) {
-    const now = new Date().getTime();
     const parsedData = JSON.parse(cachedData[cacheKey]);
     const cacheAge = now - parsedData.lastDate;
 
@@ -302,7 +302,7 @@ export async function fetchReleaseStats(
   }
 
   const newCacheKey = `releaseStats_${matchedArtist}_${releaseTitle}`;
-  const now = new Date().getTime();
+  now = new Date().getTime();
 
   const cacheObject = {};
 
