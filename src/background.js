@@ -284,7 +284,7 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         for (const [prop, fieldPaths] of pathMap.entries()) {
-          browser.scripting.executeScript({
+          browserAPI.scripting.executeScript({
             target: { tabId: sender.tab.id },
             world: 'MAIN',
             args: [prop, fieldPaths, constants.APP_NAME_SLUG, watch, deep],
