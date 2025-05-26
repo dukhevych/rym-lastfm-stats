@@ -66,23 +66,10 @@ function createPlayHistoryItem() {
   customMyRating.className = PLAY_HISTORY_ITEM_CLASSES.customMyRating;
   customMyRating.dataset.element = 'rymstats-track-rating';
 
-  // NO RATING
-  const noRating = document.createElement('div');
-  noRating.dataset.element = 'rymstats-track-no-rating';
-  noRating.textContent = 'No rating available';
-
   // OWNERSHIP + FORMAT
   const format = document.createElement('div');
   format.dataset.element = 'rymstats-track-format';
   format.textContent = '';
-
-  // NO RATING HELP ICON
-  const noRatingHelpIcon = document.createElement('span');
-  noRatingHelpIcon.className = 'help-icon';
-  noRatingHelpIcon.dataset.element = 'rymstats-track-no-rating-help-icon';
-  noRatingHelpIcon.textContent = '?';
-  noRatingHelpIcon.title = 'Not rated yet or metadata mismatch';
-  noRating.appendChild(noRatingHelpIcon);
 
   // STARS WRAPPER
   const starsWrapper = document.createElement('div');
@@ -100,7 +87,6 @@ function createPlayHistoryItem() {
 
   starsWrapper.appendChild(starsEmpty);
   starsWrapper.appendChild(starsFilled);
-  customMyRating.appendChild(noRating);
   customMyRating.appendChild(starsWrapper);
   customMyRating.appendChild(format);
 
@@ -271,7 +257,7 @@ async function populatePlayHistoryItem(
         let earliestRelease;
         let minId = Infinity;
         let formats = [];
-        let rating;
+        let rating = 0;
 
         albumsFromDB.forEach((album) => {
           if (album.ownership === 'o' && album.format) {
@@ -297,14 +283,19 @@ async function populatePlayHistoryItem(
           starsWrapper.title = `${rating / 2} / 5`;
         }
 
+        if (rating === 0) {
+          starsFilled.style.width = '';
+          customMyRating.classList.add('no-rating');
+        }
+
         format.textContent = formats.map(key => constants.RYM_FORMATS[key] || key).join(', ');
 
         if (formats.length > 0) {
           customMyRating.classList.add('has-ownership');
         }
       } else {
+        starsFilled.style.width = '';
         customMyRating.classList.add('no-rating');
-        customMyRating.title = 'Not rated yet or metadata mismatch';
       }
     }
 

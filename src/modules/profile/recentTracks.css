@@ -279,14 +279,24 @@
     gap: 10px;
 
     &.no-rating {
-      [data-element="rymstats-track-no-rating"] {
-        display: block;
-        line-height: 23px;
-        min-height: 24px;
-      }
-
       [data-element="rymstats-track-rating-stars"] {
-        display: none;
+        & > * {
+          opacity: 0.15;
+          filter: grayscale(100%);
+        }
+
+        &:after {
+          content: 'Not rated';
+          color: var(--clr-accent);
+          text-transform: uppercase;
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          letter-spacing: 0.25em;
+        }
       }
     }
 
@@ -304,22 +314,6 @@
       display: none;
       font-weight: bold;
       color: var(--clr-accent);
-    }
-
-    [data-element="rymstats-track-no-rating"] {
-      display: none;
-
-      [data-element="rymstats-track-no-rating-help-icon"] {
-        border-radius: 50%;
-        display: inline-block;
-        text-align: center;
-        margin-left: 0.5em;
-        line-height: 21px;
-        width: 22px;
-        height: 22px;
-        cursor: pointer;
-        font-weight: bold;
-      }
     }
 
     .stars-filled,

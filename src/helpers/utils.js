@@ -737,13 +737,13 @@ export function shallowEqual(obj1, obj2) {
   const keys2 = Object.keys(obj2);
 
   if (keys1.length !== keys2.length) {
-    console.warn('Objects have different number of keys:', keys1.length, keys2.length);
+    if (constants.isDev) console.warn('Objects have different number of keys:', keys1.length, keys2.length);
     return false;
   }
 
   for (const key of keys1) {
     if (obj1[key] !== obj2[key]) {
-      console.warn(`Values for key "${key}" are different:`, obj1[key], obj2[key]);
+      if (constants.isDev) console.warn(`Values for key "${key}" are different:`, obj1[key], obj2[key]);
       return false;
     }
   }
