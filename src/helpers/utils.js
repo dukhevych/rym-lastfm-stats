@@ -432,67 +432,6 @@ export function deburr(string) {
   return removeDiacritics(string);
 }
 
-export function getAndWatchObjectField(propName, fieldName, onChange) {
-  return new Promise((resolve) => {
-    let resolved = false;
-    let lastValue;
-
-    const handler = (e) => {
-      if (
-        e?.detail?.prop === propName &&
-        e?.detail?.field === fieldName
-      ) {
-        const newVal = e.detail.value;
-
-        // If value hasn't changed, ignore
-        if (newVal === lastValue) return;
-        lastValue = newVal;
-
-        if (!resolved) {
-          resolved = true;
-          resolve({ initialValue: newVal, stopWatching });
-        } else {
-          onChange?.(newVal);
-        }
-      }
-    };
-
-    function stopWatching() {
-      window.removeEventListener(`${constants.APP_NAME_SLUG}:field-update`, handler);
-    }
-
-    window.addEventListener(`${constants.APP_NAME_SLUG}:field-update`, handler);
-
-    browserAPI.runtime.sendMessage({
-      type: 'get-and-watch-object-field',
-      propName,
-      fieldName
-    });
-  });
-}
-
-export function getObjectFieldOnce(propName, fieldName) {
-  return new Promise((resolve) => {
-    const handler = (e) => {
-      if (
-        e?.detail?.prop === propName &&
-        e?.detail?.field === fieldName
-      ) {
-        window.removeEventListener(`${constants.APP_NAME_SLUG}:field-once`, handler);
-        resolve(e.detail.value);
-      }
-    };
-
-    window.addEventListener(`${constants.APP_NAME_SLUG}:field-once`, handler);
-
-    browserAPI.runtime.sendMessage({
-      type: 'get-object-field-once',
-      propName,
-      fieldName
-    });
-  });
-}
-
 export async function getImageColors(imageUrl) {
   const dataUrl = await new Promise((resolve, reject) => {
     browserAPI.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl }, (response) => {
