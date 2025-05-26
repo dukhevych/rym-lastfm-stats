@@ -161,8 +161,8 @@ export function detectLastfmUserName() {
     }
     const href = link.href.toLowerCase();
     return (
-      href.includes('last.fm/user/')
-      || (href.includes('lastfm.') && href.includes('/user/'))
+      (href.includes('last.fm') && href.includes('/user/')) ||
+      (href.includes('lastfm.') && href.includes('/user/'))
     );
   });
 
@@ -171,7 +171,13 @@ export function detectLastfmUserName() {
       .replace(/\/$/, '')
       .replace(/^\/|\/$/g, '')
       .split('/');
-    userName = parts[parts.length - 1].trim();
+
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].toLowerCase() === 'user' && parts[i + 1]) {
+        userName = parts[i + 1].trim();
+        break;
+      }
+    }
   }
 
   return userName;
