@@ -151,6 +151,12 @@ async function render(config) {
     }
   );
 
+  if (!data || Object.keys(data).length === 0) {
+    console.warn('No data found for the specified artists/release', artists, releaseTitle);
+    setNoFound();
+    return;
+  }
+
   const releaseTypeDataMap = {
     album: 'album',
     single: 'track',
@@ -159,7 +165,7 @@ async function render(config) {
   const releaseTypeData = data[releaseTypeDataMap[releaseType] ?? 'album'];
 
   if (!releaseTypeData) {
-    console.error('No data found for the specified release type:', releaseType);
+    console.warn('No data found for the specified release type:', releaseType);
     setNoFound();
     return;
   }

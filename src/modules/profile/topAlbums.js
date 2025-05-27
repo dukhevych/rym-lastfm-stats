@@ -189,6 +189,14 @@ function createTopAlbumsUI() {
 
 function populateTopAlbums(container, topAlbums) {
   container.replaceChildren();
+
+  if (!topAlbums || !Array.isArray(topAlbums) || topAlbums.length === 0) {
+    container.classList.add('is-empty');
+    return;
+  } else {
+    container.classList.remove('is-empty');
+  }
+
   topAlbums.forEach((album) => {
     const albumWrapper = createAlbumWrapper(album);
     container.appendChild(albumWrapper);

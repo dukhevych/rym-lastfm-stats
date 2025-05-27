@@ -109,17 +109,18 @@ const validationRules = {
 
       let partialMatch = false;
 
-      // if (hasArtist) {
-      //   console.log('hasArtist', artistName, _query);
-      //   console.log('hasArtist', artistNameLocalized, _query);
-      // }
-
+      const _queryNoParenthesis = _query.replace(/[()]/g, '').trim();
       const _queryCleaned = _query.replace(constants.KEYWORDS_REPLACE_PATTERN, '').trim();
 
-      if (releaseTitleNormalized === _query || releaseTitleNormalized === _queryCleaned) {
+      if (
+        releaseTitleNormalized === _query ||
+        releaseTitleNormalized === _queryNoParenthesis ||
+        releaseTitleNormalized === _queryCleaned
+      ) {
         hasReleaseTitle = true;
       } else if (
         utils.checkPartialStringsMatch(releaseTitleNormalized, _query) ||
+        utils.checkPartialStringsMatch(releaseTitleNormalized, _queryNoParenthesis) ||
         utils.checkPartialStringsMatch(releaseTitleNormalized, _queryCleaned)
       ) {
         hasReleaseTitle = true;

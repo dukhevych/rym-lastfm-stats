@@ -284,8 +284,8 @@ export async function fetchReleaseStats(
       data = await response.json();
 
       if (data.error) {
-        console.warn(`Error fetching data for ${artist}`, data.error, data.message);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.warn(`Error fetching data for "${artist}" - "${releaseTitle}"`, data.error, data.message);
+        await new Promise((resolve) => setTimeout(resolve, 500));
         continue;
       }
 
@@ -297,7 +297,6 @@ export async function fetchReleaseStats(
   }
 
   if (data.error) {
-    console.error('No data found for any artist.');
     return null;
   }
 

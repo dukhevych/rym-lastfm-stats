@@ -139,6 +139,7 @@ export const REPLACE_KEYWORDS = [
   'version',
   'digipack',
   'edition',
+  'part',
   'bonus',
   'expanded',
   'remaster',

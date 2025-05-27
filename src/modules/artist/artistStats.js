@@ -33,7 +33,7 @@ function prepareReleaseStatsUI() {
 }
 
 function populateArtistStats(
-  { playcount, listeners, userplaycount, url, urlOriginal, artistName, artistNameLocalized, error },
+  { playcount, listeners, userplaycount, url, urlOriginal, artistName, artistNameLocalized, notFound },
   timestamp,
 ) {
   const infoBlock = document.querySelector(ARTIST_CONTAINER_SELECTOR);
@@ -50,8 +50,8 @@ function populateArtistStats(
     const content = infoBlock.querySelector('#lastfm_data');
     content.textContent = '';
 
-    if (error) {
-      content.textContent = error;
+    if (notFound) {
+      content.textContent = 'Not found';
       return;
     }
 
@@ -202,6 +202,10 @@ async function render(config) {
     urlOriginal = !data2.error ? data2.artist.url : urlOriginal;
   }
 
+  let notFound = false;
+
+  notFound = (data1?.error && data2?.error) ? true : notFound;
+
   const stats = {
     playcount,
     listeners,
@@ -210,7 +214,7 @@ async function render(config) {
     urlOriginal,
     artistName,
     artistNameLocalized,
-    error: data1?.error ?? data2?.error,
+    notFound: notFound,
   };
 
   if (!config.lastfmApiKey) {
