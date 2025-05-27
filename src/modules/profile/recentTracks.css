@@ -356,6 +356,11 @@
     width: fit-content;
     margin-top: 1.5em;
 
+    &:before {
+      content: 'Album: ';
+      color: var(--clr-accent);
+    }
+
     a {
       font-weight: bold;
 
@@ -1081,12 +1086,14 @@ html[data-scheme="light"] {
 }
 
 html[data-scheme="light"] {
+  /* --clr-accent: var(--clr-light-accent); */
   [data-element="rymstats-track-panel"] {
     border-color: var(--clr-light-accent);
   }
 }
 
 html[data-scheme="dark"] {
+  /* --clr-accent: var(--clr-dark-accent); */
   [data-element="rymstats-track-panel"] {
     border-color: var(--clr-dark-accent);
   }

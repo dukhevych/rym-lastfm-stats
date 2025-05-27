@@ -231,7 +231,7 @@ export function storageRemove(keys, storageType = 'sync') {
   });
 }
 
-export function getSyncedOptions(fields = constants.OPTIONS_DEFAULT_KEYS) {
+export function getSyncedOptions(fields = Object.keys(constants.OPTIONS_DEFAULT)) {
   return storageGet(fields);
 };
 

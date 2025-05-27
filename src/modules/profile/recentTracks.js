@@ -285,6 +285,7 @@ async function populatePlayHistoryItem(
 
         if (rating === 0) {
           starsFilled.style.width = '';
+          starsWrapper.title = '';
           customMyRating.classList.add('no-rating');
         }
 
@@ -295,6 +296,7 @@ async function populatePlayHistoryItem(
         }
       } else {
         starsFilled.style.width = '';
+        starsWrapper.title = '';
         customMyRating.classList.add('no-rating');
       }
     }
@@ -303,7 +305,7 @@ async function populatePlayHistoryItem(
 
     if (customFromAlbum) {
       if (albumName && albumUrl) {
-        customFromAlbum.textContent = 'Album: ';
+        customFromAlbum.textContent = '';
         const albumLink = document.createElement('a');
         albumLink.href = albumUrl;
         albumLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
