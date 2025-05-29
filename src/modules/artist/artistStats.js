@@ -1,5 +1,8 @@
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
+import { createElement as h } from '@/helpers/utils.js';
+
+import '@/modules/release/releaseStats.css';
 
 const ARTIST_CONTAINER_SELECTOR = '.artist_info_main';
 
@@ -13,104 +16,111 @@ function getArtist() {
   return [directTextNodeContent, spanTextContent ?? directTextNodeContent];
 }
 
-function prepareReleaseStatsUI() {
+const uiElements = {};
+
+function prepareArtistStatsUI() {
   const infoBlock = document.querySelector(ARTIST_CONTAINER_SELECTOR);
+  if (!infoBlock) return;
 
-  if (infoBlock) {
-    const heading = document.createElement('div');
-    heading.classList.add('info_hdr');
-    heading.textContent = 'Last.fm';
-    heading.id = 'lastfm_label';
+  uiElements.infoBlock = infoBlock;
 
-    const content = document.createElement('div');
-    content.classList.add('info_content');
-    content.textContent = 'Loading...';
-    content.id = 'lastfm_data';
+  uiElements.statsList = h('ul', { className: 'list-stats' }, [
+    uiElements.listeners = h('li', { className: 'is-listeners' }, 'listeners'),
+    uiElements.playcount = h('li', { className: 'is-playcount' }, 'plays'),
+    uiElements.userplaycount = h('li', { className: 'is-user-playcount' })
+  ]);
 
-    infoBlock.appendChild(heading);
-    infoBlock.appendChild(content);
-  }
+  uiElements.lastfmLink = h(
+    'a',
+    {
+      className: [ 'lastfm-link', 'is-localized' ],
+      target: '_blank',
+    },
+    utils.createSvgUse('svg-lastfm-square-symbol')
+  );
+
+  uiElements.lastfmLink2 = h(
+    'a',
+    {
+      className: [ 'lastfm-link', 'is-original' ],
+      target: '_blank',
+    },
+    utils.createSvgUse('svg-lastfm-square-symbol')
+  );
+
+  uiElements.statsWrapper = h(
+    'div',
+    { className: ['list-stats-wrapper', 'is-loading'] },
+    [uiElements.statsList, uiElements.lastfmLink, uiElements.lastfmLink2]
+  );
+
+  uiElements.heading = h('div', {
+    className: 'info_hdr',
+    id: 'lastfm_label',
+  }, 'Last.fm');
+
+  uiElements.content = h('div', {
+    className: 'info_content',
+  }, uiElements.statsWrapper);
+
+  infoBlock.append(uiElements.heading, uiElements.content);
 }
 
 function populateArtistStats(
   { playcount, listeners, userplaycount, url, urlOriginal, artistName, artistNameLocalized, notFound },
   timestamp,
 ) {
-  const infoBlock = document.querySelector(ARTIST_CONTAINER_SELECTOR);
+  uiElements.statsWrapper.classList.remove('is-loading');
 
-  if (infoBlock) {
-    const heading = infoBlock.querySelector('#lastfm_label');
+  if (notFound) {
+    uiElements.statsWrapper.classList.add('not-found');
+    return;
+  }
 
-    const isCombinedData = urlOriginal && artistName !== artistNameLocalized;
+  const isCombinedData = urlOriginal && artistName !== artistNameLocalized;
 
-    if (isCombinedData) {
-      heading.textContent += ' (combined)';
-    }
+  if (isCombinedData) uiElements.heading.textContent += ' (combined)';
 
-    const content = infoBlock.querySelector('#lastfm_data');
-    content.textContent = '';
+  const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
 
-    if (notFound) {
-      content.textContent = 'Not found';
-      return;
-    }
+  if (listeners !== undefined) {
+    uiElements.listeners.style.display = 'block';
+    uiElements.listeners.dataset.value = utils.shortenNumber(parseInt(listeners));
+    uiElements.listeners.title = `${listeners} listeners ${cacheTimeHint}`;
+  } else {
+    uiElements.listeners.style.display = 'none';
+  }
 
-    const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
+  if (playcount !== undefined) {
+    uiElements.playcount.style.display = 'block';
+    uiElements.playcount.dataset.value = utils.shortenNumber(parseInt(playcount));
+    uiElements.playcount.title = `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`;
+  } else {
+    uiElements.playcount.style.display = 'none';
+  }
 
-    const listenersSpan =
-      listeners !== undefined
-        ? utils.createSpan(
-            `${listeners} listeners ${cacheTimeHint}`,
-            `${utils.shortenNumber(parseInt(listeners))} listeners`,
-          )
-        : null;
+  if (userplaycount !== undefined) {
+    uiElements.userplaycount.style.display = 'block';
+    uiElements.userplaycount.title = `${userplaycount} scrobbles`;
+    uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`;
+  } else {
+    uiElements.userplaycount.style.display = 'none';
+  }
 
-    const playcountSpan =
-      playcount !== undefined
-        ? utils.createSpan(
-            `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`,
-            `${utils.shortenNumber(parseInt(playcount))} plays`,
-          )
-        : null;
+  if (url) {
+    uiElements.lastfmLink.href = url;
+    uiElements.lastfmLink.title = `View ${artistNameLocalized} on Last.fm`;
+  } else {
+    uiElements.lastfmLink.href = '';
+    uiElements.lastfmLink.title = '';
+  }
 
-    const userplaycountSpan =
-      userplaycount !== undefined
-        ? utils.createStrong(
-            `${userplaycount} scrobbles`,
-            `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`,
-          )
-        : null;
-
-    let link = null;
-
-    if (url) {
-      link = utils.createLink(url, 'View on Last.fm');
-      link.title = `View ${artistNameLocalized} on Last.fm`;
-    }
-
-    let link2 = null;
-
-    if (isCombinedData) {
-      link2 = utils.createLink(urlOriginal, '(original name)');
-      link2.title = `View ${artistName} on Last.fm`;
-    }
-
-    const elements = [
-      listenersSpan,
-      playcountSpan,
-      userplaycountSpan,
-      link,
-      link2,
-    ].filter((x) => x);
-
-    elements.forEach((element, index) => {
-      if (index > 0) {
-        const separator = document.createElement('span');
-        separator.textContent = '\u00A0\u00A0|\u00A0\u00A0';
-        content.appendChild(separator);
-      }
-      content.appendChild(element);
-    });
+  if (isCombinedData) {
+    uiElements.lastfmLink2.href = urlOriginal;
+    uiElements.lastfmLink2.title = `View ${artistName} on Last.fm`;
+  } else {
+    uiElements.lastfmLink2.href = '';
+    uiElements.lastfmLink2.title = '';
   }
 }
 
@@ -128,7 +138,7 @@ async function render(config) {
   const userName = userData?.name;
   const storageKey = `artistStats_${artistNameLocalized}`;
 
-  prepareReleaseStatsUI();
+  prepareArtistStatsUI();
 
   if (!config.lastfmApiKey) {
     const cachedData = localStorage.getItem(storageKey);

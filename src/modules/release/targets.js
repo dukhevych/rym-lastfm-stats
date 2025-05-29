@@ -36,3 +36,11 @@ export function getReleaseTitle() {
     .map(node => node.textContent.trim())
     .join('');
 }
+
+export function getReleaseType() {
+  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
+  if (!infoTable) return null;
+  const releaseType = infoTable.querySelector('tr:nth-child(2) td')
+    .textContent.toLowerCase().split(', ')[0];
+  return releaseType;
+}

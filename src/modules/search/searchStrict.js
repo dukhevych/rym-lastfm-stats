@@ -110,15 +110,15 @@ const validationRules = {
       let partialMatch = false;
 
       const _queryNoParenthesis = _query.replace(/[()]/g, '').trim();
-      const _queryCleaned = _query.replace(constants.KEYWORDS_REPLACE_PATTERN, '').trim();
+      const _queryCleaned = utils.cleanupReleaseEdition(_query);
 
       if (
         releaseTitleNormalized === _query ||
-        releaseTitleNormalized === _queryNoParenthesis ||
-        releaseTitleNormalized === _queryCleaned
+        releaseTitleNormalized === _queryNoParenthesis
       ) {
         hasReleaseTitle = true;
       } else if (
+        releaseTitleNormalized === _queryCleaned ||
         utils.checkPartialStringsMatch(releaseTitleNormalized, _query) ||
         utils.checkPartialStringsMatch(releaseTitleNormalized, _queryNoParenthesis) ||
         utils.checkPartialStringsMatch(releaseTitleNormalized, _queryCleaned)

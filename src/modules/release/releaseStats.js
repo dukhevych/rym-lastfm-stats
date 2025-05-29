@@ -1,6 +1,9 @@
 import * as utils from '@/helpers/utils.js';
 import * as api from '@/helpers/api.js';
 import * as constants from '@/helpers/constants.js';
+import { createElement as h } from '@/helpers/utils.js';
+
+import './releaseStats.css';
 
 import {
   INFO_CONTAINER_SELECTOR,
@@ -8,91 +11,90 @@ import {
   INFO_ALBUM_TITLE_SELECTOR,
   getArtistNames,
   getReleaseTitle,
-
+  getReleaseType,
 } from './targets.js';
+
+const uiElements = {};
 
 function prepareReleaseStatsUI() {
   const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
-  if (infoTable) {
-    const tr = document.createElement('tr');
-    const th = document.createElement('th');
+  if (!infoTable) return;
 
-    const td = document.createElement('td');
-    td.id = 'lastfm_data';
+  uiElements.infoTable = infoTable;
 
-    th.classList.add('info_hdr');
-    th.textContent = 'Last.fm';
-    td.classList.add('release_pri_descriptors');
-    td.colspan = '2';
-    td.textContent = 'Loading...';
+  uiElements.statsList = h('ul', { className: 'list-stats' }, [
+    uiElements.listeners = h('li', { className: 'is-listeners' }, 'listeners'),
+    uiElements.playcount = h('li', { className: 'is-playcount' }, 'plays'),
+    uiElements.userplaycount = h('li', { className: 'is-user-playcount' })
+  ]);
 
-    tr.appendChild(th);
-    tr.appendChild(td);
+  uiElements.lastfmLink = h(
+    'a',
+    {
+      className: 'lastfm-link',
+      target: '_blank',
+      title: 'View on Last.fm'
+    },
+    utils.createSvgUse('svg-lastfm-square-symbol')
+  );
 
-    infoTable.appendChild(tr);
-  }
+  uiElements.statsWrapper = h(
+    'div',
+    { className: ['list-stats-wrapper', 'is-loading'] },
+    [uiElements.statsList, uiElements.lastfmLink]
+  );
+
+  uiElements.heading = h('th', { className: 'info_hdr' }, 'Last.fm');
+
+  uiElements.content = h(
+    'td',
+    { className: 'release_pri_descriptors', colspan: '2' },
+    uiElements.statsWrapper
+  );
+
+  uiElements.tr = h('tr', {}, [uiElements.heading, uiElements.content]);
+
+  infoTable.appendChild(uiElements.tr);
 }
 
 function setNoFound() {
-  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
-  if (infoTable) {
-    const td = infoTable.querySelector('#lastfm_data');
-    td.textContent = 'No data found';
-  }
+  if (!uiElements.statsWrapper) return;
+  uiElements.statsWrapper.classList.add('not-found');
 }
 
 function populateReleaseStats(
   { playcount, listeners, userplaycount, url },
   timestamp,
 ) {
-  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
+  const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
 
-  if (infoTable) {
-    const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
+  uiElements.statsWrapper.classList.remove('is-loading');
 
-    const td = infoTable.querySelector('#lastfm_data');
-
-    td.textContent = '';
-
-    const listenersSpan =
-      listeners !== undefined
-        ? utils.createSpan(
-            `${listeners} listeners ${cacheTimeHint}`,
-            `${utils.shortenNumber(parseInt(listeners))} listeners`,
-          )
-        : null;
-    const playcountSpan =
-      playcount !== undefined
-        ? utils.createSpan(
-            `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`,
-            `${utils.shortenNumber(parseInt(playcount))} plays`,
-          )
-        : null;
-    const userplaycountSpan =
-      userplaycount !== undefined
-        ? utils.createStrong(
-            `${userplaycount} scrobbles`,
-            `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`,
-          )
-        : null;
-    const link = utils.createLink(url, 'View on Last.fm');
-
-    const elements = [
-      listenersSpan,
-      playcountSpan,
-      userplaycountSpan,
-      link,
-    ].filter((x) => x);
-
-    elements.forEach((element, index) => {
-      if (index > 0) {
-        const separator = document.createElement('span');
-        separator.textContent = '\u00A0\u00A0|\u00A0\u00A0';
-        td.appendChild(separator);
-      }
-      td.appendChild(element);
-    });
+  if (listeners !== undefined) {
+    uiElements.listeners.style.display = 'block';
+    uiElements.listeners.title = `${listeners} listeners ${cacheTimeHint}`;
+    uiElements.listeners.dataset.value = utils.shortenNumber(parseInt(listeners));
+  } else {
+    uiElements.listeners.style.display = 'none';
   }
+
+  if (playcount !== undefined && listeners !== undefined) {
+    uiElements.playcount.style.display = 'block';
+    uiElements.playcount.title = `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`;
+    uiElements.playcount.dataset.value = utils.shortenNumber(parseInt(playcount));
+  } else {
+    uiElements.listeners.style.display = 'block';
+  }
+
+  if (userplaycount !== undefined) {
+    uiElements.userplaycount.style.display = 'block';
+    uiElements.userplaycount.title = `${userplaycount} scrobbles`;
+    uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`;
+  } else {
+    uiElements.userplaycount.style.display = 'none';
+  }
+
+  uiElements.lastfmLink.href = url;
 }
 
 async function render(config) {

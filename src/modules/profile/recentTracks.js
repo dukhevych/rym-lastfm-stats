@@ -236,7 +236,7 @@ async function populatePlayHistoryItem(
     const format = customMyRating.querySelector(`[data-element="rymstats-track-format"]`);
 
     if (customMyRating) {
-      const albumNameFallback = albumName.replace(constants.KEYWORDS_REPLACE_PATTERN, '').trim();
+      const albumNameFallback = utils.cleanupReleaseEdition(albumName);
 
       const albumsFromDB = await RecordsAPI.getByArtistAndTitle(
         artistName,
@@ -346,6 +346,7 @@ function prepareRecentTracksUI() {
 
   if (config.recentTracksShowOnLoad) {
     tracksWrapper.classList.add('is-active');
+    tracksWrapper.classList.add('is-loading');
     lockButton.classList.add('is-locked');
   }
 
@@ -372,7 +373,7 @@ function prepareRecentTracksUI() {
   panelBgSwitcher.appendChild(playlistIcon);
   panelBgSwitcher.classList.add('btn-bg-switcher');
 
-  const bgOptionsQty = 23;
+  const bgOptionsQty = 22;
 
   panelBgSwitcher.dataset.option = `${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
   panelBgSwitcher.title = `Background option ${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
@@ -590,8 +591,15 @@ async function render(_config) {
   const populateRecentTracks = async ({
     data,
     timestamp,
-    colors,
   }) => {
+    let colors;
+
+    try {
+      colors = await utils.getImageColors(data[0].il);
+    } catch {
+      console.warn('Failed to get image colors, using cached data without colors');
+    }
+
     if (data[0].c) {
       panelContainer.classList.add("is-now-playing");
     } else {
@@ -668,6 +676,8 @@ async function render(_config) {
     tracksWrapper.replaceChildren(tracksList);
 
     tracksWrapper.dataset.timestamp = `Updated at ${new Date(timestamp).toLocaleString()}`;
+
+    tracksWrapper.classList.remove('is-loading');
   }
 
   const updateAction = async () => {
@@ -682,6 +692,10 @@ async function render(_config) {
         abortController.signal,
       );
 
+      if (data.error) {
+        throw new Error(`Last.fm API error: ${data.message}`);
+      }
+
       const timestamp = Date.now();
 
       const normalizedData = data.map((item) => ({
@@ -695,14 +709,6 @@ async function render(_config) {
         a: item.artist['#text'],
       }));
 
-      let colors = null;
-
-      try {
-        colors = await utils.getImageColors(normalizedData[0].il);
-      } catch {
-        console.warn('Failed to get image colors, using cached data without colors');
-      }
-
       await utils.storageSet({
         recentTracksCache: {
           data: normalizedData,
@@ -714,11 +720,11 @@ async function render(_config) {
       await populateRecentTracks({
         data: normalizedData,
         timestamp,
-        colors,
       });
     } catch (err) {
       if (err.name !== 'AbortError') {
-        console.error("Failed to fetch recent tracks:", err);
+        failedToFetch = true;
+        stopInterval();
       }
     }
   };
@@ -772,6 +778,7 @@ async function render(_config) {
   };
 
   const { recentTracksCache } = await utils.storageGet(['recentTracksCache']);
+  let failedToFetch = false;
 
   if (
     recentTracksCache
@@ -783,40 +790,37 @@ async function render(_config) {
       Date.now() - recentTracksCache.timestamp >
       constants.RECENT_TRACKS_INTERVAL_MS
     ) {
+      // Cache is outdated, fetch new data
       await updateAction();
     } else {
-      let colors = null;
-
-      try {
-        colors = await utils.getImageColors(recentTracksCache.data[0].il);
-      } catch {
-        console.warn('Failed to get image colors, using cached data without colors');
-      }
-
-      await populateRecentTracks({
-        data: recentTracksCache.data,
-        colors,
-      });
+      await populateRecentTracks({ data: recentTracksCache.data });
       tracksWrapper.dataset.timestamp = `Updated at ${new Date(recentTracksCache.timestamp).toLocaleString()}`;
     }
   } else {
+    // No cache available for this user, fetch new data
     if (document.visibilityState === 'visible') {
       await updateAction();
     }
+  }
+
+  if (failedToFetch) {
+    tracksWrapper.style.display = 'none';
+    panelContainer.style.display = 'none';
+    return;
   }
 
   if (document.visibilityState === 'visible') {
     startInterval();
   }
 
-  const stopInterval = () => {
+  function stopInterval() {
     if (intervalId) {
       clearInterval(intervalId);
       intervalId = null;
     }
   };
 
-  const handleVisibilityChange = async () => {
+  async function handleVisibilityChange() {
     if (document.visibilityState === 'visible') {
       await updateAction();
       startInterval();

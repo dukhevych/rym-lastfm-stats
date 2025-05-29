@@ -7,5 +7,7 @@ import * as constants from '@/helpers/constants.js';
   const storageItems = await utils.getSyncedOptions();
   const config = { ...constants.OPTIONS_DEFAULT, ...storageItems };
 
+  await utils.insertSVGSprite(utils.createSVGSprite());
+
   await renderContent(artist, config);
 })();

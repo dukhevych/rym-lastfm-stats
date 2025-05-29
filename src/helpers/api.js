@@ -72,9 +72,8 @@ export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}, sign
   return fetch(url, { signal })
     .then((response) => response.json())
     .then((data) => {
-      return data.recenttracks.track;
-    })
-    .catch((error) => console.error('Error:', error));
+      return data.recenttracks?.track || data;
+    });
 }
 
 export function fetchUserTopAlbums(
@@ -310,4 +309,38 @@ export async function fetchReleaseStats(
   await utils.storageSet(cacheObject, 'local');
 
   return data;
+}
+
+export function searchAlbum(
+  apiKey,
+  { artist, albumTitle },
+) {
+  if (!apiKey) {
+    return Promise.reject(new Error('No API key provided.'));
+  }
+  if (!artist) {
+    return Promise.reject(new Error('No artist provided.'));
+  }
+  if (!albumTitle) {
+    return Promise.reject(new Error('No album title provided.'));
+  }
+
+  const _params = {
+    method: 'album.search',
+    album: `${artist} ${albumTitle}`,
+    api_key: apiKey,
+    limit: 5,
+    format: 'json',
+  };
+
+  const params = new URLSearchParams(_params);
+
+  const url = `${BASE_URL}?${params.toString()}`;
+
+  return fetch(url)
+    .then((response) => response.json())
+    .catch((error) => {
+      console.error('Error:', error);
+      throw error;
+    });
 }

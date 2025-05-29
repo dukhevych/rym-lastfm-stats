@@ -10,7 +10,6 @@ export default function getWindowDataInjected(
     const event = new CustomEvent(eventName, {
       detail: { prop: propName, field, value }
     });
-    // console.log(`Dispatching event: ${eventName}`, { prop: propName, field, value });
     window.dispatchEvent(event);
   }
 

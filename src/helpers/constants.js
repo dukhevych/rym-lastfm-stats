@@ -134,7 +134,7 @@ export const RYM_ENTITY_CODES_INVERTED = Object.entries(RYM_ENTITY_CODES).reduce
 
 // Keywords to clean up album titles from additional information in parentheses or brackets
 // (Deluxe Edition), (Remastered), [Digipack], (Live in London) etc.
-export const REPLACE_KEYWORDS = [
+export const EDITION_KEYWORDS = [
   'deluxe',
   'version',
   'digipack',
@@ -155,8 +155,8 @@ export const REPLACE_KEYWORDS = [
   'anniversary',
 ];
 
-export const KEYWORDS_REPLACE_PATTERN = new RegExp(
-  `\\s*[\\[(]([^\\])]*\\b(?:${REPLACE_KEYWORDS.join('|')})\\b[^\\])]*)[\\])]$`,
+export const EDITION_KEYWORDS_REPLACE_PATTERN = new RegExp(
+  `\\s*[\\[(]([^\\])]*\\b(?:${EDITION_KEYWORDS.join('|')})\\b[^\\])]*)[\\])]$`,
   'i'
 );
 

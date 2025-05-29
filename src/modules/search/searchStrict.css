@@ -3,6 +3,8 @@
   margin: 1rem 0;
   font-weight: bold;
   border-left: 10px solid currentColor;
+
+  a { margin-left: 0.5rem; }
 }
 
 .rym-warning p { margin: 0; }

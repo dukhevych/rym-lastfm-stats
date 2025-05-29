@@ -23,10 +23,9 @@ const dbMessageTypes = new Set([
 ]);
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-
 const flexIndex = new FlexSearch.Index({ tokenize: 'forward', cache: true });
-
-let recordMap = new Map();
+const recordMap = new Map();
+let isIndexBuilt = false;
 
 async function buildSearchIndex() {
   const records = await db.getAllRecords();
@@ -46,6 +45,14 @@ async function buildSearchIndex() {
   });
 
   console.log(`[FlexSearch] Indexed ${records.length} records`);
+  isIndexBuilt = true;
+}
+
+if (browserAPI.runtime && browserAPI.runtime.onStartup) {
+  browserAPI.runtime.onStartup.addListener(() => {
+    console.log('[Background] onStartup triggered');
+    buildSearchIndex();
+  });
 }
 
 (async () => {
@@ -57,10 +64,18 @@ async function buildSearchIndex() {
   }
 })();
 
+async function ensureIndex() {
+  if (!isIndexBuilt) {
+    console.warn('[Background] Cache empty or not built, rebuilding index');
+    await buildSearchIndex();
+  }
+}
+
 async function handleDatabaseMessages(message, sender, sendResponse) {
   const { type, payload } = message;
 
   try {
+    await ensureIndex();
     let result = null;
 
     switch (type) {
@@ -132,7 +147,11 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
           return matchTitle && (matchArtist || matchArtistLocalized);
         });
 
-        if (!result && payload.titleFallback) {
+        if (
+          payload.titleFallback && (
+            result === null || (Array.isArray(result) && result.length === 0)
+          )
+        ) {
           const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
           const queryFallback = `${artistQuery} ${titleFallbackQuery}`;
           const hitsFallback = flexIndex.search(queryFallback, { limit: 50 });
