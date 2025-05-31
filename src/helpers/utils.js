@@ -613,27 +613,15 @@ export function combineArtistNames(artistNames) {
 
   let combinedArtistName = `${artistNames.map((name) => name.artistName).join(', ')}`;
 
-  combinedArtistName = ' & ' + lastArtistNames.artistName;
+  combinedArtistName += ' & ' + lastArtistNames.artistName;
 
-  let combinedArtistNameLocalized = `${artistNames.map((name) => name.artistNameLocalized).join(', ')}`;
+  let combinedArtistNameLocalized = `${artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ')}`;
 
-  combinedArtistNameLocalized = ' & ' + lastArtistNames.artistNameLocalized;
-
-  // if (
-  //   lastArtistNames
-  //     && (
-  //       artistNames.some((name => name.artistNameLocalized))
-  //       || lastArtistNames.artistNameLocalized
-  //     )
-  // ) {
-  //   combinedArtistNameLocalized = ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
-  //   const combinedArtistNames = artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ');
-  //   combinedArtistNameLocalized = `${combinedArtistNames}${combinedArtistNameLocalized}`;
-  // }
+  combinedArtistNameLocalized += ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
 
   return {
     artistName: combinedArtistName,
-    artistNameLocalized: combinedArtistNameLocalized,
+    artistNameLocalized: combinedArtistNameLocalized !== combinedArtistName ? combinedArtistNameLocalized : '',
   }
 };
 

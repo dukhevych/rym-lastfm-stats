@@ -97,6 +97,34 @@ function populateReleaseStats(
   uiElements.lastfmLink.href = url;
 }
 
+async function getSearchResults(config, artists, releaseTitle) {
+  const currentUrl = window.location.href;
+  const searchResultsCache = await utils.storageGet(`searchResults_${currentUrl}`);
+
+  if (searchResultsCache) {
+    if (constants.isDev) console.log('Using cached search results:', searchResultsCache);
+    return searchResultsCache;
+  }
+
+  const searchResults = await api.searchRelease(
+    config.lastfmApiKey || process.env.LASTFM_API_KEY,
+    {
+      artists: artists.map(utils.normalizeForSearch),
+      releaseTitle: utils.normalizeForSearch(releaseTitle),
+    },
+  );
+
+  if (!searchResults || searchResults.length === 0) {
+    console.warn('No search results found for:', artists, releaseTitle);
+    return null;
+  }
+
+  if (constants.isDev) console.log('Search results found:', searchResults);
+  await utils.storageSet({ [`searchResults_${currentUrl}`]: searchResults });
+
+  return searchResults;
+}
+
 async function render(config) {
   if (!config) return;
 
@@ -122,12 +150,17 @@ async function render(config) {
 
   prepareReleaseStatsUI();
 
-  const search = await api.searchAlbum(
-    config.lastfmApiKey || process.env.LASTFM_API_KEY,
-    { artist: artists[0], albumTitle: utils.normalizeForSearch(releaseTitle) }
-  );
+  // const searchResults = await getSearchResults(config, artists, releaseTitle);
 
-  console.log('Search result:', search);
+  // let searchArtist;
+  // let searchReleaseTitle;
+
+  // if (searchResults) {
+  //   searchArtist = searchResults[0].artist;
+  //   searchReleaseTitle = searchResults[0].name;
+  // }
+
+  // console.log('Search best result', searchArtist, searchReleaseTitle);
 
   if (!config.lastfmApiKey) {
     const cachedData = localStorage.getItem(storageKey);
