@@ -1,5 +1,3 @@
-const { colord } = require('colord');
-
 function splitBalancedArgs(str) {
   const args = [];
   let current = '';
@@ -25,7 +23,7 @@ function splitBalancedArgs(str) {
 function generatePercentSteps(steps) {
   const result = [];
   for (let i = 0; i <= steps; i++) {
-    const percent = +(i * 100 / steps).toFixed(2).replace(/\.?0+$/, ''); // remove trailing .00 or .0
+    const percent = +(i * 100 / steps).toFixed(2).replace(/\.?0+$/, '');
     result.push(percent);
   }
   return result;
@@ -175,9 +173,6 @@ module.exports = () => {
           const gradientIndex = i + 1;
           const currentColorIndex = inverted ? i + 1 : -i + 1;
           const currentColors = [...colors.slice(currentColorIndex), ...colors.slice(0, currentColorIndex)];
-
-          console.log(currentColors);
-
 
           let rule = `repeating-radial-gradient(circle, `;
 
