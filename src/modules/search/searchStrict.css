@@ -57,6 +57,7 @@ td:has(> .rym-search-strict--item) {
 .rym-search-strict--item {
   &[data-master-release] {
     position: relative;
+    min-height: 130px;
 
     &:before {
       content: 'Master release';
