@@ -122,6 +122,13 @@ async function render(config) {
 
   prepareReleaseStatsUI();
 
+  const search = await api.searchAlbum(
+    config.lastfmApiKey || process.env.LASTFM_API_KEY,
+    { artist: artists[0], albumTitle: utils.normalizeForSearch(releaseTitle) }
+  );
+
+  console.log('Search result:', search);
+
   if (!config.lastfmApiKey) {
     const cachedData = localStorage.getItem(storageKey);
 

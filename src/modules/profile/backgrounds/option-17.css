@@ -1,0 +1,22 @@
+[data-element="rymstats-track-panel"] {
+  &.bg-option-17:after {
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--clr-palette-vibrant) 0,
+        var(--clr-palette-vibrant) 30px,
+        transparent 30px,
+        transparent 60px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-muted) 0,
+        var(--clr-palette-muted) 10px,
+        var(--clr-palette-lightmuted) 10px,
+        var(--clr-palette-lightmuted) 20px
+      );
+    background-blend-mode: overlay;
+    background-size: 100% 40px;
+    background-position: 0 20px;
+  }
+}

@@ -1,6 +1,7 @@
 import profile, { targetSelectors } from '@/modules/profile/index.js';
 import { renderContent } from '@/helpers/renderContent.js';
 import * as utils from '@/helpers/utils.js';
+import './test.css';
 
 (async function () {
   utils.initColorSchemeDetection();

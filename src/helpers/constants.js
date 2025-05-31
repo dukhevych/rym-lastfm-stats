@@ -197,3 +197,28 @@ export const RYM_OWNERSHIP_TYPES_EXTRA_LABELS = {
   'Wishlist': 'w',
   'Used to Own': 'u',
 };
+
+export const RECENT_TRACK_BACKGROUND_NAMES = {
+  1: 'Clean',
+  2: 'Diagonal',
+  3: 'Mutiny',
+  4: 'Breathing',
+  5: 'Hypnosis',
+  6: 'Diagonal #2',
+  7: 'Star',
+  8: 'Grille',
+  9: 'Explosion',
+  10: 'Glitch',
+  11: 'Plaid',
+  12: 'Tiny rombo',
+  13: 'Diagonal #3',
+  14: 'Diagonal #4',
+  15: 'Vertical stripes',
+  16: 'Rombo',
+  17: 'Squares',
+  18: 'Horizontal stripes #1',
+  19: 'Horizontal stripes #2',
+  20: 'Flow',
+  21: 'EQ LG',
+  22: 'EQ SM inverted'
+}

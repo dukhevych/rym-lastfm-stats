@@ -1,0 +1,27 @@
+[data-element="rymstats-track-panel"] {
+  &.bg-option-11:after {
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        var(--clr-palette-darkvibrant) 0,
+        var(--clr-palette-darkvibrant) 5px,
+        transparent 5px,
+        transparent 10px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        var(--clr-palette-lightmuted) 0,
+        var(--clr-palette-lightmuted) 5px,
+        transparent 5px,
+        transparent 10px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        var(--clr-palette-muted) 0,
+        var(--clr-palette-muted) 2px,
+        transparent 2px,
+        transparent 6px
+      );
+    background-blend-mode: hard-light;
+  }
+}

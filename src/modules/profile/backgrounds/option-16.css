@@ -1,0 +1,20 @@
+[data-element="rymstats-track-panel"] {
+  &.bg-option-16:after {
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--clr-palette-muted) 0,
+        var(--clr-palette-muted) 20px,
+        var(--clr-palette-lightmuted) 20px,
+        var(--clr-palette-lightmuted) 40px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-darkvibrant) 0,
+        var(--clr-palette-darkvibrant) 20px,
+        var(--clr-palette-lightvibrant) 20px,
+        var(--clr-palette-lightvibrant) 40px
+      );
+    background-blend-mode: difference;
+  }
+}

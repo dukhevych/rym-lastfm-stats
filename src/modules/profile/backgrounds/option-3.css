@@ -1,0 +1,13 @@
+@animated-circle-gradient bg-option-3 {
+  thickness: 50px;
+  speed: 3s;
+  colors: (
+    var(--clr-palette-vibrant),
+    var(--clr-palette-darkvibrant),
+    var(--clr-palette-lightvibrant)
+  );
+  selectors: (
+    base: [data-element="rymstats-track-panel"].bg-option-3:after,
+    animated: [data-element="rymstats-track-panel"].is-now-playing.bg-option-3:after
+  )
+}

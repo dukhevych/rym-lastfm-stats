@@ -375,7 +375,9 @@ function prepareRecentTracksUI() {
 
   const bgOptionsQty = 22;
 
-  panelBgSwitcher.dataset.option = `${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
+  const bgName = constants.RECENT_TRACK_BACKGROUND_NAMES[config.recentTracksReplaceBackground + 1] ||
+    `${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
+  panelBgSwitcher.dataset.option = bgName;
   panelBgSwitcher.title = `Background option ${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
 
   panelBgSwitcher.addEventListener('click', async () => {
@@ -389,7 +391,8 @@ function prepareRecentTracksUI() {
     });
     panelContainer.classList.add(`bg-option-${newBgOption}`);
     panelBgSwitcher.title = `Background option ${newBgOption + 1} / ${bgOptionsQty}`;
-    panelBgSwitcher.dataset.option = `${newBgOption + 1} / ${bgOptionsQty}`;
+    const bgName = constants.RECENT_TRACK_BACKGROUND_NAMES[newBgOption + 1] || `${newBgOption + 1} / ${bgOptionsQty}`;
+    panelBgSwitcher.dataset.option = bgName || `${newBgOption + 1} / ${bgOptionsQty}`;
   });
   panelContainer.appendChild(panelBgSwitcher);
 
