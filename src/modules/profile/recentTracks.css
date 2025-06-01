@@ -1,3 +1,29 @@
+@import './backgrounds/option-0.css';
+@import './backgrounds/option-1.css';
+@import './backgrounds/option-2.css';
+@import './backgrounds/option-3.css';
+@import './backgrounds/option-4.css';
+@import './backgrounds/option-5.css';
+@import './backgrounds/option-6.css';
+@import './backgrounds/option-7.css';
+@import './backgrounds/option-8.css';
+@import './backgrounds/option-9.css';
+@import './backgrounds/option-10.css';
+@import './backgrounds/option-11.css';
+@import './backgrounds/option-12.css';
+@import './backgrounds/option-13.css';
+@import './backgrounds/option-14.css';
+@import './backgrounds/option-15.css';
+@import './backgrounds/option-16.css';
+@import './backgrounds/option-17.css';
+@import './backgrounds/option-18.css';
+@import './backgrounds/option-19.css';
+@import './backgrounds/option-20.css';
+@import './backgrounds/option-21.css';
+
+@property --shift-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --shift-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
+
 @property --bg-option-21-bar-1  { syntax: '<number>'; inherits: false; initial-value: 50; }
 @property --bg-option-21-bar-2  { syntax: '<number>'; inherits: false; initial-value: 50; }
 @property --bg-option-21-bar-3  { syntax: '<number>'; inherits: false; initial-value: 50; }
@@ -11,167 +37,26 @@
 @property --bg-option-21-bar-11 { syntax: '<number>'; inherits: false; initial-value: 50; }
 @property --bg-option-21-bar-12 { syntax: '<number>'; inherits: false; initial-value: 50; }
 
-@keyframes bg-option-21-animation {
-  0% {
-    --bg-option-21-bar-1: 40; --bg-option-21-bar-2: 70; --bg-option-21-bar-3: 50; --bg-option-21-bar-4: 90;
-    --bg-option-21-bar-5: 30; --bg-option-21-bar-6: 80; --bg-option-21-bar-7: 60; --bg-option-21-bar-8: 50;
-    --bg-option-21-bar-9: 70; --bg-option-21-bar-10: 30; --bg-option-21-bar-11: 90; --bg-option-21-bar-12: 40;
-  }
-
-  10% {
-    --bg-option-21-bar-1: 60; --bg-option-21-bar-2: 40; --bg-option-21-bar-3: 80; --bg-option-21-bar-4: 30;
-    --bg-option-21-bar-5: 70; --bg-option-21-bar-6: 50; --bg-option-21-bar-7: 90; --bg-option-21-bar-8: 30;
-    --bg-option-21-bar-9: 40; --bg-option-21-bar-10: 80; --bg-option-21-bar-11: 60; --bg-option-21-bar-12: 50;
-  }
-
-  25% {
-    --bg-option-21-bar-1: 30; --bg-option-21-bar-2: 90; --bg-option-21-bar-3: 60; --bg-option-21-bar-4: 70;
-    --bg-option-21-bar-5: 50; --bg-option-21-bar-6: 20; --bg-option-21-bar-7: 70; --bg-option-21-bar-8: 80;
-    --bg-option-21-bar-9: 20; --bg-option-21-bar-10: 60; --bg-option-21-bar-11: 30; --bg-option-21-bar-12: 90;
-  }
-
-  40% {
-    --bg-option-21-bar-1: 70; --bg-option-21-bar-2: 30; --bg-option-21-bar-3: 90; --bg-option-21-bar-4: 40;
-    --bg-option-21-bar-5: 80; --bg-option-21-bar-6: 40; --bg-option-21-bar-7: 90; --bg-option-21-bar-8: 60;
-    --bg-option-21-bar-9: 30; --bg-option-21-bar-10: 80; --bg-option-21-bar-11: 50; --bg-option-21-bar-12: 70;
-  }
-
-  60% {
-    --bg-option-21-bar-1: 50; --bg-option-21-bar-2: 60; --bg-option-21-bar-3: 30; --bg-option-21-bar-4: 80;
-    --bg-option-21-bar-5: 20; --bg-option-21-bar-6: 90; --bg-option-21-bar-7: 40; --bg-option-21-bar-8: 70;
-    --bg-option-21-bar-9: 90; --bg-option-21-bar-10: 20; --bg-option-21-bar-11: 70; --bg-option-21-bar-12: 60;
-  }
-
-  75% {
-    --bg-option-21-bar-1: 80; --bg-option-21-bar-2: 20; --bg-option-21-bar-3: 70; --bg-option-21-bar-4: 50;
-    --bg-option-21-bar-5: 90; --bg-option-21-bar-6: 30; --bg-option-21-bar-7: 20; --bg-option-21-bar-8: 90;
-    --bg-option-21-bar-9: 60; --bg-option-21-bar-10: 40; --bg-option-21-bar-11: 20; --bg-option-21-bar-12: 80;
-  }
-
-  90% {
-    --bg-option-21-bar-1: 60; --bg-option-21-bar-2: 40; --bg-option-21-bar-3: 50; --bg-option-21-bar-4: 60;
-    --bg-option-21-bar-5: 40; --bg-option-21-bar-6: 60; --bg-option-21-bar-7: 80; --bg-option-21-bar-8: 40;
-    --bg-option-21-bar-9: 70; --bg-option-21-bar-10: 50; --bg-option-21-bar-11: 60; --bg-option-21-bar-12: 30;
-  }
-
-  100% {
-    --bg-option-21-bar-1: 40; --bg-option-21-bar-2: 70; --bg-option-21-bar-3: 50; --bg-option-21-bar-4: 90;
-    --bg-option-21-bar-5: 30; --bg-option-21-bar-6: 80; --bg-option-21-bar-7: 60; --bg-option-21-bar-8: 50;
-    --bg-option-21-bar-9: 70; --bg-option-21-bar-10: 30; --bg-option-21-bar-11: 90; --bg-option-21-bar-12: 40;
-  }
-}
-
-@keyframes bg-option-20-animation {
-  0% { background-position: 0 0, 0 0; }
-  100% { background-position: 30px 60px, -20px 40px; }
-}
-
-@keyframes bg-option-24-animation {
-  0% {
-    --height-1: 20%;
-    --height-2: 50%;
-    --height-3: 90%;
-    --height-4: 40%;
-    --height-5: 60%;
-  }
-  25% {
-    --height-1: 80%;
-    --height-2: 30%;
-    --height-3: 60%;
-    --height-4: 100%;
-    --height-5: 20%;
-  }
-  50% {
-    --height-1: 40%;
-    --height-2: 90%;
-    --height-3: 20%;
-    --height-4: 60%;
-    --height-5: 30%;
-  }
-  75% {
-    --height-1: 100%;
-    --height-2: 70%;
-    --height-3: 40%;
-    --height-4: 30%;
-    --height-5: 90%;
-  }
-  100% {
-    --height-1: 20%;
-    --height-2: 50%;
-    --height-3: 90%;
-    --height-4: 40%;
-    --height-5: 60%;
-  }
-}
-
-@keyframes bg-option-23-animation {
-  0% {
-    background-position:
-      0 0,
-      0 0;
-  }
-  100% {
-    background-position:
-      100px 100px,
-      -100px -100px;
-  }
-}
-
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
+@property --angle-360 { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 
 @keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes image-shift {
-  0% {
-    transform: translateY(-50%);
-  }
-
-  25% {
-    transform: translateY(-75%);
-  }
-
-  50% {
-    transform: translateY(-50%);
-  }
-
-  75% {
-    transform: translateY(-25%);
-  }
-
-  100% {
-    transform: translateY(-50%);
-  }
+  0% { transform: translateY(-50%); }
+  25% { transform: translateY(-75%); }
+  50% { transform: translateY(-50%); }
+  75% { transform: translateY(-25%); }
+  100% { transform: translateY(-50%); }
 }
 
-:root {
-  --clr-lastfm: #f71414;
-}
+:root { --clr-lastfm: #f71414; }
 
 [data-element="rymstats-track-artist-link"],
 [data-element="rymstats-track-link"] {
-  &:hover {
-    text-decoration: underline;
-  }
+  &:hover { text-decoration: underline; }
 }
 
 [data-element="rymstats-track-item"] {
@@ -272,8 +157,6 @@
     font-size: 0.8em;
     width: fit-content;
     margin-bottom: 1.5em;
-    /* visibility: hidden; */
-
     display: flex;
     align-items: center;
     gap: 10px;
@@ -340,7 +223,7 @@
 
     .stars-empty {
       svg {
-        color: color-mix(in lab, currentColor, transparent 50%);
+        color: color-mix(in lab, currentColor, transparent 75%);
         fill: transparent;
       }
     }
@@ -355,6 +238,11 @@
     font-size: 0.8em;
     width: fit-content;
     margin-top: 1.5em;
+
+    &:before {
+      content: 'Album: ';
+      color: var(--clr-accent);
+    }
 
     a {
       font-weight: bold;
@@ -500,7 +388,8 @@ html[data-scheme="light"] {
 
 [data-element="rymstats-track-panel"] {
   padding-right: 1rem;
-  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+  transition: all 0.3s ease-out;
+  transition-property: background-color, color, border-radius;
   position: relative;
 
   &:before {
@@ -528,544 +417,6 @@ html[data-scheme="light"] {
     opacity: 0.1;
   }
 
-  &.bg-option-0:after {
-    opacity: 0.2;
-  }
-
-  &.bg-option-1:after {
-    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
-      var(--clr-palette-vibrant) 0px,
-      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
-  }
-  &.bg-option-2:after {
-    background-image:
-    repeating-linear-gradient(
-      to right,
-      var(--clr-palette-vibrant) 0,
-      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 3)
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      var(--clr-palette-lightmuted) 0,
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 3)
-    );
-    background-blend-mode: multiply;
-  }
-  &.bg-option-3:after {
-    background-image: repeating-radial-gradient(
-      circle,
-      var(--clr-palette-vibrant) 0,
-      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6)
-    );
-  }
-  &.bg-option-4:after {
-    background-image:
-      repeating-linear-gradient(
-        var(--track-panel-gradient-angle),
-        var(--clr-palette-muted) 0,
-        var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2)
-      ),
-      repeating-linear-gradient(
-        calc(var(--track-panel-gradient-angle) + 90deg),
-        var(--clr-palette-darkvibrant) 0,
-        var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
-        var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 2)
-      );
-    background-blend-mode: soft-light;
-  }
-  &.bg-option-5:after {
-    background-image:
-    repeating-linear-gradient(
-      45deg,
-      var(--clr-palette-lightmuted) 0,
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
-      transparent calc(var(--track-panel-gradient-stripe-width) * 1),
-      transparent calc(var(--track-panel-gradient-stripe-width) * 2)
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      var(--clr-palette-darkmuted) 0,
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 1),
-      transparent calc(var(--track-panel-gradient-stripe-width) * 1),
-      transparent calc(var(--track-panel-gradient-stripe-width) * 2)
-    );
-    background-blend-mode: screen;
-  }
-  &.bg-option-6:after {
-    background-image:
-    repeating-conic-gradient(
-      from 0deg,
-      var(--clr-palette-vibrant) 0deg 30deg,
-      var(--clr-palette-muted) 30deg 60deg,
-      var(--clr-palette-lightvibrant) 60deg 90deg,
-      var(--clr-palette-darkvibrant) 90deg 120deg,
-      var(--clr-palette-lightmuted) 120deg 150deg,
-      var(--clr-palette-darkmuted) 150deg 180deg
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      var(--clr-palette-darkmuted) 0,
-      var(--clr-palette-darkmuted) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-    background-blend-mode: difference;
-    background-position: center, 0 2px;
-  }
-  &.bg-option-7:after {
-    background-image:
-    repeating-linear-gradient(
-      to bottom,
-      var(--clr-palette-darkmuted) 0px,
-      var(--clr-palette-darkmuted) 1px,
-      transparent 1px,
-      transparent 2px
-    ),
-    repeating-linear-gradient(
-      to right,
-      var(--clr-palette-vibrant) 0,
-      var(--clr-palette-vibrant) 4px,
-      var(--clr-palette-lightvibrant) 4px,
-      var(--clr-palette-lightvibrant) 8px
-    );
-    background-blend-mode: overlay;
-    filter: contrast(200%) brightness(80%);
-  }
-  &.bg-option-8:after {
-    background-image: repeating-conic-gradient(
-      from 0deg at 50% 50%,
-      var(--clr-palette-vibrant) 0deg 10deg,
-      var(--clr-palette-darkvibrant) 10deg 20deg,
-      var(--clr-palette-muted) 20deg 30deg,
-      var(--clr-palette-lightmuted) 30deg 40deg,
-      var(--clr-palette-darkmuted) 40deg 50deg,
-      var(--clr-palette-lightvibrant) 50deg 60deg
-    );
-    transform: scale(2) rotate(1deg);
-    mix-blend-mode: exclusion;
-    filter: blur(0.3px) contrast(200%);
-  }
-  &.bg-option-9:after {
-    background-image:
-      repeating-linear-gradient(
-        90deg,
-        var(--clr-palette-vibrant) 0px,
-        var(--clr-palette-vibrant) 3px,
-        var(--clr-palette-darkmuted) 3px,
-        var(--clr-palette-darkmuted) 6px
-      ),
-      repeating-linear-gradient(
-        91deg,
-        var(--clr-palette-lightvibrant) 0px,
-        var(--clr-palette-lightvibrant) 3px,
-        transparent 3px,
-        transparent 6px
-      ),
-      repeating-linear-gradient(
-        89deg,
-        var(--clr-palette-muted) 0px,
-        var(--clr-palette-muted) 1px,
-        transparent 1px,
-        transparent 4px
-      );
-    background-blend-mode: difference;
-    filter: hue-rotate(90deg) brightness(120%);
-  }
-  &.bg-option-10:after {
-    background-image:
-      repeating-linear-gradient(
-        to right,
-        var(--clr-palette-muted) 0,
-        var(--clr-palette-muted) 10px,
-        var(--clr-palette-darkmuted) 10px,
-        var(--clr-palette-darkmuted) 20px
-      ),
-      repeating-linear-gradient(
-        to bottom,
-        var(--clr-palette-vibrant) 0,
-        var(--clr-palette-vibrant) 10px,
-        var(--clr-palette-lightvibrant) 10px,
-        var(--clr-palette-lightvibrant) 20px
-      );
-    background-blend-mode: multiply;
-  }
-  &.bg-option-11:after {
-    background-image:
-      repeating-linear-gradient(
-        45deg,
-        var(--clr-palette-darkvibrant) 0,
-        var(--clr-palette-darkvibrant) 5px,
-        transparent 5px,
-        transparent 10px
-      ),
-      repeating-linear-gradient(
-        -45deg,
-        var(--clr-palette-lightmuted) 0,
-        var(--clr-palette-lightmuted) 5px,
-        transparent 5px,
-        transparent 10px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        var(--clr-palette-muted) 0,
-        var(--clr-palette-muted) 2px,
-        transparent 2px,
-        transparent 6px
-      );
-    background-blend-mode: hard-light;
-  }
-  &.bg-option-12:after {
-    --track-panel-gradient-stripe-width: 120px;
-    --track-panel-gradient-angle: -45deg;
-
-    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
-      var(--clr-palette-vibrant) 0px,
-      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
-  }
-  &.bg-option-13:after {
-    --track-panel-gradient-stripe-width: 5px;
-    --track-panel-gradient-angle: 15deg;
-
-    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
-      var(--clr-palette-vibrant) 0px,
-      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
-  }
-  &.bg-option-14:after {
-    --track-panel-gradient-stripe-width: 15px;
-    --track-panel-gradient-angle: 90deg;
-
-    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
-      var(--clr-palette-vibrant) 0px,
-      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
-  }
-  &.bg-option-15:after {
-    background-image:
-      repeating-linear-gradient(
-        135deg,
-        var(--clr-palette-vibrant) 0,
-        var(--clr-palette-vibrant) 10px,
-        var(--clr-palette-darkvibrant) 10px,
-        var(--clr-palette-darkvibrant) 20px
-      ),
-      repeating-linear-gradient(
-        225deg,
-        var(--clr-palette-lightvibrant) 0,
-        var(--clr-palette-lightvibrant) 10px,
-        transparent 10px,
-        transparent 20px
-      );
-    background-blend-mode: difference;
-  }
-  &.bg-option-16:after {
-    background-image:
-      repeating-linear-gradient(
-        to right,
-        var(--clr-palette-muted) 0,
-        var(--clr-palette-muted) 20px,
-        var(--clr-palette-lightmuted) 20px,
-        var(--clr-palette-lightmuted) 40px
-      ),
-      repeating-linear-gradient(
-        to bottom,
-        var(--clr-palette-darkvibrant) 0,
-        var(--clr-palette-darkvibrant) 20px,
-        var(--clr-palette-lightvibrant) 20px,
-        var(--clr-palette-lightvibrant) 40px
-      );
-    background-blend-mode: difference;
-  }
-  &.bg-option-17:after {
-    background-image:
-      repeating-linear-gradient(
-        to right,
-        var(--clr-palette-vibrant) 0,
-        var(--clr-palette-vibrant) 30px,
-        transparent 30px,
-        transparent 60px
-      ),
-      repeating-linear-gradient(
-        to bottom,
-        var(--clr-palette-muted) 0,
-        var(--clr-palette-muted) 10px,
-        var(--clr-palette-lightmuted) 10px,
-        var(--clr-palette-lightmuted) 20px
-      );
-    background-blend-mode: overlay;
-    background-size: 100% 40px;
-    background-position: 0 20px;
-  }
-  &.bg-option-18:after {
-    background-image:
-      repeating-linear-gradient(
-        0deg,
-        var(--clr-palette-muted) 0px,
-        var(--clr-palette-muted) 5px,
-        var(--clr-palette-darkmuted) 5px,
-        var(--clr-palette-darkmuted) 10px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        var(--clr-palette-lightvibrant) 0px,
-        var(--clr-palette-lightvibrant) 5px,
-        var(--clr-palette-darkvibrant) 5px,
-        var(--clr-palette-darkvibrant) 10px
-      );
-    background-size: 100% 100%, 100% 100%;
-    /* background-blend-mode: difference; */
-    animation: bg-option-23-animation 0.2s infinite steps(1);
-  }
-  &.bg-option-19:after {
-    --stripe-width: 8px;
-    --stripe-gap: 4px;
-    --height-1: 20%;
-    --height-2: 40%;
-    --height-3: 60%;
-    --height-4: 80%;
-    --height-5: 100%;
-
-    background-image:
-      linear-gradient(to top,
-        var(--clr-palette-vibrant) 0%,
-        var(--clr-palette-vibrant) var(--height-1),
-        transparent var(--height-1),
-        transparent 100%
-      ),
-      linear-gradient(to top,
-        var(--clr-palette-darkvibrant) 0%,
-        var(--clr-palette-darkvibrant) var(--height-2),
-        transparent var(--height-2),
-        transparent 100%
-      ),
-      linear-gradient(to top,
-        var(--clr-palette-lightvibrant) 0%,
-        var(--clr-palette-lightvibrant) var(--height-3),
-        transparent var(--height-3),
-        transparent 100%
-      ),
-      linear-gradient(to top,
-        var(--clr-palette-muted) 0%,
-        var(--clr-palette-muted) var(--height-4),
-        transparent var(--height-4),
-        transparent 100%
-      ),
-      linear-gradient(to top,
-        var(--clr-palette-lightmuted) 0%,
-        var(--clr-palette-lightmuted) var(--height-5),
-        transparent var(--height-5),
-        transparent 100%
-      );
-
-    background-size:
-      var(--stripe-width) 100%,
-      var(--stripe-width) 100%,
-      var(--stripe-width) 100%,
-      var(--stripe-width) 100%,
-      var(--stripe-width) 100%;
-
-    background-position:
-      0 0,
-      calc(var(--stripe-width) + var(--stripe-gap)) 0,
-      calc((var(--stripe-width) + var(--stripe-gap)) * 2) 0,
-      calc((var(--stripe-width) + var(--stripe-gap)) * 3) 0,
-      calc((var(--stripe-width) + var(--stripe-gap)) * 4) 0;
-
-    background-repeat: no-repeat;
-    animation: bg-option-24-animation 1s infinite steps(1);
-  }
-  &.bg-option-20:after {
-    background-image:
-      repeating-linear-gradient(
-        60deg,
-        var(--clr-palette-darkvibrant) 0,
-        var(--clr-palette-darkvibrant) 3px,
-        transparent 3px,
-        transparent 6px
-      ),
-      repeating-linear-gradient(
-        120deg,
-        var(--clr-palette-lightvibrant) 0,
-        var(--clr-palette-lightvibrant) 2px,
-        transparent 2px,
-        transparent 5px
-      );
-    background-blend-mode: overlay;
-    animation: bg-option-20-animation 2s infinite linear alternate;
-    opacity: 0.2;
-  }
-  &.bg-option-21:after,
-  &.bg-option-22:after {
-    --n: 12;
-    --bar-width: calc((100% / var(--n)) - 2%);
-
-    --clr-1: var(--clr-palette-lightvibrant);
-    --clr-3: var(--clr-palette-vibrant);
-    --clr-5: var(--clr-palette-darkvibrant);
-    --clr-7: var(--clr-palette-lightmuted);
-    --clr-9: var(--clr-palette-muted);
-    --clr-11: var(--clr-palette-darkmuted);
-    --clr-2: color-mix(in lch, var(--clr-1) 50%, var(--clr-3));
-    --clr-4: color-mix(in lch, var(--clr-3) 50%, var(--clr-5));
-    --clr-6: color-mix(in lch, var(--clr-5) 50%, var(--clr-7));
-    --clr-8: color-mix(in lch, var(--clr-7) 50%, var(--clr-9));
-    --clr-10: color-mix(in lch, var(--clr-9) 50%, var(--clr-11));
-    --clr-12: color-mix(in lch, var(--clr-11) 20%, var(--clr-1));
-
-    --bar-1-x: calc((0 * 100%) / (var(--n) - 1));
-    --bar-2-x: calc((1 * 100%) / (var(--n) - 1));
-    --bar-3-x: calc((2 * 100%) / (var(--n) - 1));
-    --bar-4-x: calc((3 * 100%) / (var(--n) - 1));
-    --bar-5-x: calc((4 * 100%) / (var(--n) - 1));
-    --bar-6-x: calc((5 * 100%) / (var(--n) - 1));
-    --bar-7-x: calc((6 * 100%) / (var(--n) - 1));
-    --bar-8-x: calc((7 * 100%) / (var(--n) - 1));
-    --bar-9-x: calc((8 * 100%) / (var(--n) - 1));
-    --bar-10-x: calc((9 * 100%) / (var(--n) - 1));
-    --bar-11-x: calc((10 * 100%) / (var(--n) - 1));
-    --bar-12-x: calc((11 * 100%) / (var(--n) - 1));
-
-    background:
-      linear-gradient(to top, var(--clr-1) calc(var(--bg-option-21-bar-1) * 1%), transparent calc(var(--bg-option-21-bar-1) * 1%))
-        var(--bar-1-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-2) calc(var(--bg-option-21-bar-2) * 1%), transparent calc(var(--bg-option-21-bar-2) * 1%))
-        var(--bar-2-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-3) calc(var(--bg-option-21-bar-3) * 1%), transparent calc(var(--bg-option-21-bar-3) * 1%))
-        var(--bar-3-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-4) calc(var(--bg-option-21-bar-4) * 1%), transparent calc(var(--bg-option-21-bar-4) * 1%))
-        var(--bar-4-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-5) calc(var(--bg-option-21-bar-5) * 1%), transparent calc(var(--bg-option-21-bar-5) * 1%))
-        var(--bar-5-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-6) calc(var(--bg-option-21-bar-6) * 1%), transparent calc(var(--bg-option-21-bar-6) * 1%))
-        var(--bar-6-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-7) calc(var(--bg-option-21-bar-7) * 1%), transparent calc(var(--bg-option-21-bar-7) * 1%))
-        var(--bar-7-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-8) calc(var(--bg-option-21-bar-8) * 1%), transparent calc(var(--bg-option-21-bar-8) * 1%))
-        var(--bar-8-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-9) calc(var(--bg-option-21-bar-9) * 1%), transparent calc(var(--bg-option-21-bar-9) * 1%))
-        var(--bar-9-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-10) calc(var(--bg-option-21-bar-10) * 1%), transparent calc(var(--bg-option-21-bar-10) * 1%))
-        var(--bar-10-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-11) calc(var(--bg-option-21-bar-11) * 1%), transparent calc(var(--bg-option-21-bar-11) * 1%))
-        var(--bar-11-x) 0 / var(--bar-width) 100% no-repeat,
-
-      linear-gradient(to top, var(--clr-12) calc(var(--bg-option-21-bar-12) * 1%), transparent calc(var(--bg-option-21-bar-12) * 1%))
-        var(--bar-12-x) 0 / var(--bar-width) 100% no-repeat;
-
-    opacity: 0.2;
-
-    --bg-option-21-bar-1: 0;
-    --bg-option-21-bar-2: 10;
-    --bg-option-21-bar-3: 20;
-    --bg-option-21-bar-4: 30;
-    --bg-option-21-bar-5: 40;
-    --bg-option-21-bar-6: 50;
-    --bg-option-21-bar-7: 55;
-    --bg-option-21-bar-8: 40;
-    --bg-option-21-bar-9: 30;
-    --bg-option-21-bar-10: 20;
-    --bg-option-21-bar-11: 10;
-    --bg-option-21-bar-12: 0;
-  }
-  &.bg-option-22:after {
-    width: 20%;
-    height: 50%;
-    left: 50%;
-    transform: translateX(-50%) scaleY(-1);
-    bottom: auto;
-    opacity: 0.4;
-
-    /* --n: 6; */
-
-    --bar-width: calc((100% / var(--n)) - 4%);
-
-    --clr-1: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-1) * 0.5%), calc(var(--bg-option-21-bar-1) / 100));
-    --clr-2: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-2) * 0.5%), calc(var(--bg-option-21-bar-2) / 100));
-    --clr-3: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-3) * 0.5%), calc(var(--bg-option-21-bar-3) / 100));
-    --clr-4: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-4) * 0.5%), calc(var(--bg-option-21-bar-4) / 100));
-    --clr-5: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-5) * 0.5%), calc(var(--bg-option-21-bar-5) / 100));
-    --clr-6: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-6) * 0.5%), calc(var(--bg-option-21-bar-6) / 100));
-    --clr-7: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-7) * 0.5%), calc(var(--bg-option-21-bar-7) / 100));
-    --clr-8: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-8) * 0.5%), calc(var(--bg-option-21-bar-8) / 100));
-    --clr-9: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-9) * 0.5%), calc(var(--bg-option-21-bar-9) / 100));
-    --clr-10: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-10) * 0.5%), calc(var(--bg-option-21-bar-10) / 100));
-    --clr-11: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-11) * 0.5%), calc(var(--bg-option-21-bar-11) / 100));
-    --clr-12: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-12) * 0.5%), calc(var(--bg-option-21-bar-12) / 100));
-  }
-  &.is-now-playing.bg-option-21:after,
-  &.is-now-playing.bg-option-22:after {
-    animation: bg-option-21-animation 1.5s linear infinite;
-  }
-
   & > * {
     position: relative;
     z-index: 2;
@@ -1081,12 +432,14 @@ html[data-scheme="light"] {
 }
 
 html[data-scheme="light"] {
+  /* --clr-accent: var(--clr-light-accent); */
   [data-element="rymstats-track-panel"] {
     border-color: var(--clr-light-accent);
   }
 }
 
 html[data-scheme="dark"] {
+  /* --clr-accent: var(--clr-dark-accent); */
   [data-element="rymstats-track-panel"] {
     border-color: var(--clr-dark-accent);
   }
@@ -1162,6 +515,10 @@ html[data-scheme="dark"] {
   transform: translateY(-10px);
   margin-top: 0;
   padding-bottom: 30px;
+
+  &.is-loading {
+    display: none;
+  }
 
   &::before,
   &::after {

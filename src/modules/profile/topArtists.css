@@ -38,6 +38,15 @@
   align-items: start;
   padding: 14px;
 
+  &.is-empty {
+    align-items: center;
+
+    &:before {
+      content: 'No artists found for the selected period';
+      padding: 10px;
+    }
+  }
+
   & > .loader {
     color: var(--clr-lastfm);
     width: 182px;

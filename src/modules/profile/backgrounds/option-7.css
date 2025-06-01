@@ -1,0 +1,21 @@
+[data-element="rymstats-track-panel"] {
+  &.bg-option-7:after {
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-darkmuted) 0px,
+        var(--clr-palette-darkmuted) 1px,
+        transparent 1px,
+        transparent 2px
+      ),
+      repeating-linear-gradient(
+        to right,
+        var(--clr-palette-vibrant) 0,
+        var(--clr-palette-vibrant) 4px,
+        var(--clr-palette-lightvibrant) 4px,
+        var(--clr-palette-lightvibrant) 8px
+      );
+    background-blend-mode: overlay;
+    filter: contrast(200%) brightness(80%);
+  }
+}

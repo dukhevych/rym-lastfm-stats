@@ -94,7 +94,7 @@ export const createLink = (href, text, target = '_blank') => {
   const link = document.createElement('a');
   link.href = href;
   if (target) link.target = target;
-  link.textContent = text;
+  if (text) link.textContent = text;
   return link;
 };
 
@@ -237,7 +237,7 @@ export function storageRemove(keys, storageType = 'sync') {
   });
 }
 
-export function getSyncedOptions(fields = constants.OPTIONS_DEFAULT_KEYS) {
+export function getSyncedOptions(fields = Object.keys(constants.OPTIONS_DEFAULT)) {
   return storageGet(fields);
 };
 
@@ -317,6 +317,7 @@ export const getFullConfig = async () => {
 import svgLoader from '@/assets/icons/loader.svg?raw';
 import starSvg from '@/assets/icons/star.svg?raw';
 import lastfmSvg from '@/assets/icons/lastfm.svg?raw';
+import lastfmSquareSvg from '@/assets/icons/lastfm-square.svg?raw';
 import playlistSvg from '@/assets/icons/playlist.svg?raw';
 import volumeSvg from '@/assets/icons/volume.svg?raw';
 import brushSvg from '@/assets/icons/brush.svg?raw';
@@ -333,6 +334,7 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(svgLoader, 'svg-loader-symbol');
   addIconToSVGSprite(starSvg, 'svg-star-symbol');
   addIconToSVGSprite(lastfmSvg, 'svg-lastfm-symbol');
+  addIconToSVGSprite(lastfmSquareSvg, 'svg-lastfm-square-symbol');
   addIconToSVGSprite(playlistSvg, 'svg-playlist-symbol');
   addIconToSVGSprite(volumeSvg, 'svg-volume-symbol');
   addIconToSVGSprite(brushSvg, 'svg-brush-symbol');
@@ -617,27 +619,15 @@ export function combineArtistNames(artistNames) {
 
   let combinedArtistName = `${artistNames.map((name) => name.artistName).join(', ')}`;
 
-  combinedArtistName = ' & ' + lastArtistNames.artistName;
+  combinedArtistName += ' & ' + lastArtistNames.artistName;
 
-  let combinedArtistNameLocalized = `${artistNames.map((name) => name.artistNameLocalized).join(', ')}`;
+  let combinedArtistNameLocalized = `${artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ')}`;
 
-  combinedArtistNameLocalized = ' & ' + lastArtistNames.artistNameLocalized;
-
-  // if (
-  //   lastArtistNames
-  //     && (
-  //       artistNames.some((name => name.artistNameLocalized))
-  //       || lastArtistNames.artistNameLocalized
-  //     )
-  // ) {
-  //   combinedArtistNameLocalized = ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
-  //   const combinedArtistNames = artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ');
-  //   combinedArtistNameLocalized = `${combinedArtistNames}${combinedArtistNameLocalized}`;
-  // }
+  combinedArtistNameLocalized += ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
 
   return {
     artistName: combinedArtistName,
-    artistNameLocalized: combinedArtistNameLocalized,
+    artistNameLocalized: combinedArtistNameLocalized !== combinedArtistName ? combinedArtistNameLocalized : '',
   }
 };
 
@@ -770,4 +760,42 @@ export function omit(obj, keysToOmit) {
   }
 
   return result;
+}
+
+export function cleanupReleaseEdition(releaseTitle) {
+  if (!releaseTitle) return '';
+
+  return releaseTitle
+    .replace(constants.EDITION_KEYWORDS_REPLACE_PATTERN, '')
+    .trim();
+}
+
+export function createElement(tag, props = {}, ...children) {
+  const el = document.createElement(tag);
+
+  for (const [key, value] of Object.entries(props)) {
+    if (key === 'style' && typeof value === 'object') {
+      Object.assign(el.style, value);
+    } else if (key === 'className') {
+      if (Array.isArray(value)) el.classList.add(...value);
+      else el.classList.add(...value.trim().split(/\s+/)); // handles 'foo bar'
+    } else if (key.startsWith('on') && typeof value === 'function') {
+      el.addEventListener(key.slice(2).toLowerCase(), value);
+    } else if (key === 'dataset' && typeof value === 'object') {
+      for (const [dataKey, dataValue] of Object.entries(value)) {
+        el.dataset[dataKey] = dataValue;
+      }
+    } else if (key in el) {
+      el[key] = value;
+    } else {
+      el.setAttribute(key, value);
+    }
+  }
+
+  for (const child of children.flat()) {
+    if (child == null) continue;
+    el.append(child instanceof Node ? child : document.createTextNode(String(child)));
+  }
+
+  return el;
 }

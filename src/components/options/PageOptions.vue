@@ -248,14 +248,13 @@
               placeholder="Add your lastfm API key here"
               min="32"
               max="32"
-              @focus="(e) => e.target.select()"
-              @blur="(e) => e.target.value = e.target.value.trim()"
+              :type="lastfmApiInputType"
+              @focus="handleApiKeyFocus"
+              @blur="handleApiKeyBlur"
             >
               <template #hint>
-                With API Key you will get your
-                <strong>personal scrobbling stats</strong>
-                on your
-                <strong>Profile page</strong>.
+                Used for <strong>Enhanced Profile</strong>
+                and unlocks <strong>personal scrobbling stats</strong> on Artist/Release pages.
               </template>
             </FormInput>
 
@@ -415,16 +414,6 @@
               :min="constants.TOP_ARTISTS_LIMIT_MIN"
               :max="constants.TOP_ARTISTS_LIMIT_MAX"
               :disabled="options.topArtists === false"
-            />
-
-            <FormSeparator />
-
-            <!-- OTHER PROFILES -->
-            <FormCheckbox
-              v-model="options.parseOtherProfiles"
-              name="parseOtherProfiles"
-              label="Parse other users profiles"
-              hint="Try to parse other users profiles on RYM and display their Last.fm stats if username found."
             />
           </FormFieldset>
 
@@ -599,6 +588,18 @@ const saved = ref(false);
 const dirty = ref(false);
 const signinInProgress = ref(false);
 const showModal = ref(false);
+
+const lastfmApiInputType = ref('password');
+
+function handleApiKeyFocus(e) {
+  e.target.select();
+  lastfmApiInputType.value = 'text';
+}
+
+function handleApiKeyBlur(e) {
+  e.target.value = e.target.value.trim();
+  lastfmApiInputType.value = 'password';
+}
 
 const submit = async () => {
   const newConfig = JSON.parse(JSON.stringify(options));

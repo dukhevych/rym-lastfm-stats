@@ -1,0 +1,5 @@
+[data-element="rymstats-track-panel"] {
+  &.bg-option-0:after {
+    opacity: 0.2;
+  }
+}

@@ -187,6 +187,14 @@ function createTopArtistsUI() {
 
 function populateTopArtists(container, topArtists) {
   container.replaceChildren();
+
+  if (!topArtists || !Array.isArray(topArtists) || topArtists.length === 0) {
+    container.classList.add('is-empty');
+    return;
+  } else {
+    container.classList.remove('is-empty');
+  }
+
   const maxPlaycount = Math.max(...topArtists.map(artist => artist.playcount));
   const minPlaycount = Math.min(...topArtists.map(artist => artist.playcount));
   const playcountRange = maxPlaycount - minPlaycount;

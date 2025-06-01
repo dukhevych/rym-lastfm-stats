@@ -1,0 +1,27 @@
+@keyframes bg-option-19-animation {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 30px 60px, -20px 40px; }
+}
+
+[data-element="rymstats-track-panel"] {
+  &.bg-option-19:after {
+    background-image:
+      repeating-linear-gradient(
+        60deg,
+        var(--clr-palette-darkvibrant) 0,
+        var(--clr-palette-darkvibrant) 3px,
+        transparent 3px,
+        transparent 6px
+      ),
+      repeating-linear-gradient(
+        120deg,
+        var(--clr-palette-lightvibrant) 0,
+        var(--clr-palette-lightvibrant) 2px,
+        transparent 2px,
+        transparent 5px
+      );
+    background-blend-mode: overlay;
+    animation: bg-option-19-animation 2s infinite linear alternate;
+    opacity: 0.2;
+  }
+}

@@ -1,0 +1,40 @@
+@keyframes bg-option-9-animation {
+  0% {
+    --angle-360: 0deg;
+  }
+  100% {
+    --angle-360: 360deg;
+  }
+}
+
+[data-element="rymstats-track-panel"] {
+  &.bg-option-9:after {
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        var(--clr-palette-vibrant) 0px,
+        var(--clr-palette-vibrant) 3px,
+        var(--clr-palette-darkmuted) 3px,
+        var(--clr-palette-darkmuted) 6px
+      ),
+      repeating-linear-gradient(
+        91deg,
+        var(--clr-palette-lightvibrant) 0px,
+        var(--clr-palette-lightvibrant) 3px,
+        transparent 3px,
+        transparent 6px
+      ),
+      repeating-linear-gradient(
+        89deg,
+        var(--clr-palette-muted) 0px,
+        var(--clr-palette-muted) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+    background-blend-mode: difference;
+    filter: hue-rotate(calc(var(--angle-360) + 90deg)) brightness(120%);
+  }
+  &.is-now-playing.bg-option-9:after {
+    animation: bg-option-9-animation 1s linear infinite;
+  }
+}

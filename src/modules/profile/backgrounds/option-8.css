@@ -1,0 +1,37 @@
+@keyframes bg-option-8-animation {
+  0% {
+    --angle-360: 0deg;
+  }
+  15% {
+    --angle-360: 1deg;
+  }
+  50% {
+    --angle-360: 0deg;
+  }
+  65% {
+    --angle-360: -1deg;
+  }
+  100% {
+    --angle-360: 0deg;
+  }
+}
+
+[data-element="rymstats-track-panel"] {
+  &.bg-option-8:after {
+    background-image: repeating-conic-gradient(
+      from var(--angle-360) at 50% 50%,
+      var(--clr-palette-vibrant) var(--angle-360) calc(var(--angle-360) + 10deg),
+      var(--clr-palette-darkvibrant) calc(var(--angle-360) + 10deg) calc(var(--angle-360) + 20deg),
+      var(--clr-palette-muted) calc(var(--angle-360) + 20deg) calc(var(--angle-360) + 30deg),
+      var(--clr-palette-lightmuted) calc(var(--angle-360) + 30deg) calc(var(--angle-360) + 40deg),
+      var(--clr-palette-darkmuted) calc(var(--angle-360) + 40deg) calc(var(--angle-360) + 50deg),
+      var(--clr-palette-lightvibrant) calc(var(--angle-360) + 50deg) calc(var(--angle-360) + 60deg)
+    );
+    transform: scale(2) rotate(1deg);
+    mix-blend-mode: exclusion;
+    filter: blur(0.3px) contrast(200%);
+  }
+  &.is-now-playing.bg-option-8:after {
+    animation: bg-option-8-animation 5s ease-out infinite;
+  }
+}

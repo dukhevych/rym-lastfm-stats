@@ -1,0 +1,44 @@
+@keyframes bg-option-10-animation {
+  0% {
+    --shift-x: 0px;
+    --shift-y: 0px;
+  }
+  25% {
+    --shift-x: -10px;
+    --shift-y: 0px;
+  }
+  50% {
+    --shift-x: -10px;
+    --shift-y: -10px;
+  }
+  75% {
+    --shift-x: 0px;
+    --shift-y: -10px;
+  }
+  100% {
+    --shift-x: 0px;
+    --shift-y: 0px;
+  }
+}
+
+[data-element="rymstats-track-panel"] {
+  &.bg-option-10:after {
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--clr-palette-muted) var(--shift-x),
+        var(--clr-palette-muted) calc(var(--shift-x) + 10px),
+        var(--clr-palette-darkmuted) calc(var(--shift-x) + 10px),
+        var(--clr-palette-darkmuted) calc(var(--shift-x) + 20px)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-vibrant) var(--shift-y),
+        var(--clr-palette-vibrant) calc(var(--shift-y) + 10px),
+        var(--clr-palette-lightvibrant) calc(var(--shift-y) + 10px),
+        var(--clr-palette-lightvibrant) calc(var(--shift-y) + 20px)
+      );
+    background-blend-mode: multiply;
+    animation: bg-option-10-animation 5s ease-in-out infinite;
+  }
+}

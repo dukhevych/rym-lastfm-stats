@@ -1,14 +1,17 @@
-export const RYM_DB_VERSION = 2;
-
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+const manifest = browserAPI.runtime.getManifest();
 
 export const isDev = process.env.NODE_ENV === 'development';
 
-export const LASTFM_COLOR = '#f71414';
+export const APP_VERSION = manifest.version;
+export const APP_NAME = manifest.name;
+export const APP_NAME_SLUG = APP_NAME.replace(/\s+/g, '-').toLowerCase();
 
+export const RYM_DB_VERSION = 2;
 export const RYM_DB_NAME = 'rymExportDB';
-
 export const RYM_DB_STORE_NAME = 'rymExportStore';
+
+export const LASTFM_COLOR = '#f71414';
 
 export const LIGHT_THEME_CLASSES = [
   'theme_light',
@@ -35,6 +38,7 @@ DARK_THEME_CLASSES.reduce((acc, theme) => {
   return acc;
 }, THEMES);
 
+// Last.fm api values
 export const PERIOD_OPTIONS = [
   {
     value: 'overall',
@@ -63,20 +67,21 @@ export const PERIOD_OPTIONS = [
 ];
 
 export const PERIOD_LABELS_MAP = PERIOD_OPTIONS.reduce(
-  (acc, { value, label }) => {
-    acc[value] = label;
-    return acc;
-  },
-  {},
-);
+(acc, { value, label }) => {
+  acc[value] = label;
+  return acc;
+}, {});
 
+// TOP ALBUMS
 export const TOP_ALBUMS_PERIOD_DEFAULT = '1month';
 
+// TOP ARTISTS
 export const TOP_ARTISTS_PERIOD_DEFAULT = '12month';
 export const TOP_ARTISTS_LIMIT_MIN = 5;
 export const TOP_ARTISTS_LIMIT_MAX = 10;
 export const TOP_ARTISTS_LIMIT_DEFAULT = 5;
 
+// RECENT TRACKS
 export const RECENT_TRACKS_LIMIT_MIN = 1;
 export const RECENT_TRACKS_LIMIT_MAX = 20;
 export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
@@ -92,7 +97,6 @@ export const PROFILE_OPTIONS_DEFAULT = {
   topArtistsPeriod: TOP_ARTISTS_PERIOD_DEFAULT,
   topAlbums: true,
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
-  parseOtherProfiles: false,
 }
 
 export const OPTIONS_DEFAULT = {
@@ -100,27 +104,15 @@ export const OPTIONS_DEFAULT = {
   ...PROFILE_OPTIONS_DEFAULT,
 };
 
-export const OPTIONS_DEFAULT_KEYS = Object.keys(OPTIONS_DEFAULT);
-
-export const RECENT_TRACKS_INTERVAL_MS = isDev ? 10000 : 120000;
-
+// Interval constants for fetching data
+export const RECENT_TRACKS_INTERVAL_MS = isDev ? 10000 : 120000; // 10 seconds / 2 minutes
 export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = RECENT_TRACKS_INTERVAL_MS / 2;
-
-export const TOP_ALBUMS_INTERVAL_MS = 120000;
-
-export const TOP_ARTISTS_INTERVAL_MS = 120000;
-
-const manifest = browserAPI.runtime.getManifest();
-
-export const APP_VERSION = manifest.version;
-
-export const APP_NAME = manifest.name;
-
-export const APP_NAME_SLUG = APP_NAME.replace(/\s+/g, '-').toLowerCase();
-
+export const TOP_ALBUMS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+export const TOP_ARTISTS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const STATS_CACHE_LIFETIME_GUEST_MS = 24 * 60 * 60 * 1000; // 24 hours
 export const STATS_CACHE_LIFETIME_MS = 5 * 60 * 1000; // 5 minutes
 
+// [Addon entity type]: [RYM entity code]
 export const RYM_ENTITY_CODES = {
   artist: 'a',
   release: 'l',
@@ -134,21 +126,26 @@ export const RYM_ENTITY_CODES = {
   // s: 'list',
 }
 
+// [RYM entity code]: [Addon entity type]
 export const RYM_ENTITY_CODES_INVERTED = Object.entries(RYM_ENTITY_CODES).reduce((acc, [key, value]) => {
   acc[value] = key;
   return acc;
 }, {});
 
-export const REPLACE_KEYWORDS = [
+// Keywords to clean up album titles from additional information in parentheses or brackets
+// (Deluxe Edition), (Remastered), [Digipack], (Live in London) etc.
+export const EDITION_KEYWORDS = [
   'deluxe',
   'version',
   'digipack',
   'edition',
+  'part',
   'bonus',
   'expanded',
   'remaster',
   'remastered',
   'reissue',
+  'live',
   'redux',
   'limited',
   'exclusive',
@@ -158,11 +155,12 @@ export const REPLACE_KEYWORDS = [
   'anniversary',
 ];
 
-export const KEYWORDS_REPLACE_PATTERN = new RegExp(
-  `\\s*[\\[(]([^\\])]*\\b(?:${REPLACE_KEYWORDS.join('|')})\\b[^\\])]*)[\\])]$`,
+export const EDITION_KEYWORDS_REPLACE_PATTERN = new RegExp(
+  `\\s*[\\[(]([^\\])]*\\b(?:${EDITION_KEYWORDS.join('|')})\\b[^\\])]*)[\\])]$`,
   'i'
 );
 
+// [DB value]: [display value]
 export const RYM_FORMATS = {
   'CD': 'CD',
   'LP': 'Vinyl',
@@ -177,11 +175,13 @@ export const RYM_FORMATS = {
   'Other': 'Other',
 };
 
+// [display value]: [RYM DB value]
 export const RYM_FORMATS_INVERTED = Object.entries(RYM_FORMATS).reduce((acc, [key, value]) => {
   acc[value] = key;
   return acc;
 }, {});
 
+// [DB value]: [display value]
 export const RYM_OWNERSHIP_TYPES = {
   o: 'In collection',
   w: 'On wishlist',
@@ -189,7 +189,36 @@ export const RYM_OWNERSHIP_TYPES = {
   n: '(not cataloged)',
 };
 
+// [display value on Profile/Collection]: [RYM DB value]
+// Only 2 values are used in the Profile/Collection
+// `In collection` always has `format`
+// `Wishlist` and `Used to own` are always shown no matter if `format` is set or not
 export const RYM_OWNERSHIP_TYPES_EXTRA_LABELS = {
   'Wishlist': 'w',
   'Used to Own': 'u',
 };
+
+export const RECENT_TRACK_BACKGROUND_NAMES = {
+  1: 'Clean',
+  2: 'Diagonal',
+  3: 'Mutiny',
+  4: 'Breathing',
+  5: 'Hypnosis',
+  6: 'Diagonal #2',
+  7: 'Star',
+  8: 'Grille',
+  9: 'Explosion',
+  10: 'Glitch',
+  11: 'Plaid',
+  12: 'Tiny rombo',
+  13: 'Diagonal #3',
+  14: 'Diagonal #4',
+  15: 'Vertical stripes',
+  16: 'Rombo',
+  17: 'Squares',
+  18: 'Horizontal stripes #1',
+  19: 'Horizontal stripes #2',
+  20: 'Flow',
+  21: 'EQ LG',
+  22: 'EQ SM inverted'
+}

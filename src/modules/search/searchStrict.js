@@ -107,24 +107,31 @@ const validationRules = {
         _query = _query.replace(artistNameLocalizedNormalized, '').trim();
       }
 
-      if (hasArtist) {
-        console.log('hasArtist', artistName, _query);
-        console.log('hasArtist', artistNameLocalized, _query);
-      }
+      let partialMatch = false;
 
-      if (utils.checkPartialStringsMatch(releaseTitleNormalized, _query)) {
+      const _queryNoParenthesis = _query.replace(/[()]/g, '').trim();
+      const _queryCleaned = utils.cleanupReleaseEdition(_query);
+
+      if (
+        releaseTitleNormalized === _query ||
+        releaseTitleNormalized === _queryNoParenthesis
+      ) {
         hasReleaseTitle = true;
+      } else if (
+        releaseTitleNormalized === _queryCleaned ||
+        utils.checkPartialStringsMatch(releaseTitleNormalized, _query) ||
+        utils.checkPartialStringsMatch(releaseTitleNormalized, _queryNoParenthesis) ||
+        utils.checkPartialStringsMatch(releaseTitleNormalized, _queryCleaned)
+      ) {
+        hasReleaseTitle = true;
+        partialMatch = true;
       }
 
-      if (!hasReleaseTitle) {
-        const _queryCleaned = _query.replace(constants.KEYWORDS_REPLACE_PATTERN, '').trim();
+      const matched = hasArtist && hasReleaseTitle;
 
-        if (utils.checkPartialStringsMatch(releaseTitleNormalized, _queryCleaned)) {
-          hasReleaseTitle = true;
-        }
-      }
+      if (!matched) return false;
 
-      return hasArtist && hasReleaseTitle;
+      return partialMatch ? 'partial' : 'full';
     },
   },
   [constants.RYM_ENTITY_CODES.song]: {
@@ -178,18 +185,23 @@ async function render(config) {
 
   Array.from(searchItems).forEach((item) => {
     item.classList.add('rym-search-strict--item');
-    item.classList.add(`is-${constants.RYM_ENTITY_CODES_INVERTED[searchType]}`);
+    item.dataset.itemType = constants.RYM_ENTITY_CODES_INVERTED[searchType];
 
-    if (searchType === constants.RYM_ENTITY_CODES.release) {
+    const isReleaseSearch = searchType === constants.RYM_ENTITY_CODES.release;
+
+    if (isReleaseSearch) {
       addReleaseUserRating(item);
     }
 
-    if (validationRules[searchType].validate(item, searchTerm)) {
+    const validity = validationRules[searchType].validate(item, searchTerm);
+
+    if (validity !== false) {
+      if (isReleaseSearch) {
+        item.dataset.validity = validity;
+      }
       searchItemsFiltered.push(item);
-      item.classList.add('rym-search-strict--filtered');
     } else {
       searchItemsToHide.push(item);
-      item.classList.add('rym-search-strict--hidden');
     }
   });
 
@@ -203,6 +215,8 @@ async function render(config) {
     const releaseGroups = {};
 
     searchItemsFiltered.forEach((item) => {
+      if (item.dataset.validity !== 'full') return;
+
       const artistId = item.querySelector(validationRules.l.selectors.artistNameSelector)?.title;
 
       if (artistId) {
@@ -228,7 +242,8 @@ async function render(config) {
       });
 
       if (minItem) {
-        minItem.classList.add('rym-search-strict--highlight');
+        minItem.dataset.masterRelease = true;
+        // minItem.classList.add('rym-search-strict--highlight');
       }
     });
   }

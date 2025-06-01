@@ -1,0 +1,21 @@
+@animated-circle-gradient bg-option-4 {
+  thickness: 15px;
+  speed: 5s;
+  inverted: true;
+  colors: (
+    var(--clr-palette-vibrant),
+    var(--clr-palette-darkvibrant),
+    var(--clr-palette-lightvibrant),
+    var(--clr-palette-vibrant),
+    var(--clr-palette-darkvibrant),
+    var(--clr-palette-lightvibrant),
+  );
+  selectors: (
+    base: [data-element="rymstats-track-panel"].bg-option-4:after,
+    animated: [data-element="rymstats-track-panel"].bg-option-4.is-now-playing:after
+  )
+}
+
+[data-element="rymstats-track-panel"].bg-option-4:after {
+  opacity: 0.1;
+}

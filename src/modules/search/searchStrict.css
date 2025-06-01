@@ -3,6 +3,8 @@
   margin: 1rem 0;
   font-weight: bold;
   border-left: 10px solid currentColor;
+
+  a { margin-left: 0.5rem; }
 }
 
 .rym-warning p { margin: 0; }
@@ -26,49 +28,82 @@ td:has(> .rym-search-strict--item) {
   flex-direction: column;
 
   & > * {
-    order: 2;
+    order: 5;
 
     &:not(table) {
       order: 0;
     }
 
     &.rym-search-strict--item {
-      & + *:not(table) {
-        order: 3;
+      & ~ *:not(table) {
+        order: 10;
       }
 
-      &.rym-search-strict--highlight {
+      &[data-master-release] {
         order: 1;
+      }
+
+      &[data-validity="full"] {
+        order: 2;
+      }
+
+      &[data-validity="partial"] {
+        order: 3;
       }
     }
   }
 }
 
-.rym-search-strict--highlight {
-  position: relative;
-
-  &:before {
-    content: 'Master release';
-    position: absolute;
-    writing-mode: vertical-lr;
-    transform: rotate(-180deg);
-    top: 0;
-    right: 100%;
-    bottom: 0;
-    text-align: center;
-    font-weight: bold;
-    background-color: rgba(255, 255, 0, 0.5);
-    padding: 0.5rem;
-    z-index: 1;
-  }
-}
-
 .rym-search-strict--item {
-  &.is-release[data-rym-rating] {
+  &[data-master-release] {
+    position: relative;
+    min-height: 130px;
+
+    &:before {
+      content: 'Master release';
+      position: absolute;
+      writing-mode: vertical-lr;
+      transform: rotate(-180deg);
+      top: 0;
+      right: 100%;
+      bottom: 0;
+      text-align: center;
+      font-weight: bold;
+      background-color: rgba(255, 255, 0, 0.5);
+      padding: 0.5rem;
+      z-index: 1;
+    }
+  }
+
+  &[data-validity="full"] {
+    border: 1px solid green;
+  }
+
+  &[data-validity="partial"] {
+    position: relative;
+    border: 1px solid orange;
+
+    &:before {
+      content: 'Partial match';
+      position: absolute;
+      writing-mode: vertical-lr;
+      transform: rotate(-180deg);
+      top: 0;
+      right: 100%;
+      bottom: 0;
+      text-align: center;
+      font-weight: bold;
+      background-color: rgba(255, 127, 0, 0.05);
+      padding: 0.5rem;
+      z-index: 1;
+    }
+  }
+
+  &[data-item-type="release"][data-rym-rating] {
     position: relative;
 
     &:after {
-      content: attr(data-rym-rating);
+      content: attr(data-rym-rating)' / 5';
       z-ndex: 1;
       position: absolute;
       top: 0;

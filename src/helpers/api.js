@@ -72,13 +72,7 @@ export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}, sign
   return fetch(url, { signal })
     .then((response) => response.json())
     .then((data) => {
-      if (data.error) {
-        return Promise.reject(new Error(`Last.fm API error: ${data.message || data.error}`));
-      }
-      if (!data.recenttracks || !Array.isArray(data.recenttracks.track)) {
-        return Promise.reject(new Error('No recent tracks available.'));
-      }
-      return data.recenttracks.track;
+      return data.recenttracks?.track || data;
     });
 }
 
@@ -289,8 +283,8 @@ export async function fetchReleaseStats(
       data = await response.json();
 
       if (data.error) {
-        console.warn(`Error fetching data for ${artist}`, data.error, data.message);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.warn(`Error fetching data for "${artist}" - "${releaseTitle}"`, data.error, data.message);
+        await new Promise((resolve) => setTimeout(resolve, 500));
         continue;
       }
 
@@ -302,7 +296,6 @@ export async function fetchReleaseStats(
   }
 
   if (data.error) {
-    console.error('No data found for any artist.');
     return null;
   }
 
@@ -316,4 +309,55 @@ export async function fetchReleaseStats(
   await utils.storageSet(cacheObject, 'local');
 
   return data;
+}
+
+export async function searchRelease(
+  apiKey,
+  { artists, releaseTitle },
+) {
+  if (!apiKey) {
+    return Promise.reject(new Error('No API key provided.'));
+  }
+  if (!artists || artists.length === 0) {
+    return Promise.reject(new Error('No artist provided.'));
+  }
+  if (!releaseTitle || releaseTitle.trim() === '' || typeof releaseTitle !== 'string') {
+    return Promise.reject(new Error('No album title provided.'));
+  }
+
+  let result = null;
+
+  for (const artist of artists) {
+    const _params = {
+      method: 'album.search',
+      album: `${artist} ${releaseTitle}`,
+      api_key: apiKey,
+      limit: 5,
+      format: 'json',
+    };
+
+    const params = new URLSearchParams(_params);
+    const url = `${BASE_URL}?${params.toString()}`;
+    const response = await (await fetch(url)).json();
+
+    if (response.error) {
+      console.warn(`Error fetching data for "${artist} - ${releaseTitle}"`, response.error, response.message);
+      await utils.wait(500);
+      continue;
+    }
+
+    const albums = response.results?.albummatches?.album;
+
+    if (!albums || albums.length === 0) {
+      console.warn(`No albums found for "${artist} - ${releaseTitle}"`);
+      await utils.wait(500);
+      continue;
+    }
+
+    result = albums;
+
+    break;
+  }
+
+  return result;
 }

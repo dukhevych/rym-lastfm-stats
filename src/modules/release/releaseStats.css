@@ -1,0 +1,191 @@
+:root {
+  --clr-lastfm: #f71414;
+}
+
+.list-stats {
+  list-style: none;
+  display: flex;
+  align-items: center;
+
+  & > li {
+    display: flex;
+    align-items: center;
+    cursor: default;
+
+    &.is-user-playcount {
+      font-weight: bold;
+    }
+
+    &:not(:last-child) {
+      &:after {
+        content: '|';
+        margin-inline: 0.8rem;
+      }
+    }
+
+    &[data-value]:before {
+      content: attr(data-value);
+      margin-right: 0.5rem;
+      font-weight: bold;
+    }
+  }
+}
+
+.list-stats-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+
+  &:before {
+    content: 'Loading...';
+    display: none;
+  }
+
+  &.is-updating {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &.is-loading {
+    & > * {
+      display: none !important;
+    }
+    &:before {
+      display: block;
+    }
+  }
+
+  &.not-found {
+    .list-stats,
+    .lastfm-link {
+      display: none;
+    }
+
+    &:before {
+      content: 'No Last.fm data found';
+      font-weight: bold;
+    }
+  }
+
+  .incorrect-stats-link {
+    font-size: 1.1em;
+    padding: .25em .5em;
+    font-weight: bold;
+    color: var(--mono-c);
+
+    position: relative;
+
+    &:hover {
+      color: var(--mono-6)
+    }
+  }
+
+  .lastfm-link {
+    transition: color .15s ease-in-out;
+    display: inline-flex;
+    gap: 0.5rem;
+
+    &[href=""] { display: none; }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+
+    &:after {
+      content: 'Last.fm';
+      font-weight: bold;
+    }
+
+    &.is-localized {
+      color: var(--clr-lastfm);
+
+      &:hover {
+        color: color-mix(in srgb, var(--clr-lastfm), #fff 60%);
+      }
+    }
+
+    &.is-original:after {
+      content: 'Original name';
+    }
+  }
+}
+
+.incorrect-stats-wrapper {
+  posrition: relative;
+  margin-left: auto;
+}
+
+.incorrect-stats-popup {
+  position: absolute;
+  top: 100%;
+  right: 9999px;
+  opacity: 0;
+  transition-duration: .15s;
+  transition-timing-function: ease-in-out;
+  transition-property: transform, opacity;
+  transform: translateY(-10px);
+  pointer-events: none;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  min-width: 250px;
+  max-width: 400px;
+  border-radius: 5px;
+  overflow: hidden;
+
+  &.is-active {
+    right: 0;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .incorrect-stats-popup-title {
+    font-size: inherit;
+    font-weight: 400;
+    text-align: center;
+    padding: 1rem;
+    margin: 0;
+    cursor: default;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .incorrect-stats-popup-warning {
+    text-align: center;
+    padding: 1rem;
+    margin: 0;
+    color: #ff0000;
+    cursor: default;
+  }
+}
+
+.list-search-albums {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  .list-search-albums-item {
+    display: block;
+    padding: 1rem;
+    color: #fff;
+    &:is(a) {
+      text-decoration: none;
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+    &:not(a) {
+      cursor: default;
+      background-color: rgba(255, 255, 255, 0.2);
+      &:before {
+        content: '✅';
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}
