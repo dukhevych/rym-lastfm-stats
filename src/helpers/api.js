@@ -72,9 +72,14 @@ export function fetchUserRecentTracks(username, apiKey, { limit = 5 } = {}, sign
   return fetch(url, { signal })
     .then((response) => response.json())
     .then((data) => {
+      if (data.error) {
+        return Promise.reject(new Error(`Last.fm API error: ${data.message || data.error}`));
+      }
+      if (!data.recenttracks || !Array.isArray(data.recenttracks.track)) {
+        return Promise.reject(new Error('No recent tracks available.'));
+      }
       return data.recenttracks.track;
-    })
-    .catch((error) => console.error('Error:', error));
+    });
 }
 
 export function fetchUserTopAlbums(

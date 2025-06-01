@@ -717,6 +717,10 @@ async function render(_config) {
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error("Failed to fetch recent tracks:", err);
+
+        stopInterval();
+        panelContainer?.remove();
+        tracksWrapper?.remove();
       }
     }
   };
@@ -807,14 +811,14 @@ async function render(_config) {
     startInterval();
   }
 
-  const stopInterval = () => {
+  function stopInterval () {
     if (intervalId) {
       clearInterval(intervalId);
       intervalId = null;
     }
   };
 
-  const handleVisibilityChange = async () => {
+  async function handleVisibilityChange () {
     if (document.visibilityState === 'visible') {
       await updateAction();
       startInterval();
