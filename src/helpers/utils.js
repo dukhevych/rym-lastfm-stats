@@ -585,6 +585,18 @@ export function getDirectInnerText(element) {
     .trim();
 }
 
+export function slugify(str) {
+  if (!str) return '';
+  return deburr(str
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/[^\w-]+/g, '') // Remove non-word characters except hyphens
+    .replace(/--+/g, '-') // Replace multiple hyphens with a single one
+    .replace(/^-+/, '') // Remove leading hyphens
+    .replace(/-+$/, '') // Remove trailing hyphens
+  );
+}
+
 export function normalizeForSearch(str) {
   if (!str) return '';
 
@@ -597,6 +609,7 @@ export function normalizeForSearch(str) {
     .replace(/ - /g, ' ')
     .replace(/'/g, '')
     .replace(/\s\/\s/g, ' ')
+    .replace(/\//g, ' ')
     .replace(/’/g, '')
     .replace(/\\/g, '')
     .replace(/:/g, '')

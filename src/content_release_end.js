@@ -9,7 +9,7 @@ import {
 
 (async function () {
   window.addEventListener('load', async () => {
-    const releaseId = utils.extractIdFromTitle(document.querySelectorAll('.album_shortcut')[0].value);
+    const releaseId = utils.extractIdFromTitle(document.querySelector('.album_shortcut').value);
 
     const rymRatingPath = 'rating_l_' + releaseId;
     const rymCatalogPath = 'catalog_l_' + releaseId;

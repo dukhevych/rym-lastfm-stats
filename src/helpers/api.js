@@ -172,8 +172,8 @@ export async function fetchArtistStats(username, apiKey, { artist }) {
 
   const cachedData = await utils.storageGet(cacheKey, 'local');
 
-  if (cachedData) {
-    const parsedData = JSON.parse(cachedData);
+  if (cachedData && typeof cachedData === 'object') {
+    const parsedData = cachedData;
     const cacheAge = now - parsedData.lastDate;
 
     if (
@@ -187,14 +187,12 @@ export async function fetchArtistStats(username, apiKey, { artist }) {
     }
   }
 
-  console.log('Fetching new data');
-
   const response = await fetch(url);
   const data = await response.json();
 
   const cacheObject = {};
 
-  cacheObject[cacheKey] = JSON.stringify({ data, lastDate: now });
+  cacheObject[cacheKey] = { data, lastDate: now };
 
   await utils.storageSet(cacheObject, 'local');
 
@@ -204,27 +202,29 @@ export async function fetchArtistStats(username, apiKey, { artist }) {
 export async function fetchReleaseStats(
   username,
   apiKey,
-  { artists, releaseTitle, releaseType },
+  { artist, releaseTitle, releaseType },
 ) {
   if (!apiKey) {
     return Promise.reject(new Error('No API key provided.'));
   }
 
-  if (!artists || artists.length === 0) {
-    return Promise.reject(new Error('No artists provided.'));
+  if (!artist) {
+    return Promise.reject(new Error('No artist provided.'));
   }
 
   if (!releaseTitle) {
     return Promise.reject(new Error('No release title provided.'));
   }
 
-  const cacheKeys = artists.map((artist) => `releaseStats_${artist}_${releaseTitle}`);
-  const cachedData = await utils.storageGet(cacheKeys, 'local');
-  const cacheKey = Object.keys(cachedData).find((key) => cachedData[key] !== undefined);
-  let now = new Date().getTime();
+  let cacheKey = `releaseStats_${artist}_${releaseTitle}`;
+  if (username) cacheKey += `_${username}`;
 
-  if (cachedData && cacheKey) {
-    const parsedData = JSON.parse(cachedData[cacheKey]);
+  const cachedData = await utils.storageGet(cacheKey, 'local');
+
+  let now = Date.now();
+
+  if (cachedData && typeof cachedData === 'object' && cachedData[cacheKey]) {
+    const parsedData = cachedData[cacheKey];
     const cacheAge = now - parsedData.lastDate;
 
     if (
@@ -247,66 +247,39 @@ export async function fetchReleaseStats(
   const _params = {
     method,
     api_key: apiKey,
+    artist,
     format: 'json',
   };
 
-  if (releaseType === 'album') {
-    _params.album = releaseTitle;
-  } else if (releaseType === 'single') {
-    _params.track = releaseTitle;
-  } else {
-    _params.album = releaseTitle;
-  }
+  if (username) _params.user = username;
 
-  if (username) {
-    _params.user = username;
-  }
+  _params[method.split('.')[0]] = releaseTitle;
 
   let data = null;
-  let matchedArtist = null;
 
-  const artistVariants = new Set(artists);
+  const params = new URLSearchParams(_params);
+  const url = `${BASE_URL}?${params.toString()}`;
+  const response = await fetch(url);
 
-  artists.forEach((artist) => {
-    artistVariants.add(artist.split(' & ').join(' and '));
-    artistVariants.add(artist.split(' and ').join(' & '));
-  });
+  try {
+    data = await response.json();
 
-  for (const artist of Array.from(artistVariants)) {
-    try {
-      const params = new URLSearchParams({
-        ..._params,
-        artist,
-      });
-      const url = `${BASE_URL}?${params.toString()}`;
-      const response = await fetch(url);
-      data = await response.json();
-
-      if (data.error) {
-        console.warn(`Error fetching data for "${artist}" - "${releaseTitle}"`, data.error, data.message);
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        continue;
-      }
-
-      matchedArtist = artist;
-      break;
-    } catch (error) {
-      console.error(`Error fetching data for artist: ${artist}`, error);
+    if (data.error) {
+      console.warn(`Error fetching data for "${artist}" - "${releaseTitle}"`, data.error, data.message);
+      return null;
     }
+  } catch (error) {
+    console.error(`Error fetching data for artist: ${artist}`, error);
+    return null;
   }
 
   if (data.error) {
     return null;
   }
 
-  const newCacheKey = `releaseStats_${matchedArtist}_${releaseTitle}`;
-  now = new Date().getTime();
+  now = Date.now();
 
-  const cacheObject = {};
-
-  cacheObject[newCacheKey] = JSON.stringify({ data, lastDate: now });
-
-  await utils.storageSet(cacheObject, 'local');
+  await utils.storageSet({ [cacheKey]: { data, lastDate: now } }, 'local');
 
   return data;
 }

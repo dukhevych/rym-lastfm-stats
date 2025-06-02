@@ -12,13 +12,136 @@ import {
   getArtistNames,
   getReleaseTitle,
   getReleaseType,
+  getReleaseId,
 } from './targets.js';
 
 const uiElements = {};
 
+const state = {
+  releaseType: null,
+  userName: null,
+  searchResults: null,
+  releaseId: null,
+  artistQuery: null,
+  releaseTitleQuery: null,
+  artists: [],
+  releaseTitle: null,
+  config: null,
+  get storageKey() {
+    if (!this.releaseId || !this.artistQuery || !this.releaseTitleQuery) {
+      return null;
+    }
+
+    let value = `releaseStats_${this.releaseId}`;
+
+    if (this.userName) {
+      value += `_${this.userName}`;
+    }
+
+    value += `_${utils.slugify(this.artistQuery)}_${utils.slugify(this.releaseTitleQuery)}`;
+
+    return value;
+  },
+  get artistQueryCacheKey() {
+    if (!this.releaseId) return null;
+    return `artistQuery_${this.releaseId}`;
+  },
+  get releaseTitleQueryCacheKey() {
+    if (!this.releaseId) return null;
+    return `releaseTitleQuery_${this.releaseId}`;
+  },
+};
+
+function createSearchDialog() {
+  let list;
+  const dialog = h('dialog', { className: 'dialog-base', id: 'dialog-search-lastfm' }, [
+    h(
+      'h2',
+      { className: 'dialog-title' },
+      [
+        'Choose Last.fm release',
+        h('button', {
+          className: 'dialog-close-btn',
+          onClick: () => dialog.close(),
+        }, '×'),
+      ],
+    ),
+
+    list = h('ul', { className: 'list-search' })
+  ]);
+
+  return { dialog, list };
+}
+
+function populateSearchDialog() {
+  if (!uiElements.searchList) return;
+
+  uiElements.searchList.replaceChildren();
+
+  state.searchResults.forEach((item) => {
+    const isSelected = item.artist === state.artistQuery && item.name === state.releaseTitleQuery;
+    const classNames = ['search-item'];
+
+    if (isSelected) classNames.push('is-selected');
+
+    const itemElement = h('li', {
+      className: classNames.join(' '),
+      dataset: {
+        artist: item.artist,
+        title: item.name,
+      },
+    }, [
+      h('a', {
+        href: item.url,
+        className: 'search-item-link',
+        onClick: async (e) => {
+          e.preventDefault();
+          await utils.storageSet({
+            [state.artistQueryCacheKey]: item.artist,
+            [state.releaseTitleQueryCacheKey]: item.name,
+          }, 'local');
+          state.artistQuery = item.artist;
+          state.releaseTitleQuery = item.name;
+          updateSearchDialog();
+          uiElements.searchDialog.close();
+          uiElements.statsWrapper.classList.add('is-loading');
+          await updateReleaseStats();
+          uiElements.statsWrapper.classList.remove('is-loading');
+        },
+      }, [
+        h('img', {
+          className: 'search-item-image',
+          src: item.image[0]['#text'],
+        }),
+        h('span', { className: 'search-item-title' }, `${item.artist} - ${item.name}`),
+      ]),
+    ]);
+
+    uiElements.searchList.appendChild(itemElement);
+  });
+}
+
+function updateSearchDialog() {
+  uiElements.searchList.querySelectorAll('.search-item').forEach((item) => {
+    const artist = item.dataset.artist;
+    const title = item.dataset.title;
+
+    if (artist === state.artistQuery && title === state.releaseTitleQuery) {
+      item.classList.add('is-selected');
+    } else {
+      item.classList.remove('is-selected');
+    }
+  });
+}
+
 function prepareReleaseStatsUI() {
   const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
   if (!infoTable) return;
+
+  const { dialog: searchDialog, list: searchList } = createSearchDialog();
+
+  uiElements.searchDialog = searchDialog;
+  uiElements.searchList = searchList;
 
   uiElements.infoTable = infoTable;
 
@@ -38,26 +161,49 @@ function prepareReleaseStatsUI() {
     utils.createSvgUse('svg-lastfm-square-symbol')
   );
 
+  uiElements.searchDialogOpener = h(
+    'a',
+    {
+      title: 'Search Last.fm for this release',
+      className: 'incorrect-stats-link',
+      onClick: (e) => {
+        e.preventDefault();
+        uiElements.searchDialog.showModal();
+      },
+    },
+    'Incorrect stats?'
+  );
+
   uiElements.statsWrapper = h(
     'div',
     { className: ['list-stats-wrapper', 'is-loading'] },
-    [uiElements.statsList, uiElements.lastfmLink]
+    [
+      uiElements.statsList,
+      uiElements.lastfmLink,
+      uiElements.searchDialogOpener,
+    ]
   );
 
   uiElements.heading = h('th', { className: 'info_hdr' }, 'Last.fm');
 
   uiElements.content = h(
     'td',
-    { className: 'release_pri_descriptors', colspan: '2' },
-    uiElements.statsWrapper
+    { className: 'release_pri_descriptors release-stats-content', colspan: '2' },
+    uiElements.statsWrapper,
   );
 
   uiElements.tr = h('tr', {}, [uiElements.heading, uiElements.content]);
 
   infoTable.appendChild(uiElements.tr);
+  document.body.appendChild(uiElements.searchDialog);
 }
 
-function setNoFound() {
+function setNoData() {
+  if (!uiElements.statsWrapper) return;
+  uiElements.statsWrapper.classList.add('no-data');
+}
+
+function setNotFound() {
   if (!uiElements.statsWrapper) return;
   uiElements.statsWrapper.classList.add('not-found');
 }
@@ -97,9 +243,9 @@ function populateReleaseStats(
   uiElements.lastfmLink.href = url;
 }
 
-async function getSearchResults(config, artists, releaseTitle) {
-  const currentUrl = window.location.href;
-  const searchResultsCache = await utils.storageGet(`searchResults_${currentUrl}`);
+async function getSearchResults() {
+  const cacheKey = `searchQuery_${state.releaseId}`;
+  const searchResultsCache = await utils.storageGet(cacheKey, 'local');
 
   if (searchResultsCache) {
     if (constants.isDev) console.log('Using cached search results:', searchResultsCache);
@@ -107,95 +253,68 @@ async function getSearchResults(config, artists, releaseTitle) {
   }
 
   const searchResults = await api.searchRelease(
-    config.lastfmApiKey || process.env.LASTFM_API_KEY,
+    state.config.lastfmApiKey || process.env.LASTFM_API_KEY,
     {
-      artists: artists.map(utils.normalizeForSearch),
-      releaseTitle: utils.normalizeForSearch(releaseTitle),
+      artists: state.artists.map(utils.normalizeForSearch),
+      releaseTitle: utils.normalizeForSearch(state.releaseTitle),
     },
   );
 
   if (!searchResults || searchResults.length === 0) {
-    console.warn('No search results found for:', artists, releaseTitle);
+    console.warn('No search results found for:', state.artists, state.releaseTitle);
     return null;
   }
 
   if (constants.isDev) console.log('Search results found:', searchResults);
-  await utils.storageSet({ [`searchResults_${currentUrl}`]: searchResults });
+  await utils.storageSet({ [cacheKey]: searchResults }, 'local');
 
   return searchResults;
 }
 
-async function render(config) {
-  if (!config) return;
+async function initQueries() {
+  const artistCacheKey = `artistQuery_${state.releaseId}`;
+  const releaseTitleCacheKey = `releaseTitleQuery_${state.releaseId}`;
 
-  const artistNames = getArtistNames();
+  const cachedQueries = await utils.storageGet([artistCacheKey, releaseTitleCacheKey], 'local');
 
-  if (constants.isDev) console.log('Parsed artists:', artistNames);
+  let artistQuery = cachedQueries[artistCacheKey];
+  let releaseTitleQuery = cachedQueries[releaseTitleCacheKey];
 
-  const artists = artistNames.map((artist) => {
-    const { artistName, artistNameLocalized } = artist;
-    return artistNameLocalized || artistName;
-  });
+  if (!artistQuery || !releaseTitleQuery) {
+    if (state.searchResults && state.searchResults.length > 0) {
+      const bestResult = state.searchResults[0];
+      artistQuery = bestResult.artist;
+      releaseTitleQuery = bestResult.name;
 
-  const releaseTitle = getReleaseTitle();
-
-  if (artists.length === 0 || !releaseTitle) {
-    console.error('No artist or release title found.');
-    return;
-  }
-
-  const userData = await utils.getSyncedUserData();
-  const userName = userData?.name;
-  const storageKey = `releaseStats_${artists.join('_')}`;
-
-  prepareReleaseStatsUI();
-
-  // const searchResults = await getSearchResults(config, artists, releaseTitle);
-
-  // let searchArtist;
-  // let searchReleaseTitle;
-
-  // if (searchResults) {
-  //   searchArtist = searchResults[0].artist;
-  //   searchReleaseTitle = searchResults[0].name;
-  // }
-
-  // console.log('Search best result', searchArtist, searchReleaseTitle);
-
-  if (!config.lastfmApiKey) {
-    const cachedData = localStorage.getItem(storageKey);
-
-    if (cachedData) {
-      const { timestamp, data } = JSON.parse(cachedData);
-      const cachedDate = new Date(timestamp).toDateString();
-      const currentDate = new Date().toDateString();
-
-      if (cachedDate === currentDate) {
-        populateReleaseStats(data, timestamp);
-        return;
-      }
+      await utils.storageSet({
+        [artistCacheKey]: artistQuery,
+        [releaseTitleCacheKey]: releaseTitleQuery,
+      }, 'local');
+    } else {
+      console.warn('No search results to extract queries from.');
     }
   }
 
-  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
+  if (artistQuery && releaseTitleQuery) {
+    state.artistQuery = artistQuery;
+    state.releaseTitleQuery = releaseTitleQuery;
+  }
+}
 
-  const releaseType = infoTable
-    .querySelector('tr:nth-child(2) td')
-    .textContent.toLowerCase().split(', ')?.[0];
-
+async function updateReleaseStats() {
   const data = await api.fetchReleaseStats(
-    userName,
-    config.lastfmApiKey || process.env.LASTFM_API_KEY,
+    state.userName,
+    state.config.lastfmApiKey || process.env.LASTFM_API_KEY,
     {
-      artists,
-      releaseTitle,
-      releaseType,
+      artist: state.artistQuery,
+      releaseTitle: state.releaseTitleQuery,
+      releaseType: state.releaseType,
     }
   );
 
   if (!data || Object.keys(data).length === 0) {
-    console.warn('No data found for the specified artists/release', artists, releaseTitle);
-    setNoFound();
+    console.warn('No data found for the specified artist/release', state.artistQuery, state.releaseTitleQuery);
+    setNoData();
     return;
   }
 
@@ -204,11 +323,11 @@ async function render(config) {
     single: 'track',
   };
 
-  const releaseTypeData = data[releaseTypeDataMap[releaseType] ?? 'album'];
+  const releaseTypeData = data[releaseTypeDataMap[state.releaseType] ?? 'album'];
 
   if (!releaseTypeData) {
-    console.warn('No data found for the specified release type:', releaseType);
-    setNoFound();
+    console.warn('No data found for the specified release type:', state.releaseType);
+    setNoData();
     return;
   }
 
@@ -226,11 +345,83 @@ async function render(config) {
     url,
   };
 
-  if (!config.lastfmApiKey) {
-    localStorage.setItem(storageKey, JSON.stringify({ timestamp: Date.now(), data: stats }));
+  if (!state.config.lastfmApiKey) {
+    utils.storageSet(state.storageKey, { timestamp: Date.now(), data: stats }, 'local');
   }
 
   populateReleaseStats(stats);
+}
+
+function initState(config) {
+  if (!config) return;
+
+  state.config = config;
+  state.artistNames = getArtistNames();
+  state.artists = state.artistNames.map((artist) => {
+    const { artistName, artistNameLocalized } = artist;
+    return artistNameLocalized || artistName;
+  });
+  state.releaseType = getReleaseType();
+  state.releaseTitle = getReleaseTitle();
+  state.releaseId = getReleaseId();
+}
+
+async function render(config) {
+  initState(config);
+
+  if (state.artists.length === 0 || !state.releaseTitle) {
+    console.error('No artist or release title found.');
+    return;
+  }
+
+  prepareReleaseStatsUI();
+
+  const [userData, searchResults] = await Promise.all([
+    utils.getSyncedUserData(),
+    getSearchResults(),
+  ]);
+
+  state.searchResults = searchResults;
+
+  await initQueries();
+
+  if (!state.artistQuery || !state.releaseTitleQuery) {
+    console.warn('No artist or release title found during Last.fm search.');
+    setNotFound();
+    return;
+  }
+
+  if (constants.isDev) {
+    console.log('Artist query:', state.artistQuery);
+    console.log('Release title query:', state.releaseTitleQuery);
+  }
+
+  const userName = userData?.name;
+
+  if (userName) state.userName = userName;
+
+  populateSearchDialog();
+
+  // Use cached data once per day if no API key is provided
+  // Another layer of caching is added to api.fetchReleaseStats, plan to make this consistent later
+  if (!config.lastfmApiKey) {
+    const cachedData = await utils.storageGet(state.storageKey, 'local');
+
+    if (cachedData && cachedData.timestamp && cachedData.data) {
+      const { timestamp, data } = cachedData;
+      const cachedDate = new Date(timestamp).toDateString();
+      const currentDate = new Date().toDateString();
+
+      if (cachedDate === currentDate) {
+        populateReleaseStats(data, timestamp);
+        return;
+      }
+    }
+  }
+
+  console.log('state', JSON.stringify(state, null, 2));
+
+  await updateReleaseStats();
 }
 
 export default {
