@@ -27,6 +27,16 @@ const state = {
   artists: [],
   releaseTitle: null,
   config: null,
+  get artistNamesFlatNormalized() {
+    const result = [];
+    this.artistNames.forEach((artist) => {
+      if (artist.artistNameLocalized) {
+        result.push(utils.normalizeForSearch(artist.artistNameLocalized));
+      }
+      result.push(utils.normalizeForSearch(artist.artistName));
+    });
+    return result;
+  },
   get storageKey() {
     if (!this.releaseId || !this.artistQuery || !this.releaseTitleQuery) {
       return null;
@@ -203,11 +213,6 @@ function setNoData() {
   uiElements.statsWrapper.classList.add('no-data');
 }
 
-function setNotFound() {
-  if (!uiElements.statsWrapper) return;
-  uiElements.statsWrapper.classList.add('not-found');
-}
-
 function populateReleaseStats(
   { playcount, listeners, userplaycount, url },
   timestamp,
@@ -243,13 +248,15 @@ function populateReleaseStats(
   uiElements.lastfmLink.href = url;
 }
 
-async function getSearchResults() {
+async function initSearchResults() {
   const cacheKey = `searchQuery_${state.releaseId}`;
   const searchResultsCache = await utils.storageGet(cacheKey, 'local');
 
   if (searchResultsCache) {
     if (constants.isDev) console.log('Using cached search results:', searchResultsCache);
-    return searchResultsCache;
+    state.searchResults = searchResultsCache;
+    console.log(state.searchResults);
+    return;
   }
 
   const searchResults = await api.searchRelease(
@@ -261,14 +268,51 @@ async function getSearchResults() {
   );
 
   if (!searchResults || searchResults.length === 0) {
-    console.warn('No search results found for:', state.artists, state.releaseTitle);
+    console.warn('No search results returned from api for:', state.artists, state.releaseTitle);
     return null;
   }
 
-  if (constants.isDev) console.log('Search results found:', searchResults);
-  await utils.storageSet({ [cacheKey]: searchResults }, 'local');
+  const searchResultsFiltered = searchResults.filter((item) => {
+    const itemArtistNormalized = utils.normalizeForSearch(item.artist);
+    const itemTitleNormalized = utils.normalizeForSearch(item.name);
 
-  return searchResults;
+    const hasArtist = state.artistNamesFlatNormalized
+      .some((name) => utils.checkPartialStringsMatch(itemArtistNormalized, name));
+
+    if (!hasArtist) return false;
+
+    return utils.checkPartialStringsMatch(itemTitleNormalized, utils.normalizeForSearch(state.releaseTitle));
+  });
+
+  if (searchResultsFiltered.length === 0) {
+    console.warn('No matching search results found for:', state.artists, state.releaseTitle);
+    return null;
+  }
+
+  const searchResultsFilteredSorted = searchResultsFiltered.sort((a, b) => {
+      const isFullMatch = (item) => {
+        const itemTitleNormalized = utils.normalizeForSearch(item.name);
+        const itemArtistNormalized = utils.normalizeForSearch(item.artist);
+        const hasFullTitleMatch = itemTitleNormalized === utils.normalizeForSearch(state.releaseTitle);
+        if (!hasFullTitleMatch) return false;
+        const hasArtistFullMatch = state.artistNamesFlatNormalized.some((name) => itemArtistNormalized === name);
+        if (!hasArtistFullMatch) return false;
+        return true;
+      }
+
+      const aMatch = isFullMatch(a);
+      const bMatch = isFullMatch(b);
+
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+  });
+
+  if (constants.isDev) console.log('Search results found:', searchResultsFilteredSorted);
+
+  await utils.storageSet({ [cacheKey]: searchResultsFilteredSorted }, 'local');
+
+  state.searchResults = searchResultsFilteredSorted;
 }
 
 async function initQueries() {
@@ -376,20 +420,12 @@ async function render(config) {
 
   prepareReleaseStatsUI();
 
-  const [userData, searchResults] = await Promise.all([
+  const [userData] = await Promise.all([
     utils.getSyncedUserData(),
-    getSearchResults(),
+    initSearchResults(),
   ]);
 
-  state.searchResults = searchResults;
-
   await initQueries();
-
-  if (!state.artistQuery || !state.releaseTitleQuery) {
-    console.warn('No artist or release title found during Last.fm search.');
-    setNotFound();
-    return;
-  }
 
   if (constants.isDev) {
     console.log('Artist query:', state.artistQuery);
@@ -400,7 +436,13 @@ async function render(config) {
 
   if (userName) state.userName = userName;
 
-  populateSearchDialog();
+  if (!state.artistQuery || !state.releaseTitleQuery) {
+    console.warn('No artist or release title found during Last.fm search. Trying to fallback to parsed values.');
+    state.artistQuery = state.artists[0];
+    state.releaseTitleQuery = state.releaseTitle;
+  } else {
+    populateSearchDialog();
+  }
 
   // Use cached data once per day if no API key is provided
   // Another layer of caching is added to api.fetchReleaseStats, plan to make this consistent later
@@ -418,8 +460,6 @@ async function render(config) {
       }
     }
   }
-
-  console.log('state', JSON.stringify(state, null, 2));
 
   await updateReleaseStats();
 }

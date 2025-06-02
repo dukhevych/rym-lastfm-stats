@@ -145,14 +145,20 @@ export const EDITION_KEYWORDS = [
   'remaster',
   'remastered',
   'reissue',
+  're-issue',
   'live',
   'redux',
   'limited',
   'exclusive',
+  'single',
+  'ep',
   'special',
   'legacy',
   'collector',
   'anniversary',
+  'instrumental',
+  'ost',
+  'soundtrack',
 ];
 
 export const EDITION_KEYWORDS_REPLACE_PATTERN = new RegExp(

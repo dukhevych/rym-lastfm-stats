@@ -117,34 +117,59 @@
 
 /* Base styling for the dialog box */
 dialog.dialog-base {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  border: 2px solid #ccc;
-  border-radius: 12px;
-
   --dialog-padding-inline: 2rem;
   --dialog-padding-block: 0;
-
+  top: 50%;
+  left: 50%;
   padding: var(--dialog-padding-block) var(--dialog-padding-inline);
-
   width: 90%;
   max-width: 500px;
-
   font-size: 14px;
   line-height: 20px;
   background: black;
   color: white;
-
   box-shadow: 0 0 2rem rgba(0, 0, 0, 0.4);
   z-index: 1000;
+  opacity: 0;
+  border: 2px solid rgba(255 255 255 / 0.1);
+  border-radius: 4px;
+  transform: translate(-50%, -50%);
+  transition-property: display opacity;
+  transition-duration: 0.3s;
+  transition-behavior: allow-discrete;
+
+  --vertical-shift: 5vh;
+  translate: 0 var(--vertical-shift);
+
+  &[open] {
+    opacity: 1;
+    translate: 0 0;
+
+    @starting-style {
+      opacity: 0;
+      translate: 0 calc(var(--vertical-shift) * -1);
+    }
+  }
 }
 
 /* Backdrop when dialog is shown modally */
 dialog.dialog-base::backdrop {
+  opacity: 0;
+  transition-property: opacity, display, overlay;
+  transition-duration: 2s;
+  transition-behavior: allow-discrete;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
+}
+
+dialog.dialog-base[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog.dialog-base[open]::backdrop {
+    opacity: 0;
+  }
 }
 
 /* Close button in top-right corner */
@@ -216,4 +241,12 @@ dialog.dialog-base::backdrop {
     height: 30px;
     background-color: #ccc;
   }
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body:has(dialog[open]) {
+  overflow: hidden;
 }
