@@ -26,6 +26,16 @@ function injectShowAllButton() {
   });
 }
 
+// function addReleaseIdAsOrder(item) {
+//   const releaseTitleSelector = validationRules[constants.RYM_ENTITY_CODES.release].selectors.releaseTitleSelector;
+//   const releaseTitle = item.querySelector(releaseTitleSelector);
+//   let releaseId = releaseTitle?.title || '';
+//   releaseId = utils.extractIdFromTitle(releaseId);
+//   if (releaseId) {
+//     item.style.order = releaseId;
+//   }
+// };
+
 const validationRules = {
   [constants.RYM_ENTITY_CODES.artist]: {
     selectors: {
@@ -76,38 +86,34 @@ const validationRules = {
 
       let _query = utils.normalizeForSearch(query);
 
-      let artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
-
-      let artistNameLocalized;
-
-      const artistNameParts = artistName.split(' ');
-
-      if (artistNameParts.length > 1) {
-        const lastPart = artistNameParts.pop();
-        if (lastPart.match(/^\[|\]$/)) {
-          artistNameLocalized = lastPart.replace(/^\[|\]$/g, '');
-          artistName = artistNameParts.join(' ');
-        }
-      }
-
-      const artistNameNormalized = utils.normalizeForSearch(artistName);
-      const artistNameLocalizedNormalized = utils.normalizeForSearch(artistNameLocalized || '');
+      // let artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
+      const artistLinks = Array.from(item.querySelectorAll(artistNameSelector));
+      const artistNames = artistLinks.map((artistLink) => {
+        return utils.getNodeDirectTextContent(artistLink).trim();
+      }).filter(Boolean);
+      const artistNamesNormalized = artistNames.map((name) => {
+        return utils.normalizeForSearch(name);
+      });
+      const artistNamesLocalized = artistLinks.map((artistLink) => {
+        return (artistLink.querySelector('.subtext')?.textContent || '').replace(/^\[(.*)\]$/, '$1');
+      });
+      const artistNamesLocalizedNormalized = artistNamesLocalized.map((name) => {
+        return utils.normalizeForSearch(name);
+      });
 
       const releaseTitleNormalized = utils
         .normalizeForSearch(item.querySelector(releaseTitleSelector)?.textContent || '');
 
       let hasArtist = false;
       let hasReleaseTitle = false;
-
-      if (utils.checkPartialStringsMatch(artistNameNormalized, _query)) {
-        hasArtist = true;
-        _query = _query.replace(artistNameNormalized, '').trim();
-      } else if (utils.checkPartialStringsMatch(artistNameLocalizedNormalized, _query)) {
-        hasArtist = true;
-        _query = _query.replace(artistNameLocalizedNormalized, '').trim();
-      }
-
       let partialMatch = false;
+
+      [...artistNamesNormalized, ...artistNamesLocalizedNormalized].forEach((artistNameNormalized) => {
+        if (artistNameNormalized && utils.checkPartialStringsMatch(artistNameNormalized, _query)) {
+          hasArtist = true;
+          _query = _query.replace(artistNameNormalized, '').trim();
+        }
+      });
 
       const _queryNoParenthesis = _query.replace(/[()]/g, '').trim();
       const _queryCleaned = utils.cleanupReleaseEdition(_query);
@@ -191,6 +197,7 @@ async function render(config) {
 
     if (isReleaseSearch) {
       addReleaseUserRating(item);
+      // addReleaseIdAsOrder(item);
     }
 
     const validity = validationRules[searchType].validate(item, searchTerm);
@@ -209,43 +216,6 @@ async function render(config) {
 
   if (searchMoreLink) {
     searchMoreLink.href += '&strict=true';
-  }
-
-  function highlightMasterRelease() {
-    const releaseGroups = {};
-
-    searchItemsFiltered.forEach((item) => {
-      if (item.dataset.validity !== 'full') return;
-
-      const artistId = item.querySelector(validationRules.l.selectors.artistNameSelector)?.title;
-
-      if (artistId) {
-        if (!releaseGroups[artistId]) {
-          releaseGroups[artistId] = [];
-        }
-        releaseGroups[artistId].push(item);
-      }
-    });
-
-    Object.values(releaseGroups).forEach((items) => {
-      let minItem = null;
-      let minId = Infinity;
-
-      items.forEach((item) => {
-        const releaseId = item.querySelector(validationRules.l.selectors.releaseTitleSelector).title;
-        const id = +utils.extractIdFromTitle(releaseId);
-
-        if (id && id < minId) {
-          minId = id;
-          minItem = item;
-        }
-      });
-
-      if (minItem) {
-        minItem.dataset.masterRelease = true;
-        // minItem.classList.add('rym-search-strict--highlight');
-      }
-    });
   }
 
   async function addReleaseUserRating(item) {
@@ -302,10 +272,6 @@ async function render(config) {
         }
       }
     }
-  }
-
-  if (searchType === constants.RYM_ENTITY_CODES.release && searchItemsFiltered.length) {
-    highlightMasterRelease();
   }
 }
 

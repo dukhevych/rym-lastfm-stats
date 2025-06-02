@@ -23,7 +23,37 @@ const dbMessageTypes = new Set([
 ]);
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-const flexIndex = new FlexSearch.Index({ tokenize: 'forward', cache: true });
+const flexIndex = new FlexSearch.Index({
+  tokenize: 'forward',
+  cache: true,
+  resolution: 9,
+  depth: 3
+});
+const flexIndexDoc = new FlexSearch.Document({
+  document: {
+    id: 'id',
+    index: [
+      '$title',
+      '$artistName',
+      '$artistNameLocalized'
+    ],
+    store: [
+      'id',
+      'title',
+      'releaseDate',
+      'rating',
+      'artistName',
+      'artistNameLocalized',
+      'ownership',
+      'format'
+    ]
+  },
+  tokenize: 'forward',
+  resolution: 9,
+  depth: 3,
+  cache: 500
+});
+
 const recordMap = new Map();
 let isIndexBuilt = false;
 
@@ -38,7 +68,7 @@ async function buildSearchIndex() {
       record.$title,
       record.$artistName,
       record.$artistNameLocalized,
-    ].join(' ').toLowerCase();
+    ].join(' ');
 
     flexIndex.add(record.id, searchable);
     recordMap.set(record.id, record);
@@ -134,36 +164,50 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       case 'GET_RECORD_BY_ARTIST_AND_TITLE': {
         const artistQuery = utils.normalizeForSearch(payload.artist);
         const titleQuery = utils.normalizeForSearch(payload.title);
-        const query = `${artistQuery} ${titleQuery}`;
-        const hits = flexIndex.search(query, { limit: 50 });
 
-        const matchedRecords = hits.map(id => recordMap.get(id));
+        const hits = flexIndex.search(artistQuery, { limit: 50 });
+        const matchedRecords = hits.map(id => recordMap.get(id)).filter(Boolean);
 
-        result = matchedRecords.filter(record => {
-          const matchTitle = utils.checkPartialStringsMatch(record.$title, titleQuery);
-          const matchArtist = utils.checkPartialStringsMatch(record.$artistName, artistQuery);
-          const matchArtistLocalized = utils.checkPartialStringsMatch(record.$artistNameLocalized, artistQuery);
+        const filterByTitleAndArtist = (records, title) => {
+          return records.filter(record => {
+            const isTitleMatch = utils.checkPartialStringsMatch(record.$title, title);
+            const isArtistMatch =
+              utils.checkPartialStringsMatch(record.$artistName, artistQuery) ||
+              utils.checkPartialStringsMatch(record.$artistNameLocalized, artistQuery);
 
-          return matchTitle && (matchArtist || matchArtistLocalized);
-        });
-
-        if (
-          payload.titleFallback && (
-            result === null || (Array.isArray(result) && result.length === 0)
-          )
-        ) {
-          const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
-          const queryFallback = `${artistQuery} ${titleFallbackQuery}`;
-          const hitsFallback = flexIndex.search(queryFallback, { limit: 50 });
-          const matchedRecordsFallback = hitsFallback.map(id => recordMap.get(id));
-
-          result = matchedRecordsFallback.filter(record => {
-            const matchTitle = utils.checkPartialStringsMatch(record.$title, titleFallbackQuery);
-            const matchArtist = utils.checkPartialStringsMatch(record.$artistName, artistQuery);
-            const matchArtistLocalized = utils.checkPartialStringsMatch(record.$artistNameLocalized, artistQuery);
-
-            return matchTitle && (matchArtist || matchArtistLocalized);
+            return isTitleMatch && isArtistMatch;
           });
+        };
+
+        result = filterByTitleAndArtist(matchedRecords, titleQuery);
+
+        const fallbackTitleQuery = utils.normalizeForSearch(payload.titleFallback);
+
+        const shouldTryFallback =
+          !result?.length &&
+          payload.titleFallback &&
+          titleQuery !== fallbackTitleQuery;
+
+        if (shouldTryFallback) {
+          const fallbackTitleQuery = utils.normalizeForSearch(payload.titleFallback);
+          result = filterByTitleAndArtist(matchedRecords, fallbackTitleQuery);
+        }
+
+        const shouldTryPerWordFallback = !result?.length;
+
+        if (shouldTryPerWordFallback) {
+          // split titleQuery into words and try to find matches for each word
+          // but ignore if 1 character not matched if it's a special character
+          // Probably just split titleQuery by spaces and filter out special characters
+          // and then just use matchedRecords to find albums which titles contain all words from titleQuery array
+          const titleWords = titleQuery.split(' ').filter(word => word.length > 1 || !/^[^\w\s]+$/.test(word));
+          if (titleWords.length) {
+            result = matchedRecords.filter(record => {
+              return titleWords.every(word => {
+                return record.$title.includes(word);
+              });
+            });
+          }
         }
 
         break;

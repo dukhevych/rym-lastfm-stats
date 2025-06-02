@@ -33,6 +33,8 @@
       </div>
     </header>
 
+    <!-- <pre>{{ dbStatus }}</pre> -->
+
     <main class="flex flex-col px-2">
       <div class="mx-auto w-full max-w-[700px]">
         <div
@@ -566,6 +568,7 @@
 
 <script setup>
 import { ref, reactive, watch, computed } from 'vue';
+import { RecordsAPI } from '@/helpers/records-api.js';
 import * as utils from '@/helpers/utils.js';
 import * as constants from '@/helpers/constants.js';
 import * as api from '@/helpers/api.js';
@@ -600,6 +603,8 @@ function handleApiKeyBlur(e) {
   e.target.value = e.target.value.trim();
   lastfmApiInputType.value = 'password';
 }
+
+const dbStatus = ref(null);
 
 const submit = async () => {
   const newConfig = JSON.parse(JSON.stringify(options));
@@ -691,6 +696,7 @@ const closeModalHandler = (e) => {
 const init = async () => {
   try {
     const syncedOptions = await utils.getSyncedOptions();
+    dbStatus.value = await RecordsAPI.getQty()
 
     config.value = syncedOptions;
 

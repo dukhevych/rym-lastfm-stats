@@ -6,9 +6,9 @@
     var(--clr-palette-vibrant),
     var(--clr-palette-darkvibrant),
     var(--clr-palette-lightvibrant),
-    var(--clr-palette-vibrant),
-    var(--clr-palette-darkvibrant),
-    var(--clr-palette-lightvibrant),
+    var(--clr-palette-muted),
+    var(--clr-palette-darkmuted),
+    var(--clr-palette-lightmuted),
   );
   selectors: (
     base: [data-element="rymstats-track-panel"].bg-option-4:after,
@@ -17,5 +17,5 @@
 }
 
 [data-element="rymstats-track-panel"].bg-option-4:after {
-  opacity: 0.1;
+  opacity: 0.15;
 }

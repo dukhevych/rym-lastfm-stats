@@ -596,6 +596,7 @@ export function normalizeForSearch(str) {
     .replace(/"/g, '')
     .replace(/ - /g, ' ')
     .replace(/'/g, '')
+    .replace(/\s\/\s/g, ' ')
     .replace(/’/g, '')
     .replace(/\\/g, '')
     .replace(/:/g, '')

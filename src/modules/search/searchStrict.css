@@ -55,12 +55,13 @@ td:has(> .rym-search-strict--item) {
 }
 
 .rym-search-strict--item {
-  &[data-master-release] {
+  &[data-validity="full"] {
     position: relative;
+    border: 1px solid green;
     min-height: 130px;
 
     &:before {
-      content: 'Master release';
+      content: 'Full match';
       position: absolute;
       writing-mode: vertical-lr;
       transform: rotate(-180deg);
@@ -73,10 +74,6 @@ td:has(> .rym-search-strict--item) {
       padding: 0.5rem;
       z-index: 1;
     }
-  }
-
-  &[data-validity="full"] {
-    border: 1px solid green;
   }
 
   &[data-validity="partial"] {
