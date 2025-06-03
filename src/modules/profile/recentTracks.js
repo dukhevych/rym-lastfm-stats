@@ -252,12 +252,12 @@ async function populatePlayHistoryItem(
       customMyRating.title = '';
 
       if (albumsFromDB.length > 0) {
-        // using `earliestRelease` for the variable name instead of `masterRelease`
-        // user may not have rated the actual master release yet, so a rating of the earliest release will be used
         let formats = new Set();
 
         const albumsFromDBFullMatch = [];
         const albumsFromDBPartialMatch = [];
+
+        // const hasOnlyPartialMatch = albumsFromDBFullMatch.length === 0;
 
         albumsFromDB.forEach((album) => {
           if (album.ownership === 'o' && album.format) {
