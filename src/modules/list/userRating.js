@@ -1,4 +1,5 @@
 import * as constants from '@/helpers/constants';
+import * as utils from '@/helpers/utils';
 import { RecordsAPI } from '@/helpers/records-api';
 import './userRating.css';
 
@@ -74,54 +75,54 @@ function addReleaseRating(item) {
   item.node.dataset.rymRating = `${rating} / 5`;
 }
 
-function addArtistStats(item) {
-  // Add artist stats to the item
-  console.log('Artist stats:', item);
-};
+// function addArtistStats(item) {
+//   // TODO Add artist stats to the item
+// };
 
 async function render() {
   const {
     releases,
-    artists,
   } = getItems();
 
-  const releasesPromises = releases.map(item => {
-    const releaseId = item.releaseId;
+  const releasesIds = [];
+  const releasesWithoutId = [];
 
-    if (item.releaseId) return RecordsAPI.getById(releaseId, true);
-    if (item.artistName && item.title) {
-      return RecordsAPI.getByArtistAndTitle(item.artistName, item.title);
+  releases.forEach(item => {
+    if (item.releaseId) {
+      releasesIds.push(item.releaseId);
+    } else if (item.artistName && item.title) {
+      releasesWithoutId.push(item);
     }
-    return Promise.resolve(null);
   });
 
-  const artistsPromises = artists.map(item => {
-    if (item.artistName) return RecordsAPI.getByArtist(item.artistName);
-    return Promise.resolve(null);
-  });
+  const releasesWithIdData = await RecordsAPI.getByIds(releasesIds, true);
 
-  const responseReleases = await Promise.all(releasesPromises);
-  const responseArtists = await Promise.all(artistsPromises);
+  await Promise.all(releasesWithoutId.map(async (item) => {
+    const releases = await RecordsAPI.getByArtistAndTitle(
+      utils.normalizeForSearch(item.artistName),
+      utils.normalizeForSearch(item.title),
+    );
 
-  releases.forEach((item, index) => {
-    const release = responseReleases[index];
+    const release = releases?.[0] || null;
+
+    if (release && release.rating > 0) {
+      addReleaseRating({
+        ...item,
+        releaseId: release.id,
+        rating: release.rating,
+      });
+    }
+  }));
+
+  releases.forEach(async (item) => {
+    const release = releasesWithIdData[item.releaseId] || null;
 
     if (release && release.rating) {
       item.rating = release.rating;
       addReleaseRating(item);
     }
   });
-
-  artists.forEach((item, index) => {
-    const artistReleases = responseArtists[index];
-
-    if (artistReleases) {
-      item.releases = artistReleases;
-      addArtistStats(item);
-    }
-  });
 }
-
 
 export default {
   render,

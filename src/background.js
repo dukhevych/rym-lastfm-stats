@@ -58,6 +58,7 @@ const recordMap = new Map();
 let isIndexBuilt = false;
 
 async function buildSearchIndex() {
+  console.log('[FlexSearch] Building index...');
   const records = await db.getAllRecords();
 
   recordMap.clear();
@@ -107,6 +108,8 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
   try {
     await ensureIndex();
     let result = null;
+
+    console.log(`${type} message received`, payload);
 
     switch (type) {
       case 'GET_RECORD_BY_ID': {

@@ -108,11 +108,6 @@ const validationRules = {
       let hasReleaseTitle = false;
       let partialMatch = false;
 
-      console.log('-=----------------------');
-      console.log(_query);
-      console.log(artistNamesNormalized, artistNamesLocalizedNormalized);
-      console.log(releaseTitleNormalized);
-
       [...artistNamesNormalized, ...artistNamesLocalizedNormalized].forEach((name) => {
         if (name && utils.checkPartialStringsMatch(name, _query)) {
           hasArtist = true;
