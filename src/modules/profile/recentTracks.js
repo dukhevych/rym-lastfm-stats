@@ -254,29 +254,42 @@ async function populatePlayHistoryItem(
       if (albumsFromDB.length > 0) {
         // using `earliestRelease` for the variable name instead of `masterRelease`
         // user may not have rated the actual master release yet, so a rating of the earliest release will be used
-        let earliestRelease;
-        let minId = Infinity;
-        let formats = [];
-        let rating = 0;
+        let formats = new Set();
+
+        const albumsFromDBFullMatch = [];
+        const albumsFromDBPartialMatch = [];
 
         albumsFromDB.forEach((album) => {
           if (album.ownership === 'o' && album.format) {
-            formats.push(album.format);
+            formats.add(album.format);
           }
 
-          if (!album.rating) return;
-
-          const id = +album.id;
-
-          if (id && id < minId) {
-            minId = id;
-            earliestRelease = album;
+          if (album._match === 'full') {
+            albumsFromDBFullMatch.push(album);
+          } else if (album._match === 'partial') {
+            albumsFromDBPartialMatch.push(album);
           }
         });
 
-        if (earliestRelease) {
-          rating = earliestRelease.rating;
+        function getEarliestRating(albums) {
+          let earliestRating = 0;
+          let minId = Infinity;
+          albums.forEach((album) => {
+            if (!album.rating) return;
+
+            const id = +album.id;
+            if (id && id < minId) {
+              minId = id;
+              earliestRating = album.rating;
+            }
+          });
+          return earliestRating;
         }
+
+        const earliestFullMatchRating = getEarliestRating(albumsFromDBFullMatch);
+        const earliestPartialMatchRating = getEarliestRating(albumsFromDBPartialMatch);
+
+        let rating = earliestFullMatchRating || earliestPartialMatchRating;
 
         if (rating > 0) {
           starsFilled.style.width = `${rating * 10}%`;
@@ -289,9 +302,9 @@ async function populatePlayHistoryItem(
           customMyRating.classList.add('no-rating');
         }
 
-        format.textContent = formats.map(key => constants.RYM_FORMATS[key] || key).join(', ');
+        format.textContent = Array.from(formats).map(key => constants.RYM_FORMATS[key] || key).join(', ');
 
-        if (formats.length > 0) {
+        if (formats.size > 0) {
           customMyRating.classList.add('has-ownership');
         }
       } else {

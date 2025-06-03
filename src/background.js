@@ -169,13 +169,33 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
         const matchedRecords = hits.map(id => recordMap.get(id)).filter(Boolean);
 
         const filterByTitleAndArtist = (records, title) => {
-          return records.filter(record => {
+          return records.map(record => {
+            const isTitleFullMatch = record.$title === title;
+            const isArtistFullMatch = record.$artistName === artistQuery || record.$artistNameLocalized === artistQuery;
+
+            if (isTitleFullMatch && isArtistFullMatch) {
+              return {
+                ...record,
+                _match: 'full'
+              };
+            };
+
             const isTitleMatch = utils.checkPartialStringsMatch(record.$title, title);
-            const isArtistMatch =
-              utils.checkPartialStringsMatch(record.$artistName, artistQuery) ||
+            const isArtistMatch = utils.checkPartialStringsMatch(record.$artistName, artistQuery) ||
               utils.checkPartialStringsMatch(record.$artistNameLocalized, artistQuery);
 
-            return isTitleMatch && isArtistMatch;
+            if (isTitleMatch && isArtistMatch) {
+              return {
+                ...record,
+                _match: 'partial'
+              };
+            };
+
+            return null;
+          }).filter(Boolean).sort((a, b) => {
+            if (a.match === 'full' && b.match !== 'full') return -1;
+            if (b.match === 'full' && a.match !== 'full') return 1;
+            return 0;
           });
         };
 
