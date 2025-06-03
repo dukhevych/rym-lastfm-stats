@@ -86,7 +86,6 @@ const validationRules = {
 
       let _query = utils.normalizeForSearch(query);
 
-      // let artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
       const artistLinks = Array.from(item.querySelectorAll(artistNameSelector));
       const artistNames = artistLinks.map((artistLink) => {
         return utils.getNodeDirectTextContent(artistLink).trim();
@@ -114,6 +113,8 @@ const validationRules = {
           _query = _query.replace(name, '').trim();
         }
       });
+
+      if (!hasArtist) return false;
 
       const _queryNoParenthesis = _query.replace(/[()]/g, '').trim();
       const _queryCleaned = utils.cleanupReleaseEdition(_query);

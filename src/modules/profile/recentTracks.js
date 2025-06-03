@@ -268,6 +268,8 @@ async function populatePlayHistoryItem(
             albumsFromDBFullMatch.push(album);
           } else if (album._match === 'partial') {
             albumsFromDBPartialMatch.push(album);
+          } else {
+            albumsFromDBPartialMatch.push(album);
           }
         });
 

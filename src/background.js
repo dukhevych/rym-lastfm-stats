@@ -109,7 +109,7 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
     await ensureIndex();
     let result = null;
 
-    console.log(`${type} message received`, payload);
+    console.log(`[FlexSearch] ${type} message received`, payload);
 
     switch (type) {
       case 'GET_RECORD_BY_ID': {
@@ -204,26 +204,24 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
 
         result = filterByTitleAndArtist(matchedRecords, titleQuery);
 
-        const fallbackTitleQuery = utils.normalizeForSearch(payload.titleFallback);
+        const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
 
-        const shouldTryFallback =
+        const shouldTryTitleFallback =
           !result?.length &&
-          payload.titleFallback &&
-          titleQuery !== fallbackTitleQuery;
+          titleFallbackQuery &&
+          titleQuery !== titleFallbackQuery;
 
-        if (shouldTryFallback) {
-          const fallbackTitleQuery = utils.normalizeForSearch(payload.titleFallback);
-          result = filterByTitleAndArtist(matchedRecords, fallbackTitleQuery);
+        if (shouldTryTitleFallback) {
+          const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
+          result = filterByTitleAndArtist(matchedRecords, titleFallbackQuery);
         }
 
-        const shouldTryPerWordFallback = !result?.length;
+        const shouldTryPerWordTitleFallback = !result?.length;
 
-        if (shouldTryPerWordFallback) {
-          // split titleQuery into words and try to find matches for each word
-          // but ignore if 1 character not matched if it's a special character
-          // Probably just split titleQuery by spaces and filter out special characters
-          // and then just use matchedRecords to find albums which titles contain all words from titleQuery array
-          const titleWords = titleQuery.split(' ').filter(word => word.length > 1 || !/^[^\w\s]+$/.test(word));
+        if (shouldTryPerWordTitleFallback) {
+          const titleWords = titleQuery
+            .split(' ')
+            .filter(word => word.length > 1 || !/^[^\w\s]+$/.test(word));
           if (titleWords.length) {
             result = matchedRecords.filter(record => {
               return titleWords.every(word => {
@@ -231,7 +229,29 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
               });
             });
           }
+
+          if (!result?.length && payload.titleFallback) {
+            const titleFallbackWords = titleFallbackQuery
+              .split(' ')
+              .filter(word => word.length > 1 || !/^[^\w\s]+$/.test(word));
+            if (titleFallbackWords.length) {
+              result = matchedRecords.filter(record => {
+                return titleFallbackWords.every(word => {
+                  return record.$title.includes(word);
+                });
+              });
+            }
+          }
         }
+
+        // TODO - consider adding a fallback for searching by title only
+        // const shouldTrySearchByTitle = !result?.length;
+
+        // if (shouldTrySearchByTitle) {
+        //   const titleQuery = utils.normalizeForSearch(payload.titleFallback || payload.title);
+        //   const titleHits = flexIndex.search(titleQuery, { limit: 50 });
+        //   console.log('titleHits', titleHits);
+        // }
 
         break;
       }
