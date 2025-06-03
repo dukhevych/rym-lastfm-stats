@@ -249,7 +249,7 @@ function populateReleaseStats(
 }
 
 async function initSearchResults() {
-  const cacheKey = `searchQuery_${state.releaseId}`;
+  const cacheKey = `searchResults_${state.releaseId}`;
   const searchResultsCache = await utils.storageGet(cacheKey, 'local');
 
   if (searchResultsCache) {
@@ -390,7 +390,9 @@ async function updateReleaseStats() {
   };
 
   if (!state.config.lastfmApiKey) {
-    utils.storageSet(state.storageKey, { timestamp: Date.now(), data: stats }, 'local');
+    utils.storageSet({
+      [state.storageKey]: { timestamp: Date.now(), data: stats },
+    }, 'local');
   }
 
   populateReleaseStats(stats);

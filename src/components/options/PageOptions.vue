@@ -33,8 +33,6 @@
       </div>
     </header>
 
-    <!-- <pre>{{ dbStatus }}</pre> -->
-
     <main class="flex flex-col px-2">
       <div class="mx-auto w-full max-w-[700px]">
         <div
@@ -110,6 +108,37 @@
             @click.prevent="showModal = true"
           >
             How it works?
+          </button>
+        </div>
+
+        <!-- RYM SYNC -->
+        <div
+          class="
+            mt-4 flex items-center justify-between gap-2 rounded bg-gray-200 p-4
+            dark:bg-gray-800
+          "
+        >
+          <div>
+            <p><strong>{{ rymSyncMessage }}</strong></p>
+            <strong><code>{{ dbStatus }}</code></strong> records in addon database
+          </div>
+          <button
+            type="button"
+            class="
+              rounded bg-orange-500 px-4 py-2 font-bold text-white
+              hover:bg-orange-700
+            "
+            :class="{
+              'bg-red-500 hover:bg-red-700': !rymSyncTimestamp,
+            }"
+            @click.prevent="openRymSync"
+          >
+            <template v-if="rymSyncTimestamp">
+              Re-sync
+            </template>
+            <template v-else>
+              Run RYM Sync
+            </template>
           </button>
         </div>
 
@@ -256,7 +285,7 @@
             >
               <template #hint>
                 Used for <strong>Enhanced Profile</strong>
-                and unlocks <strong>personal scrobbling stats</strong> on Artist/Release pages.
+                and unlocks <strong>personal scrobbling stats</strong> on <strong>Artist/Release</strong> pages.
               </template>
             </FormInput>
 
@@ -591,6 +620,13 @@ const saved = ref(false);
 const dirty = ref(false);
 const signinInProgress = ref(false);
 const showModal = ref(false);
+const rymSyncTimestamp = ref(null);
+
+const rymSyncMessage = computed(() => {
+  if (!rymSyncTimestamp.value) return '⚠️ RYM Sync not performed yet';
+  const date = new Date(rymSyncTimestamp.value);
+  return `✅ Last full RYM Sync: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+});
 
 const lastfmApiInputType = ref('password');
 
@@ -698,6 +734,8 @@ const init = async () => {
     const syncedOptions = await utils.getSyncedOptions();
     dbStatus.value = await RecordsAPI.getQty()
 
+    rymSyncTimestamp.value = await utils.storageGet('rymSyncTimestamp', 'local');
+
     config.value = syncedOptions;
 
     Object.assign(options, config.value);
@@ -741,6 +779,10 @@ const init = async () => {
 const hasApiKey = computed(() => {
   return options.lastfmApiKey && options.lastfmApiKey.length === 32;
 });
+
+const openRymSync = () => {
+  window.open('https://rateyourmusic.com/music_export?sync', '_blank');
+}
 
 const logout = async () => {
   const doConfirm = confirm('Are you sure you want to logout?');

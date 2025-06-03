@@ -122,7 +122,14 @@ import { RecordsAPI } from '@/helpers/records-api.js';
       await RecordsAPI.setBulk(parsedData);
       const recordsQty = await RecordsAPI.getQty();
 
-      statusMessage.textContent = `✅ Synced successfully ${recordsQty} records.`;
+      if (parsedData.length === recordsQty) {
+        statusMessage.textContent = `✅ Synced successfully ${recordsQty} records.`;
+        await utils.storageSet({
+          rymSyncTimestamp: Date.now(),
+        }, 'local');
+      } else {
+        statusMessage.textContent = `⚠️ Could not sync. Please, try again.`;
+      }
     } catch (error) {
       console.error('Error:', error);
       console.log('Copy this error message and contact addon support:');
