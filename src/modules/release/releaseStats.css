@@ -14,15 +14,17 @@
     align-items: center;
     cursor: default;
 
+    &.is-hidden {
+      display: none;
+    }
+
     &.is-user-playcount {
       font-weight: bold;
     }
 
-    &:not(:last-child) {
-      &:after {
-        content: '|';
-        margin-inline: 0.8rem;
-      }
+    &:after {
+      content: '|';
+      margin-inline: 0.8rem;
     }
 
     &[data-value]:before {
@@ -37,7 +39,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 2rem;
+  /* gap: 2rem; */
 
   &:before {
     content: 'Loading...';
@@ -117,22 +119,20 @@
 
 /* Base styling for the dialog box */
 dialog.dialog-base {
-  --dialog-padding-inline: 2rem;
-  --dialog-padding-block: 0;
   top: 50%;
   left: 50%;
-  padding: var(--dialog-padding-block) var(--dialog-padding-inline);
   width: 90%;
   max-width: 500px;
   font-size: 14px;
   line-height: 20px;
-  background: black;
-  color: white;
+  background: var(--mono-f);
+  color: var(--text-primary);
   box-shadow: 0 0 2rem rgba(0, 0, 0, 0.4);
   z-index: 1000;
   opacity: 0;
-  border: 2px solid rgba(255 255 255 / 0.1);
-  border-radius: 4px;
+  border: 5px solid rgba(255, 255, 255, 0.1);
+  background-clip: padding-box;
+  border-radius: 5px;
   transform: translate(-50%, -50%);
   transition-property: display opacity;
   transition-duration: 0.3s;
@@ -179,16 +179,25 @@ dialog.dialog-base[open]::backdrop {
   height: 100%;
   top: 50%;
   right: 0;
-  font-size: 5rem;
   line-height: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transform: translateY(-50%);
   background: transparent;
   border: none;
   color: #666;
   cursor: pointer;
+  outline: none;
+
+  svg {
+    width: 80%;
+    height: 80%;
+    fill: currentColor;
+  }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    color: #f0f0f0;
   }
 }
 
@@ -197,37 +206,35 @@ dialog.dialog-base[open]::backdrop {
   font-size: 1.5rem;
   text-align: center;
   font-weight: bold;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: color-mix(in srgb, var(--text-primary), transparent 75%);
   padding-block: 1.25rem;
+  margin: 0;
   position: relative;
-  margin: 0 calc(var(--dialog-padding-inline) * -1);
 }
 
 .list-search {
   list-style: none;
   margin: 0;
   padding: 0;
-  margin-inline: calc(var(--dialog-padding-inline) * -1);
 }
 
 .search-item {
   .search-item-link {
     display: flex;
     align-items: center;
-    padding-inline: var(--dialog-padding-inline);
-    padding-block: 0.5rem;
+    padding: 1rem;
     color: currentColor;
-    gap: 0.5rem;
+    gap: 1rem;
     text-decoration: none;
     transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: color-mix(in srgb, var(--text-primary), transparent 90%);
     }
   }
 
   &.is-selected .search-item-link {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: color-mix(in srgb, var(--text-primary), transparent 95%);
     cursor: default;
     pointer-events: none;
   }
@@ -239,7 +246,7 @@ dialog.dialog-base[open]::backdrop {
   .search-item-image {
     width: 30px;
     height: 30px;
-    background-color: #ccc;
+    background-color: var(--mono-3);
   }
 }
 

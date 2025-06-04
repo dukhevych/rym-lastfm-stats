@@ -70,10 +70,18 @@ function createSearchDialog() {
       { className: 'dialog-title' },
       [
         'Choose Last.fm release',
-        h('button', {
-          className: 'dialog-close-btn',
-          onClick: () => dialog.close(),
-        }, '×'),
+        h(
+          'a',
+          {
+            href: '#',
+            className: 'dialog-close-btn',
+            onClick: (e) => {
+              e.preventDefault();
+              dialog.close();
+            },
+          },
+          utils.createSvgUse('svg-close-symbol')
+        ),
       ],
     ),
 
@@ -222,27 +230,28 @@ function populateReleaseStats(
   uiElements.statsWrapper.classList.remove('is-loading');
 
   if (listeners !== undefined) {
+    uiElements.listeners.classList.remove('is-hidden');
     uiElements.listeners.style.display = 'block';
     uiElements.listeners.title = `${listeners} listeners ${cacheTimeHint}`;
     uiElements.listeners.dataset.value = utils.shortenNumber(parseInt(listeners));
   } else {
-    uiElements.listeners.style.display = 'none';
+    uiElements.listeners.classList.add('is-hidden');
   }
 
   if (playcount !== undefined && listeners !== undefined) {
-    uiElements.playcount.style.display = 'block';
+    uiElements.playcount.classList.remove('is-hidden');
     uiElements.playcount.title = `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`;
     uiElements.playcount.dataset.value = utils.shortenNumber(parseInt(playcount));
   } else {
-    uiElements.listeners.style.display = 'block';
+    uiElements.playcount.classList.add('is-hidden');
   }
 
   if (userplaycount !== undefined) {
-    uiElements.userplaycount.style.display = 'block';
+    uiElements.userplaycount.classList.remove('is-hidden');
     uiElements.userplaycount.title = `${userplaycount} scrobbles`;
     uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`;
   } else {
-    uiElements.userplaycount.style.display = 'none';
+    uiElements.userplaycount.classList.add('is-hidden');
   }
 
   uiElements.lastfmLink.href = url;
@@ -255,7 +264,6 @@ async function initSearchResults() {
   if (searchResultsCache) {
     if (constants.isDev) console.log('Using cached search results:', searchResultsCache);
     state.searchResults = searchResultsCache;
-    console.log(state.searchResults);
     return;
   }
 
@@ -263,7 +271,7 @@ async function initSearchResults() {
     state.config.lastfmApiKey || process.env.LASTFM_API_KEY,
     {
       artists: state.artists.map(utils.normalizeForSearch),
-      releaseTitle: utils.normalizeForSearch(state.releaseTitle),
+      releaseTitle: state.releaseTitle,
     },
   );
 

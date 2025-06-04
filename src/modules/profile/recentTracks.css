@@ -738,18 +738,19 @@ html[data-scheme="dark"] {
 
 @keyframes progress-animation {
   0% {
-    opacity: 0.5;
-  }
-  50% {
     opacity: 1;
   }
-  100% {
+  50% {
     opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
   }
 }
 
 .btn.btn-lastfm {
   position: relative;
+  transition: opacity 0.3s ease-out;
 
   &:before {
     content: '';
@@ -763,10 +764,9 @@ html[data-scheme="dark"] {
       transparent 0deg
     );
     border-radius: inherit;
-    transition: opacity 0.3s ease-out;
   }
 
-  &.is-fetching:before {
+  &.is-fetching {
     animation: progress-animation 1.5s linear infinite;
   }
 }

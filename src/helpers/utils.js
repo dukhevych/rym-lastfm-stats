@@ -321,6 +321,7 @@ import lastfmSquareSvg from '@/assets/icons/lastfm-square.svg?raw';
 import playlistSvg from '@/assets/icons/playlist.svg?raw';
 import volumeSvg from '@/assets/icons/volume.svg?raw';
 import brushSvg from '@/assets/icons/brush.svg?raw';
+import closeSvg from '@/assets/icons/close.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 let svgSprite = null;
@@ -338,6 +339,7 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(playlistSvg, 'svg-playlist-symbol');
   addIconToSVGSprite(volumeSvg, 'svg-volume-symbol');
   addIconToSVGSprite(brushSvg, 'svg-brush-symbol');
+  addIconToSVGSprite(closeSvg, 'svg-close-symbol');
 
   return svgSprite;
 }

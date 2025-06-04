@@ -9,3 +9,8 @@ document.getElementById('btn-sync-ratings').addEventListener('click', () => {
   window.open('https://rateyourmusic.com/music_export?sync');
   window.close();
 });
+
+document.getElementById('btn-patreon').addEventListener('click', () => {
+  window.open('https://www.patreon.com/c/BohdanDukhevych');
+  window.close();
+});

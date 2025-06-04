@@ -21,7 +21,15 @@
           <span class="text-red-600">RYM Last.fm Stats</span>
         </h1>
       </div>
-      <div>
+      <div class="flex items-center gap-5">
+        <a
+          href="https://www.patreon.com/c/BohdanDukhevych"
+          target="_blank"
+          class="
+            font-bold
+            hover:underline
+          "
+        >Patreon</a>
         <a
           :href="reportIssueUrl"
           target="_blank"
@@ -734,8 +742,6 @@ const init = async () => {
     const syncedOptions = await utils.getSyncedOptions();
     dbStatus.value = await RecordsAPI.getQty()
 
-    rymSyncTimestamp.value = await utils.storageGet('rymSyncTimestamp', 'local');
-
     config.value = syncedOptions;
 
     Object.assign(options, config.value);
@@ -743,6 +749,8 @@ const init = async () => {
     const syncedUserData = await utils.getSyncedUserData();
 
     userData.value = syncedUserData;
+
+    rymSyncTimestamp.value = await utils.storageGet('rymSyncTimestamp', 'local');
 
     const debouncedSubmit = utils.debounce(() => {
       submit();
