@@ -605,10 +605,10 @@
 
 <script setup>
 import { ref, reactive, watch, computed } from 'vue';
-import { RecordsAPI } from '@/helpers/records-api.js';
-import * as utils from '@/helpers/utils.js';
-import * as constants from '@/helpers/constants.js';
-import * as api from '@/helpers/api.js';
+import { RecordsAPI } from '@/helpers/records-api';
+import * as utils from '@/helpers/utils';
+import * as constants from '@/helpers/constants';
+import * as api from '@/helpers/api';
 import FormInput from '@/components/options/FormInput.vue';
 import FormCheckbox from '@/components/options/FormCheckbox.vue';
 import FormFieldset from '@/components/options/FormFieldset.vue';

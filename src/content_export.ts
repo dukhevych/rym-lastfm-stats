@@ -1,28 +1,51 @@
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
-import { LASTFM_COLOR } from '@/helpers/constants.js';
-import { RecordsAPI } from '@/helpers/records-api.js';
+import { LASTFM_COLOR } from '@/helpers/constants';
+import { RecordsAPI } from '@/helpers/records-api';
+import { createElement as h } from '@/helpers/utils';
 
 (async function () {
-  const form = document.querySelector('form.music_export');
+  const form: HTMLFormElement | null = document.querySelector('form.music_export');
 
-  const formSubmitButton = form.querySelector('button[type="submit"]');
+  if (!form) {
+    console.warn('Music export form not found.');
+    return;
+  }
+
+  const formSubmitButton: HTMLElement | null = form.querySelector('button[type="submit"]');
+
+  if (!formSubmitButton) {
+    console.warn('Form submit button not found.');
+    return;
+  }
+
   formSubmitButton.style.display = 'none';
 
-  const includeReviewsCheckbox = form.querySelector('label[for="include_reviews"]');
-  includeReviewsCheckbox.style.display = 'none';
+  const includeReviewsCheckbox: HTMLElement | null = form.querySelector('label[for="include_reviews"]');
 
-  const formSyncButton = document.createElement('button');
+  if (!includeReviewsCheckbox) {
+    console.warn('Include reviews checkbox not found.');
+  } else {
+    includeReviewsCheckbox.style.display = 'none';
+  }
 
-  const statusMessage = document.createElement('div');
-  statusMessage.style.display = 'none';
-  statusMessage.style.marginTop = '10px';
+  const statusMessage = h('div', {
+    style: {
+      display: 'none',
+      marginTop: '10px',
+    },
+  });
 
-  formSyncButton.type = 'button';
-  formSyncButton.classList.add(...formSubmitButton.classList);
-  formSyncButton.style.backgroundColor = LASTFM_COLOR;
   const formSyncButtonText = 'Sync with RYM Last.fm Stats';
-  formSyncButton.textContent = formSyncButtonText;
+
+  const formSyncButton = h('button', {
+    type: 'button',
+    class: formSubmitButton.className,
+    style: {
+      backgroundColor: LASTFM_COLOR,
+    },
+    textContent: formSyncButtonText,
+  });
 
   formSubmitButton.insertAdjacentElement('afterend', formSyncButton);
   formSyncButton.insertAdjacentElement('afterend', statusMessage);
@@ -34,7 +57,6 @@ import { RecordsAPI } from '@/helpers/records-api.js';
     statusMessage.style.display = 'none';
 
     formSyncButton.setAttribute('disabled', 'true');
-
     formSyncButton.textContent = 'Syncing...';
 
     statusMessage.style.display = 'block';
@@ -56,7 +78,7 @@ import { RecordsAPI } from '@/helpers/records-api.js';
       const exportData = await response.text();
       const rows = exportData.split('\n').slice(1);
 
-      const parsedData = [];
+      const parsedData: IRYMRecordDB[] = [];
 
       rows.forEach(row => {
         const columns = utils.decodeHtmlEntities(row)
@@ -77,10 +99,10 @@ import { RecordsAPI } from '@/helpers/records-api.js';
         const title = columns[5];
         const releaseDate = +columns[6];
         const rating = +columns[7];
-        const ownership = columns[8];
-        const format = columns[10];
+        const ownership = columns[8] as ERYMOwnershipStatus;
+        const format = columns[10] as ERYMFormats;
 
-        const getCombinedName = (firstName, lastName) => [firstName, lastName]
+        const getCombinedName = (firstName: string, lastName: string) => [firstName, lastName]
           .filter(Boolean)
           .join(' ')
           .trim()
@@ -89,7 +111,7 @@ import { RecordsAPI } from '@/helpers/records-api.js';
         const artistName = getCombinedName(firstName, lastName);
         const artistNameLocalized = getCombinedName(firstNameLocalized, lastNameLocalized);
 
-        const item = {
+        const item: IRYMRecordDB = {
           id,
           title,
           releaseDate,

@@ -1,6 +1,6 @@
-import * as constants from '@/helpers/constants.js';
-import * as utils from '@/helpers/utils.js';
-import { RecordsAPI } from '@/helpers/records-api.js';
+import * as constants from '@/helpers/constants';
+import * as utils from '@/helpers/utils';
+import { RecordsAPI } from '@/helpers/records-api';
 
 (async function () {
   window.addEventListener('load', async () => {

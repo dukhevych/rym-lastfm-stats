@@ -1,7 +1,7 @@
-import * as utils from '@/helpers/utils.js';
-import * as api from '@/helpers/api.js';
-import * as constants from '@/helpers/constants.js';
-import { createElement as h } from '@/helpers/utils.js';
+import * as utils from '@/helpers/utils';
+import * as api from '@/helpers/api';
+import * as constants from '@/helpers/constants';
+import { createElement as h } from '@/helpers/utils';
 
 import './releaseStats.css';
 
@@ -13,11 +13,29 @@ import {
   getReleaseTitle,
   getReleaseType,
   getReleaseId,
-} from './targets.js';
+} from './targets';
 
 const uiElements = {};
 
-const state = {
+interface Stats {
+  releaseType: string | null;
+  userName: string | null;
+  releaseId: string | null;
+  artistQuery: string | null;
+  releaseTitleQuery: string | null;
+  artistNames: { artistName: string; artistNameLocalized?: string }[];
+  releaseTitle: string | null;
+  searchResults: { artist: string; name: string; url: string; image: { '#text': string } }[] | null;
+  config: { lastfmApiKey?: string } | null;
+  artistNamesFlatNormalized: string[];
+  storageKey: string | null;
+  artistQueryCacheKey: string | null;
+  releaseTitleQueryCacheKey: string | null;
+  artists: string[];
+}
+
+const state: Stats = {
+  artistNames: [],
   releaseType: null,
   userName: null,
   searchResults: null,
@@ -28,7 +46,7 @@ const state = {
   releaseTitle: null,
   config: null,
   get artistNamesFlatNormalized() {
-    const result = [];
+    const result: string[] = [];
     this.artistNames.forEach((artist) => {
       if (artist.artistNameLocalized) {
         result.push(utils.normalizeForSearch(artist.artistNameLocalized));

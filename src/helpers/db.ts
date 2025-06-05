@@ -3,42 +3,49 @@ import * as utils from '@/helpers/utils';
 
 export async function getDatabaseName() {
   const userName = await utils.getUserName();
-  if (!userName) {
-    throw new Error('User name not found');
-  }
+  if (!userName) constants.RYM_DB_NAME;
   return `${constants.RYM_DB_NAME}_${userName}`;
 }
 
-export async function getRecord(id) {
+interface GetRecordResult {
+  id: string | number;
+  [key: string]: any;
+}
+
+export async function getRecord(id: string | number): Promise<GetRecordResult | undefined> {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
 
-  return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
+  return new Promise<GetRecordResult | undefined>((resolve, reject) => {
+    const dbRequest: IDBOpenDBRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
 
-    dbRequest.onsuccess = function (event) {
-      const db = event.target.result;
-      const transaction = db.transaction(storeName, 'readonly');
-      const store = transaction.objectStore(storeName);
+    dbRequest.onsuccess = function (event: Event) {
+      if (!event.target) {
+        reject(new Error('IndexedDB onsuccess event.target is null'));
+        return;
+      }
+      const db = (event.target as IDBRequest<IDBDatabase>).result;
+      const transaction: IDBTransaction = db.transaction(storeName, 'readonly');
+      const store: IDBObjectStore = transaction.objectStore(storeName);
 
-      const getRequest = store.get(id);
+      const getRequest: IDBRequest<GetRecordResult> = store.get(id);
 
       getRequest.onsuccess = function () {
         resolve(getRequest.result);
       };
 
-      getRequest.onerror = function (event) {
-        reject(event.target.error);
+      getRequest.onerror = function (event: Event) {
+        reject((event.target as IDBRequest).error);
       };
     };
 
-    dbRequest.onerror = function (event) {
-      reject(event.target.error);
+    dbRequest.onerror = function (event: Event) {
+      reject((event.target as IDBRequest).error);
     };
   });
 }
 
-export async function getAllRecords() {
+export async function getAllRecords(): Promise<IRYMRecordDB[]> {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
 
@@ -50,7 +57,7 @@ export async function getAllRecords() {
     console.log(`[getAllRecords] DB Request: ${dbRequest}`);
 
     dbRequest.onsuccess = function (event) {
-      const db = event.target.result;
+      const db = (event.target as IDBRequest<IDBDatabase>).result;
 
       console.log(`[getAllRecords] DB opened successfully`);
 
@@ -75,42 +82,49 @@ export async function getAllRecords() {
 
       getAllRequest.onerror = function (event) {
         db.close();
-        reject(event.target.error);
+        reject(event.target && 'error' in event.target ? (event.target as IDBRequest).error : new Error('Unknown IndexedDB error'));
       };
     };
 
     dbRequest.onerror = function (event) {
-      reject(event.target.error);
+      reject(event.target && 'error' in event.target ? (event.target as IDBRequest).error : new Error('Unknown IndexedDB error'));
     };
   });
 }
 
-export async function getRecords(ids, asObject = false) {
+interface GetRecordsOptions {
+  asObject?: boolean;
+}
+
+export async function getRecords(
+  ids: Array<string | number>,
+  asObject: boolean = false
+): Promise<Array<GetRecordResult | undefined> | Record<string | number, GetRecordResult>> {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
 
-  return new Promise((resolve, reject) => {
-    const dbRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
+  return new Promise<Array<GetRecordResult | undefined> | Record<string | number, GetRecordResult>>((resolve, reject) => {
+    const dbRequest: IDBOpenDBRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
 
-    dbRequest.onsuccess = function (event) {
-      const db = event.target.result;
-      const transaction = db.transaction(storeName, 'readonly');
-      const store = transaction.objectStore(storeName);
+    dbRequest.onsuccess = function (event: Event) {
+      const db = (event.target as IDBRequest<IDBDatabase>).result;
+      const transaction: IDBTransaction = db.transaction(storeName, 'readonly');
+      const store: IDBObjectStore = transaction.objectStore(storeName);
 
-      const getAllRequest = store.getAll();
+      const getAllRequest: IDBRequest<GetRecordResult[]> = store.getAll();
 
       getAllRequest.onsuccess = function () {
-        const allRecordsMap = new Map(getAllRequest.result.map(rec => [rec.id, rec]));
+        const allRecordsMap = new Map<string | number, GetRecordResult>(getAllRequest.result.map(rec => [rec.id, rec]));
 
-        const results = ids.map(id => allRecordsMap.get(id));
+        const results: Array<GetRecordResult | undefined> = ids.map(id => allRecordsMap.get(id));
 
         if (!asObject) {
           resolve(results);
           return;
         }
 
-        const resultsAsObject = results
-          .reduce((acc, curr) => {
+        const resultsAsObject: Record<string | number, GetRecordResult> = results
+          .reduce((acc: Record<string | number, GetRecordResult>, curr) => {
             if (curr) {
               acc[curr.id] = curr;
             }
@@ -120,18 +134,18 @@ export async function getRecords(ids, asObject = false) {
         resolve(resultsAsObject);
       };
 
-      getAllRequest.onerror = function (event) {
-        reject(event.target.error);
+      getAllRequest.onerror = function (event: Event) {
+        reject((event.target as IDBRequest).error);
       };
     };
 
-    dbRequest.onerror = function (event) {
-      reject(event.target.error);
+    dbRequest.onerror = function (event: Event) {
+      reject((event.target as IDBRequest).error);
     };
   });
 }
 
-export async function addRecord(payload) {
+export async function addRecord(payload: IRYMRecordDB) {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
 
@@ -141,7 +155,7 @@ export async function addRecord(payload) {
     const dbRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
 
     dbRequest.onsuccess = function (event) {
-      const db = event.target.result;
+      const db = (event.target as IDBRequest<IDBDatabase>).result;
       const transaction = db.transaction(storeName, 'readwrite');
       const store = transaction.objectStore(storeName);
 
@@ -154,19 +168,20 @@ export async function addRecord(payload) {
       };
 
       putRequest.onerror = function (event) {
-        console.error(`[addRecord] Error adding record: ${event.target.error}`);
+        const error = (event.target as IDBRequest).error;
+        console.error(`[addRecord] Error adding record: ${error}`);
         db.close();
-        reject(event.target.error);
+        reject(error);
       };
     };
 
     dbRequest.onerror = function (event) {
-      reject(event.target.error);
+      reject((event.target as IDBRequest).error);
     };
   });
 }
 
-export async function updateRecord(id, payload) {
+export async function updateRecord(id: string, payload: Partial<IRYMRecordDB>) {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
 
@@ -176,7 +191,7 @@ export async function updateRecord(id, payload) {
     const dbRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
 
     dbRequest.onsuccess = function (event) {
-      const db = event.target.result;
+      const db = (event.target as IDBRequest<IDBDatabase>).result;
       const transaction = db.transaction(storeName, 'readwrite');
       const store = transaction.objectStore(storeName);
 
@@ -195,9 +210,9 @@ export async function updateRecord(id, payload) {
           };
 
           updateRequest.onerror = function (event) {
-            console.error(`[updateRecord] Error updating record: ${event.target.error}`);
+            console.error(`[updateRecord] Error updating record: ${(event.target as IDBRequest).error}`);
             db.close();
-            reject(event.target.error);
+            reject((event.target as IDBRequest).error);
           };
         } else {
           reject(new Error(`No record found with id: ${id}`));
@@ -205,21 +220,21 @@ export async function updateRecord(id, payload) {
       };
 
       getRequest.onerror = function (event) {
-        reject(event.target.error);
+        reject((event.target as IDBRequest).error);
       };
     };
 
     dbRequest.onerror = function (event) {
-      reject(event.target.error);
+      reject((event.target as IDBRequest).error);
     };
   });
 }
 
-export async function updateRecordRating(id, rating) {
+export async function updateRecordRating(id: string, rating: number) {
   return updateRecord(id, { rating });
 }
 
-export async function deleteRecord(id) {
+export async function deleteRecord(id: string) {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
 
@@ -227,7 +242,7 @@ export async function deleteRecord(id) {
     const dbRequest = indexedDB.open(dbName, constants.RYM_DB_VERSION);
 
     dbRequest.onsuccess = function (event) {
-      const db = event.target.result;
+      const db = (event.target as IDBRequest).result;
       const transaction = db.transaction(storeName, 'readwrite');
       const store = transaction.objectStore(storeName);
 
@@ -237,13 +252,13 @@ export async function deleteRecord(id) {
         resolve(true);
       };
 
-      deleteRequest.onerror = function (event) {
-        reject(event.target.error);
+      deleteRequest.onerror = function (event: Event) {
+        reject((event.target as IDBRequest).error);
       };
     };
 
     dbRequest.onerror = function (event) {
-      reject(event.target.error);
+      reject((event.target as IDBRequest).error);
     };
   });
 }
@@ -261,7 +276,7 @@ export async function initDatabase() {
     const request = indexedDB.open(dbName, version);
 
     request.onupgradeneeded = (event) => {
-      const db = event.target.result;
+      const db = (event.target as IDBRequest).result;
 
       if (!db.objectStoreNames.contains(storeName)) {
         const store = db.createObjectStore(storeName, { keyPath: 'id' });
@@ -271,18 +286,18 @@ export async function initDatabase() {
     };
 
     request.onsuccess = (event) => {
-      event.target.result.close();
+      (event.target as IDBRequest).result.close();
       console.log(`[initDatabase] Database opened successfully`);
-      resolve();
+      resolve(undefined);
     };
 
     request.onerror = (event) => {
-      reject(event.target.error);
+      reject((event.target as IDBRequest).error);
     };
   });
 }
 
-export async function setRecords(payload) {
+export async function setRecords(payload: IRYMRecordDB[]): Promise<true> {
   const dbName = await getDatabaseName();
   const storeName = getStoreName();
   const version = constants.RYM_DB_VERSION;
@@ -291,15 +306,15 @@ export async function setRecords(payload) {
 
   console.warn(`[setRecords] ⚠️ DB Name: ${dbName}, Version: ${version}`);
 
-  await new Promise((res, rej) => {
+  await new Promise((resolve, rej) => {
     const delReq = indexedDB.deleteDatabase(dbName);
     delReq.onsuccess = () => {
       console.warn('[setRecords] ✅ Database deleted');
-      res();
+      resolve(true);
     };
     delReq.onerror = (e) => {
-      console.error('[setRecords] ❌ Delete failed:', e.target.error);
-      rej(e.target.error);
+      console.error('[setRecords] ❌ Delete failed:', (e.target as IDBRequest).error);
+      rej((e.target as IDBRequest).error);
     };
   });
 
@@ -308,7 +323,7 @@ export async function setRecords(payload) {
 
     req.onupgradeneeded = (e) => {
       console.warn('[setRecords] 🔼 onupgradeneeded triggered');
-      const db = e.target.result;
+      const db = (e.target as IDBRequest<IDBDatabase>).result;
 
       if (db.objectStoreNames.contains(storeName)) {
         db.deleteObjectStore(storeName);
@@ -317,7 +332,8 @@ export async function setRecords(payload) {
       const store = db.createObjectStore(storeName, { keyPath: 'id' });
       store.createIndex('idIndex', 'id', { unique: true });
 
-      const tx = e.target.transaction;
+      // The transaction for onupgradeneeded is available via db.transaction(storeName, 'readwrite')
+      const tx = (e.target as IDBOpenDBRequest).result.transaction(storeName, 'readwrite');
 
       payload.forEach((record) => store.put(record));
 
@@ -325,29 +341,29 @@ export async function setRecords(payload) {
         console.log('[setRecords] ✅ Records inserted during upgrade');
         db.close();
         finished = true;
-        resolve();
+        resolve(true);
       };
 
       tx.onerror = (err) => {
         db.close();
         finished = true;
-        reject(err.target.error);
+        reject(err.target && 'error' in err.target ? (err.target as IDBRequest).error : new Error('Unknown IndexedDB error'));
       };
     };
 
     req.onsuccess = (e) => {
-      const db = e.target.result;
+      const db = (e.target as IDBRequest<IDBDatabase>).result;
       db.close();
       if (!finished) {
         console.log('[setRecords] ✅ DB opened successfully (no upgrade needed)');
-        resolve();
+        resolve(true);
       }
     };
 
     req.onerror = (e) => {
       if (!finished) {
-        console.error('[setRecords] ❌ DB open error:', e.target.error);
-        reject(e.target.error);
+        console.error('[setRecords] ❌ DB open error:', (e.target as IDBRequest).error);
+        reject((e.target as IDBRequest).error);
       }
     };
   });

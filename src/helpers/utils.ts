@@ -1,15 +1,19 @@
+declare const chrome: any;
+
+import browser from 'webextension-polyfill';
 import { Vibrant } from "node-vibrant/browser";
-import { MD5 } from '@/libs/crypto-js.min.js';
+import { MD5 } from 'crypto-js';
 import { remove as removeDiacritics } from 'diacritics';
-import * as constants from './constants.js';
+import * as constants from './constants';
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
 
-const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-
 export function detectColorScheme() {
   const html = document.querySelector('html');
+
+  if (!html) return 'light';
+
   const htmlThemeClass = Array.from(html.classList).find(cls => cls.startsWith('theme_'));
 
   if (htmlThemeClass) {
@@ -42,7 +46,7 @@ export function initColorSchemeDetection() {
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 }
 
-export function shortenNumber(num) {
+export function shortenNumber(num: number): string {
   if (num >= 1000000) {
     return parseFloat((num / 1000000).toFixed(1)) + 'M';
   } else if (num >= 1000) {
@@ -52,20 +56,29 @@ export function shortenNumber(num) {
   }
 };
 
-export const createSpan = (title, text) => {
+export const createSpan = (title: string, text: string) => {
   const span = document.createElement('span');
   span.title = title.trim();
   span.textContent = text.trim();
   return span;
 };
 
-export const createParagraph = (text) => {
+export interface CreateParagraph {
+  (text: string): HTMLParagraphElement;
+}
+
+export const createParagraph: CreateParagraph = (text: string): HTMLParagraphElement => {
   const paragraph = document.createElement('p');
   paragraph.textContent = text;
   return paragraph;
 };
 
-export const createSelect = (options, selectedValue) => {
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export const createSelect = (options: SelectOption[], selectedValue?: string): HTMLSelectElement => {
   const select = document.createElement('select');
 
   options.forEach(({ value, label }) => {
@@ -83,14 +96,29 @@ export const createSelect = (options, selectedValue) => {
   return select;
 };
 
-export const createStrong = (title, text) => {
+interface CreateStrongOptions {
+  title: string;
+  text: string;
+}
+
+export const createStrong = (title: string, text: string): HTMLElement => {
   const strong = document.createElement('strong');
   strong.title = title;
   strong.textContent = text;
   return strong;
 };
 
-export const createLink = (href, text, target = '_blank') => {
+export interface CreateLinkOptions {
+  href: string;
+  text?: string;
+  target?: string;
+}
+
+export const createLink = (
+  href: string,
+  text?: string,
+  target: string = '_blank'
+): HTMLAnchorElement => {
   const link = document.createElement('a');
   link.href = href;
   if (target) link.target = target;
@@ -98,10 +126,25 @@ export const createLink = (href, text, target = '_blank') => {
   return link;
 };
 
-export const formatNumber = (number) => {
-  const formatter = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 20,
+export interface FormatNumberOptions {
+  minimumFractionDigits?: number;
+  maximumFractionDigits?: number;
+  locale?: string;
+}
+
+export const formatNumber = (
+  number: number,
+  options: FormatNumberOptions = {}
+): string => {
+  const {
+    minimumFractionDigits = 0,
+    maximumFractionDigits = 20,
+    locale = 'en-US',
+  } = options;
+
+  const formatter = new Intl.NumberFormat(locale, {
+    minimumFractionDigits,
+    maximumFractionDigits,
   });
 
   return formatter.format(number);
@@ -111,7 +154,7 @@ export function getHeaderUsername() {
   const headerProfileUsername = document.querySelector('#header_profile_username');
 
   if (headerProfileUsername) {
-    return headerProfileUsername.textContent.trim();
+    return (headerProfileUsername.textContent ?? '').trim();
   }
 
   return null;
@@ -141,14 +184,21 @@ export function isMyProfile() {
 
 // Depends on the list of dark theme classes that is hardcoded and can be changed by RYM
 export function isDarkMode() {
-  const htmlClasses = document.querySelector('html').classList;
+  const htmlElement = document.querySelector('html');
+  if (!htmlElement) return false;
+  const htmlClasses = htmlElement.classList;
   return constants.DARK_THEME_CLASSES.some((darkThemeClass) =>
     htmlClasses.contains(darkThemeClass),
   );
 };
 
+interface UserData {
+  name?: string;
+  // add other properties if needed
+}
+
 export async function getUserName() {
-  const userData = await getSyncedUserData();
+  const userData = await getSyncedUserData() as UserData;
   return userData?.name ?? null;
 };
 
@@ -185,33 +235,49 @@ export function detectLastfmUserName() {
 
 const STORAGE_TYPES = ['local', 'sync'];
 
-export function storageGet(keys, storageType = 'sync') {
+export type StorageType = 'local' | 'sync';
+
+export interface StorageGetResult {
+  [key: string]: any;
+}
+
+export function storageGet<T = StorageGetResult>(
+  keys: string | string[] | null,
+  storageType: StorageType = 'sync'
+): Promise<T> {
   if (!STORAGE_TYPES.includes(storageType)) {
     throw new Error(`Invalid storage type: ${storageType}`);
   }
 
-  return new Promise((resolve, reject) => {
-    browserAPI.storage[storageType].get(keys, (result) => {
+  return new Promise<T>((resolve, reject) => {
+    browser.storage[storageType].get(keys, (result: StorageGetResult) => {
       if (typeof chrome !== 'undefined' && chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {
         if (typeof keys === 'string') {
-          resolve(result[keys]);
+          resolve(result[keys] as T);
         } else {
-          resolve(result);
+          resolve(result as T);
         }
       }
     });
   });
 }
 
-export function storageSet(payload, storageType = 'sync') {
+export interface StorageSetPayload {
+  [key: string]: any;
+}
+
+export function storageSet(
+  payload: StorageSetPayload,
+  storageType: StorageType = 'sync'
+): Promise<void> {
   if (!STORAGE_TYPES.includes(storageType)) {
     throw new Error(`Invalid storage type: ${storageType}`);
   }
 
-  return new Promise((resolve, reject) => {
-    browserAPI.storage[storageType].set(payload, () => {
+  return new Promise<void>((resolve, reject) => {
+    browser.storage[storageType].set(payload, () => {
       if (typeof chrome !== 'undefined' && chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {
@@ -221,13 +287,21 @@ export function storageSet(payload, storageType = 'sync') {
   });
 }
 
-export function storageRemove(keys, storageType = 'sync') {
+export interface StorageRemoveOptions {
+  keys: string | string[];
+  storageType?: StorageType;
+}
+
+export function storageRemove(
+  keys: string | string[],
+  storageType: StorageType = 'sync'
+): Promise<void> {
   if (!STORAGE_TYPES.includes(storageType)) {
     throw new Error(`Invalid storage type: ${storageType}`);
   }
 
-  return new Promise((resolve, reject) => {
-    browserAPI.storage[storageType].remove(keys, () => {
+  return new Promise<void>((resolve, reject) => {
+    browser.storage[storageType].remove(keys, () => {
       if (typeof chrome !== 'undefined' && chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {
@@ -276,12 +350,12 @@ export function generateSearchUrl({
 export function waitForDOMReady() {
   return new Promise((resolve) => {
     if (document.readyState === 'interactive' || document.readyState === 'complete') {
-      return resolve();
+      return resolve(undefined);
     }
 
     const check = () => {
       if (document.readyState === 'interactive' || document.readyState === 'complete') {
-        resolve();
+        resolve(undefined);
       } else {
         requestAnimationFrame(check);
       }
@@ -291,7 +365,15 @@ export function waitForDOMReady() {
   });
 }
 
-export async function checkDOMCondition(targetSelectors, conditionCallback) {
+export interface CheckDOMConditionOptions {
+  targetSelectors: string[];
+  conditionCallback: () => any;
+}
+
+export async function checkDOMCondition(
+  targetSelectors: string[],
+  conditionCallback: () => any
+): Promise<any> {
   return new Promise((resolve) => {
     function _() {
       const targetElementsExist = targetSelectors.every(
@@ -324,7 +406,9 @@ import brushSvg from '@/assets/icons/brush.svg?raw';
 import closeSvg from '@/assets/icons/close.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
-let svgSprite = null;
+
+interface SvgSprite extends SVGSVGElement {}
+let svgSprite: SvgSprite | null = null;
 
 export const createSVGSprite = function() {
   svgSprite = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -344,8 +428,12 @@ export const createSVGSprite = function() {
   return svgSprite;
 }
 
-export const insertSVGSprite = function(svgSprite) {
-  return new Promise((resolve) => {
+export interface InsertSVGSprite {
+  (svgSprite: SVGSVGElement): Promise<void>;
+}
+
+export const insertSVGSprite: InsertSVGSprite = function(svgSprite) {
+  return new Promise<void>((resolve) => {
     if (document.body) {
       document.body.appendChild(svgSprite);
       resolve();
@@ -363,7 +451,11 @@ export const insertSVGSprite = function(svgSprite) {
   });
 }
 
-export const addIconToSVGSprite = function(iconRaw, iconName) {
+export interface AddIconToSVGSprite {
+  (iconRaw: string, iconName: string): void;
+}
+
+export const addIconToSVGSprite: AddIconToSVGSprite = function(iconRaw, iconName) {
   if (!svgSprite) {
     console.error('SVG sprite not found');
     return;
@@ -385,40 +477,63 @@ export const addIconToSVGSprite = function(iconRaw, iconName) {
   const svgElement = svgDoc.documentElement;
   const symbolElement = document.createElementNS('http://www.w3.org/2000/svg', 'symbol');
   symbolElement.setAttribute('id', iconName);
-  symbolElement.setAttribute('viewBox', svgElement.getAttribute('viewBox'));
-  [...svgElement.childNodes].forEach(node => {
+  const viewBox = svgElement.getAttribute('viewBox');
+  if (viewBox) {
+    symbolElement.setAttribute('viewBox', viewBox);
+  }
+  Array.from(svgElement.childNodes).forEach(node => {
     symbolElement.appendChild(node.cloneNode(true));
   });
 
   svgSprite.appendChild(symbolElement);
 }
 
-export const createSvgUse = function(iconName, viewBox = '0 0 24 24') {
-  const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+export interface CreateSvgUseOptions {
+  iconName: string;
+  viewBox?: string;
+}
+
+export const createSvgUse = function(
+  iconName: string,
+  viewBox: string = '0 0 24 24'
+): SVGSVGElement {
+  const wrapper: SVGSVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   wrapper.setAttribute('viewBox', viewBox);
-  const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  const useElement: SVGUseElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
   useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#${iconName}`);
   wrapper.appendChild(useElement);
   return wrapper;
 }
 
-export function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export interface Wait {
+  (ms: number): Promise<void>;
 }
 
-export function debounce(fn, wait) {
-  let timeout;
-  return function (...args) {
+export const wait: Wait = function(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
+export interface DebouncedFunction<T extends (...args: any[]) => any> {
+  (...args: Parameters<T>): void;
+}
+
+export function debounce<T extends (...args: any[]) => any>(fn: T, wait: number): DebouncedFunction<T> {
+  let timeout: ReturnType<typeof setTimeout>;
+  return function (this: any, ...args: Parameters<T>) {
     clearTimeout(timeout);
     timeout = setTimeout(() => fn.apply(this, args), wait);
   };
 }
 
-export function throttle(fn, wait) {
-  let lastCall = 0;
-  let timeout;
+export interface ThrottledFunction<T extends (...args: any[]) => any> {
+  (...args: Parameters<T>): void;
+}
 
-  return function (...args) {
+export function throttle<T extends (...args: any[]) => any>(fn: T, wait: number): ThrottledFunction<T> {
+  let lastCall = 0;
+  let timeout: ReturnType<typeof setTimeout>;
+
+  return function (this: any, ...args: Parameters<T>) {
     const now = Date.now();
 
     const invoke = () => {
@@ -435,44 +550,68 @@ export function throttle(fn, wait) {
   };
 }
 
-export function deburr(string) {
+export interface Deburr {
+  (string: string): string;
+}
+
+export const deburr: Deburr = function(string: string): string {
   if (typeof string !== 'string') {
     throw new TypeError('Expected a string');
   }
   return removeDiacritics(string);
 }
 
-export async function getImageColors(imageUrl) {
-  const dataUrl = await new Promise((resolve, reject) => {
-    browserAPI.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl }, (response) => {
+interface FetchImageResponse {
+  success: boolean;
+  dataUrl?: string;
+  error?: string;
+}
+
+export async function getImageColors(imageUrl: string): Promise<ReturnType<typeof getVibrantUiColors>> {
+  const dataUrl: string = await new Promise<string>((resolve, reject) => {
+    browser.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl }, (response: FetchImageResponse) => {
       if (!response?.success) {
         return reject(new Error(response?.error || 'Failed to fetch image'));
       }
-      resolve(response.dataUrl);
+      resolve(response.dataUrl as string);
     });
   });
 
   const v = new Vibrant(dataUrl);
 
-  const palette = await v.getPalette();
+  const rawPalette = await v.getPalette();
+
+  // Convert null swatches to undefined to match VibrantPalette type
+  const palette: VibrantPalette = Object.fromEntries(
+    Object.entries(rawPalette).map(([key, value]) => [key, value === null ? undefined : value])
+  );
 
   return getVibrantUiColors(palette);
 }
 
-export function getContrastingColor(hexColor, darkColor = '#000', lightColor = '#fff') {
+export interface GetContrastingColorOptions {
+  darkColor?: string;
+  lightColor?: string;
+}
+
+export function getContrastingColor(
+  hexColor: string,
+  darkColor: string = '#000',
+  lightColor: string = '#fff'
+): string {
   if (!/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(hexColor)) {
     throw new Error('Invalid hex color format');
   }
 
-  const hex = hexColor.slice(1);
-  const parseHex = (hex) => parseInt(hex.length === 1 ? hex + hex : hex, 16);
+  const hex: string = hexColor.slice(1);
+  const parseHex = (hex: string): number => parseInt(hex.length === 1 ? hex + hex : hex, 16);
 
-  const r = parseHex(hex.length === 3 ? hex[0] : hex.substring(0, 2));
-  const g = parseHex(hex.length === 3 ? hex[1] : hex.substring(2, 4));
-  const b = parseHex(hex.length === 3 ? hex[2] : hex.substring(4, 6));
+  const r: number = parseHex(hex.length === 3 ? hex[0] : hex.substring(0, 2));
+  const g: number = parseHex(hex.length === 3 ? hex[1] : hex.substring(2, 4));
+  const b: number = parseHex(hex.length === 3 ? hex[2] : hex.substring(4, 6));
 
-  const relativeLuminance = (r, g, b) => {
-    const [R, G, B] = [r, g, b].map((c) => {
+  const relativeLuminance = (r: number, g: number, b: number): number => {
+    const [R, G, B]: number[] = [r, g, b].map((c: number) => {
       c /= 255;
       return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
     });
@@ -482,7 +621,40 @@ export function getContrastingColor(hexColor, darkColor = '#000', lightColor = '
   return relativeLuminance(r, g, b) > 0.179 ? darkColor : lightColor;
 }
 
-export async function getVibrantUiColors(palette) {
+export interface VibrantSwatch {
+  hex: string;
+  hsl: [number, number, number];
+  rgb: [number, number, number];
+  population: number;
+  bodyTextColor?: string;
+  titleTextColor?: string;
+}
+
+export interface VibrantPalette {
+  Vibrant?: VibrantSwatch;
+  Muted?: VibrantSwatch;
+  DarkVibrant?: VibrantSwatch;
+  DarkMuted?: VibrantSwatch;
+  LightVibrant?: VibrantSwatch;
+  LightMuted?: VibrantSwatch;
+  [key: string]: VibrantSwatch | undefined;
+}
+
+export interface VibrantUiColorSet {
+  bgColor: string;
+  accentColor: string;
+  accentColorHSL: [number, number, number];
+  readonly bgColorContrast: string;
+  readonly accentColorContrast: string;
+}
+
+export interface VibrantUiColors {
+  light: VibrantUiColorSet;
+  dark: VibrantUiColorSet;
+  palette: VibrantPalette;
+}
+
+export async function getVibrantUiColors(palette: VibrantPalette): Promise<VibrantUiColors> {
   const lightColors = {
     bgColor: (palette.LightMuted || palette.Muted || palette.LightVibrant)?.hex || '#222',
     accentColor: (palette.Vibrant || palette.DarkVibrant)?.hex || '#ff4081',
@@ -518,8 +690,27 @@ export async function getVibrantUiColors(palette) {
   };
 }
 
-export async function fetchSessionKey(token) {
-  let apiSig;
+export interface FetchSessionKeyParams {
+  method: string;
+  api_key: string | undefined;
+  token: string;
+  api_sig?: string;
+  format?: string;
+}
+
+export interface LastFmSessionResponse {
+  session?: {
+    name: string;
+    key: string;
+    subscriber: number;
+  };
+  error?: number;
+  message?: string;
+  [key: string]: any;
+}
+
+export async function fetchSessionKey(token: string): Promise<string | null> {
+  let apiSig: string;
 
   try {
     apiSig = generateApiSig({
@@ -532,7 +723,7 @@ export async function fetchSessionKey(token) {
     return null;
   }
 
-  const _params = {
+  const _params: FetchSessionKeyParams = {
     method: 'auth.getSession',
     api_key: SYSTEM_API_KEY,
     token: token,
@@ -540,7 +731,7 @@ export async function fetchSessionKey(token) {
     format: 'json',
   };
 
-  const params = new URLSearchParams(_params);
+  const params = new URLSearchParams(_params as unknown as Record<string, string>);
 
   const url = `https://ws.audioscrobbler.com/2.0/?${params.toString()}`;
 
@@ -550,7 +741,7 @@ export async function fetchSessionKey(token) {
       console.error(`HTTP error! Status: ${response.status} ${response.statusText}`);
       return null;
     }
-    const data = await response.json();
+    const data: LastFmSessionResponse = await response.json();
     if (data.session) {
       return data.session.key;
     } else {
@@ -563,7 +754,13 @@ export async function fetchSessionKey(token) {
   }
 };
 
-const generateApiSig = (params) => {
+export interface ApiSigParams {
+  [key: string]: string | undefined;
+}
+
+export type GenerateApiSig = (params: ApiSigParams) => string;
+
+const generateApiSig: GenerateApiSig = (params) => {
   const sortedKeys = Object.keys(params).sort();
   let stringToSign = '';
 
@@ -575,19 +772,31 @@ const generateApiSig = (params) => {
   return generateMd5(stringToSign);
 };
 
-function generateMd5(string) {
+interface GenerateMd5 {
+  (string: string): string;
+}
+
+const generateMd5: GenerateMd5 = function(string: string): string {
   return MD5(string).toString();
 }
 
-export function getDirectInnerText(element) {
-  return Array.from(element.childNodes)
-    .filter(node => node.nodeType === Node.TEXT_NODE)
-    .map(node => node.textContent.trim())
-    .join(' ')
-    .trim();
+export interface GetDirectInnerText {
+  (element: Element): string;
 }
 
-export function slugify(str) {
+export const getDirectInnerText: GetDirectInnerText = function(element: Element): string {
+  return Array.from(element.childNodes)
+    .filter((node: ChildNode) => node.nodeType === Node.TEXT_NODE)
+    .map((node: ChildNode) => (node.textContent ?? '').trim())
+    .join(' ')
+    .trim();
+};
+
+export interface Slugify {
+  (str: string): string;
+}
+
+export const slugify: Slugify = function(str: string): string {
   if (!str) return '';
   return deburr(str
     .toLowerCase()
@@ -599,7 +808,11 @@ export function slugify(str) {
   );
 }
 
-export function normalizeForSearch(str) {
+export interface NormalizeForSearch {
+  (str: string): string;
+}
+
+export function normalizeForSearch(str: string): string {
   if (!str) return '';
 
   return deburr(str
@@ -624,22 +837,36 @@ export function normalizeForSearch(str) {
     .trim());
 }
 
-export function decodeHtmlEntities(str) {
-  return new DOMParser().parseFromString(str, 'text/html').body.textContent;
-};
+export interface DecodeHtmlEntities {
+  (str: string): string;
+}
 
-export function combineArtistNames(artistNames) {
+export const decodeHtmlEntities: DecodeHtmlEntities = function(str: string): string {
+  return new DOMParser().parseFromString(str, 'text/html').body?.textContent ?? '';
+};;
+
+export interface ArtistNameItem {
+  artistName: string;
+  artistNameLocalized: string;
+}
+
+export interface CombinedArtistNamesResult {
+  artistName: string;
+  artistNameLocalized: string;
+}
+
+export function combineArtistNames(artistNames: ArtistNameItem[]): CombinedArtistNamesResult {
   if (artistNames.length === 1) return artistNames[0];
 
-  if (artistNames.length === 0) return null;
+  if (artistNames.length === 0) return { artistName: '', artistNameLocalized: '' };
 
-  const lastArtistNames = artistNames.pop();
+  const lastArtistNames: ArtistNameItem = artistNames.pop() as ArtistNameItem;
 
-  let combinedArtistName = `${artistNames.map((name) => name.artistName).join(', ')}`;
+  let combinedArtistName: string = `${artistNames.map((name) => name.artistName).join(', ')}`;
 
   combinedArtistName += ' & ' + lastArtistNames.artistName;
 
-  let combinedArtistNameLocalized = `${artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ')}`;
+  let combinedArtistNameLocalized: string = `${artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ')}`;
 
   combinedArtistNameLocalized += ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
 
@@ -649,32 +876,52 @@ export function combineArtistNames(artistNames) {
   }
 };
 
-export function checkPartialStringsMatch(str1, str2) {
+export interface CheckPartialStringsMatch {
+  (str1: string, str2: string): boolean;
+}
+
+export const checkPartialStringsMatch: CheckPartialStringsMatch = function(str1, str2) {
   if (!str1 || !str2) return false;
 
   return str1 === str2 || str1.includes(str2) || str2.includes(str1);
+};
+
+export interface GetNodeDirectTextContent {
+  (item: Node | null): string;
 }
 
-export function getNodeDirectTextContent(item) {
+export function getNodeDirectTextContent(item: Node | null): string {
   if (!item) return '';
 
-  const result = [];
+  const result: string[] = [];
 
-  item.childNodes.forEach((node) => {
+  item.childNodes.forEach((node: ChildNode) => {
     if (node.nodeType === Node.TEXT_NODE) {
-      result.push(node.textContent);
+      result.push(node.textContent ?? '');
     }
   });
 
   return result.join(' ');
 }
 
-export function extractIdFromTitle(title) {
-  const idStr = title.match(/\d+/g)?.join('');
-  return idStr || null;
+export interface ExtractIdFromTitle {
+  (title: string): string;
 }
 
-function setDeepValue(obj, path, value) {
+export const extractIdFromTitle: ExtractIdFromTitle = function(title: string): string {
+  const idStr = title.match(/\d+/g)?.join('');
+  return idStr || '';
+};
+
+export interface DeepValueObject {
+  [key: string]: any;
+}
+
+export interface SetDeepValue {
+  (obj: DeepValueObject, path: string, value: any): void;
+}
+
+export const setDeepValue: SetDeepValue = function(obj, path, value) {
   const keys = path.split('.');
   let current = obj;
   for (let i = 0; i < keys.length - 1; i++) {
@@ -682,21 +929,42 @@ function setDeepValue(obj, path, value) {
     current = current[keys[i]];
   }
   current[keys[keys.length - 1]] = value;
+};
+
+export interface GetWindowDataOptions {
+  deep?: boolean;
 }
 
-export function getWindowData(paths, onChange, options = {}) {
+export interface GetWindowDataResult {
+  initialValue: Record<string, any>;
+  stopWatching?: () => void;
+}
+
+export interface WindowDataEventDetail {
+  field: string;
+  value: any;
+  prop: string;
+}
+
+export type WindowDataOnChange = (data: Record<string, any>) => void;
+
+export function getWindowData(
+  paths: string[],
+  onChange?: WindowDataOnChange,
+  options: GetWindowDataOptions = {}
+): Promise<GetWindowDataResult> {
   return new Promise((resolve) => {
     let resolved = false;
 
     const slug = constants.APP_NAME_SLUG;
     const eventName = `${slug}:field-update`;
-    const flatMap = {};
-    const nestedMap = {};
-    const received = new Set();
+    const flatMap: Record<string, any> = {};
+    const nestedMap: Record<string, any> = {};
+    const received = new Set<string>();
 
     let pending = false;
 
-    const handler = (e) => {
+    const handler = (e: CustomEvent<WindowDataEventDetail>) => {
       const { field, value, prop } = e.detail;
       const fullPath = `${prop}.${field}`;
 
@@ -710,7 +978,7 @@ export function getWindowData(paths, onChange, options = {}) {
       if (!resolved && received.size === paths.length) {
         resolved = true;
         if (!onChange) {
-          window.removeEventListener(eventName, handler);
+          window.removeEventListener(eventName, handler as EventListener);
           resolve({ initialValue: nestedMap });
         } else {
           resolve({ initialValue: nestedMap, stopWatching });
@@ -728,21 +996,25 @@ export function getWindowData(paths, onChange, options = {}) {
     };
 
     function stopWatching() {
-      window.removeEventListener(eventName, handler);
+      window.removeEventListener(eventName, handler as EventListener);
     }
 
-    browserAPI.runtime.sendMessage({
+    browser.runtime.sendMessage({
       type: 'get-window-data',
       paths,
       watch: !!onChange,
       deep: options.deep === true,
     });
 
-    window.addEventListener(eventName, handler);
+    window.addEventListener(eventName, handler as EventListener);
   });
 }
 
-export function shallowEqual(obj1, obj2) {
+export interface ShallowEqualObject {
+  [key: string]: any;
+}
+
+export function shallowEqual(obj1: ShallowEqualObject, obj2: ShallowEqualObject): boolean {
   if (!obj1 || !obj2) {
     return false;
   }
@@ -765,22 +1037,35 @@ export function shallowEqual(obj1, obj2) {
   return true;
 }
 
-export function omit(obj, keysToOmit) {
+export interface OmitObject {
+  [key: string]: any;
+}
+
+export type OmitKeys = string[];
+
+export function omit<T extends OmitObject, K extends keyof T>(
+  obj: T,
+  keysToOmit: K[] | string[]
+): Partial<Omit<T, K>> {
   if (!obj) return obj;
   if (Object.keys(obj).length === 0) return obj;
 
-  const result = {};
+  const result: Partial<Omit<T, K>> = {};
 
   for (const key in obj) {
-    if (!keysToOmit.includes(key)) {
-      result[key] = obj[key];
+    if (!keysToOmit.map(String).includes(String(key))) {
+      (result as any)[key] = obj[key];
     }
   }
 
   return result;
 }
 
-export function cleanupReleaseEdition(releaseTitle) {
+export interface CleanupReleaseEdition {
+  (releaseTitle: string): string;
+}
+
+export function cleanupReleaseEdition(releaseTitle: string): string {
   if (!releaseTitle) return '';
 
   return releaseTitle
@@ -788,7 +1073,31 @@ export function cleanupReleaseEdition(releaseTitle) {
     .trim();
 }
 
-export function createElement(tag, props = {}, ...children) {
+export interface CreateElementProps {
+  style?: Partial<CSSStyleDeclaration>;
+  className?: string | string[];
+  dataset?: { [key: string]: string };
+  [key: string]: any;
+}
+
+export type Child = Node | string | number | boolean | null | undefined;
+export type Children = Child | Child[];
+
+export function createElement<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  props?: CreateElementProps,
+  ...children: Children[]
+): HTMLElementTagNameMap[K];
+export function createElement(
+  tag: string,
+  props?: CreateElementProps,
+  ...children: Children[]
+): HTMLElement;
+export function createElement(
+  tag: string,
+  props: CreateElementProps = {},
+  ...children: Children[]
+): HTMLElement {
   const el = document.createElement(tag);
 
   for (const [key, value] of Object.entries(props)) {
@@ -801,10 +1110,10 @@ export function createElement(tag, props = {}, ...children) {
       el.addEventListener(key.slice(2).toLowerCase(), value);
     } else if (key === 'dataset' && typeof value === 'object') {
       for (const [dataKey, dataValue] of Object.entries(value)) {
-        el.dataset[dataKey] = dataValue;
+        el.dataset[dataKey] = dataValue != null ? String(dataValue) : undefined;
       }
     } else if (key in el) {
-      el[key] = value;
+      (el as any)[key] = value;
     } else {
       el.setAttribute(key, value);
     }

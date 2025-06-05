@@ -1,4 +1,4 @@
-import isElementFullyParsed from './isElementFullyParsed.js';
+import isElementFullyParsed from './isElementFullyParsed';
 
 const MAX_WAIT = 3000;
 

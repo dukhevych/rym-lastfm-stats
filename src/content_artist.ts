@@ -1,7 +1,7 @@
-import artist from '@/modules/artist/index.js';
-import { renderContent } from '@/helpers/renderContent.js';
-import * as utils from '@/helpers/utils.js';
-import * as constants from '@/helpers/constants.js';
+import artist from '@/modules/artist';
+import { renderContent } from '@/helpers/renderContent';
+import * as utils from '@/helpers/utils';
+import * as constants from '@/helpers/constants';
 
 (async function () {
   const storageItems = await utils.getSyncedOptions();

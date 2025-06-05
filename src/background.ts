@@ -1,12 +1,18 @@
+import browser from 'webextension-polyfill';
+
 import FlexSearch from 'flexsearch';
 import * as db from '@/helpers/db';
-import * as utils from '@/helpers/utils.js';
-import * as constants from '@/helpers/constants.js';
-import getWindowDataInjected from '@/background/getWindowDataInjected.js';
+import * as utils from '@/helpers/utils';
+import * as constants from '@/helpers/constants';
+import getWindowDataInjected from '@/background/getWindowDataInjected';
 
-import './background/runtime/onInstalled.js';
+import './background/runtime/onInstalled';
 
-const dbMessageTypes = new Set([
+function notNull<T>(value: T): value is NonNullable<T> {
+  return value != null;
+}
+
+const dbMessageTypes = [
   'GET_RECORD_BY_ID',
   'GET_RECORDS_BY_IDS',
   'GET_ALL_RECORDS',
@@ -19,42 +25,17 @@ const dbMessageTypes = new Set([
   'DELETE_RECORD',
   'GET_RECORDS_QTY',
   'SET_RECORDS',
-  'SEARCH',
-]);
+] as const;
 
-const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+type DBMessageType = typeof dbMessageTypes[number];
+
 const flexIndex = new FlexSearch.Index({
   tokenize: 'forward',
   cache: true,
   resolution: 9,
-  depth: 3
-});
-const flexIndexDoc = new FlexSearch.Document({
-  document: {
-    id: 'id',
-    index: [
-      '$title',
-      '$artistName',
-      '$artistNameLocalized'
-    ],
-    store: [
-      'id',
-      'title',
-      'releaseDate',
-      'rating',
-      'artistName',
-      'artistNameLocalized',
-      'ownership',
-      'format'
-    ]
-  },
-  tokenize: 'forward',
-  resolution: 9,
-  depth: 3,
-  cache: 500
 });
 
-const recordMap = new Map();
+const recordMap = new Map<string, IRYMRecordDB>();
 let isIndexBuilt = false;
 
 async function buildSearchIndex() {
@@ -79,8 +60,8 @@ async function buildSearchIndex() {
   isIndexBuilt = true;
 }
 
-if (browserAPI.runtime && browserAPI.runtime.onStartup) {
-  browserAPI.runtime.onStartup.addListener(() => {
+if (browser.runtime && browser.runtime.onStartup) {
+  browser.runtime.onStartup.addListener(() => {
     console.log('[Background] onStartup triggered');
     buildSearchIndex();
   });
@@ -102,23 +83,43 @@ async function ensureIndex() {
   }
 }
 
-async function handleDatabaseMessages(message, sender, sendResponse) {
-  const { type, payload } = message;
+async function handleDatabaseMessages(message: DatabaseMessage, sender: browser.Runtime.MessageSender, sendResponse: (response: any) => void) {
+  const { type, payload }: DatabaseMessage = message;
 
   try {
     await ensureIndex();
-    let result = null;
+
+    type TResult =
+      | null
+      | true
+      | number
+      | IRYMRecordDB
+      | IRYMRecordDB[]
+      | IRYMRecordDBMatch[]
+      | Record<string, IRYMRecordDB>
+      | Record<string, IRYMRecordDB[]>
+    ;
+
+    let result: TResult = null;
 
     console.log(`[FlexSearch] ${type} message received`, payload);
 
     switch (type) {
       case 'GET_RECORD_BY_ID': {
+        if (!payload || typeof payload.id !== 'string') {
+          throw new Error('Invalid payload for GET_RECORDS_BY_IDS');
+        }
+
         result = recordMap.get(payload.id) || null;
         break;
       }
 
       case 'GET_RECORDS_BY_IDS': {
-        const results = payload.ids.map(id => recordMap.get(id)).filter(Boolean);
+        if (!payload || !Array.isArray(payload.ids)) {
+          throw new Error('Invalid payload for GET_RECORDS_BY_IDS');
+        }
+
+        const results: IRYMRecordDB[] = payload.ids.map((id: string) => recordMap.get(id)).filter(notNull);
 
         if (payload.asObject) {
           result = Object.fromEntries(results.map(record => [record.id, record]));
@@ -134,44 +135,67 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       }
 
       case 'GET_RECORDS_BY_ARTIST': {
-        const query = utils.normalizeForSearch(payload.artist);
+        if (!payload || typeof payload.artist !== 'string' || !payload.artist.trim()) {
+          throw new Error('Invalid payload for GET_RECORDS_BY_IDS');
+        }
+
+        const artist = payload.artist.trim();
+
+        const query = utils.normalizeForSearch(artist);
         const hits = flexIndex.search(query, { limit: 100 });
 
         result = hits
-          .map(id => recordMap.get(id))
-          .filter(record => {
+          .map(id => recordMap.get(String(id)))
+          .filter((record): record is IRYMRecordDB => {
+            if (!record) return false;
             return record.$artistName.includes(query) || record.$artistNameLocalized.includes(query);
           });
         break;
       }
 
       case 'GET_RECORDS_BY_ARTISTS': {
-        payload.artists.forEach(artist => {
+        if (!payload || !Array.isArray(payload.artists)) {
+          throw new Error('Invalid payload for GET_RECORDS_BY_IDS');
+        }
+
+        const artistsResult: Record<string, IRYMRecordDB[]> = {};
+
+        payload.artists.forEach((artist: string) => {
+          if (typeof artist !== 'string' || !artist.trim()) {
+            console.warn(`Invalid artist name: ${artist}`);
+            return;
+          }
+
           const query = utils.normalizeForSearch(artist);
           const hits = flexIndex.search(query, { limit: 100 });
 
-          const records = hits
-            .map(id => recordMap.get(id))
-            .filter(record => {
+          const records: IRYMRecordDB[] = hits
+            .map(id => recordMap.get(String(id)))
+            .filter((record): record is IRYMRecordDB => {
+              if (!record) return false;
               return record.$artistName.includes(query) || record.$artistNameLocalized.includes(query);
             });
 
           if (records.length) {
-            if (!result) result = {};
-            result[artist] = records.slice();
+            artistsResult[artist] = records.slice();
           }
         });
+        result = artistsResult;
         break;
       }
 
       case 'GET_RECORD_BY_ARTIST_AND_TITLE': {
+        if (!payload || typeof payload.artist !== 'string' || typeof payload.title !== 'string') {
+          throw new Error('Invalid payload for GET_RECORD_BY_ARTIST_AND_TITLE');
+        }
+
         const artistQuery = utils.normalizeForSearch(payload.artist);
         const titleQuery = utils.normalizeForSearch(payload.title);
 
         const hits = flexIndex.search(artistQuery, { limit: 50 });
-        const matchedRecords = hits.map(id => recordMap.get(id)).filter(Boolean);
+        const matchedRecords = hits.map(id => recordMap.get(String(id))).filter(notNull);
 
-        const filterByTitleAndArtist = (records, title) => {
+        const filterByTitleAndArtist = (records: IRYMRecordDB[], title: string) => {
           return records.map(record => {
             const isTitleFullMatch = record.$title === title;
             const isArtistFullMatch = record.$artistName === artistQuery || record.$artistNameLocalized === artistQuery;
@@ -195,9 +219,9 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
             };
 
             return null;
-          }).filter(Boolean).sort((a, b) => {
-            if (a.match === 'full' && b.match !== 'full') return -1;
-            if (b.match === 'full' && a.match !== 'full') return 1;
+          }).filter(notNull).sort((a, b) => {
+            if (a._match === 'full' && b._match !== 'full') return -1;
+            if (b._match === 'full' && a._match !== 'full') return 1;
             return 0;
           });
         };
@@ -207,7 +231,7 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
         const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
 
         const shouldTryTitleFallback =
-          !result?.length &&
+          !(result as [])?.length &&
           titleFallbackQuery &&
           titleQuery !== titleFallbackQuery;
 
@@ -216,7 +240,7 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
           result = filterByTitleAndArtist(matchedRecords, titleFallbackQuery);
         }
 
-        const shouldTryPerWordTitleFallback = !result?.length;
+        const shouldTryPerWordTitleFallback = !(result as [])?.length;
 
         if (shouldTryPerWordTitleFallback) {
           const titleWords = titleQuery
@@ -230,7 +254,7 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
             });
           }
 
-          if (!result?.length && payload.titleFallback) {
+          if (!(result as [])?.length && payload.titleFallback) {
             const titleFallbackWords = titleFallbackQuery
               .split(' ')
               .filter(word => word.length > 1 || !/^[^\w\s]+$/.test(word));
@@ -257,6 +281,9 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       }
 
       case 'ADD_RECORD': {
+        if (!payload || !payload.record || typeof payload.record !== 'object') {
+          throw new Error('Invalid payload for ADD_RECORD');
+        }
         const { record } = payload;
         await db.addRecord(record);
         recordMap.set(record.id, record);
@@ -273,6 +300,9 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       }
 
       case 'UPDATE_RECORD': {
+        if (!payload || !payload.id || typeof payload.updatedData !== 'object') {
+          throw new Error('Invalid payload for UPDATE_RECORD');
+        }
         const existing = recordMap.get(payload.id);
         if (!existing) throw new Error(`No record with id ${payload.id}`);
         const updated = { ...existing, ...payload.updatedData };
@@ -290,6 +320,15 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       }
 
       case 'UPDATE_RECORD_RATING': {
+        if (!payload || typeof payload.id !== 'string' || typeof payload.rating !== 'number') {
+          throw new Error('Invalid payload for UPDATE_RECORD_RATING');
+        }
+        if (payload.rating < 0 || payload.rating > 10) {
+          throw new Error('Rating must be between 0 and 10');
+        }
+        if (!recordMap.has(payload.id)) {
+          throw new Error(`No record with id ${payload.id}`);
+        }
         const existing = recordMap.get(payload.id);
         if (!existing) throw new Error(`No record with id ${payload.id}`);
         existing.rating = payload.rating;
@@ -300,6 +339,9 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       }
 
       case 'DELETE_RECORD': {
+        if (!payload || typeof payload.id !== 'string') {
+          throw new Error('Invalid payload for DELETE_RECORD');
+        }
         await db.deleteRecord(payload.id);
         recordMap.delete(payload.id);
         flexIndex.remove(payload.id);
@@ -313,20 +355,11 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
       }
 
       case 'SET_RECORDS': {
+        if (!payload || !Array.isArray(payload.payload)) {
+          throw new Error('Invalid payload for SET_RECORDS');
+        }
         result = await db.setRecords(payload.payload);
         await buildSearchIndex();
-        break;
-      }
-
-      case 'SEARCH': {
-        const queryParts = [payload.artistName, payload.title]
-          .filter(Boolean)
-          .map(s => s.toLowerCase().trim());
-
-        const searchQuery = queryParts.join(' ');
-        const hits = flexIndex.search(searchQuery, { limit: 30 });
-
-        result = hits.map(id => recordMap.get(id));
         break;
       }
 
@@ -336,72 +369,98 @@ async function handleDatabaseMessages(message, sender, sendResponse) {
     sendResponse({ success: true, result });
   } catch (error) {
     console.error(error);
-    sendResponse({ success: false, error: error.message });
+    sendResponse({ success: false, error: typeof error === 'object' && error !== null && 'message' in error ? (error as { message: string }).message : String(error) });
   }
 }
 
-browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  const { type } = message;
+interface DatabaseMessage {
+  type: DBMessageType;
+  payload?: Record<string, any>;
+}
 
-  if (dbMessageTypes.has(type)) {
-    (async () => {
-      await handleDatabaseMessages(message, sender, sendResponse);
-    })();
-    return true;
-  }
+interface FetchImageMessage {
+  type: 'FETCH_IMAGE';
+  url: string;
+}
 
-  switch (type) {
-    case 'FETCH_IMAGE': {
-      fetch(message.url, { mode: 'cors' })
-        .then((response) => response.blob())
-        .then((blob) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            sendResponse({ success: true, dataUrl: reader.result });
-          };
-          reader.onerror = (e) => {
-            console.error(e);
-            sendResponse({ success: false, error: 'Failed to read blob' });
-          };
-          reader.readAsDataURL(blob);
-        })
-        .catch((err) => {
-          sendResponse({ success: false, error: err.message || 'Fetch error' });
-        });
+interface GetWindowDataMessage {
+  type: 'get-window-data';
+  paths: string[];
+  watch?: boolean;
+  deep?: boolean;
+}
+
+type BackgroundMessage = DatabaseMessage | FetchImageMessage | GetWindowDataMessage;
+
+browser.runtime.onMessage.addListener(
+  (
+    message: BackgroundMessage,
+    sender: browser.Runtime.MessageSender,
+    sendResponse: (response: any) => void
+  ): boolean | void => {
+    const { type } = message;
+
+    if (dbMessageTypes.includes(type as DBMessageType)) {
+      (async () => {
+        await handleDatabaseMessages(message as DatabaseMessage, sender, sendResponse);
+      })();
       return true;
     }
 
-    case 'get-window-data': {
-      if (
-        sender.tab?.id &&
-        Array.isArray(message.paths)
-      ) {
-        const { paths, watch, deep } = message;
-        const pathMap = new Map();
+    switch (type) {
+      case 'FETCH_IMAGE': {
+        fetch((message as FetchImageMessage).url, { mode: 'cors' })
+          .then((response) => response.blob())
+          .then((blob) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              sendResponse({ success: true, dataUrl: reader.result });
+            };
+            reader.onerror = (e) => {
+              console.error(e);
+              sendResponse({ success: false, error: 'Failed to read blob' });
+            };
+            reader.readAsDataURL(blob);
+          })
+          .catch((err) => {
+            sendResponse({ success: false, error: err.message || 'Fetch error' });
+          });
+        return true;
+      }
 
-        for (const path of paths) {
-          const [root] = path.split('.');
-          const value = path.substring(root.length + 1);
+      case 'get-window-data': {
+        const msg = message as GetWindowDataMessage;
+        if (
+          sender.tab?.id &&
+          Array.isArray(msg.paths)
+        ) {
+          const { paths, watch, deep } = msg;
+          const pathMap: Map<string, string[]> = new Map();
 
-          if (!pathMap.has(root)) pathMap.set(root, []);
-          if (value) {
-            pathMap.get(root).push(value);
+          for (const path of paths) {
+            const [root] = path.split('.');
+            const value = path.substring(root.length + 1);
+
+            if (!pathMap.has(root)) pathMap.set(root, []);
+            if (value) {
+              pathMap.get(root)!.push(value);
+            }
+          }
+
+          for (const [prop, fieldPaths] of pathMap.entries()) {
+            browser.scripting.executeScript({
+              target: { tabId: sender.tab.id },
+              world: 'MAIN',
+              args: [prop, fieldPaths, constants.APP_NAME_SLUG, watch, deep],
+              func: getWindowDataInjected,
+            });
           }
         }
-
-        for (const [prop, fieldPaths] of pathMap.entries()) {
-          browserAPI.scripting.executeScript({
-            target: { tabId: sender.tab.id },
-            world: 'MAIN',
-            args: [prop, fieldPaths, constants.APP_NAME_SLUG, watch, deep],
-            func: getWindowDataInjected,
-          });
-        }
+        return false;
       }
-      return false;
-    }
 
-    default:
-      console.warn('Unhandled message type:', type);
+      default:
+        console.warn('Unhandled message type:', type);
+    }
   }
-});
+);

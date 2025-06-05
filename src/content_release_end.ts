@@ -1,15 +1,19 @@
-import * as utils from '@/helpers/utils.js';
-import * as constants from '@/helpers/constants.js';
-import { RecordsAPI } from '@/helpers/records-api.js';
+import * as utils from '@/helpers/utils';
+import * as constants from '@/helpers/constants';
+import { RecordsAPI } from '@/helpers/records-api';
 import {
   getReleaseYear,
   getReleaseTitle,
   getArtistNames,
-} from './modules/release/targets.js';
+} from './modules/release/targets';
 
 (async function () {
   window.addEventListener('load', async () => {
-    const releaseId = utils.extractIdFromTitle(document.querySelector('.album_shortcut').value);
+    const albumShortcutElem = document.querySelector('.album_shortcut') as HTMLInputElement | null;
+    if (!albumShortcutElem) {
+      throw new Error("Element with class 'album_shortcut' not found.");
+    }
+    const releaseId = utils.extractIdFromTitle(albumShortcutElem.value);
 
     const rymRatingPath = 'rating_l_' + releaseId;
     const rymCatalogPath = 'catalog_l_' + releaseId;
@@ -19,7 +23,7 @@ import {
       `${rymCatalogPath}.ownership`,
       `${rymCatalogPath}.format`,
     ], async updatedData => {
-      // Fix for RYM bug when setting (not catalogued) and format is not being reset
+      // Fix for the runtime RYM bug when setting [not catalogued] and `format` is not being reset
       if (updatedData[rymCatalogPath].ownership === 'n') {
         updatedData[rymCatalogPath].format = '';
       }
@@ -27,7 +31,28 @@ import {
       await syncWithDB(updatedData);
     });
 
-    function prepareFullData(syncedData) {
+    interface RYMRecord {
+      id: string;
+      title: string;
+      releaseDate: string | number;
+      artistName: string;
+      artistNameLocalized: string;
+      $artistName: string;
+      $artistNameLocalized: string;
+      $title: string;
+      rating: number;
+      ownership: string;
+      format: string;
+      _raw?: any;
+    }
+
+    interface SyncedData {
+      rating: number;
+      ownership: string;
+      format: string;
+    }
+
+    function prepareFullData(syncedData: SyncedData): RYMRecord {
       const artistNames = getArtistNames();
       const { artistName, artistNameLocalized } = utils.combineArtistNames(artistNames);
 
@@ -50,6 +75,7 @@ import {
       const { rating } = data[rymRatingPath];
       const { ownership, format } = data[rymCatalogPath];
       const dbRecord = await RecordsAPI.getById(releaseId);
+
       const parsedRecord = prepareFullData({
         rating,
         ownership,

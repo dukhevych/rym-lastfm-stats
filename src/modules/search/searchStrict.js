@@ -1,5 +1,5 @@
-import * as utils from '@/helpers/utils.js';
-import * as constants from '@/helpers/constants.js';
+import * as utils from '@/helpers/utils';
+import * as constants from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
 
 import './searchStrict.css';

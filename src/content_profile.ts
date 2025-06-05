@@ -1,6 +1,7 @@
-import profile, { targetSelectors } from '@/modules/profile/index.js';
-import { renderContent } from '@/helpers/renderContent.js';
-import * as utils from '@/helpers/utils.js';
+import profile, { targetSelectors } from '@/modules/profile';
+import { renderContent } from '@/helpers/renderContent';
+import * as utils from '@/helpers/utils';
+
 import './test.css';
 
 (async function () {

@@ -1,6 +1,6 @@
-import * as utils from '@/helpers/utils.js';
-import * as api from '@/helpers/api.js';
-import * as constants from '@/helpers/constants.js';
+import * as utils from '@/helpers/utils';
+import * as api from '@/helpers/api';
+import * as constants from '@/helpers/constants';
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 

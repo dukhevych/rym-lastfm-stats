@@ -1,7 +1,7 @@
-import release from '@/modules/release/index.js';
-import { renderContent } from '@/helpers/renderContent.js';
-import * as utils from '@/helpers/utils.js';
-import * as constants from '@/helpers/constants.js';
+import release from '@/modules/release';
+import { renderContent } from '@/helpers/renderContent';
+import * as utils from '@/helpers/utils';
+import * as constants from '@/helpers/constants';
 
 (async function () {
   const sprite = utils.createSVGSprite();

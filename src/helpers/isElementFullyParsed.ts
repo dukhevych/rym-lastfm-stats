@@ -1,7 +1,7 @@
-export default function isElementFullyParsed(el) {
+export default function isElementFullyParsed(el: Element | null | undefined): boolean {
   if (!el || !(el instanceof Element)) return false;
 
-  let current = el;
+  let current: Element | null = el;
 
   while (current && current !== document.body) {
     if (current.nextElementSibling) {

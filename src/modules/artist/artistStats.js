@@ -1,6 +1,6 @@
-import * as utils from '@/helpers/utils.js';
-import * as api from '@/helpers/api.js';
-import { createElement as h } from '@/helpers/utils.js';
+import * as utils from '@/helpers/utils';
+import * as api from '@/helpers/api';
+import { createElement as h } from '@/helpers/utils';
 
 import '@/modules/release/releaseStats.css';
 

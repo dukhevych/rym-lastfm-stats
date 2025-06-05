@@ -1,5 +1,6 @@
-const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
-const manifest = browserAPI.runtime.getManifest();
+import browser from 'webextension-polyfill';
+
+const manifest = browser.runtime.getManifest();
 
 export const isDev = process.env.NODE_ENV === 'development';
 
@@ -26,7 +27,7 @@ export const DARK_THEME_CLASSES = [
   'theme_darkgray',
 ];
 
-export const THEMES = {};
+export const THEMES: { [key: string]: string } = {};
 
 LIGHT_THEME_CLASSES.reduce((acc, theme) => {
   acc[theme] = 'light';
@@ -67,10 +68,11 @@ export const PERIOD_OPTIONS = [
 ];
 
 export const PERIOD_LABELS_MAP = PERIOD_OPTIONS.reduce(
-(acc, { value, label }) => {
-  acc[value] = label;
-  return acc;
-}, {});
+  (acc: { [key: string]: string }, { value, label }) => {
+    acc[value] = label;
+    return acc;
+  }, {} as { [key: string]: string }
+);
 
 // TOP ALBUMS
 export const TOP_ALBUMS_PERIOD_DEFAULT = '1month';
@@ -127,10 +129,10 @@ export const RYM_ENTITY_CODES = {
 }
 
 // [RYM entity code]: [Addon entity type]
-export const RYM_ENTITY_CODES_INVERTED = Object.entries(RYM_ENTITY_CODES).reduce((acc, [key, value]) => {
+export const RYM_ENTITY_CODES_INVERTED = Object.entries(RYM_ENTITY_CODES).reduce((acc: { [key: string]: string }, [key, value]) => {
   acc[value] = key;
   return acc;
-}, {});
+}, {} as { [key: string]: string });
 
 // Keywords to clean up album titles from additional information in parentheses or brackets
 // (Deluxe Edition), (Remastered), [Digipack], (Live in London) etc.
@@ -167,32 +169,30 @@ export const EDITION_KEYWORDS_REPLACE_PATTERN = new RegExp(
 );
 
 // [DB value]: [display value]
-export const RYM_FORMATS = {
-  'CD': 'CD',
-  'LP': 'Vinyl',
-  'MP3': 'Digital',
-  'CD-R': 'CD-R',
-  'Cassette': 'Cassette',
-  'DVD-A': 'DVD-A',
-  'SACD': 'SACD',
-  'Minidisc': 'Minidisc',
-  'Multiple': 'Multiple',
-  '8-Track': '8-track',
-  'Other': 'Other',
+export const RYMFormatsLabels: Record<ERYMFormats, string> = {
+  [ERYMFormats.CD]: 'CD',
+  [ERYMFormats.LP]: 'Vinyl',
+  [ERYMFormats.MP3]: 'Digital',
+  [ERYMFormats.CD_R]: 'CD-R',
+  [ERYMFormats.Cassette]: 'Cassette',
+  [ERYMFormats.DVD_A]: 'DVD-A',
+  [ERYMFormats.SACD]: 'SACD',
+  [ERYMFormats.Minidisc]: 'Minidisc',
+  [ERYMFormats.Multiple]: 'Multiple',
+  [ERYMFormats.EightTrack]: '8-track',
+  [ERYMFormats.Other]: 'Other',
 };
 
 // [display value]: [RYM DB value]
-export const RYM_FORMATS_INVERTED = Object.entries(RYM_FORMATS).reduce((acc, [key, value]) => {
-  acc[value] = key;
-  return acc;
-}, {});
+export const RYMFormatsLabelsReverse: Record<string, ERYMFormats> = Object.fromEntries(
+  Object.entries(RYMFormatsLabels).map(([key, value]) => [value, key as ERYMFormats])
+);
 
-// [DB value]: [display value]
-export const RYM_OWNERSHIP_TYPES = {
-  o: 'In collection',
-  w: 'On wishlist',
-  u: 'Used to own',
-  n: '(not cataloged)',
+export const RYMOwnershipStatusLabels: Record<ERYMOwnershipStatus, string> = {
+  [ERYMOwnershipStatus.InCollection]: 'In collection',
+  [ERYMOwnershipStatus.OnWishlist]: 'On wishlist',
+  [ERYMOwnershipStatus.UsedToOwn]: 'Used to own',
+  [ERYMOwnershipStatus.NotCataloged]: '(not cataloged)',
 };
 
 // [display value on Profile/Collection]: [RYM DB value]
@@ -204,27 +204,27 @@ export const RYM_OWNERSHIP_TYPES_EXTRA_LABELS = {
   'Used to Own': 'u',
 };
 
-export const RECENT_TRACK_BACKGROUND_NAMES = {
-  1: 'Clean',
-  2: 'Diagonal',
-  3: 'Mutiny',
-  4: 'Breathing',
-  5: 'Hypnosis',
-  6: 'Diagonal #2',
-  7: 'Star',
-  8: 'Grille',
-  9: 'Explosion',
-  10: 'Glitch',
-  11: 'Plaid',
-  12: 'Tiny rombo',
-  13: 'Diagonal #3',
-  14: 'Diagonal #4',
-  15: 'Vertical stripes',
-  16: 'Rombo',
-  17: 'Squares',
-  18: 'Horizontal stripes #1',
-  19: 'Horizontal stripes #2',
-  20: 'Flow',
-  21: 'EQ LG',
-  22: 'EQ SM inverted'
-}
+export const RECENT_TRACK_BACKGROUND_NAMES = [
+  'Clean',
+  'Diagonal',
+  'Mutiny',
+  'Breathing',
+  'Hypnosis',
+  'Diagonal #2',
+  'Star',
+  'Grille',
+  'Explosion',
+  'Glitch',
+  'Plaid',
+  'Tiny rombo',
+  'Diagonal #3',
+  'Diagonal #4',
+  'Vertical stripes',
+  'Rombo',
+  'Squares',
+  'Horizontal stripes #1',
+  'Horizontal stripes #2',
+  'Flow',
+  'EQ LG',
+  'EQ SM inverted'
+];

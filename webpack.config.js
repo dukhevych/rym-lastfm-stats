@@ -15,7 +15,7 @@ const packageJson = require('./package.json');
 
 const appVersion = packageJson.version;
 
-const entries = glob.sync('./src/*.js').reduce((acc, file) => {
+const entries = glob.sync('./src/*.{js,ts}').reduce((acc, file) => {
   const name = path.basename(file, path.extname(file));
   acc[name] = path.resolve(__dirname, file);
   return acc;
@@ -84,7 +84,7 @@ module.exports = (env) => {
         '@': path.resolve(__dirname, 'src'),
         vue$: 'vue/dist/vue.runtime.esm-browser.prod.js',
       },
-      extensions: ['.js', '.vue'],
+      extensions: ['.ts', '.js', '.vue']
     },
     module: {
       rules: [
@@ -108,7 +108,7 @@ module.exports = (env) => {
             {
               loader: 'style-loader',
               options: {
-                insert: require.resolve('./src/helpers/styleLoaderInsert.js'),
+                insert: require.resolve('./src/helpers/styleLoaderInsert.ts'),
               }
             },
             'css-loader',
@@ -124,6 +124,16 @@ module.exports = (env) => {
           test: /\.csv$/i,
           resourceQuery: /raw/,
           use: 'raw-loader',
+        },
+        {
+          test: /\.ts$/,
+          exclude: [/node_modules/],
+          use: {
+            loader: 'ts-loader',
+            options: {
+              transpileOnly: true,
+            },
+          },
         },
       ],
     },
@@ -163,7 +173,7 @@ module.exports = (env) => {
         ],
       }),
       new ESLintPlugin({
-        extensions: ['js', 'vue'],
+        extensions: ['js', 'ts', 'vue'],
         configType: 'flat',
         fix: process.env.NODE_ENV === 'production',
         failOnError: true,
