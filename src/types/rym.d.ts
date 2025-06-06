@@ -1,25 +1,4 @@
 declare global {
-  enum ERYMOwnershipStatus {
-    InCollection = 'o',
-    OnWishlist = 'w',
-    UsedToOwn = 'u',
-    NotCataloged = 'n',
-  }
-
-  export enum ERYMFormats {
-    CD = 'CD',
-    LP = 'LP',
-    MP3 = 'MP3',
-    CD_R = 'CD-R',
-    Cassette = 'Cassette',
-    DVD_A = 'DVD-A',
-    SACD = 'SACD',
-    Minidisc = 'Minidisc',
-    Multiple = 'Multiple',
-    EightTrack = '8-Track',
-    Other = 'Other',
-  };
-
   interface IRYMRecordExport {
     id: string;
     firstName: string;
@@ -30,7 +9,7 @@ declare global {
     releaseDate: string;
     rating: number;
     ownership: ERYMOwnershipStatus;
-    format: ERYMFormats | '';
+    format: ERYMFormat | '';
   }
 
   interface IRYMRecordDB {
@@ -39,7 +18,7 @@ declare global {
     title: string;
     rating: number;
     ownership: ERYMOwnershipStatus;
-    format: ERYMFormats | '';
+    format: ERYMFormat | '';
     artistName: string;
     artistNameLocalized: string;
     $artistName: string;

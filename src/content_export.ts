@@ -100,7 +100,7 @@ import { createElement as h } from '@/helpers/utils';
         const releaseDate = +columns[6];
         const rating = +columns[7];
         const ownership = columns[8] as ERYMOwnershipStatus;
-        const format = columns[10] as ERYMFormats;
+        const format = columns[10] as ERYMFormat;
 
         const getCombinedName = (firstName: string, lastName: string) => [firstName, lastName]
           .filter(Boolean)

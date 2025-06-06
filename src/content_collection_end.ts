@@ -12,27 +12,31 @@ import { RecordsAPI } from '@/helpers/records-api';
       document.querySelectorAll('table.mbgen > tbody > tr[id^="page_catalog_item_"]:has(.or_q_rating_date_s)')
     );
 
-    const parsedData = collectionPageItems.map(item => {
-      const ratingEl = item.querySelector('.or_q_rating_date_s img');
-      const rating = ratingEl ?
-        parseInt(item.querySelector('.or_q_rating_date_s img').src.split('/').pop().split('.')[0])
-      : 0;
-      const releaseLink = item.querySelector('.or_q_albumartist_td a.album');
-      const releaseId = releaseLink.title.replace('[Album', '').replace(']', '');
-      const title = releaseLink.innerText;
-      const year = item.querySelector('.or_q_albumartist i:has(a.album) + span').innerText
-        .replace('(', '').replace(')', '');
-      const ownershipText = item.querySelector('.or_q_ownership').textContent.trim();
+    const parsedData: IRYMRecordDB[] = collectionPageItems.map(item => {
+      const ratingEl: HTMLImageElement | null = item.querySelector('.or_q_rating_date_s img');
+      const releaseLink: HTMLAnchorElement | null = item.querySelector('.or_q_albumartist_td a.album');
+      const yearEl: HTMLSpanElement | null = item.querySelector('.or_q_albumartist i:has(a.album) + span');
+      const ownershipEl: HTMLSpanElement | null = item.querySelector('.or_q_ownership');
 
-      let ownership = 'n';
-      let format = '';
+      const rating = ratingEl && ratingEl.src ? parseInt(ratingEl.src.split('/').pop()?.split('.')[0] || '0') : '0';
+      const releaseId = releaseLink ? releaseLink.title.replace('[Album', '').replace(']', '') : '';
+      const title = releaseLink?.innerText || '';
+      const year = yearEl ? yearEl.innerText.replace('(', '').replace(')', '') : '';
+      const ownershipText = (ownershipEl?.textContent || '').trim();
 
-      if (ownershipText) {
-        ownership = constants.RYM_OWNERSHIP_TYPES_EXTRA_LABELS[ownershipText] || 'o';
+      let ownership: ERYMOwnershipStatus = ERYMOwnershipStatus.NotCataloged; // default to 'n'
+      let format: ERYMFormat | '' = ''; // default to ''
+
+      function isOwnershipAltText(value: string): value is ERYMOwnershipAltText {
+        return Object.values(ERYMOwnershipAltText).includes(value as ERYMOwnershipAltText);
+      }
+
+      if (ownershipText && isOwnershipAltText(ownershipText)) {
+        ownership = constants.ERYMOwnershipAltToCode[ownershipText] || ERYMOwnershipStatus.InCollection;
 
         // Formats for 'Used to Own' and 'Wishlist' are not available on Collection page
         // Only 'In collection' is used by addon anyway, so we ignore formats for other ownership types
-        if (ownership === 'o') {
+        if (ownership === ERYMOwnershipStatus.InCollection) {
           format = constants.RYMFormatsLabelsReverse[ownershipText] || '';
         }
       }
@@ -80,7 +84,7 @@ import { RecordsAPI } from '@/helpers/records-api';
 
     await Promise.all(
       parsedData.map((data) => {
-        const dbItem = dbData[data.id];
+        const dbItem = (dbData as Record<string, IRYMRecordDB>)[data.id];
 
         if (!dbItem) {
           addedQty++;

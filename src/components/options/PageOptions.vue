@@ -128,7 +128,7 @@
         >
           <div>
             <p><strong>{{ rymSyncMessage }}</strong></p>
-            <strong><code>{{ dbStatus }}</code></strong> records in addon database
+            <strong><code>{{ dbRecordsQty }}</code></strong> records synced with RYM
           </div>
           <button
             type="button"
@@ -409,14 +409,6 @@
               label="Recent tracks"
             />
 
-            <!-- RECENT TRACKS REPLACE -->
-            <FormCheckbox
-              v-model="options.recentTracksReplace"
-              name="recentTracksReplace"
-              label="Replace 'Listening to' (experimental)"
-              :disabled="options.recentTracks === false"
-            />
-
             <!-- RECENT TRACKS LIMIT -->
             <FormRange
               v-model="options.recentTracksLimit"
@@ -453,6 +445,15 @@
               :min="constants.TOP_ARTISTS_LIMIT_MIN"
               :max="constants.TOP_ARTISTS_LIMIT_MAX"
               :disabled="options.topArtists === false"
+            />
+
+            <FormSeparator />
+
+            <!-- RYM PLAY HISTORY HIDE -->
+            <FormCheckbox
+              v-model="options.rymPlayHistoryHide"
+              name="rymPlayHistoryHide"
+              label="Hide default 'RYM Play History' section"
             />
           </FormFieldset>
 
@@ -648,7 +649,7 @@ function handleApiKeyBlur(e) {
   lastfmApiInputType.value = 'password';
 }
 
-const dbStatus = ref(null);
+const dbRecordsQty = ref(null);
 
 const submit = async () => {
   const newConfig = JSON.parse(JSON.stringify(options));
@@ -740,7 +741,7 @@ const closeModalHandler = (e) => {
 const init = async () => {
   try {
     const syncedOptions = await utils.getSyncedOptions();
-    dbStatus.value = await RecordsAPI.getQty()
+    dbRecordsQty.value = await RecordsAPI.getQty()
 
     config.value = syncedOptions;
 

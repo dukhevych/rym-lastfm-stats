@@ -649,3 +649,134 @@ export async function searchRelease(
 
   return result;
 }
+
+// REFACTORED METHODS
+
+// METHOD: RECENT TRACKS
+export interface RecentTrack {
+  artist: { '#text': string; mbid: string };
+  album: { '#text': string; mbid: string };
+  name: string;
+  streamable: string;
+  mbid: string;
+  url: string;
+  image: Array<{ size: string; '#text': string }>;
+  date?: { uts: string; '#text': string }; // Missing if now playing
+  '@attr'?: { nowplaying: 'true' };
+}
+
+export interface RecentTracksResponse {
+  recenttracks: {
+    track: RecentTrack[];
+    '@attr': {
+      user: string;
+      page: string;
+      total: string;
+      perPage: string;
+      totalPages: string;
+    };
+  };
+}
+
+interface GetRecentTracksParams {
+  username: string;
+  apiKey: string;
+  limit?: number;
+  page?: number;
+  from?: number; // UNIX timestamp
+  to?: number;   // UNIX timestamp
+}
+
+export async function getRecentTracks(
+  {
+    username,
+    apiKey,
+    limit,
+    page,
+    from,
+    to,
+  }: GetRecentTracksParams,
+  signal?: AbortSignal,
+): Promise<RecentTracksResponse> {
+  const params = new URLSearchParams({
+    method: 'user.getrecenttracks',
+    user: username,
+    api_key: apiKey,
+    format: 'json',
+  });
+
+  if (limit) params.set('limit', limit.toString());
+  if (page) params.set('page', page.toString());
+  if (from) params.set('from', from.toString());
+  if (to) params.set('to', to.toString());
+
+  const url = `${BASE_URL}?${params.toString()}`;
+  const res = await fetch(url, { signal });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || `Failed to fetch recent tracks: ${res.statusText}`);
+  }
+
+  return res.json();
+}
+
+// METHOD: ALBUM SEARCH
+
+interface AlbumSearchParams {
+  album: string;
+  apiKey: string;
+  limit?: number;
+  page?: number;
+}
+
+export interface AlbumSearchResult {
+  name: string;
+  artist: string;
+  url: string;
+  image: Array<{ size: string; '#text': string }>;
+  mbid: string;
+}
+
+export interface AlbumSearchResponse {
+  results: {
+    'opensearch:Query': {
+      '#text': string;
+      role: string;
+      searchTerms: string;
+      startPage: string;
+    };
+    'opensearch:totalResults': string;
+    'opensearch:startIndex': string;
+    'opensearch:itemsPerPage': string;
+    albummatches: {
+      album: AlbumSearchResult[];
+    };
+  };
+}
+
+export async function searchAlbums({
+  album,
+  apiKey,
+  limit,
+  page,
+}: AlbumSearchParams): Promise<AlbumSearchResponse> {
+  const params = new URLSearchParams({
+    method: 'album.search',
+    album,
+    api_key: apiKey,
+    format: 'json',
+  });
+
+  if (limit) params.set('limit', limit.toString());
+  if (page) params.set('page', page.toString());
+
+  const url = `${BASE_URL}?${params.toString()}`;
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    throw new Error(`Failed to search albums: ${res.statusText}`);
+  }
+
+  return res.json();
+}

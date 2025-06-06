@@ -391,6 +391,7 @@ html[data-scheme="light"] {
   transition: all 0.3s ease-out;
   transition-property: background-color, color, border-radius;
   position: relative;
+  margin-top: 0;
 
   &:before {
     content: '';

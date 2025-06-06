@@ -15,7 +15,7 @@ import {
   getReleaseId,
 } from './targets';
 
-const uiElements = {};
+const uiElements = {} as UIElements;
 
 interface Stats {
   releaseType: string | null;
@@ -32,6 +32,22 @@ interface Stats {
   artistQueryCacheKey: string | null;
   releaseTitleQueryCacheKey: string | null;
   artists: string[];
+}
+
+interface UIElements {
+  searchDialog: HTMLDialogElement;
+  searchList: HTMLUListElement;
+  infoTable: HTMLTableElement;
+  statsList: HTMLUListElement;
+  listeners: HTMLLIElement;
+  playcount: HTMLLIElement;
+  userplaycount: HTMLLIElement;
+  lastfmLink: HTMLAnchorElement;
+  searchDialogOpener: HTMLAnchorElement;
+  statsWrapper: HTMLDivElement;
+  heading: HTMLTableCellElement;
+  content: HTMLTableCellElement;
+  tr: HTMLTableRowElement;
 }
 
 const state: Stats = {
@@ -93,7 +109,7 @@ function createSearchDialog() {
           {
             href: '#',
             className: 'dialog-close-btn',
-            onClick: (e) => {
+            onClick: (e: MouseEvent) => {
               e.preventDefault();
               dialog.close();
             },
@@ -130,7 +146,7 @@ function populateSearchDialog() {
       h('a', {
         href: item.url,
         className: 'search-item-link',
-        onClick: async (e) => {
+        onClick: async (e: MouseEvent) => {
           e.preventDefault();
           await utils.storageSet({
             [state.artistQueryCacheKey]: item.artist,
@@ -171,7 +187,8 @@ function updateSearchDialog() {
 }
 
 function prepareReleaseStatsUI() {
-  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
+  const infoTable: HTMLTableElement | null = document.querySelector(INFO_CONTAINER_SELECTOR);
+
   if (!infoTable) return;
 
   const { dialog: searchDialog, list: searchList } = createSearchDialog();
@@ -202,7 +219,7 @@ function prepareReleaseStatsUI() {
     {
       title: 'Search Last.fm for this release',
       className: 'incorrect-stats-link',
-      onClick: (e) => {
+      onClick: (e: MouseEvent) => {
         e.preventDefault();
         uiElements.searchDialog.showModal();
       },
@@ -251,15 +268,15 @@ function populateReleaseStats(
     uiElements.listeners.classList.remove('is-hidden');
     uiElements.listeners.style.display = 'block';
     uiElements.listeners.title = `${listeners} listeners ${cacheTimeHint}`;
-    uiElements.listeners.dataset.value = utils.shortenNumber(parseInt(listeners));
+    uiElements.listeners.dataset.value = utils.shortenNumber(Math.trunc(listeners));
   } else {
     uiElements.listeners.classList.add('is-hidden');
   }
 
   if (playcount !== undefined && listeners !== undefined) {
     uiElements.playcount.classList.remove('is-hidden');
-    uiElements.playcount.title = `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`;
-    uiElements.playcount.dataset.value = utils.shortenNumber(parseInt(playcount));
+    uiElements.playcount.title = `${playcount}, ${Math.trunc(playcount / listeners)} per listener ${cacheTimeHint}`;
+    uiElements.playcount.dataset.value = utils.shortenNumber(Math.trunc(playcount));
   } else {
     uiElements.playcount.classList.add('is-hidden');
   }
@@ -267,7 +284,7 @@ function populateReleaseStats(
   if (userplaycount !== undefined) {
     uiElements.userplaycount.classList.remove('is-hidden');
     uiElements.userplaycount.title = `${userplaycount} scrobbles`;
-    uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`;
+    uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(Math.trunc(userplaycount))}`;
   } else {
     uiElements.userplaycount.classList.add('is-hidden');
   }
@@ -424,7 +441,7 @@ async function updateReleaseStats() {
   populateReleaseStats(stats);
 }
 
-function initState(config) {
+function initState(config: ProfileOptions) {
   if (!config) return;
 
   state.config = config;
@@ -438,7 +455,7 @@ function initState(config) {
   state.releaseId = getReleaseId();
 }
 
-async function render(config) {
+async function render(config: ProfileOptions) {
   initState(config);
 
   if (state.artists.length === 0 || !state.releaseTitle) {

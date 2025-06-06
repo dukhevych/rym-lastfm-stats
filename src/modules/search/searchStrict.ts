@@ -27,7 +27,7 @@ function injectShowAllButton() {
 }
 
 // function addReleaseIdAsOrder(item) {
-//   const releaseTitleSelector = validationRules[constants.RYM_ENTITY_CODES.release].selectors.releaseTitleSelector;
+//   const releaseTitleSelector = validationRules[RYMEntityCode.Release].selectors.releaseTitleSelector;
 //   const releaseTitle = item.querySelector(releaseTitleSelector);
 //   let releaseId = releaseTitle?.title || '';
 //   releaseId = utils.extractIdFromTitle(releaseId);
@@ -37,7 +37,7 @@ function injectShowAllButton() {
 // };
 
 const validationRules = {
-  [constants.RYM_ENTITY_CODES.artist]: {
+  [RYMEntityCode.Artist]: {
     selectors: {
       artistNameSelector: 'a.searchpage.artist',
       artistNameLocalizedSelector: 'a.searchpage.artist + span.smallgray',
@@ -73,7 +73,7 @@ const validationRules = {
       );
     },
   },
-  [constants.RYM_ENTITY_CODES.release]: {
+  [RYMEntityCode.Release]: {
     selectors: {
       artistNameSelector: 'a.artist',
       releaseTitleSelector: 'a.searchpage',
@@ -141,7 +141,7 @@ const validationRules = {
       return partialMatch ? 'partial' : 'full';
     },
   },
-  [constants.RYM_ENTITY_CODES.song]: {
+  [RYMEntityCode.Song]: {
     selectors: {
       artistNameSelector: '.infobox td:nth-child(2) > span .ui_name_locale',
       trackNameSelector: '.infobox td:nth-child(2) > table .ui_name_locale_original',
@@ -182,7 +182,7 @@ async function render(config) {
   const strict = urlParams.get('strict');
   const searchType = urlParams.get('searchtype');
 
-  if (strict !== 'true' || !Object.values(constants.RYM_ENTITY_CODES).includes(searchType)) return;
+  if (strict !== 'true' || !Object.values(RYMEntityCode).includes(searchType)) return;
 
   const searchTerm = utils.deburr(urlParams.get('searchterm').toLowerCase());
 
@@ -194,7 +194,7 @@ async function render(config) {
     item.classList.add('rym-search-strict--item');
     item.dataset.itemType = constants.RYM_ENTITY_CODES_INVERTED[searchType];
 
-    const isReleaseSearch = searchType === constants.RYM_ENTITY_CODES.release;
+    const isReleaseSearch = searchType === RYMEntityCode.Release;
 
     if (isReleaseSearch) {
       addReleaseUserRating(item);
@@ -250,14 +250,14 @@ async function render(config) {
 
         warning.appendChild(utils.createParagraph(`No direct matches found on the #${page} page.`));
 
-        if (searchType === constants.RYM_ENTITY_CODES.artist) {
+        if (searchType === RYMEntityCode.Artist) {
           const p = utils.createParagraph('This artist may not be added yet into RYM database or too obscure.');
           p.appendChild(utils.createLink('/artist/profile_ac', 'Add artist', false));
           warning.appendChild(p);
-        } else if (searchType === constants.RYM_ENTITY_CODES.release) {
+        } else if (searchType === RYMEntityCode.Release) {
           const p = utils.createParagraph('This release may not be added yet into RYM database or too obscure.');
           warning.appendChild(p);
-        } else if (searchType === constants.RYM_ENTITY_CODES.song) {
+        } else if (searchType === RYMEntityCode.Song) {
           const p = utils.createParagraph('This song may not be added yet into RYM database or too obscure.');
           warning.appendChild(p);
         }

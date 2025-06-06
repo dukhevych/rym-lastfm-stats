@@ -1,4 +1,5 @@
 import browser from 'webextension-polyfill';
+import * as enums from '@/helpers/enums';
 
 const manifest = browser.runtime.getManifest();
 
@@ -91,8 +92,8 @@ export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 export const PROFILE_OPTIONS_DEFAULT = {
   recentTracks: true,
   recentTracksShowOnLoad: false,
-  recentTracksReplace: true,
-  recentTracksReplaceBackground: 1,
+  recentTracksBackground: 1,
+  rymPlayHistoryHide: false,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
   topArtists: true,
   topArtistsLimit: TOP_ARTISTS_LIMIT_DEFAULT,
@@ -169,39 +170,39 @@ export const EDITION_KEYWORDS_REPLACE_PATTERN = new RegExp(
 );
 
 // [DB value]: [display value]
-export const RYMFormatsLabels: Record<ERYMFormats, string> = {
-  [ERYMFormats.CD]: 'CD',
-  [ERYMFormats.LP]: 'Vinyl',
-  [ERYMFormats.MP3]: 'Digital',
-  [ERYMFormats.CD_R]: 'CD-R',
-  [ERYMFormats.Cassette]: 'Cassette',
-  [ERYMFormats.DVD_A]: 'DVD-A',
-  [ERYMFormats.SACD]: 'SACD',
-  [ERYMFormats.Minidisc]: 'Minidisc',
-  [ERYMFormats.Multiple]: 'Multiple',
-  [ERYMFormats.EightTrack]: '8-track',
-  [ERYMFormats.Other]: 'Other',
+export const RYMFormatsLabels: Record<ERYMFormat, string> = {
+  [enums.ERYMFormat.CD]: 'CD',
+  [enums.ERYMFormat.LP]: 'Vinyl',
+  [enums.ERYMFormat.MP3]: 'Digital',
+  [enums.ERYMFormat.CD_R]: 'CD-R',
+  [enums.ERYMFormat.Cassette]: 'Cassette',
+  [enums.ERYMFormat.DVD_A]: 'DVD-A',
+  [enums.ERYMFormat.SACD]: 'SACD',
+  [enums.ERYMFormat.Minidisc]: 'Minidisc',
+  [enums.ERYMFormat.Multiple]: 'Multiple',
+  [enums.ERYMFormat.EightTrack]: '8-track',
+  [enums.ERYMFormat.Other]: 'Other',
 };
 
 // [display value]: [RYM DB value]
-export const RYMFormatsLabelsReverse: Record<string, ERYMFormats> = Object.fromEntries(
-  Object.entries(RYMFormatsLabels).map(([key, value]) => [value, key as ERYMFormats])
+export const RYMFormatsLabelsReverse: Record<string, ERYMFormat> = Object.fromEntries(
+  Object.entries(RYMFormatsLabels).map(([key, value]) => [value, key as ERYMFormat])
 );
 
 export const RYMOwnershipStatusLabels: Record<ERYMOwnershipStatus, string> = {
-  [ERYMOwnershipStatus.InCollection]: 'In collection',
-  [ERYMOwnershipStatus.OnWishlist]: 'On wishlist',
-  [ERYMOwnershipStatus.UsedToOwn]: 'Used to own',
-  [ERYMOwnershipStatus.NotCataloged]: '(not cataloged)',
+  [enums.ERYMOwnershipStatus.InCollection]: 'In collection',
+  [enums.ERYMOwnershipStatus.OnWishlist]: 'On wishlist',
+  [enums.ERYMOwnershipStatus.UsedToOwn]: 'Used to own',
+  [enums.ERYMOwnershipStatus.NotCataloged]: '(not cataloged)',
 };
 
 // [display value on Profile/Collection]: [RYM DB value]
 // Only 2 values are used in the Profile/Collection
 // `In collection` always has `format`
 // `Wishlist` and `Used to own` are always shown no matter if `format` is set or not
-export const RYM_OWNERSHIP_TYPES_EXTRA_LABELS = {
-  'Wishlist': 'w',
-  'Used to Own': 'u',
+export const ERYMOwnershipAltToCode: Partial<Record<ERYMOwnershipAltText, ERYMOwnershipStatus>> = {
+  [enums.ERYMOwnershipAltText.OnWishlist]: enums.ERYMOwnershipStatus.OnWishlist,
+  [enums.ERYMOwnershipAltText.UsedToOwn]: enums.ERYMOwnershipStatus.UsedToOwn,
 };
 
 export const RECENT_TRACK_BACKGROUND_NAMES = [

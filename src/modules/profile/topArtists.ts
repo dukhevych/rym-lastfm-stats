@@ -7,9 +7,9 @@ import './topArtists.css';
 const PROFILE_CONTAINER_SELECTOR =
   '.bubble_header.profile_header + .bubble_content';
 
-let config = null;
+let config: ProfileOptions & { userName?: string };
 
-export async function render(_config) {
+export async function render(_config: ProfileOptions & { userName?: string }) {
   config = _config;
 
   if (!config) return;
@@ -60,7 +60,7 @@ export async function render(_config) {
   let initialPeriod = config.topArtistsPeriod;
 
   topArtistsPeriodSwitcher.addEventListener('change', async (event) => {
-    const period = event.target.value;
+    const period = (event.target as HTMLSelectElement).value;
 
     topArtistsContainer.classList.add('is-loading');
 
@@ -131,7 +131,7 @@ export async function render(_config) {
     ) {
       await updateAction();
     } else {
-      populateTopArtists(topArtistsContainer, topArtistsCache.data, userName);
+      populateTopArtists(topArtistsContainer, topArtistsCache.data);
     }
   } else {
     await updateAction();
@@ -174,7 +174,7 @@ function createTopArtistsUI() {
 
   const topArtistsContainer = document.createElement('div');
   topArtistsContainer.classList.add('bubble_content', 'top-artists');
-  topArtistsContainer.style.setProperty('--config-top-artists-limit', config.topArtistsLimit);
+  topArtistsContainer.style.setProperty('--config-top-artists-limit', String(config.topArtistsLimit));
 
   return {
     topArtistsHeader,
@@ -238,7 +238,7 @@ function populateArtistTemplate(artist, artistElement) {
   const playsText = artist.playcount + ` play${artist.playcount > 1 ? 's' : ''}`;
   artistElement.querySelector('.artist-scrobbles').textContent = playsText;
 
-  const hue = parseInt(
+  const hue = Math.trunc(
     hueStart + (1 - artist.playcountPercentageAbsolute / 100) * (hueEnd - hueStart)
   );
 

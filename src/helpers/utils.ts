@@ -199,7 +199,7 @@ interface UserData {
 
 export async function getUserName() {
   const userData = await getSyncedUserData() as UserData;
-  return userData?.name ?? null;
+  return userData?.name ?? '';
 };
 
 export function detectLastfmUserName() {
@@ -1125,4 +1125,23 @@ export function createElement(
   }
 
   return el;
+}
+
+export function setColorVar(name: string, value: string | number) {
+  document.documentElement.style.setProperty(name, `${value}`);
+}
+
+export function getEarliestRating(albums: IRYMRecordDBMatch[]) {
+  let earliestRating = 0;
+  let minId = Infinity;
+  albums.forEach((album) => {
+    if (!album.rating) return;
+
+    const id = +album.id;
+    if (id && id < minId) {
+      minId = id;
+      earliestRating = album.rating;
+    }
+  });
+  return earliestRating;
 }
