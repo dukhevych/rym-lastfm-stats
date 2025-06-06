@@ -29,7 +29,7 @@ import { RecordsAPI } from '@/helpers/records-api';
         // Formats for 'Used to Own' and 'Wishlist' are not available on Profile page
         // Only 'In collection' is used by addon anyway, so we ignore formats for other ownership types
         if (ownership === 'o') {
-          format = constants.RYM_FORMATS_INVERTED[ownershipText] || '';
+          format = constants.RYMFormatsLabelsReverse[ownershipText] || '';
         }
       }
 

@@ -323,17 +323,8 @@ function prepareRecentTracksUI() {
     }
   });
 
-  const panelContainer: HTMLElement | null = document.querySelector('.profile_listening_container');
-
-  if (!panelContainer) {
-    console.warn('Profile listening container not found. Recent Tracks will not be displayed.');
-    return;
-  }
-
-  uiRecentTracks.panelContainer = panelContainer;
-
-  panelContainer.classList.add(`bg-option-${config.recentTracksReplaceBackground}`)
-  panelContainer.dataset['element'] = 'rymstats-track-panel';
+  uiRecentTracks.panelContainer.classList.add(`bg-option-${config.recentTracksReplaceBackground}`)
+  uiRecentTracks.panelContainer.dataset['element'] = 'rymstats-track-panel';
 
   const panelBgSwitcher = h('button', { class: 'btn-bg-switcher' }, [
     utils.createSvgUse('svg-brush-symbol')
@@ -347,7 +338,7 @@ function prepareRecentTracksUI() {
   panelBgSwitcher.title = `Background option ${config.recentTracksReplaceBackground + 1} / ${bgOptionsQty}`;
 
   panelBgSwitcher.addEventListener('click', async () => {
-    panelContainer.classList.remove(`bg-option-${config.recentTracksReplaceBackground}`);
+    uiRecentTracks.panelContainer.classList.remove(`bg-option-${config.recentTracksReplaceBackground}`);
     let newBgOption;
     if (config.recentTracksReplaceBackground === (bgOptionsQty - 1)) newBgOption = 0;
     else newBgOption = config.recentTracksReplaceBackground + 1;
@@ -355,22 +346,22 @@ function prepareRecentTracksUI() {
     await utils.storageSet({
       recentTracksReplaceBackground: newBgOption,
     });
-    panelContainer.classList.add(`bg-option-${newBgOption}`);
+    uiRecentTracks.panelContainer.classList.add(`bg-option-${newBgOption}`);
     panelBgSwitcher.title = `Background option ${newBgOption + 1} / ${bgOptionsQty}`;
     const bgName = constants.RECENT_TRACK_BACKGROUND_NAMES[newBgOption + 1] || `${newBgOption + 1} / ${bgOptionsQty}`;
     panelBgSwitcher.dataset.option = bgName || `${newBgOption + 1} / ${bgOptionsQty}`;
   });
 
-  panelContainer.appendChild(panelBgSwitcher);
+  uiRecentTracks.panelContainer.appendChild(panelBgSwitcher);
 
   if (config.recentTracksReplace) {
-    const setToBtn: HTMLElement | null = panelContainer.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
+    const setToBtn: HTMLElement | null = uiRecentTracks.panelContainer.querySelector(PROFILE_LISTENING_SET_TO_SELECTOR);
     if (setToBtn) setToBtn.style.display = 'none';
 
-    const playHistoryBtn: HTMLElement | null = panelContainer.querySelector(PROFILE_LISTENING_PLAY_HISTORY_BTN);
+    const playHistoryBtn: HTMLElement | null = uiRecentTracks.panelContainer.querySelector(PROFILE_LISTENING_PLAY_HISTORY_BTN);
     if (playHistoryBtn) playHistoryBtn.style.display = 'none';
 
-    const currentTrackContainer: HTMLElement | null = panelContainer.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
+    const currentTrackContainer: HTMLElement | null = uiRecentTracks.panelContainer.querySelector(PROFILE_LISTENING_CURRENT_TRACK_SELECTOR);
     if (currentTrackContainer) {
       currentTrackContainer.classList.add('recent-tracks-current');
       createPlayHistoryItem();
@@ -476,17 +467,6 @@ function createTrackDate(track) {
   ]);
 }
 
-function insertRecentTracksWrapperIntoDOM(tracksWrapper: HTMLElement) {
-  const listeningContainer = document.querySelector(
-    '.profile_listening_container',
-  );
-  if (!listeningContainer) {
-    console.warn('Profile listening container not found. Recent Tracks will not be displayed.');
-    return;
-  }
-  listeningContainer.insertAdjacentElement('afterend', tracksWrapper);
-}
-
 async function render(_config: ProfileOptions & { userName?: string }) {
   if (!_config) return;
 
@@ -503,6 +483,15 @@ async function render(_config: ProfileOptions & { userName?: string }) {
     console.warn('No Last.fm username found. Recent Tracks can\'t be displayed.');
     return;
   }
+
+  const panelContainer: HTMLElement | null = document.querySelector('.profile_listening_container');
+
+  if (!panelContainer) {
+    console.warn('Profile listening container not found. Recent Tracks will not be displayed.');
+    return;
+  }
+
+  uiRecentTracks.panelContainer = panelContainer;
 
   prepareRecentTracksUI();
 
@@ -568,7 +557,7 @@ async function render(_config: ProfileOptions & { userName?: string }) {
         documentRoot.style.setProperty('--clr-dark-accent', colors.dark.accentColor);
         documentRoot.style.setProperty('--clr-dark-accent-contrast', colors.dark.accentColorContrast);
 
-        documentRoot.style.setProperty('--clr-light-accent-hue', parseInt(colors.light.accentColorHSL[0] * 360));
+        documentRoot.style.setProperty('--clr-light-accent-hue', String(Math.trunc(colors.light.accentColorHSL[0] * 360)));
         documentRoot.style.setProperty(
           '--clr-light-accent-saturation',
           (colors.light.accentColorHSL[1] * 100).toFixed(2),
@@ -578,7 +567,7 @@ async function render(_config: ProfileOptions & { userName?: string }) {
           (colors.light.accentColorHSL[2] * 100).toFixed(2),
         );
 
-        documentRoot.style.setProperty('--clr-dark-accent-hue', parseInt(colors.dark.accentColorHSL[0] * 360));
+        documentRoot.style.setProperty('--clr-dark-accent-hue', String(Math.trunc(colors.dark.accentColorHSL[0] * 360)));
         documentRoot.style.setProperty(
           '--clr-dark-accent-saturation',
           (colors.dark.accentColorHSL[1] * 100).toFixed(2),
@@ -594,7 +583,7 @@ async function render(_config: ProfileOptions & { userName?: string }) {
     }
 
     const tracklistData = data[0].c ? data.slice(1) : data;
-    const tracksList = createTracksList(tracklistData, userName);
+    const tracksList = createTracksList(tracklistData);
 
     uiRecentTracks.tracksWrapper.replaceChildren(tracksList);
     uiRecentTracks.tracksWrapper.dataset.timestamp = `Updated at ${new Date(timestamp).toLocaleString()}`;
@@ -650,7 +639,7 @@ async function render(_config: ProfileOptions & { userName?: string }) {
     }
   };
 
-  insertRecentTracksWrapperIntoDOM(uiRecentTracks.tracksWrapper);
+  uiRecentTracks.panelContainer.insertAdjacentElement('afterend', uiRecentTracks.tracksWrapper);
 
   let intervalId: ReturnType<typeof setInterval> | null = null;
   let lastTick: number;
