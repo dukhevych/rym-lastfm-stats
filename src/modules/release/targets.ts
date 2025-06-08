@@ -1,7 +1,8 @@
+import type { ReleaseType } from '@/api/getReleaseInfo';
 import * as utils from '@/helpers/utils';
-import * as constants from '@/helpers/constants';
 
-export const INFO_CONTAINER_SELECTOR = '.album_info tbody';
+export const PARENT_SELECTOR = '#column_container_right .section_main_info';
+export const INFO_TABLE_SELECTOR = '.album_info tbody';
 export const INFO_ARTISTS_SELECTOR = '.album_info [itemprop="byArtist"] a.artist';
 export const INFO_ALBUM_TITLE_SELECTOR = '.album_title';
 export const INFO_ALBUM_RELEASE_YEAR_SELECTOR = '.album_info a[href^="/charts/top/"] b';
@@ -15,9 +16,10 @@ export function getReleaseYear() {
   return match ? Number(match[0]) : '';
 }
 
-export function getArtistNames() {
-  const artistLinks = document.querySelectorAll(INFO_ARTISTS_SELECTOR);
-  const artistNames = Array.from(artistLinks)
+export function getArtistNames(parentEl: HTMLElement) {
+  const artistLinks = parentEl.querySelectorAll(INFO_ARTISTS_SELECTOR);
+
+  return Array.from(artistLinks)
     .map((artist) => {
       let localizedName = artist.querySelector('.subtext')?.textContent || '';
       if (localizedName) {
@@ -28,32 +30,27 @@ export function getArtistNames() {
         artistName: utils.getDirectInnerText(artist),
       };
     });
-
-  if (constants.isDev) console.log('Parsed artists:', artistNames);
-
-  return artistNames;
 }
 
-export function getReleaseTitle() {
-  const title = document.querySelector(INFO_ALBUM_TITLE_SELECTOR);
+export function getReleaseTitle(parentEl: HTMLElement) {
+  const title = parentEl.querySelector(INFO_ALBUM_TITLE_SELECTOR);
+
   if (!title) return '';
+
   return Array.from(title.childNodes)
     .filter(node => node.nodeType === Node.TEXT_NODE)
     .map(node => (node.textContent ?? '').trim())
     .join('');
 }
 
-export function getReleaseType() {
-  const infoTable = document.querySelector(INFO_CONTAINER_SELECTOR);
-  if (!infoTable) return null;
-  const typeCell = infoTable.querySelector('tr:nth-child(2) td');
+export function getReleaseType(parentEl: HTMLElement): ReleaseType | null {
+  const typeCell = parentEl.querySelector('tr:nth-child(2) td');
   if (!typeCell || !typeCell.textContent) return null;
-  const releaseType = typeCell.textContent.toLowerCase().split(', ')[0];
-  return releaseType;
+  return typeCell.textContent.toLowerCase().split(', ')[0] as ReleaseType || null;
 }
 
-export function getReleaseId() {
-  const element = document.querySelector(INFO_RELEASE_ID) as HTMLInputElement | null;
+export function getReleaseId(parentEl: HTMLElement): string {
+  const element = parentEl.querySelector(INFO_RELEASE_ID) as HTMLInputElement | null;
   if (!element) return '';
   return utils.extractIdFromTitle(element.value);
 }

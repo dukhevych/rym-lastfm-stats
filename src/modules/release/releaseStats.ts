@@ -1,42 +1,41 @@
 import * as utils from '@/helpers/utils';
-import * as api from '@/helpers/api';
+import * as api from '@/api';
 import * as constants from '@/helpers/constants';
 import { createElement as h } from '@/helpers/utils';
-
+import type { ReleaseType } from '@/api/getReleaseInfo';
+import type { AlbumSearchResult } from '@/api/searchAlbums';
 import './releaseStats.css';
-
 import {
-  INFO_CONTAINER_SELECTOR,
-  INFO_ARTISTS_SELECTOR,
-  INFO_ALBUM_TITLE_SELECTOR,
+  PARENT_SELECTOR,
+  INFO_TABLE_SELECTOR,
   getArtistNames,
   getReleaseTitle,
   getReleaseType,
   getReleaseId,
 } from './targets';
 
-const uiElements = {} as UIElements;
-
-interface Stats {
-  releaseType: string | null;
-  userName: string | null;
-  releaseId: string | null;
-  artistQuery: string | null;
-  releaseTitleQuery: string | null;
+interface State {
+  userName: string;
+  releaseType: ReleaseType;
+  releaseId: string;
+  searchCacheKey: string;
+  artistQuery: string;
+  releaseTitleQuery: string;
   artistNames: { artistName: string; artistNameLocalized?: string }[];
-  releaseTitle: string | null;
-  searchResults: { artist: string; name: string; url: string; image: { '#text': string } }[] | null;
-  config: { lastfmApiKey?: string } | null;
+  releaseTitle: string;
+  searchResults: AlbumSearchResult[];
   artistNamesFlatNormalized: string[];
-  storageKey: string | null;
-  artistQueryCacheKey: string | null;
-  releaseTitleQueryCacheKey: string | null;
+  storageKey: string;
+  artistQueryCacheKey: string;
+  releaseTitleQueryCacheKey: string;
   artists: string[];
 }
 
 interface UIElements {
+  parent: HTMLElement;
   searchDialog: HTMLDialogElement;
   searchList: HTMLUListElement;
+  searchListItems: HTMLLIElement[];
   infoTable: HTMLTableElement;
   statsList: HTMLUListElement;
   listeners: HTMLLIElement;
@@ -50,17 +49,16 @@ interface UIElements {
   tr: HTMLTableRowElement;
 }
 
-const state: Stats = {
-  artistNames: [],
-  releaseType: null,
-  userName: null,
-  searchResults: null,
-  releaseId: null,
-  artistQuery: null,
-  releaseTitleQuery: null,
-  artists: [],
-  releaseTitle: null,
-  config: null,
+const uiElements = {} as UIElements;
+let config: ProfileOptions;
+
+const state = {
+  get artists() {
+    return this.artistNames.map((artist) => {
+      const { artistName, artistNameLocalized } = artist;
+      return artistNameLocalized || artistName;
+    });
+  },
   get artistNamesFlatNormalized() {
     const result: string[] = [];
     this.artistNames.forEach((artist) => {
@@ -72,10 +70,6 @@ const state: Stats = {
     return result;
   },
   get storageKey() {
-    if (!this.releaseId || !this.artistQuery || !this.releaseTitleQuery) {
-      return null;
-    }
-
     let value = `releaseStats_${this.releaseId}`;
 
     if (this.userName) {
@@ -86,18 +80,16 @@ const state: Stats = {
 
     return value;
   },
-  get artistQueryCacheKey() {
-    if (!this.releaseId) return null;
-    return `artistQuery_${this.releaseId}`;
+  get artistQueryCacheKey() { return `artistQuery_${this.releaseId}`; },
+  get releaseTitleQueryCacheKey() { return `releaseTitleQuery_${this.releaseId}`; },
+  get searchCacheKey() {
+    return `searchResults_${this.releaseId}`;
   },
-  get releaseTitleQueryCacheKey() {
-    if (!this.releaseId) return null;
-    return `releaseTitleQuery_${this.releaseId}`;
-  },
-};
+} as State;
 
 function createSearchDialog() {
-  let list;
+  const list = h('ul', { className: 'list-search' });
+
   const dialog = h('dialog', { className: 'dialog-base', id: 'dialog-search-lastfm' }, [
     h(
       'h2',
@@ -118,8 +110,7 @@ function createSearchDialog() {
         ),
       ],
     ),
-
-    list = h('ul', { className: 'list-search' })
+    list,
   ]);
 
   return { dialog, list };
@@ -130,13 +121,19 @@ function populateSearchDialog() {
 
   uiElements.searchList.replaceChildren();
 
-  state.searchResults.forEach((item) => {
+  if (!state.searchResults || state.searchResults.length === 0) {
+    const noResultsItem = h('li', { className: 'search-item is-no-results' }, 'No results found');
+    uiElements.searchList.appendChild(noResultsItem);
+    return;
+  }
+
+  uiElements.searchListItems = state.searchResults.map((item) => {
     const isSelected = item.artist === state.artistQuery && item.name === state.releaseTitleQuery;
     const classNames = ['search-item'];
 
     if (isSelected) classNames.push('is-selected');
 
-    const itemElement = h('li', {
+    return h('li', {
       className: classNames.join(' '),
       dataset: {
         artist: item.artist,
@@ -168,13 +165,13 @@ function populateSearchDialog() {
         h('span', { className: 'search-item-title' }, `${item.artist} - ${item.name}`),
       ]),
     ]);
-
-    uiElements.searchList.appendChild(itemElement);
   });
+
+  uiElements.searchList.append(...uiElements.searchListItems);
 }
 
 function updateSearchDialog() {
-  uiElements.searchList.querySelectorAll('.search-item').forEach((item) => {
+  uiElements.searchListItems.forEach((item) => {
     const artist = item.dataset.artist;
     const title = item.dataset.title;
 
@@ -187,16 +184,12 @@ function updateSearchDialog() {
 }
 
 function prepareReleaseStatsUI() {
-  const infoTable: HTMLTableElement | null = document.querySelector(INFO_CONTAINER_SELECTOR);
-
-  if (!infoTable) return;
-
   const { dialog: searchDialog, list: searchList } = createSearchDialog();
+
+  uiElements.infoTable = document.querySelector(INFO_TABLE_SELECTOR) as HTMLTableElement;
 
   uiElements.searchDialog = searchDialog;
   uiElements.searchList = searchList;
-
-  uiElements.infoTable = infoTable;
 
   uiElements.statsList = h('ul', { className: 'list-stats' }, [
     uiElements.listeners = h('li', { className: 'is-listeners' }, 'listeners'),
@@ -247,7 +240,7 @@ function prepareReleaseStatsUI() {
 
   uiElements.tr = h('tr', {}, [uiElements.heading, uiElements.content]);
 
-  infoTable.appendChild(uiElements.tr);
+  uiElements.infoTable.appendChild(uiElements.tr);
   document.body.appendChild(uiElements.searchDialog);
 }
 
@@ -258,7 +251,7 @@ function setNoData() {
 
 function populateReleaseStats(
   { playcount, listeners, userplaycount, url },
-  timestamp,
+  timestamp?: number,
 ) {
   const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
 
@@ -293,8 +286,7 @@ function populateReleaseStats(
 }
 
 async function initSearchResults() {
-  const cacheKey = `searchResults_${state.releaseId}`;
-  const searchResultsCache = await utils.storageGet(cacheKey, 'local');
+  const searchResultsCache: AlbumSearchResult[] | undefined = await utils.storageGet(state.searchCacheKey, 'local');
 
   if (searchResultsCache) {
     if (constants.isDev) console.log('Using cached search results:', searchResultsCache);
@@ -302,13 +294,12 @@ async function initSearchResults() {
     return;
   }
 
-  const searchResults = await api.searchRelease(
-    state.config.lastfmApiKey || process.env.LASTFM_API_KEY,
-    {
-      artists: state.artists.map(utils.normalizeForSearch),
-      releaseTitle: state.releaseTitle,
-    },
-  );
+  const searchAlbumsResponse = await api.searchAlbums({
+    apiKey: config.lastfmApiKey || process.env.LASTFM_API_KEY as string,
+    query: utils.normalizeForSearch(state.artists[0]) + ' ' + utils.normalizeForSearch(state.releaseTitle),
+  });
+
+  const { results: { albummatches: { album: searchResults } } } = searchAlbumsResponse;
 
   if (!searchResults || searchResults.length === 0) {
     console.warn('No search results returned from api for:', state.artists, state.releaseTitle);
@@ -332,28 +323,28 @@ async function initSearchResults() {
     return null;
   }
 
+  const isFullMatch = (item: AlbumSearchResult) => {
+    const itemTitleNormalized = utils.normalizeForSearch(item.name);
+    const itemArtistNormalized = utils.normalizeForSearch(item.artist);
+    const hasFullTitleMatch = itemTitleNormalized === utils.normalizeForSearch(state.releaseTitle);
+    if (!hasFullTitleMatch) return false;
+    const hasArtistFullMatch = state.artistNamesFlatNormalized.some((name) => itemArtistNormalized === name);
+    if (!hasArtistFullMatch) return false;
+    return true;
+  }
+
   const searchResultsFilteredSorted = searchResultsFiltered.sort((a, b) => {
-      const isFullMatch = (item) => {
-        const itemTitleNormalized = utils.normalizeForSearch(item.name);
-        const itemArtistNormalized = utils.normalizeForSearch(item.artist);
-        const hasFullTitleMatch = itemTitleNormalized === utils.normalizeForSearch(state.releaseTitle);
-        if (!hasFullTitleMatch) return false;
-        const hasArtistFullMatch = state.artistNamesFlatNormalized.some((name) => itemArtistNormalized === name);
-        if (!hasArtistFullMatch) return false;
-        return true;
-      }
+    const aMatch = isFullMatch(a);
+    const bMatch = isFullMatch(b);
 
-      const aMatch = isFullMatch(a);
-      const bMatch = isFullMatch(b);
-
-      if (aMatch && !bMatch) return -1;
-      if (!aMatch && bMatch) return 1;
-      return 0;
+    if (aMatch && !bMatch) return -1;
+    if (!aMatch && bMatch) return 1;
+    return 0;
   });
 
   if (constants.isDev) console.log('Search results found:', searchResultsFilteredSorted);
 
-  await utils.storageSet({ [cacheKey]: searchResultsFilteredSorted }, 'local');
+  await utils.storageSet({ [state.searchCacheKey]: searchResultsFilteredSorted }, 'local');
 
   state.searchResults = searchResultsFilteredSorted;
 }
@@ -389,15 +380,15 @@ async function initQueries() {
 }
 
 async function updateReleaseStats() {
-  const data = await api.fetchReleaseStats(
-    state.userName,
-    state.config.lastfmApiKey || process.env.LASTFM_API_KEY,
-    {
+  const data = await api.getReleaseInfo({
+    type: state.releaseType,
+    apiKey: config.lastfmApiKey || process.env.LASTFM_API_KEY as string,
+    params: {
       artist: state.artistQuery,
-      releaseTitle: state.releaseTitleQuery,
-      releaseType: state.releaseType,
-    }
-  );
+      title: state.releaseTitleQuery,
+      username: state.userName,
+    },
+  });
 
   if (!data || Object.keys(data).length === 0) {
     console.warn('No data found for the specified artist/release', state.artistQuery, state.releaseTitleQuery);
@@ -432,7 +423,7 @@ async function updateReleaseStats() {
     url,
   };
 
-  if (!state.config.lastfmApiKey) {
+  if (!config.lastfmApiKey) {
     utils.storageSet({
       [state.storageKey]: { timestamp: Date.now(), data: stats },
     }, 'local');
@@ -441,22 +432,27 @@ async function updateReleaseStats() {
   populateReleaseStats(stats);
 }
 
-function initState(config: ProfileOptions) {
-  if (!config) return;
+async function render(_config: ProfileOptions) {
+  if (!_config) return;
+  config = _config;
 
-  state.config = config;
-  state.artistNames = getArtistNames();
-  state.artists = state.artistNames.map((artist) => {
-    const { artistName, artistNameLocalized } = artist;
-    return artistNameLocalized || artistName;
-  });
-  state.releaseType = getReleaseType();
-  state.releaseTitle = getReleaseTitle();
-  state.releaseId = getReleaseId();
-}
+  const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
 
-async function render(config: ProfileOptions) {
-  initState(config);
+  if (!parent) {
+    console.warn('No main section found, skipping release stats rendering.');
+    return;
+  }
+
+  uiElements.parent = parent;
+
+  state.artistNames = getArtistNames(parent);
+
+  const releaseType = getReleaseType(parent);
+  if (releaseType) state.releaseType = releaseType;
+
+  state.releaseTitle = getReleaseTitle(parent);
+
+  state.releaseId = getReleaseId(parent);
 
   if (state.artists.length === 0 || !state.releaseTitle) {
     console.error('No artist or release title found.');
@@ -470,12 +466,9 @@ async function render(config: ProfileOptions) {
     initSearchResults(),
   ]);
 
-  await initQueries();
+  console.log('state', state);
 
-  if (constants.isDev) {
-    console.log('Artist query:', state.artistQuery);
-    console.log('Release title query:', state.releaseTitleQuery);
-  }
+  await initQueries();
 
   const userName = userData?.name;
 
@@ -511,5 +504,5 @@ async function render(config: ProfileOptions) {
 
 export default {
   render,
-  targetSelectors: [INFO_CONTAINER_SELECTOR, INFO_ARTISTS_SELECTOR, INFO_ALBUM_TITLE_SELECTOR],
+  targetSelectors: [PARENT_SELECTOR],
 };

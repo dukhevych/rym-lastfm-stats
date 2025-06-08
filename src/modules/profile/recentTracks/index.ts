@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import * as utils from '@/helpers/utils';
 import { createElement as h } from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
-import * as api from '@/helpers/api';
+import * as api from '@/api';
 import lockSvg from '@/assets/icons/lock.svg?raw';
 import unlockSvg from '@/assets/icons/unlock.svg?raw';
 import './recentTracks.css';

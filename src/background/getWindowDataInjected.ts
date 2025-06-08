@@ -1,11 +1,14 @@
+type AnyObject = { [key: string | symbol]: any };
+type NotifyFn = (path: string, value: any) => void;
+
 export default function getWindowDataInjected(
-  propName,
-  deepPaths,
-  slug,
+  propName: string,
+  deepPaths: string[] | undefined,
+  slug: string,
   watch = false,
-  deep = false,
-) {
-  function dispatch(field, value) {
+  deep = false
+): void {
+  function dispatch(field: string | null, value: any): void {
     const eventName = `${slug}:field-update`;
     const event = new CustomEvent(eventName, {
       detail: { prop: propName, field, value }
@@ -13,9 +16,8 @@ export default function getWindowDataInjected(
     window.dispatchEvent(event);
   }
 
-  const base = window[propName];
-
-  if (!base || typeof base !== "object") return;
+  const base = (window as AnyObject)[propName];
+  if (!base || typeof base !== 'object') return;
 
   if (!deepPaths || !Array.isArray(deepPaths) || deepPaths.length === 0) {
     dispatch(null, base);
@@ -24,22 +26,17 @@ export default function getWindowDataInjected(
 
   for (const fullPath of deepPaths) {
     const pathParts = fullPath.split('.');
-    let target = base;
+    let target: any = base;
 
     for (let i = 0; i < pathParts.length - 1; i++) {
-      if (!target[pathParts[i]]) {
-        return;
-      }
+      if (!target[pathParts[i]]) return;
       target = target[pathParts[i]];
     }
 
     const lastKey = pathParts[pathParts.length - 1];
-    if (!target || typeof target !== "object") {
-      return;
-    }
+    if (!target || typeof target !== 'object') return;
 
     let currentValue = target[lastKey];
-
     dispatch(fullPath, currentValue);
 
     if (watch) {
@@ -55,7 +52,7 @@ export default function getWindowDataInjected(
         get() {
           return currentValue;
         },
-        set(newVal) {
+        set(newVal: any) {
           if (deep && typeof newVal === 'object' && newVal !== null) {
             newVal = createWatchedProxy(newVal, (subPath, val) => {
               dispatch(`${fullPath}.${subPath}`, val);
@@ -69,14 +66,16 @@ export default function getWindowDataInjected(
   }
 }
 
-function createWatchedProxy(obj, notify, path = []) {
+function createWatchedProxy(obj: AnyObject, notify: NotifyFn, path: string[] = []): AnyObject {
   return new Proxy(obj, {
     set(target, key, value) {
+      if (typeof key === 'symbol') return false;
       target[key] = value;
       notify([...path, key].join('.'), value);
       return true;
     },
     get(target, key) {
+      if (typeof key === 'symbol') return target[key]; // no TS error now
       const val = target[key];
       if (typeof val === 'object' && val !== null) {
         return createWatchedProxy(val, notify, [...path, key]);

@@ -28,6 +28,7 @@ export enum RYMEntityCode {
   Artist = 'a',
   Release = 'l',
   Song = 'z',
+
   // Uncomment these if needed in the future
   // Y = 'v/a release',
   // B = 'label',
