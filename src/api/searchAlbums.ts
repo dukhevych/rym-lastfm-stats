@@ -2,7 +2,6 @@ const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
 interface AlbumSearchParams {
   query: string;
-  apiKey: string;
   limit?: number;
   page?: number;
 }
@@ -32,23 +31,26 @@ export interface AlbumSearchResponse {
   };
 }
 
+interface SearchAlbumsOptions {
+  params: AlbumSearchParams;
+  apiKey: string;
+}
+
 export async function searchAlbums({
   apiKey,
-  query,
-  limit = 5,
-  page,
-}: AlbumSearchParams): Promise<AlbumSearchResponse> {
-  const params = new URLSearchParams({
+  params,
+}: SearchAlbumsOptions): Promise<AlbumSearchResponse> {
+  const searchParams = new URLSearchParams({
     method: 'album.search',
-    album: query,
-    limit: String(limit),
+    album: params.query,
+    limit: String(params.limit ?? 5),
     api_key: apiKey,
     format: 'json',
   });
 
-  if (page) params.set('page', page.toString());
+  if (params.page) searchParams.set('page', params.page.toString());
 
-  const url = `${BASE_URL}?${params.toString()}`;
+  const url = `${BASE_URL}?${searchParams.toString()}`;
   const res = await fetch(url);
 
   if (!res.ok) {

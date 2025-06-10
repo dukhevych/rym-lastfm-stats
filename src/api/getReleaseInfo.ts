@@ -10,24 +10,24 @@ interface ReleaseGetInfoParams {
 }
 
 interface getReleaseInfoOptions {
-  type: ReleaseType;
-  params: ReleaseGetInfoParams;
   apiKey: string;
+  params: ReleaseGetInfoParams;
+  releaseType: ReleaseType;
 }
 
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
 export async function getReleaseInfo({
-  type,
-  params,
   apiKey,
+  params,
+  releaseType,
 }: getReleaseInfoOptions): Promise<any> {
   const methodMap: Record<ReleaseType, string> = {
     album: 'album.getInfo',
     single: 'track.getInfo',
   };
 
-  const method = methodMap[type];
+  const method = methodMap[releaseType];
   const url = new URL(BASE_URL);
 
   url.searchParams.set('method', method);
@@ -38,7 +38,7 @@ export async function getReleaseInfo({
     url.searchParams.set('mbid', params.mbid);
   } else {
     url.searchParams.set('artist', params.artist);
-    url.searchParams.set(type === 'album' ? 'album' : 'track', params.title);
+    url.searchParams.set(releaseType === 'album' ? 'album' : 'track', params.title);
   }
 
   if ('autocorrect' in params) {

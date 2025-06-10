@@ -27,37 +27,36 @@ export interface RecentTracksResponse {
 
 interface GetRecentTracksParams {
   username: string;
-  apiKey: string;
   limit?: number;
   page?: number;
   from?: number; // UNIX timestamp
   to?: number;   // UNIX timestamp
 }
 
-export async function getRecentTracks(
-  {
-    username,
-    apiKey,
-    limit,
-    page,
-    from,
-    to,
-  }: GetRecentTracksParams,
-  signal?: AbortSignal,
-): Promise<RecentTracksResponse> {
-  const params = new URLSearchParams({
+interface GetRecentTracksOptions {
+  params: GetRecentTracksParams;
+  signal?: AbortSignal;
+  apiKey: string;
+}
+
+export async function getRecentTracks({
+  apiKey,
+  params,
+  signal,
+}: GetRecentTracksOptions): Promise<RecentTracksResponse> {
+  const searchParams = new URLSearchParams({
     method: 'user.getrecenttracks',
-    user: username,
+    user: params.username,
     api_key: apiKey,
     format: 'json',
   });
 
-  if (limit) params.set('limit', limit.toString());
-  if (page) params.set('page', page.toString());
-  if (from) params.set('from', from.toString());
-  if (to) params.set('to', to.toString());
+  if (params.limit) searchParams.set('limit', params.limit.toString());
+  if (params.page) searchParams.set('page', params.page.toString());
+  if (params.from) searchParams.set('from', params.from.toString());
+  if (params.to) searchParams.set('to', params.to.toString());
 
-  const url = `${BASE_URL}?${params.toString()}`;
+  const url = `${BASE_URL}?${searchParams.toString()}`;
   const res = await fetch(url, { signal });
 
   if (!res.ok) {

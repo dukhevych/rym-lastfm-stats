@@ -1,5 +1,6 @@
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
+import { ERYMOwnershipStatus, ERYMOwnershipAltText, ERYMFormat } from '@/helpers/enums';
 import { RecordsAPI } from '@/helpers/records-api';
 
 (async function () {

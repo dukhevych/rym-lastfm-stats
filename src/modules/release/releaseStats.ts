@@ -249,8 +249,15 @@ function setNoData() {
   uiElements.statsWrapper.classList.add('no-data');
 }
 
+interface ReleaseStats {
+  playcount?: number;
+  listeners?: number;
+  userplaycount?: number;
+  url: string;
+}
+
 function populateReleaseStats(
-  { playcount, listeners, userplaycount, url },
+  { playcount, listeners, userplaycount, url }: ReleaseStats,
   timestamp?: number,
 ) {
   const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
@@ -296,7 +303,9 @@ async function initSearchResults() {
 
   const searchAlbumsResponse = await api.searchAlbums({
     apiKey: config.lastfmApiKey || process.env.LASTFM_API_KEY as string,
-    query: utils.normalizeForSearch(state.artists[0]) + ' ' + utils.normalizeForSearch(state.releaseTitle),
+    params: {
+      query: utils.normalizeForSearch(state.artists[0]) + ' ' + utils.normalizeForSearch(state.releaseTitle)
+    },
   });
 
   const { results: { albummatches: { album: searchResults } } } = searchAlbumsResponse;
@@ -381,7 +390,7 @@ async function initQueries() {
 
 async function updateReleaseStats() {
   const data = await api.getReleaseInfo({
-    type: state.releaseType,
+    releaseType: state.releaseType,
     apiKey: config.lastfmApiKey || process.env.LASTFM_API_KEY as string,
     params: {
       artist: state.artistQuery,
@@ -433,15 +442,16 @@ async function updateReleaseStats() {
 }
 
 async function render(_config: ProfileOptions) {
-  if (!_config) return;
-  config = _config;
-
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
 
   if (!parent) {
     console.warn('No main section found, skipping release stats rendering.');
     return;
   }
+
+  if (!_config) return;
+
+  config = _config;
 
   uiElements.parent = parent;
 
@@ -465,8 +475,6 @@ async function render(_config: ProfileOptions) {
     utils.getSyncedUserData(),
     initSearchResults(),
   ]);
-
-  console.log('state', state);
 
   await initQueries();
 

@@ -543,10 +543,13 @@ async function fetchAndRenderRecentTracks() {
 
   try {
     const recentTracksResponse = await api.getRecentTracks({
-      username: userName as string,
       apiKey: config.lastfmApiKey,
-      limit: config.recentTracksLimit,
-    }, abortController.signal);
+      params: {
+        username: userName,
+        limit: config.recentTracksLimit,
+      },
+      signal: abortController.signal,
+    });
 
     const { recenttracks: { track: data } } = recentTracksResponse;
 

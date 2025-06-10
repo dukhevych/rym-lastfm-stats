@@ -14,17 +14,17 @@ declare global {
 
   interface IRYMRecordDB {
     _raw?: string;
-    id: string;
-    title: string;
-    rating: number;
-    ownership: ERYMOwnershipStatus;
-    format: ERYMFormat | '';
     artistName: string;
     artistNameLocalized: string;
+    format: ERYMFormat | '';
+    id: string;
+    ownership: ERYMOwnershipStatus;
+    rating: number;
+    releaseDate: number | '';
+    title: string;
     $artistName: string;
     $artistNameLocalized: string;
     $title: string;
-    releaseDate: number;
   }
 
   interface IRYMRecordDBMatch extends IRYMRecordDB {

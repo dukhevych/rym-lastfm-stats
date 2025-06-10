@@ -242,6 +242,11 @@
     &:before {
       content: 'Album: ';
       color: var(--clr-accent);
+      display: none;
+    }
+
+    &:has(a):before {
+      display: inline;
     }
 
     a {

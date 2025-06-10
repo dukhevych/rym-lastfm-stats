@@ -8,15 +8,15 @@ export const INFO_ALBUM_TITLE_SELECTOR = '.album_title';
 export const INFO_ALBUM_RELEASE_YEAR_SELECTOR = '.album_info a[href^="/charts/top/"] b';
 export const INFO_RELEASE_ID = '.album_title .album_shortcut';
 
-export function getReleaseYear() {
-  const yearElement = document.querySelector(INFO_ALBUM_RELEASE_YEAR_SELECTOR);
+export function getReleaseYear(parentEl: HTMLElement): number | '' {
+  const yearElement = parentEl.querySelector(INFO_ALBUM_RELEASE_YEAR_SELECTOR);
   if (!yearElement) return '';
   const yearText = (yearElement.textContent ?? '').trim();
   const match = yearText.match(/^\d{4}/);
   return match ? Number(match[0]) : '';
 }
 
-export function getArtistNames(parentEl: HTMLElement) {
+export function getArtistNames(parentEl: HTMLElement): { artistNameLocalized: string; artistName: string }[] {
   const artistLinks = parentEl.querySelectorAll(INFO_ARTISTS_SELECTOR);
 
   return Array.from(artistLinks)
@@ -32,7 +32,7 @@ export function getArtistNames(parentEl: HTMLElement) {
     });
 }
 
-export function getReleaseTitle(parentEl: HTMLElement) {
+export function getReleaseTitle(parentEl: HTMLElement): string {
   const title = parentEl.querySelector(INFO_ALBUM_TITLE_SELECTOR);
 
   if (!title) return '';
@@ -46,7 +46,7 @@ export function getReleaseTitle(parentEl: HTMLElement) {
 export function getReleaseType(parentEl: HTMLElement): ReleaseType | null {
   const typeCell = parentEl.querySelector('tr:nth-child(2) td');
   if (!typeCell || !typeCell.textContent) return null;
-  return typeCell.textContent.toLowerCase().split(', ')[0] as ReleaseType || null;
+  return typeCell.textContent.toLowerCase().split(', ')[0] as ReleaseType;
 }
 
 export function getReleaseId(parentEl: HTMLElement): string {

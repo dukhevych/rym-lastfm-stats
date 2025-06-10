@@ -7,6 +7,25 @@
   }
 }
 
+@keyframes bg-option-9-animation-image {
+  0%   { transform: translate(0, 0); }
+  10%  { transform: translate(-10px, 5px) scale(1.05); }
+  10.1%  { transform: translate(0, 0); }
+
+  25%  { transform: translate(8px, -4px) scale(1.4); }
+  25.51%  { transform: translate(0, 0); }
+
+  40%  { transform: translate(-6px, 3px) scale(0.8); }
+  40.1%  { transform: translate(0, 0); }
+
+  60%  { transform: translate(4px, -6px) skew(10deg, 10deg); }
+  61%  { transform: translate(14px, -16px) skew(10deg, 10deg) scale(1.25); }
+  65%  { transform: translate(0, 0); }
+
+  80%  { transform: translate(-12px, 2px); }
+  80.31%  { transform: translate(0, 0); }
+}
+
 [data-element="rymstats-track-panel"] {
   &.bg-option-9:after {
     background-image:
@@ -35,6 +54,9 @@
     filter: hue-rotate(calc(var(--angle-360) + 90deg)) brightness(120%);
   }
   &.is-now-playing.bg-option-9:after {
-    animation: bg-option-9-animation 1s linear infinite;
+    animation: bg-option-9-animation 5s linear infinite;
+  }
+  &.is-now-playing.bg-option-9:before {
+    animation: bg-option-9-animation-image 30s steps(1, end) infinite;
   }
 }

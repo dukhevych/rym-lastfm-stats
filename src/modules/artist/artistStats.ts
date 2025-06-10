@@ -1,29 +1,77 @@
 import * as utils from '@/helpers/utils';
-import * as api from '@/helpers/api';
+import * as api from '@/api';
 import { createElement as h } from '@/helpers/utils';
 
 import '@/modules/release/releaseStats.css';
 
-const ARTIST_CONTAINER_SELECTOR = '.artist_info_main';
+const PARENT_SELECTOR = '.artist_left_col';
+const ARTIST_INFO_SELECTOR = '.artist_info_main';
+const ARTIST_ID_SELECTOR = 'input.rym_shortcut';
 
-function getArtist() {
-  const artistNameHeader = document.querySelector('.artist_name_hdr');
-  const artistNameSpan = artistNameHeader ? artistNameHeader.querySelector('span') : null;
-
-  const directTextNodeContent = artistNameHeader ? artistNameHeader.childNodes[0].nodeValue.trim() : null;
-  const spanTextContent = artistNameSpan ? artistNameSpan.textContent : null;
-
-  return [directTextNodeContent, spanTextContent ?? directTextNodeContent];
+function getArtistId(parent: HTMLElement) {
+  const artistIdInput: HTMLInputElement = parent.querySelector(ARTIST_ID_SELECTOR)!;
+  return utils.extractIdFromTitle(artistIdInput.value);
 }
 
-const uiElements = {};
+function getArtistNames(parent: HTMLElement) {
+  let artistAkaNames: string[] = [];
+
+  const artistNameHeader = parent.querySelector('.artist_name_hdr');
+  const artistName = utils.getNodeDirectTextContent(artistNameHeader);
+  const artistNameHeaderSpan = artistNameHeader?.querySelector('span');
+  const artistNameLocalized = artistNameHeaderSpan?.textContent;
+
+  const artistAkaNamesElementHeader = Array.from(parent.querySelectorAll(ARTIST_INFO_SELECTOR + ' .info_hdr')).find(element => {
+    return element.textContent?.toLowerCase().includes('also known as');
+  });
+
+  if (artistAkaNamesElementHeader) {
+    const artistAkaNamesElement = artistAkaNamesElementHeader.nextElementSibling;
+    const artistAkaNamesText = artistAkaNamesElement?.querySelector('span')?.textContent;
+    if (artistAkaNamesText) {
+      artistAkaNamesText.split(', ').forEach(name => {
+        const nameCleaned = name.replace(/\s*\[birth name\]$/i, '').trim(); // Check for other patterns to remove
+        artistAkaNames.push(nameCleaned);
+      });
+    }
+  }
+
+  return {
+    artistName,
+    artistNameLocalized,
+    artistAkaNames,
+  };
+}
+
+interface UIElements {
+  parent: HTMLElement;
+  artistInfoMain: HTMLElement;
+  statsList: HTMLElement;
+  listeners: HTMLElement;
+  playcount: HTMLElement;
+  userplaycount: HTMLElement;
+  lastfmLinksContainer: HTMLElement;
+  lastfmLink: HTMLAnchorElement;
+  // lastfmLink2: HTMLAnchorElement;
+  statsWrapper: HTMLElement;
+  heading: HTMLElement;
+  content: HTMLElement;
+}
+
+interface State {
+  artistQuery: string;
+  artistQueryCacheKey: string;
+  artistNameOptions: string[];
+  notFound: boolean;
+  userName: string;
+  storageKey: string;
+}
+
+let config: ProfileOptions;
+const uiElements = {} as UIElements;
+const state = {} as State;
 
 function prepareArtistStatsUI() {
-  const infoBlock = document.querySelector(ARTIST_CONTAINER_SELECTOR);
-  if (!infoBlock) return;
-
-  uiElements.infoBlock = infoBlock;
-
   uiElements.statsList = h('ul', { className: 'list-stats' }, [
     uiElements.listeners = h('li', { className: 'is-listeners' }, 'listeners'),
     uiElements.playcount = h('li', { className: 'is-playcount' }, 'plays'),
@@ -39,19 +87,10 @@ function prepareArtistStatsUI() {
     utils.createSvgUse('svg-lastfm-square-symbol')
   );
 
-  uiElements.lastfmLink2 = h(
-    'a',
-    {
-      className: [ 'lastfm-link', 'is-original' ],
-      target: '_blank',
-    },
-    utils.createSvgUse('svg-lastfm-square-symbol')
-  );
-
   uiElements.statsWrapper = h(
     'div',
     { className: ['list-stats-wrapper', 'is-loading'] },
-    [uiElements.statsList, uiElements.lastfmLink, uiElements.lastfmLink2]
+    [uiElements.statsList, uiElements.lastfmLink]
   );
 
   uiElements.heading = h('div', {
@@ -63,12 +102,22 @@ function prepareArtistStatsUI() {
     className: 'info_content',
   }, uiElements.statsWrapper);
 
-  infoBlock.append(uiElements.heading, uiElements.content);
+  uiElements.artistInfoMain = uiElements.parent.querySelector(ARTIST_INFO_SELECTOR)!;
+
+  uiElements.artistInfoMain.append(uiElements.heading, uiElements.content);
+}
+
+interface ArtistStats {
+  playcount: number;
+  listeners: number;
+  userplaycount?: number;
+  url: string;
+  notFound: boolean;
 }
 
 function populateArtistStats(
-  { playcount, listeners, userplaycount, url, urlOriginal, artistName, artistNameLocalized, notFound },
-  timestamp,
+  { playcount, listeners, userplaycount, url, notFound }: ArtistStats,
+  timestamp?: number,
 ) {
   uiElements.statsWrapper.classList.remove('is-loading');
 
@@ -77,15 +126,11 @@ function populateArtistStats(
     return;
   }
 
-  const isCombinedData = urlOriginal && artistName !== artistNameLocalized;
-
-  if (isCombinedData) uiElements.heading.textContent += ' (combined)';
-
   const cacheTimeHint = timestamp ? `(as of ${new Date(timestamp).toLocaleDateString()})` : '';
 
   if (listeners !== undefined) {
     uiElements.listeners.style.display = 'block';
-    uiElements.listeners.dataset.value = utils.shortenNumber(parseInt(listeners));
+    uiElements.listeners.dataset.value = utils.shortenNumber(Math.trunc(listeners));
     uiElements.listeners.title = `${listeners} listeners ${cacheTimeHint}`;
   } else {
     uiElements.listeners.style.display = 'none';
@@ -93,8 +138,8 @@ function populateArtistStats(
 
   if (playcount !== undefined) {
     uiElements.playcount.style.display = 'block';
-    uiElements.playcount.dataset.value = utils.shortenNumber(parseInt(playcount));
-    uiElements.playcount.title = `${playcount}, ${parseInt(playcount / listeners)} per listener ${cacheTimeHint}`;
+    uiElements.playcount.dataset.value = utils.shortenNumber(Math.trunc(playcount));
+    uiElements.playcount.title = `${playcount}, ${Math.trunc(playcount / listeners)} per listener ${cacheTimeHint}`;
   } else {
     uiElements.playcount.style.display = 'none';
   }
@@ -102,133 +147,115 @@ function populateArtistStats(
   if (userplaycount !== undefined) {
     uiElements.userplaycount.style.display = 'block';
     uiElements.userplaycount.title = `${userplaycount} scrobbles`;
-    uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(parseInt(userplaycount))}`;
+    uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(Math.trunc(userplaycount))}`;
   } else {
     uiElements.userplaycount.style.display = 'none';
   }
 
   if (url) {
     uiElements.lastfmLink.href = url;
-    uiElements.lastfmLink.title = `View ${artistNameLocalized} on Last.fm`;
+    uiElements.lastfmLink.title = `View ${state.artistQuery} on Last.fm`;
   } else {
     uiElements.lastfmLink.href = '';
     uiElements.lastfmLink.title = '';
   }
-
-  if (isCombinedData) {
-    uiElements.lastfmLink2.href = urlOriginal;
-    uiElements.lastfmLink2.title = `View ${artistName} on Last.fm`;
-  } else {
-    uiElements.lastfmLink2.href = '';
-    uiElements.lastfmLink2.title = '';
-  }
 }
 
-async function render(config) {
-  if (!config) return;
+async function render(_config: ProfileOptions) {
+  const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
+  if (!parent) return;
+  uiElements.parent = parent;
 
-  const [ artistName, artistNameLocalized ] = getArtist();
+  if (!_config) return;
 
-  if (!artistName) {
+  config = _config;
+
+  const { artistName, artistNameLocalized, artistAkaNames } = getArtistNames(uiElements.parent);
+  const artistId = getArtistId(uiElements.parent);
+
+  if (!artistName && !artistNameLocalized) {
     console.error('No artist found.');
     return;
   }
 
+  state.artistNameOptions = [artistName];
+  if (artistNameLocalized) state.artistNameOptions.unshift(artistNameLocalized);
+  if (artistAkaNames.length > 0) state.artistNameOptions.push(...artistAkaNames);
+
+  state.artistQueryCacheKey = `artistQuery_${artistId}`;
+  state.artistQuery = await utils.storageGet(state.artistQueryCacheKey, 'local');
+
+  if (!state.artistQuery) {
+    state.artistQuery = state.artistNameOptions[0];
+  }
+
   const userData = await utils.getSyncedUserData();
   const userName = userData?.name;
-  const storageKey = `artistStats_${artistNameLocalized}`;
+  if (userName) state.userName = userName;
+
+  state.storageKey = `artistStats_${state.artistQuery}`;
 
   prepareArtistStatsUI();
 
   if (!config.lastfmApiKey) {
-    const cachedData = localStorage.getItem(storageKey);
+    const cachedData = await utils.storageGet(state.storageKey, 'local');
 
     if (cachedData) {
-      const { timestamp, data } = JSON.parse(cachedData);
+      const { timestamp, data } = cachedData;
       const cachedDate = new Date(timestamp).toDateString();
       const currentDate = new Date().toDateString();
 
       if (cachedDate === currentDate) {
         console.log('Inserting cached lastfm data:', data);
-
         populateArtistStats(data, timestamp);
         return;
       }
     }
   }
 
-  const requests = [];
-
-  const requestLocalized = api.fetchArtistStats(
-    userName,
-    config.lastfmApiKey || process.env.LASTFM_API_KEY,
-    { artist: artistNameLocalized },
-  );
-
-  requests.push(requestLocalized);
-
-  if (artistName !== artistNameLocalized) {
-    const requestOriginalName = api.fetchArtistStats(
-      userName,
-      config.lastfmApiKey || process.env.LASTFM_API_KEY,
-      { artist: artistName },
-    );
-
-    requests.push(requestOriginalName);
-  }
-
-  const [data1, data2] = await Promise.all(requests);
+  const artistInfoResponse = await api.getArtistInfo({
+    params: {
+      username: userName,
+      artist: state.artistQuery,
+    },
+    apiKey: config.lastfmApiKey || process.env.LASTFM_API_KEY as string,
+  });
 
   let playcount = 0;
   let listeners = 0;
   let userplaycount;
-
-  if (data1 && !data1.error) {
-    playcount += +data1.artist.stats.playcount;
-    listeners += +data1.artist.stats.listeners;
-
-    if (data1.artist.stats.userplaycount) {
-      userplaycount = 0;
-      userplaycount += +data1.artist.stats.userplaycount;
-    }
-  }
-
-  if (data2 && !data2.error) {
-    if (data2.artist) {
-      playcount += +data2.artist.stats.playcount;
-      listeners += +data2.artist.stats.listeners;
-
-      if (data2.artist.stats.userplaycount) {
-        userplaycount = userplaycount || 0;
-        userplaycount += +data2.artist.stats.userplaycount;
-      }
-    }
-  }
-
-  let url = !data1.error ? data1.artist.url : null;
-  let urlOriginal = null;
-
-  if (data2) {
-    urlOriginal = !data2.error ? data2.artist.url : urlOriginal;
-  }
-
+  let url = null;
   let notFound = false;
 
-  notFound = (data1?.error && data2?.error) ? true : notFound;
+  if (artistInfoResponse && !artistInfoResponse.error) {
+    playcount += +artistInfoResponse.artist.stats.playcount;
+    listeners += +artistInfoResponse.artist.stats.listeners;
 
-  const stats = {
+    if (artistInfoResponse.artist.stats.userplaycount) {
+      userplaycount = 0;
+      userplaycount += +artistInfoResponse.artist.stats.userplaycount;
+    }
+
+    url = artistInfoResponse.artist.url;
+  } else {
+    notFound = true;
+  }
+
+  const stats: ArtistStats = {
     playcount,
     listeners,
     userplaycount,
     url,
-    urlOriginal,
-    artistName,
-    artistNameLocalized,
-    notFound: notFound,
+    notFound,
   };
 
   if (!config.lastfmApiKey) {
-    localStorage.setItem(storageKey, JSON.stringify({ timestamp: Date.now(), data: stats }));
+    await utils.storageSet({
+      [state.storageKey]: {
+        timestamp: Date.now(),
+        data: stats,
+      },
+    }, 'local');
   }
 
   populateArtistStats(stats);
@@ -236,5 +263,5 @@ async function render(config) {
 
 export default {
   render,
-  targetSelectors: [ARTIST_CONTAINER_SELECTOR],
+  targetSelectors: [PARENT_SELECTOR],
 };
