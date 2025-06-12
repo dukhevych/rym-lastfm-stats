@@ -46,7 +46,7 @@ let config: ProfileOptions;
 const uiElements = {} as UIElements;
 const state = {
   get artistNameOptions(): string[] {
-    return [this.artistNameLocalized, this.artistName, ...this.artistAkaNames, 'asdsdsdsdssdosds0dsa0dsa'].filter(Boolean);
+    return [this.artistNameLocalized, this.artistName, ...this.artistAkaNames].filter(Boolean);
   },
   get artistQueryCacheKey(): string { return `artistQuery_${this.artistId}`; },
   get cacheStorageKey(): string { return `artistStats_${this.artistId}_${this.artistQuery}`; },
