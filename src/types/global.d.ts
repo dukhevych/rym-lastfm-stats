@@ -1,4 +1,9 @@
 declare global {
+  interface UserData {
+    name?: string;
+    // add other properties if needed
+  }
+
   interface ProfileOptions {
     recentTracks: boolean;
     recentTracksShowOnLoad: boolean;

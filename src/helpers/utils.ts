@@ -192,11 +192,6 @@ export function isDarkMode() {
   );
 };
 
-interface UserData {
-  name?: string;
-  // add other properties if needed
-}
-
 export async function getUserName() {
   const userData = await getSyncedUserData() as UserData;
   return userData?.name ?? '';
@@ -901,7 +896,7 @@ export function getNodeDirectTextContent(item: Node | null): string {
     }
   });
 
-  return result.join(' ');
+  return result.join(' ').trim();
 }
 
 export interface ExtractIdFromTitle {
@@ -1144,4 +1139,8 @@ export function getEarliestRating(albums: IRYMRecordDBMatch[]) {
     }
   });
   return earliestRating;
+}
+
+export function generateLastFMProfileUrl(artistName: string) {
+  return `https://www.last.fm/music/${encodeURIComponent(artistName)}`;
 }

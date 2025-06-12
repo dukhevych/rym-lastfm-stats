@@ -27,7 +27,7 @@ export async function getReleaseInfo({
     single: 'track.getInfo',
   };
 
-  const method = methodMap[releaseType];
+  const method = methodMap[releaseType] ?? methodMap.album;
   const url = new URL(BASE_URL);
 
   url.searchParams.set('method', method);
@@ -38,7 +38,7 @@ export async function getReleaseInfo({
     url.searchParams.set('mbid', params.mbid);
   } else {
     url.searchParams.set('artist', params.artist);
-    url.searchParams.set(releaseType === 'album' ? 'album' : 'track', params.title);
+    url.searchParams.set(releaseType === 'single' ? 'track' : 'album', params.title);
   }
 
   if ('autocorrect' in params) {

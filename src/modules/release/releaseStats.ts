@@ -88,9 +88,9 @@ const state = {
 } as State;
 
 function createSearchDialog() {
-  const list = h('ul', { className: 'list-search' });
+  const list = h('ul', { className: 'list-dialog' });
 
-  const dialog = h('dialog', { className: 'dialog-base', id: 'dialog-search-lastfm' }, [
+  const dialog = h('dialog', { className: 'dialog-base' }, [
     h(
       'h2',
       { className: 'dialog-title' },
@@ -122,14 +122,14 @@ function populateSearchDialog() {
   uiElements.searchList.replaceChildren();
 
   if (!state.searchResults || state.searchResults.length === 0) {
-    const noResultsItem = h('li', { className: 'search-item is-no-results' }, 'No results found');
+    const noResultsItem = h('li', { className: 'list-dialog-item is-no-results' }, 'No results found');
     uiElements.searchList.appendChild(noResultsItem);
     return;
   }
 
   uiElements.searchListItems = state.searchResults.map((item) => {
     const isSelected = item.artist === state.artistQuery && item.name === state.releaseTitleQuery;
-    const classNames = ['search-item'];
+    const classNames = ['list-dialog-item'];
 
     if (isSelected) classNames.push('is-selected');
 
@@ -142,7 +142,7 @@ function populateSearchDialog() {
     }, [
       h('a', {
         href: item.url,
-        className: 'search-item-link',
+        className: 'list-dialog-item-link',
         onClick: async (e: MouseEvent) => {
           e.preventDefault();
           await utils.storageSet({
@@ -159,10 +159,10 @@ function populateSearchDialog() {
         },
       }, [
         h('img', {
-          className: 'search-item-image',
+          className: 'list-dialog-item-image',
           src: item.image[0]['#text'],
         }),
-        h('span', { className: 'search-item-title' }, `${item.artist} - ${item.name}`),
+        h('span', { className: 'list-dialog-item-title' }, `${item.artist} - ${item.name}`),
       ]),
     ]);
   });

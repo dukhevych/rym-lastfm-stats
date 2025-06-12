@@ -43,6 +43,7 @@
 
   &:before {
     content: 'Loading...';
+    font-weight: bold;
     display: none;
   }
 
@@ -68,13 +69,14 @@
 
     &:before {
       content: 'No Last.fm data found';
-      font-weight: bold;
+      display: inline;
     }
   }
 
   .incorrect-stats-link {
     margin-left: auto;
     font-size: 1.1em;
+    line-height: 1em;
     font-weight: bold;
     color: var(--mono-c);
 
@@ -212,14 +214,14 @@ dialog.dialog-base[open]::backdrop {
   position: relative;
 }
 
-.list-search {
+.list-dialog {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.search-item {
-  .search-item-link {
+.list-dialog-item {
+  .list-dialog-item-link {
     display: flex;
     align-items: center;
     padding: 1rem;
@@ -233,17 +235,17 @@ dialog.dialog-base[open]::backdrop {
     }
   }
 
-  &.is-selected .search-item-link {
+  &.is-selected .list-dialog-item-link {
     background-color: color-mix(in srgb, var(--text-primary), transparent 95%);
     cursor: default;
     pointer-events: none;
   }
 
-  .search-item-title {
+  .list-dialog-item-title {
     text-wrap: balance;
   }
 
-  .search-item-image {
+  .list-dialog-item-image {
     width: 30px;
     height: 30px;
     background-color: var(--mono-3);
