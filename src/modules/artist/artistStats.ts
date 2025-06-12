@@ -94,14 +94,14 @@ async function updateArtistStats() {
       && cachedData.timestamp
       && ((Date.now() - cachedData.timestamp) <= cacheLifetime)
   ) {
-    console.log('Using cached data');
+    constants.isDev && console.log('Using cached data');
 
     stats = cachedData.data;
     timestamp = cachedData.timestamp;
   }
 
   if (!stats && !timestamp) {
-    console.log('Fetching new data');
+    constants.isDev && console.log('Fetching new data');
 
     stats = await fetchArtistInfo(state.artistQuery);
     timestamp = Date.now();
