@@ -36,3 +36,14 @@ export enum RYMEntityCode {
   // U = 'user',
   // S = 'list',
 }
+
+export enum RYMDiscographyType {
+  Album = 's',
+  LiveAlbum = 'l',
+  EP = 'e',
+  Single = 'i',
+  MusicVideo = 'o',
+  AppearsOn = 'a',
+  VACompilation = 'v',
+  AdditionalRelease = 'x',
+}

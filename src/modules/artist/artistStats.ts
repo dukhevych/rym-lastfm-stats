@@ -1,7 +1,8 @@
-import * as utils from '@/helpers/utils';
-import * as constants from '@/helpers/constants';
 import * as api from '@/api';
+import * as constants from '@/helpers/constants';
+import * as utils from '@/helpers/utils';
 import { createElement as h } from '@/helpers/utils';
+
 import {
   getArtistId,
   getArtistNames,
@@ -33,6 +34,7 @@ interface State {
   artistName: string;
   artistNameLocalized: string;
   artistAkaNames: string[];
+  artistAdditionalNames: string[];
   artistId: string;
   artistQuery: string;
   artistQueryCacheKey: string;
@@ -46,7 +48,7 @@ let config: ProfileOptions;
 const uiElements = {} as UIElements;
 const state = {
   get artistNameOptions(): string[] {
-    return [this.artistNameLocalized, this.artistName, ...this.artistAkaNames].filter(Boolean);
+    return Array.from(new Set([this.artistNameLocalized, this.artistName, ...this.artistAkaNames, ...this.artistAdditionalNames].filter(Boolean)));
   },
   get artistQueryCacheKey(): string { return `artistQuery_${this.artistId}`; },
   get cacheStorageKey(): string { return `artistStats_${this.artistId}_${this.artistQuery}`; },
@@ -81,7 +83,7 @@ function createArtistNamesDialog() {
   return { dialog, list };
 }
 
-async function updateArtistStats() {
+async function updateStats() {
   let stats: ArtistStats | null = null;
   let timestamp: number | null = null;
 
@@ -189,15 +191,21 @@ function createArtistNamesDialogListItem(artistName: string) {
         className: 'list-dialog-item-link',
         onClick: async (e: MouseEvent) => {
           e.preventDefault();
+
+          // SET VALUES
           state.artistQuery = artistName;
-          uiElements.statsWrapper.classList.add('is-updating');
+
+          // UPDATE VALUES IN CACHE
           utils.storageSet({
             [state.artistQueryCacheKey]: state.artistQuery,
           }, 'local'),
+
+          // CLOSE DIALOG
           uiElements.artistNamesDialog.close();
 
-          await updateArtistStats();
-
+          // UPDATE STATS
+          uiElements.statsWrapper.classList.add('is-updating');
+          await updateStats();
           uiElements.statsWrapper.classList.remove('is-updating');
         },
       },
@@ -206,7 +214,7 @@ function createArtistNamesDialogListItem(artistName: string) {
   ]);
 }
 
-function populateArtistNamesDialog() {
+function populateSwitchArtistDialog() {
   if (!uiElements.artistNamesDialogList || !uiElements.artistNamesDialog) return;
 
   uiElements.artistNamesDialogList.replaceChildren();
@@ -229,7 +237,7 @@ function prepareArtistNamesDialog() {
   document.body.appendChild(uiElements.artistNamesDialog);
 }
 
-function prepareArtistStatsUI() {
+function initUI() {
   uiElements.statsList = h('ul', { className: 'list-stats' }, [
     uiElements.listeners = h('li', { className: 'is-listeners' }, 'listeners'),
     uiElements.playcount = h('li', { className: 'is-playcount' }, 'plays'),
@@ -326,45 +334,61 @@ function populateArtistStats(
 }
 
 async function render(_config: ProfileOptions) {
+  // SET PARENT ELEMENT
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
   if (!parent) return;
   uiElements.parent = parent;
 
+  // SET CONFIG
   if (!_config) return;
-
   config = _config;
 
+  // SET ARTIST ID
   state.artistId = getArtistId(uiElements.parent);
-
   if (!state.artistId) {
     console.warn('No artist ID found.');
     return;
   }
 
-  const { artistName, artistNameLocalized, artistAkaNames } = getArtistNames(uiElements.parent);
+  // SET PAGE DATA
+  const {
+    artistName,
+    artistNameLocalized,
+    artistAkaNames,
+    artistAdditionalNames,
+  } = getArtistNames(uiElements.parent);
   state.artistName = artistName;
   state.artistNameLocalized = artistNameLocalized;
   state.artistAkaNames = artistAkaNames;
+  state.artistAdditionalNames = artistAdditionalNames;
 
+  // CHECK IF ARTIST NAME IS SET
   if (!state.artistName && !state.artistNameLocalized) {
     console.error('No artist found.');
     return;
   }
 
+  // INIT QUERIES
   state.artistQuery = await utils.storageGet(state.artistQueryCacheKey, 'local') || state.artistName;
 
+  // SET USER NAME
   const userData = await utils.getSyncedUserData();
   const userName = userData?.name;
   if (userName) state.userName = userName;
 
+  // PREPARE ARTIST NAMES DIALOG
   if (state.artistNameOptions.length > 1) {
     prepareArtistNamesDialog();
   }
 
-  prepareArtistStatsUI();
-  populateArtistNamesDialog();
+  // INIT UI
+  initUI();
 
-  await updateArtistStats();
+  // POPULATE ARTIST NAMES DIALOG
+  populateSwitchArtistDialog();
+
+  // FETCH AND POPULATE STATS
+  await updateStats();
 }
 
 export default {

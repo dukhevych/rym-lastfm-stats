@@ -200,7 +200,7 @@ export const RYMOwnershipStatusLabels: Record<ERYMOwnershipStatus, string> = {
 // Only 2 values are used in the Profile/Collection
 // `In collection` always has `format`
 // `Wishlist` and `Used to own` are always shown no matter if `format` is set or not
-export const ERYMOwnershipAltToCode: Partial<Record<ERYMOwnershipAltText, ERYMOwnershipStatus>> = {
+export const RYMOwnershipAltToCode: Partial<Record<ERYMOwnershipAltText, ERYMOwnershipStatus>> = {
   [enums.ERYMOwnershipAltText.OnWishlist]: enums.ERYMOwnershipStatus.OnWishlist,
   [enums.ERYMOwnershipAltText.UsedToOwn]: enums.ERYMOwnershipStatus.UsedToOwn,
 };

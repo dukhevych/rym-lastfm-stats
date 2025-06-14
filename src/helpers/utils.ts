@@ -1144,3 +1144,7 @@ export function getEarliestRating(albums: IRYMRecordDBMatch[]) {
 export function generateLastFMProfileUrl(artistName: string) {
   return `https://www.last.fm/music/${encodeURIComponent(artistName)}`;
 }
+
+export function removeArtistNameBrackets(artistName: string) {
+  return artistName.replace(/^\[(.*)\]$/, '$1');
+}

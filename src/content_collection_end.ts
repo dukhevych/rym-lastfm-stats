@@ -33,7 +33,7 @@ import { RecordsAPI } from '@/helpers/records-api';
       }
 
       if (ownershipText && isOwnershipAltText(ownershipText)) {
-        ownership = constants.ERYMOwnershipAltToCode[ownershipText] || ERYMOwnershipStatus.InCollection;
+        ownership = constants.RYMOwnershipAltToCode[ownershipText] || ERYMOwnershipStatus.InCollection;
 
         // Formats for 'Used to Own' and 'Wishlist' are not available on Collection page
         // Only 'In collection' is used by addon anyway, so we ignore formats for other ownership types
