@@ -1,8 +1,32 @@
-import * as api from '@/helpers/api';
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
+import { createElement as h } from '@/helpers/utils';
+import { getTopArtists } from '@/api/getTopArtists';
+import type { TopArtistsPeriod, TopArtist } from '@/api/getTopArtists';
 
 import './topArtists.css';
+
+interface UIElements {
+  topArtistsHeader: HTMLElement;
+  topArtistsHeaderLeft: HTMLElement;
+  topArtistsHeaderRight: HTMLElement;
+  topArtistsPeriodLabel: HTMLElement;
+  topArtistsPeriodSwitcher: HTMLSelectElement;
+  topArtistsPeriodSaveButton: HTMLButtonElement;
+  topArtistsContainer: HTMLElement;
+}
+
+interface State {
+  userName: string;
+}
+
+interface TopArtistWithPercentage extends TopArtist {
+  playcountPercentage: number;
+  playcountPercentageAbsolute: number;
+}
+
+const uiElements = {} as UIElements;
+const state = {} as State;
 
 const PROFILE_CONTAINER_SELECTOR =
   '.bubble_header.profile_header + .bubble_content';
@@ -10,109 +34,52 @@ const PROFILE_CONTAINER_SELECTOR =
 let config: ProfileOptions & { userName?: string };
 
 export async function render(_config: ProfileOptions & { userName?: string }) {
+  // SET CONFIG
   config = _config;
-
   if (!config) return;
-
   if (!config.lastfmApiKey) {
-    console.error(
+    console.warn(
       'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
     );
     return;
   }
 
-  let userName;
-
-  if (config.userName) {
-    userName = config.userName;
-  } else {
-    const userData = await utils.getSyncedUserData();
-    userName = userData?.name;
-  }
-
-  if (!userName) {
-    console.log("No Last.fm username found. Top Artists can't be displayed.");
+  // SET PAGE DATA
+  state.userName = config.userName || await utils.getUserName();
+  if (!state.userName) {
+    console.warn("No Last.fm username found. Top Artists can't be displayed.");
     return;
   }
 
-  const {
-    topArtistsHeader,
-    topArtistsContainer,
-    topArtistsPeriodSwitcher,
-    topArtistsPeriodSaveButton,
-    topArtistsPeriodLabel,
-  } = createTopArtistsUI();
-
-  topArtistsPeriodSaveButton.addEventListener('click', async () => {
-    const selectedPeriod = topArtistsPeriodSwitcher.value;
-    const selectedPeriodLabel = constants.PERIOD_LABELS_MAP[selectedPeriod];
-    topArtistsPeriodLabel.textContent = selectedPeriodLabel;
-
-    await utils.storageSet({
-      topArtistsPeriod: selectedPeriod,
-    });
-
-    config.topArtistsPeriod = selectedPeriod;
-
-    topArtistsPeriodSaveButton.style.display = 'none';
-  });
-
-  let initialPeriod = config.topArtistsPeriod;
-
-  topArtistsPeriodSwitcher.addEventListener('change', async (event) => {
-    const period = (event.target as HTMLSelectElement).value;
-
-    topArtistsContainer.classList.add('is-loading');
-
-    const data = await api.fetchUserTopArtists(
-      userName,
-      config.lastfmApiKey,
-      {
-        limit: config.topArtistsLimit,
-        period: period,
-      },
-    );
-
-    topArtistsPeriodLabel.textContent =
-      constants.PERIOD_LABELS_MAP[period];
-    topArtistsPeriodLabel.title = constants.PERIOD_LABELS_MAP[period];
-
-    populateTopArtists(topArtistsContainer, data);
-
-    topArtistsContainer.classList.remove('is-loading');
-
-    if (period !== initialPeriod) {
-      topArtistsPeriodSaveButton.style.display = 'block';
-    } else {
-      topArtistsPeriodSaveButton.style.display = 'none';
-    }
-  });
+  initUI();
 
   const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
   icon.classList.add('loader');
 
-  topArtistsContainer.appendChild(icon);
+  uiElements.topArtistsContainer.appendChild(icon);
 
-  insertTopArtistsIntoDOM(topArtistsHeader, topArtistsContainer);
+  insertTopArtistsIntoDOM();
 
-  const updateAction = async () => {
-    const topArtists = await api.fetchUserTopArtists(
-      userName,
-      config.lastfmApiKey,
-      {
+  const updateAction = async (value: TopArtistsPeriod) => {
+    const topArtistsResponse = await getTopArtists({
+      params: {
+        username: state.userName,
+        period: value || config.topArtistsPeriod as TopArtistsPeriod,
         limit: config.topArtistsLimit,
-        period: config.topArtistsPeriod,
       },
-    );
+      apiKey: config.lastfmApiKey,
+    });
 
-    populateTopArtists(topArtistsContainer, topArtists);
+    const data = topArtistsResponse.topartists.artist;
+
+    populateTopArtists(data);
 
     await utils.storageSet({
       topArtistsCache: {
-        data: topArtists,
+        data: data,
         timestamp: Date.now(),
         period: config.topArtistsPeriod,
-        userName,
+        userName: state.userName,
       },
     });
   }
@@ -123,83 +90,123 @@ export async function render(_config: ProfileOptions & { userName?: string }) {
     topArtistsCache
     && topArtistsCache.data
     && topArtistsCache.timestamp
-    && topArtistsCache.userName === userName
+    && topArtistsCache.userName === state.userName
   ) {
     if (
       ((Date.now() - topArtistsCache.timestamp) > constants.TOP_ARTISTS_INTERVAL_MS)
       || topArtistsCache.period !== config.topArtistsPeriod
     ) {
-      await updateAction();
+      await updateAction(config.topArtistsPeriod as TopArtistsPeriod);
     } else {
-      populateTopArtists(topArtistsContainer, topArtistsCache.data);
+      populateTopArtists(topArtistsCache.data);
     }
   } else {
-    await updateAction();
+    await updateAction(config.topArtistsPeriod as TopArtistsPeriod);
   }
 }
 
-function createTopArtistsUI() {
+function initUI() {
   const periodLabel = constants.PERIOD_OPTIONS.find(
     (option) => option.value === config.topArtistsPeriod,
-  )?.label;
-  const topArtistsHeader = document.createElement('div');
-  topArtistsHeader.classList.add('bubble_header');
-  topArtistsHeader.classList.add('top-artists-header');
+  )?.label as string;
 
-  const topArtistsHeaderLeft = document.createElement('div');
-  const topArtistsHeaderRight = document.createElement('div');
+  uiElements.topArtistsHeader = h('div', {
+    className: ['bubble_header', 'top-artists-header'],
+  });
 
-  topArtistsHeaderLeft.textContent = 'Top Artists';
-
-  const topArtistsPeriodLabel = utils.createSpan(periodLabel, periodLabel);
-  topArtistsPeriodLabel.id = 'top-artists-period-label';
-
-  topArtistsHeaderLeft.appendChild(topArtistsPeriodLabel);
-
-  const topArtistsPeriodSaveButton = document.createElement('button');
-  topArtistsPeriodSaveButton.textContent = 'Save';
-
-  topArtistsHeaderRight.appendChild(topArtistsPeriodSaveButton);
-  topArtistsPeriodSaveButton.style.display = 'none';
-
-  const topArtistsPeriodSwitcher = utils.createSelect(
-    constants.PERIOD_OPTIONS,
-    config.topArtistsPeriod,
+  uiElements.topArtistsHeaderLeft = h('div',
+    {},
+    [
+      'Top Artists',
+      uiElements.topArtistsPeriodLabel = h('span', {
+        title: periodLabel,
+        id: 'top-artists-period-label',
+      }, periodLabel),
+    ]
   );
 
-  topArtistsHeaderRight.appendChild(topArtistsPeriodSwitcher);
+  uiElements.topArtistsHeaderRight = h('div', {},
+    uiElements.topArtistsPeriodSaveButton = h('button', {
+      style: {
+        display: 'none',
+      },
+      onClick: async () => {
+        const selectedPeriod = uiElements.topArtistsPeriodSwitcher.value;
+        const selectedPeriodLabel = constants.PERIOD_LABELS_MAP[selectedPeriod];
+        uiElements.topArtistsPeriodLabel.textContent = selectedPeriodLabel;
 
-  topArtistsHeader.appendChild(topArtistsHeaderLeft);
-  topArtistsHeader.appendChild(topArtistsHeaderRight);
+        await utils.storageSet({
+          topArtistsPeriod: selectedPeriod,
+        });
 
-  const topArtistsContainer = document.createElement('div');
-  topArtistsContainer.classList.add('bubble_content', 'top-artists');
-  topArtistsContainer.style.setProperty('--config-top-artists-limit', String(config.topArtistsLimit));
+        config.topArtistsPeriod = selectedPeriod;
 
-  return {
-    topArtistsHeader,
-    topArtistsContainer,
-    topArtistsPeriodSwitcher,
-    topArtistsPeriodSaveButton,
-    topArtistsPeriodLabel,
-  };
+        uiElements.topArtistsPeriodSaveButton.style.display = 'none';
+      }
+    }, 'Save'),
+    uiElements.topArtistsPeriodSwitcher = utils.createSelect(
+      constants.PERIOD_OPTIONS,
+      config.topArtistsPeriod,
+      {
+        onChange: async (event: Event) => {
+          const period = (event.target as HTMLSelectElement).value as TopArtistsPeriod;
+
+          uiElements.topArtistsContainer.classList.add('is-loading');
+
+          const topArtistsResponse = await getTopArtists({
+            params: {
+              username: state.userName,
+              period,
+              limit: config.topArtistsLimit,
+            },
+            apiKey: config.lastfmApiKey,
+          });
+
+          const data = topArtistsResponse.topartists.artist;
+
+          uiElements.topArtistsPeriodLabel.textContent =
+            constants.PERIOD_LABELS_MAP[period];
+          uiElements.topArtistsPeriodLabel.title = constants.PERIOD_LABELS_MAP[period];
+
+          populateTopArtists(data);
+
+          uiElements.topArtistsContainer.classList.remove('is-loading');
+
+          if (period !== config.topArtistsPeriod) {
+            uiElements.topArtistsPeriodSaveButton.style.display = 'block';
+          } else {
+            uiElements.topArtistsPeriodSaveButton.style.display = 'none';
+          }
+        }
+      },
+    ),
+  );
+
+  uiElements.topArtistsHeader.appendChild(uiElements.topArtistsHeaderLeft);
+  uiElements.topArtistsHeader.appendChild(uiElements.topArtistsHeaderRight);
+
+  uiElements.topArtistsContainer = h('div', {
+    className: ['bubble_content', 'top-artists'],
+  });
+
+  uiElements.topArtistsContainer.style.setProperty('--config-top-artists-limit', String(config.topArtistsLimit));
 }
 
-function populateTopArtists(container, topArtists) {
-  container.replaceChildren();
+function populateTopArtists(topArtists: TopArtist[]) {
+  uiElements.topArtistsContainer.replaceChildren();
 
   if (!topArtists || !Array.isArray(topArtists) || topArtists.length === 0) {
-    container.classList.add('is-empty');
+    uiElements.topArtistsContainer.classList.add('is-empty');
     return;
   } else {
-    container.classList.remove('is-empty');
+    uiElements.topArtistsContainer.classList.remove('is-empty');
   }
 
   const maxPlaycount = Math.max(...topArtists.map(artist => artist.playcount));
   const minPlaycount = Math.min(...topArtists.map(artist => artist.playcount));
   const playcountRange = maxPlaycount - minPlaycount;
 
-  const topArtistsWithPercentage = topArtists.map(artist => ({
+  const topArtistsWithPercentage: TopArtistWithPercentage[] = topArtists.map(artist => ({
     ...artist,
     playcountPercentage: (artist.playcount / maxPlaycount) * 100,
     playcountPercentageAbsolute: playcountRange ? ((artist.playcount - minPlaycount) / playcountRange) * 100 : 0,
@@ -209,41 +216,34 @@ function populateTopArtists(container, topArtists) {
     const artistLink = createArtistLink(artist);
     artistLink.classList.add('top-artists-fade-in');
     artistLink.style.animationDelay = `${index * 0.07}s`;
-    container.appendChild(artistLink);
+    uiElements.topArtistsContainer.appendChild(artistLink);
   });
 }
 
-// TODO - add theme-based color range
 const hueStart = 0;
 const hueEnd = 240;
 
 function createArtistTemplate() {
-  const wrapper = document.createElement('a');
-  wrapper.classList.add('top-artist');
-
-  const artistName = document.createElement('span');
-  artistName.classList.add('artist-name');
-  wrapper.appendChild(artistName);
-
-  const playcount = document.createElement('span');
-  playcount.classList.add('artist-scrobbles');
-  wrapper.appendChild(playcount);
-
-  return wrapper;
+  return h('a', {
+    className: ['top-artist'],
+  }, [
+    h('span', { className: ['artist-name'] }),
+    h('span', { className: ['artist-scrobbles'] }),
+  ]);
 }
 
-function populateArtistTemplate(artist, artistElement) {
-  artistElement.querySelector('.artist-name').textContent = artist.name;
+function populateArtistTemplate(artist: TopArtistWithPercentage, artistElement: HTMLAnchorElement) {
+  artistElement.querySelector('.artist-name')!.textContent = artist.name;
 
   const playsText = artist.playcount + ` play${artist.playcount > 1 ? 's' : ''}`;
-  artistElement.querySelector('.artist-scrobbles').textContent = playsText;
+  artistElement.querySelector('.artist-scrobbles')!.textContent = playsText;
 
   const hue = Math.trunc(
     hueStart + (1 - artist.playcountPercentageAbsolute / 100) * (hueEnd - hueStart)
   );
 
-  artistElement.style.setProperty('--hue', hue);
-  artistElement.style.setProperty('--playcountPercentage', artist.playcountPercentage);
+  artistElement.style.setProperty('--hue', String(hue));
+  artistElement.style.setProperty('--playcountPercentage', String(artist.playcountPercentage));
 
   artistElement.href = utils.generateSearchUrl({ artist: artist.name });
   artistElement.title = `Search ${artist.name} on RateYourMusic`;
@@ -251,22 +251,22 @@ function populateArtistTemplate(artist, artistElement) {
 
 const ARTIST_TEMPLATE = createArtistTemplate();
 
-function createArtistLink(artist) {
-  const artistElement = ARTIST_TEMPLATE.cloneNode(true);
+function createArtistLink(artist: TopArtistWithPercentage) {
+  const artistElement = ARTIST_TEMPLATE.cloneNode(true) as typeof ARTIST_TEMPLATE;
   populateArtistTemplate(artist, artistElement);
   return artistElement;
 }
 
-function insertTopArtistsIntoDOM(topArtistsHeader, topArtistsContainer) {
-  const profileContainer = document.querySelector(PROFILE_CONTAINER_SELECTOR);
+function insertTopArtistsIntoDOM() {
+  const profileContainer = document.querySelector(PROFILE_CONTAINER_SELECTOR)!;
   const topAlbumsContainer = document.querySelector('.top-albums');
 
   if (topAlbumsContainer) {
-    topAlbumsContainer.insertAdjacentElement('afterend', topArtistsContainer);
-    topArtistsContainer.insertAdjacentElement('beforebegin', topArtistsHeader);
+    topAlbumsContainer.insertAdjacentElement('afterend', uiElements.topArtistsContainer);
+    uiElements.topArtistsContainer.insertAdjacentElement('beforebegin', uiElements.topArtistsHeader);
   } else {
-    profileContainer.insertAdjacentElement('afterend', topArtistsContainer);
-    topArtistsContainer.insertAdjacentElement('beforebegin', topArtistsHeader);
+    profileContainer.insertAdjacentElement('afterend', uiElements.topArtistsContainer);
+    uiElements.topArtistsContainer.insertAdjacentElement('beforebegin', uiElements.topArtistsHeader);
   }
 }
 

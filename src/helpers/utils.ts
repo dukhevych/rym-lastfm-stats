@@ -56,74 +56,20 @@ export function shortenNumber(num: number): string {
   }
 };
 
-export const createSpan = (title: string, text: string) => {
-  const span = document.createElement('span');
-  span.title = title.trim();
-  span.textContent = text.trim();
-  return span;
-};
-
-export interface CreateParagraph {
-  (text: string): HTMLParagraphElement;
-}
-
-export const createParagraph: CreateParagraph = (text: string): HTMLParagraphElement => {
-  const paragraph = document.createElement('p');
-  paragraph.textContent = text;
-  return paragraph;
-};
-
 interface SelectOption {
   value: string;
   label: string;
 }
 
-export const createSelect = (options: SelectOption[], selectedValue?: string): HTMLSelectElement => {
-  const select = document.createElement('select');
-
-  options.forEach(({ value, label }) => {
-    const selectOption = document.createElement('option');
-    selectOption.value = value;
-    selectOption.textContent = label;
-
-    if (value === selectedValue) {
-      selectOption.selected = true;
-    }
-
-    select.appendChild(selectOption);
-  });
-
-  return select;
-};
-
-interface CreateStrongOptions {
-  title: string;
-  text: string;
-}
-
-export const createStrong = (title: string, text: string): HTMLElement => {
-  const strong = document.createElement('strong');
-  strong.title = title;
-  strong.textContent = text;
-  return strong;
-};
-
-export interface CreateLinkOptions {
-  href: string;
-  text?: string;
-  target?: string;
-}
-
-export const createLink = (
-  href: string,
-  text?: string,
-  target: string = '_blank'
-): HTMLAnchorElement => {
-  const link = document.createElement('a');
-  link.href = href;
-  if (target) link.target = target;
-  if (text) link.textContent = text;
-  return link;
+export const createSelect = (options: SelectOption[], selectedValue?: string, selectAttributes?: CreateElementProps): HTMLSelectElement => {
+  return createElement(
+    'select',
+    selectAttributes || {},
+    options.map(({ value, label }) => createElement('option', {
+      value,
+      selected: value === selectedValue,
+    }, label)),
+  );
 };
 
 export interface FormatNumberOptions {

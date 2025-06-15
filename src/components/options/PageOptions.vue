@@ -446,6 +446,21 @@
               :max="constants.TOP_ARTISTS_LIMIT_MAX"
               :disabled="options.topArtists === false"
             />
+            <!--
+            <div style="--hue-start: 35; --hue-end: 70">
+              <div
+                class="h-10 w-10"
+                style="background-color: hsl(var(--hue-start), 100%, 50%)"
+              />
+              <div
+                class="h-10 w-10"
+                style="background-color: hsl(var(--hue-end), 100%, 50%)"
+              />
+              <div
+                class="h-10"
+                style="background-size: 100% 100%; background-image: linear-gradient(to right, hsl(var(--hue-start), 100%, 50%), hsl(var(--hue-end), 100%, 50%))"
+              />
+            </div> -->
 
             <FormSeparator />
 

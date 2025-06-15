@@ -1,29 +1,33 @@
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
+import { RYMEntityCode } from '@/helpers/enums';
+import { createElement as h } from '@/helpers/utils';
 
 import './searchStrict.css';
 
-let searchItems;
-const searchItemsToHide = [];
-const searchItemsFiltered = [];
+let searchItems: NodeListOf<HTMLElement>;
+let searchItemsToHide: HTMLElement[] = [];
+let searchItemsFiltered: HTMLElement[] = [];
 
 const SEARCH_HEADER_SELECTOR = '.page_search_results h3';
 const SEARCH_ITEMS_SELECTOR = SEARCH_HEADER_SELECTOR + ' ~ table';
 const LAST_ITEM_SELECTOR = SEARCH_HEADER_SELECTOR + ' ~ table + div';
 
 function injectShowAllButton() {
-  const button = document.createElement('button');
-  button.textContent = `Show all results (+ ${searchItemsToHide.length} more)`;
-  button.classList.add('btn', 'blue_btn', 'btn_small', 'btn-search-strict-show-all');
-  const target = document.querySelector('.page_search_results h3');
-  target.appendChild(button);
-  button.addEventListener('click', () => {
-    searchItems.forEach((item) => {
-      item.style.display = '';
-    });
-    button.style.display = 'none';
-  });
+  const button = h('button', {
+    className: ['btn', 'blue_btn', 'btn_small', 'btn-search-strict-show-all'],
+    onClick: () => {
+      searchItems.forEach((item) => {
+        item.style.display = '';
+      });
+      button.style.display = 'none';
+    }
+  }, `Show all results (+ ${searchItemsToHide.length} more)`);
+
+  const target: HTMLElement | null = document.querySelector('.page_search_results h3');
+
+  if (target) target.appendChild(button);
 }
 
 // function addReleaseIdAsOrder(item) {
@@ -43,7 +47,7 @@ const validationRules = {
       artistNameLocalizedSelector: 'a.searchpage.artist + span.smallgray',
       artistAkaSelector: '.subinfo',
     },
-    validate: function (item, query) {
+    validate: function (item: HTMLElement, query: string) {
       const {
         artistNameSelector,
         artistNameLocalizedSelector,
@@ -52,11 +56,13 @@ const validationRules = {
 
       const _query = utils.normalizeForSearch(query);
 
-      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent);
+      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
 
       const artistNameLocalized = utils.normalizeForSearch(
-        item.querySelector(artistNameLocalizedSelector)?.textContent
-      ).replace(/^\[|\]$/g, ''); // remove [ ] brackets
+        utils.removeArtistNameBrackets(
+          item.querySelector(artistNameLocalizedSelector)?.textContent || ''
+        )
+      );
 
       const artistAka =
         utils.getNodeDirectTextContent(item.querySelector(artistAkaSelector)).trim();
@@ -78,7 +84,7 @@ const validationRules = {
       artistNameSelector: 'a.artist',
       releaseTitleSelector: 'a.searchpage',
     },
-    validate: function (item, query) {
+    validate: function (item: HTMLElement, query: string) {
       const {
         artistNameSelector,
         releaseTitleSelector,
@@ -146,14 +152,14 @@ const validationRules = {
       artistNameSelector: '.infobox td:nth-child(2) > span .ui_name_locale',
       trackNameSelector: '.infobox td:nth-child(2) > table .ui_name_locale_original',
     },
-    validate: function (item, query) {
+    validate: function (item: HTMLElement, query: string) {
       const {
         artistNameSelector,
         trackNameSelector,
       } = this.selectors;
 
-      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent);
-      const trackName = utils.normalizeForSearch(item.querySelector(trackNameSelector)?.textContent);
+      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
+      const trackName = utils.normalizeForSearch(item.querySelector(trackNameSelector)?.textContent || '');
 
       let _query = utils.normalizeForSearch(query);
 
@@ -175,16 +181,16 @@ const validationRules = {
   },
 }
 
-async function render(config) {
+async function render(config: ProfileOptions) {
   if (!config) return;
 
   const urlParams = new URLSearchParams(window.location.search);
   const strict = urlParams.get('strict');
-  const searchType = urlParams.get('searchtype');
+  const searchType = urlParams.get('searchtype') as RYMEntityCode;
 
   if (strict !== 'true' || !Object.values(RYMEntityCode).includes(searchType)) return;
 
-  const searchTerm = utils.deburr(urlParams.get('searchterm').toLowerCase());
+  const searchTerm = utils.deburr(urlParams.get('searchterm')?.toLowerCase() || '');
 
   searchItems = document.querySelectorAll(SEARCH_ITEMS_SELECTOR);
 
@@ -205,7 +211,7 @@ async function render(config) {
 
     if (validity !== false) {
       if (isReleaseSearch) {
-        item.dataset.validity = validity;
+        item.dataset.validity = String(validity);
       }
       searchItemsFiltered.push(item);
     } else {
@@ -213,21 +219,22 @@ async function render(config) {
     }
   });
 
-  const searchMoreLink = document.querySelector('#search_morelink');
+  const searchMoreLink: HTMLAnchorElement | null = document.querySelector('#search_morelink');
 
   if (searchMoreLink) {
     searchMoreLink.href += '&strict=true';
   }
 
-  async function addReleaseUserRating(item) {
-    const releaseId = item.querySelector(validationRules.l.selectors.releaseTitleSelector).title;
+  async function addReleaseUserRating(item: HTMLElement) {
+    const releaseIdEl: HTMLElement | null = item.querySelector(validationRules[RYMEntityCode.Release].selectors.releaseTitleSelector);
+    const releaseId = releaseIdEl?.title || '';
     const id = utils.extractIdFromTitle(releaseId);
 
     if (id) {
       const record = await RecordsAPI.getById(id);
 
       if (record && record.rating) {
-        item.dataset.rymRating = record.rating / 2;
+        item.dataset.rymRating = String(record.rating / 2);
       }
     }
   }
@@ -242,30 +249,33 @@ async function render(config) {
       const header = document.querySelector(SEARCH_HEADER_SELECTOR);
 
       if (header) {
-        const warning = document.createElement('div');
-        warning.classList.add('rym-warning');
-
         const url = new URL(window.location.href);
         const page = url.searchParams.get('page') ?? '1';
 
-        warning.appendChild(utils.createParagraph(`No direct matches found on the #${page} page.`));
+        const warning = h('div', {
+          className: ['rym-warning'],
+        }, h('p', {}, `No direct matches found on the #${page} page.`));
 
         if (searchType === RYMEntityCode.Artist) {
-          const p = utils.createParagraph('This artist may not be added yet into RYM database or too obscure.');
-          p.appendChild(utils.createLink('/artist/profile_ac', 'Add artist', false));
+          const p = h('p', {}, [
+            'This artist may not be added yet into RYM database or too obscure.',
+            h('a', {
+              href: '/artist/profile_ac',
+            }, 'Add artist'),
+          ]);
           warning.appendChild(p);
         } else if (searchType === RYMEntityCode.Release) {
-          const p = utils.createParagraph('This release may not be added yet into RYM database or too obscure.');
+          const p = h('p', {}, 'This release may not be added yet into RYM database or too obscure.');
           warning.appendChild(p);
         } else if (searchType === RYMEntityCode.Song) {
-          const p = utils.createParagraph('This song may not be added yet into RYM database or too obscure.');
+          const p = h('p', {}, 'This song may not be added yet into RYM database or too obscure.');
           warning.appendChild(p);
         }
 
         header.insertAdjacentElement('afterend', warning);
 
         if (searchMoreLink) {
-          const tryNextPageLink = searchMoreLink.cloneNode(true);
+          const tryNextPageLink = searchMoreLink.cloneNode(true) as typeof searchMoreLink;
           tryNextPageLink.classList.add(...['btn', 'blue_btn', 'btn_small']);
           tryNextPageLink.textContent = 'Try next page';
           tryNextPageLink.style.marginBottom = '1rem';
