@@ -1029,11 +1029,13 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(
   props?: CreateElementProps,
   ...children: Children[]
 ): HTMLElementTagNameMap[K];
+
 export function createElement(
   tag: string,
   props?: CreateElementProps,
   ...children: Children[]
 ): HTMLElement;
+
 export function createElement(
   tag: string,
   props: CreateElementProps = {},
@@ -1093,4 +1095,8 @@ export function generateLastFMProfileUrl(artistName: string) {
 
 export function removeArtistNameBrackets(artistName: string) {
   return artistName.replace(/^\[(.*)\]$/, '$1');
+}
+
+export async function restartBackground() {
+  await browser.runtime.sendMessage({ type: 'RESTART_BACKGROUND' });
 }

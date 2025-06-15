@@ -8,6 +8,11 @@ import './releaseStats.css';
 import type { ReleaseType } from '@/api/getReleaseInfo';
 import type { AlbumSearchResult } from '@/api/searchAlbums';
 
+interface SearchCache {
+  data: AlbumSearchResult[] | null;
+  timestamp: number;
+}
+
 import {
   PARENT_SELECTOR,
   INFO_TABLE_SELECTOR,
@@ -311,26 +316,54 @@ function populateReleaseStats(
 }
 
 async function initSearchResults() {
-  const searchResultsCache: AlbumSearchResult[] | undefined = await utils.storageGet(state.searchCacheKey, 'local');
+  const searchResultsCache: SearchCache | undefined = await utils.storageGet(state.searchCacheKey, 'local');
+
+  const oneWeekMs = 1000 * 60 * 60 * 24 * 7;
 
   if (searchResultsCache) {
-    if (constants.isDev) console.log('Using cached search results:', searchResultsCache);
-    state.searchResults = searchResultsCache;
-    return;
+    const { data, timestamp } = searchResultsCache;
+
+    if (data) {
+      if (constants.isDev) console.log('Using cached search results:', data);
+      state.searchResults = data;
+      return;
+    }
+
+    const tooSoon = Date.now() - timestamp < oneWeekMs;
+    if (tooSoon) {
+      if (constants.isDev) console.log('Skipping API search - recent failed search exists');
+      return;
+    }
   }
 
-  const searchAlbumsResponse = await api.searchAlbums({
-    apiKey: config.lastfmApiKey || process.env.LASTFM_API_KEY as string,
-    params: {
-      query: utils.normalizeForSearch(state.artists[0]) + ' ' + utils.normalizeForSearch(state.releaseTitle)
-    },
-  });
+  let searchResults: AlbumSearchResult[] | undefined;
 
-  const { results: { albummatches: { album: searchResults } } } = searchAlbumsResponse;
+  const apiKey = config.lastfmApiKey || process.env.LASTFM_API_KEY as string;
+
+  for (const artist of state.artists) {
+    const searchAlbumsResponse = await api.searchAlbums({
+      apiKey,
+      params: {
+        query: utils.normalizeForSearch(artist) + ' ' + utils.normalizeForSearch(state.releaseTitle),
+      },
+    });
+
+    const albums = searchAlbumsResponse?.results?.albummatches?.album;
+    if (albums && albums.length > 0) {
+      searchResults = albums;
+      break;
+    }
+  }
 
   if (!searchResults || searchResults.length === 0) {
     console.warn('No search results returned from api for:', state.artists, state.releaseTitle);
-    return null;
+    await utils.storageSet({
+      [state.searchCacheKey]: {
+        data: null,
+        timestamp: Date.now(),
+      },
+    }, 'local');
+    return;
   }
 
   const searchResultsFiltered = searchResults.filter((item) => {
@@ -347,7 +380,13 @@ async function initSearchResults() {
 
   if (searchResultsFiltered.length === 0) {
     console.warn('No matching search results found for:', state.artists, state.releaseTitle);
-    return null;
+    await utils.storageSet({
+      [state.searchCacheKey]: {
+        data: null,
+        timestamp: Date.now()
+      }
+    }, 'local');
+    return;
   }
 
   const isFullMatch = (item: AlbumSearchResult) => {
@@ -369,9 +408,14 @@ async function initSearchResults() {
     return 0;
   });
 
-  if (constants.isDev) console.log('Search results found:', searchResultsFilteredSorted);
+  constants.isDev && console.log('Search results found:', searchResultsFilteredSorted);
 
-  await utils.storageSet({ [state.searchCacheKey]: searchResultsFilteredSorted }, 'local');
+  await utils.storageSet({
+    [state.searchCacheKey]: {
+      data: searchResultsFilteredSorted,
+      timestamp: Date.now(),
+    },
+  }, 'local');
 
   state.searchResults = searchResultsFilteredSorted;
 }
@@ -456,9 +500,10 @@ async function updateStats() {
   if (
     cachedData
       && cachedData.timestamp
+      && cachedData.userName === state.userName
       && ((Date.now() - cachedData.timestamp) <= cacheLifetime)
   ) {
-    constants.isDev && console.log('Using cached data');
+    constants.isDev && console.log('Using cached data for user:', state.userName);
 
     stats = cachedData.data;
     timestamp = cachedData.timestamp;
@@ -474,6 +519,7 @@ async function updateStats() {
       [state.cacheStorageKey]: {
         timestamp,
         data: stats,
+        userName: state.userName,
       },
     }, 'local');
   }

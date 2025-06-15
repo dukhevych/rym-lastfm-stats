@@ -740,6 +740,8 @@ const openAuthPage = async () => {
       lastfmSession: sessionKey,
     });
 
+    await utils.restartBackground();
+
     signinInProgress.value = false;
   } catch (err) {
     console.error('Auth failed:', err);
@@ -813,6 +815,7 @@ const logout = async () => {
   if (!doConfirm) return;
   await browserAPI.storage.sync.remove('userData');
   userData.value = null;
+  await utils.restartBackground();
 };
 
 const reportIssueUrl = computed(() => {

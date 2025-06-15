@@ -24,9 +24,14 @@ const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_containe
 const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
 
+interface ReleaseStatsConfig extends ProfileOptions {
+  isMyProfile: boolean;
+  userName?: string;
+}
+
 let volumeIcon: SVGElement;
 let starIcon: SVGElement;
-let config: ProfileOptions & { userName?: string };
+let config: ReleaseStatsConfig;
 let userName: string;
 let intervalId: ReturnType<typeof setInterval> | null = null;
 let lastTick: number;
@@ -81,7 +86,7 @@ function createPlayHistoryItem() {
     uiPlayHistory.customMyRating = h('div', {
       class: PLAY_HISTORY_ITEM_CLASSES.customMyRating,
       dataset: { element: 'rymstats-track-rating' },
-    }, [
+    }, config.isMyProfile ? [
       uiPlayHistory.starsWrapper = h('div', {
         dataset: { element: 'rymstats-track-rating-stars' },
       }, [
@@ -98,7 +103,7 @@ function createPlayHistoryItem() {
         class: 'rymstats-track-format',
         dataset: { element: 'rymstats-track-format' },
       }),
-    ]),
+    ] : config.userName),
     uiPlayHistory.itemDate = h('div', {
       class: PLAY_HISTORY_ITEM_CLASSES.itemDate,
       dataset: { element: 'rymstats-track-item-date' },
@@ -138,9 +143,11 @@ function createPlayHistoryItem() {
     }),
   ]);
 
-  for (let i = 0; i < 5; i++) {
-    uiPlayHistory.starsFilled.appendChild(starIcon.cloneNode(true));
-    uiPlayHistory.starsEmpty.appendChild(starIcon.cloneNode(true));
+  if (config.isMyProfile) {
+    for (let i = 0; i < 5; i++) {
+      uiPlayHistory.starsFilled.appendChild(starIcon.cloneNode(true));
+      uiPlayHistory.starsEmpty.appendChild(starIcon.cloneNode(true));
+    }
   }
 
   uiPlayHistory.item.appendChild(uiPlayHistory.artbox);
@@ -188,66 +195,68 @@ async function populateRecentTrackCard(data: PlayHistoryData) {
   uiPlayHistory.artistLink.title = `Search for "${artistName}" on RateYourMusic`;
   uiPlayHistory.artistLink.textContent = artistName;
 
-  const albumNameFallback = utils.cleanupReleaseEdition(albumName);
+  if (config.isMyProfile) {
+    const albumNameFallback = utils.cleanupReleaseEdition(albumName);
 
-  const albumsFromDB = await RecordsAPI.getByArtistAndTitle(
-    artistName,
-    albumName,
-    albumNameFallback,
-    true,
-  );
+    const albumsFromDB = await RecordsAPI.getByArtistAndTitle(
+      artistName,
+      albumName,
+      albumNameFallback,
+      true,
+    );
 
-  if (constants.isDev) console.log('Albums from DB:', albumsFromDB);
+    if (constants.isDev) console.log('Albums from DB:', albumsFromDB);
 
-  uiPlayHistory.customMyRating.classList.remove('no-rating');
-  uiPlayHistory.customMyRating.classList.remove('has-ownership');
-  uiPlayHistory.customMyRating.title = '';
+    uiPlayHistory.customMyRating.classList.remove('no-rating');
+    uiPlayHistory.customMyRating.classList.remove('has-ownership');
+    uiPlayHistory.customMyRating.title = '';
 
-  if (Array.isArray(albumsFromDB) && albumsFromDB.length > 0) {
-    let formats = new Set<ERYMFormat>();
+    if (Array.isArray(albumsFromDB) && albumsFromDB.length > 0) {
+      let formats = new Set<ERYMFormat>();
 
-    const albumsFromDBFullMatch: IRYMRecordDBMatch[] = [];
-    const albumsFromDBPartialMatch: IRYMRecordDBMatch[] = [];
+      const albumsFromDBFullMatch: IRYMRecordDBMatch[] = [];
+      const albumsFromDBPartialMatch: IRYMRecordDBMatch[] = [];
 
-    albumsFromDB.forEach((album) => {
-      if (album.ownership === 'o' && album.format) {
-        formats.add(album.format);
+      albumsFromDB.forEach((album) => {
+        if (album.ownership === 'o' && album.format) {
+          formats.add(album.format);
+        }
+
+        if (album._match === 'full') {
+          albumsFromDBFullMatch.push(album);
+        } else if (album._match === 'partial') {
+          albumsFromDBPartialMatch.push(album);
+        } else {
+          albumsFromDBPartialMatch.push(album);
+        }
+      });
+
+      const earliestFullMatchRating = utils.getEarliestRating(albumsFromDBFullMatch);
+      const earliestPartialMatchRating = utils.getEarliestRating(albumsFromDBPartialMatch);
+
+      let rating = earliestFullMatchRating || earliestPartialMatchRating;
+
+      if (rating > 0) {
+        uiPlayHistory.starsFilled.style.width = `${rating * 10}%`;
+        uiPlayHistory.starsWrapper.title = `${rating / 2} / 5`;
       }
 
-      if (album._match === 'full') {
-        albumsFromDBFullMatch.push(album);
-      } else if (album._match === 'partial') {
-        albumsFromDBPartialMatch.push(album);
-      } else {
-        albumsFromDBPartialMatch.push(album);
+      if (rating === 0) {
+        uiPlayHistory.starsFilled.style.width = '';
+        uiPlayHistory.starsWrapper.title = '';
+        uiPlayHistory.customMyRating.classList.add('no-rating');
       }
-    });
 
-    const earliestFullMatchRating = utils.getEarliestRating(albumsFromDBFullMatch);
-    const earliestPartialMatchRating = utils.getEarliestRating(albumsFromDBPartialMatch);
+      uiPlayHistory.format.textContent = Array.from(formats).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
 
-    let rating = earliestFullMatchRating || earliestPartialMatchRating;
-
-    if (rating > 0) {
-      uiPlayHistory.starsFilled.style.width = `${rating * 10}%`;
-      uiPlayHistory.starsWrapper.title = `${rating / 2} / 5`;
-    }
-
-    if (rating === 0) {
+      if (formats.size > 0) {
+        uiPlayHistory.customMyRating.classList.add('has-ownership');
+      }
+    } else {
       uiPlayHistory.starsFilled.style.width = '';
       uiPlayHistory.starsWrapper.title = '';
       uiPlayHistory.customMyRating.classList.add('no-rating');
     }
-
-    uiPlayHistory.format.textContent = Array.from(formats).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
-
-    if (formats.size > 0) {
-      uiPlayHistory.customMyRating.classList.add('has-ownership');
-    }
-  } else {
-    uiPlayHistory.starsFilled.style.width = '';
-    uiPlayHistory.starsWrapper.title = '';
-    uiPlayHistory.customMyRating.classList.add('no-rating');
   }
 
   if (albumName && albumUrl) {
@@ -262,17 +271,25 @@ async function populateRecentTrackCard(data: PlayHistoryData) {
   }
 }
 
-function createLockButton() {
-  return h('button', { class: 'btn-lastfm-lock' }, [
+function initUI() {
+  uiRecentTracks.button = h('button', {
+    class: 'btn-lastfm btn blue_btn btn_small',
+    dataset: { element: 'rymstats-lastfm-button' },
+  }, [ utils.createSvgUse('svg-playlist-symbol') ]);
+
+  uiRecentTracks.lockButton = h('button', { class: 'btn-lastfm-lock' }, [
     new DOMParser().parseFromString(unlockSvg, 'image/svg+xml').documentElement,
     new DOMParser().parseFromString(lockSvg, 'image/svg+xml').documentElement
   ]);
-}
 
-function prepareRecentTracksUI() {
-  uiRecentTracks.button = createLastfmButton();
-  uiRecentTracks.lockButton = createLockButton();
-  uiRecentTracks.profileButton = createProfileButton();
+  uiRecentTracks.profileButton = h('a', {
+    class: 'btn-profile btn blue_btn btn_small',
+    target: '_blank',
+  }, [
+    'Profile',
+    utils.createSvgUse('svg-lastfm-symbol'),
+  ]);
+
   uiRecentTracks.tracksWrapper = h('div', {
     className: [
       'profile_listening_container',
@@ -355,23 +372,6 @@ function prepareRecentTracksUI() {
     buttonsContainer.prepend(uiRecentTracks.button);
     buttonsContainer.prepend(uiRecentTracks.lockButton);
   }
-}
-
-function createLastfmButton() {
-  return h('button', {
-    class: 'btn-lastfm btn blue_btn btn_small',
-    dataset: { element: 'rymstats-lastfm-button' },
-  }, [ utils.createSvgUse('svg-playlist-symbol') ]);
-};
-
-function createProfileButton(): HTMLAnchorElement {
-  return h('a', {
-    class: 'btn-profile btn blue_btn btn_small',
-    target: '_blank',
-  }, [
-    'Profile',
-    utils.createSvgUse('svg-lastfm-symbol'),
-  ]);
 }
 
 function createTracksList(recentTracks: TrackDataNormalized[]) {
@@ -490,8 +490,6 @@ async function populateRecentTracks (data: TrackDataNormalized[], timestamp: num
 
   const recentTrack = data[0];
 
-  console.log(recentTrack);
-
   try {
     colors = await utils.getImageColors(recentTrack.coverExtraLargeUrl);
   } catch {
@@ -574,15 +572,12 @@ async function fetchAndRenderRecentTracks() {
       }
     }, 'local');
 
-    console.log('Recent tracks fetched:', normalizedData);
-
     await populateRecentTracks(
       normalizedData,
       timestamp,
     );
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name !== 'AbortError') {
-      console.log('asdasd', error);
       failedToFetch = true;
       stopInterval();
     }
@@ -648,11 +643,10 @@ async function handleVisibilityChange() {
   }
 };
 
-async function render(_config: ProfileOptions & { userName?: string }) {
+async function render(_config: ReleaseStatsConfig) {
+  // SET CONFIG
   if (!_config) return;
-
   config = _config;
-
   if (!config.lastfmApiKey) {
     console.warn(errorMessages.noApiKey);
     return;
@@ -679,7 +673,7 @@ async function render(_config: ProfileOptions & { userName?: string }) {
     rymPlayHistoryContainer.style.display = 'none';
   }
 
-  prepareRecentTracksUI();
+  initUI();
 
   uiRecentTracks.profileButton.href = `https://www.last.fm/user/${userName}`;
 
@@ -709,8 +703,6 @@ async function render(_config: ProfileOptions & { userName?: string }) {
       await fetchAndRenderRecentTracks();
     }
   }
-
-  console.log(failedToFetch);
 
   if (failedToFetch) {
     uiRecentTracks.tracksWrapper.style.display = 'none';

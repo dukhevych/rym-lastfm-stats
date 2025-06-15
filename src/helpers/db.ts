@@ -272,6 +272,8 @@ export async function initDatabase() {
   const storeName = getStoreName();
   const version = constants.RYM_DB_VERSION;
 
+  constants.isDev && console.log('initDatabase', 'dbName', dbName, 'storeName', storeName, 'version', version);
+
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(dbName, version);
 
@@ -302,28 +304,30 @@ export async function setRecords(payload: IRYMRecordDB[]): Promise<true> {
   const storeName = getStoreName();
   const version = constants.RYM_DB_VERSION;
 
-  let finished = false;
-
   console.warn(`[setRecords] ⚠️ DB Name: ${dbName}, Version: ${version}`);
 
-  await new Promise((resolve, rej) => {
+  await new Promise((resolve, reject) => {
     const delReq = indexedDB.deleteDatabase(dbName);
+
     delReq.onsuccess = () => {
       console.warn('[setRecords] ✅ Database deleted');
       resolve(true);
     };
+
     delReq.onerror = (e) => {
       console.error('[setRecords] ❌ Delete failed:', (e.target as IDBRequest).error);
-      rej((e.target as IDBRequest).error);
+      reject((e.target as IDBRequest).error);
     };
   });
 
   return new Promise((resolve, reject) => {
+    let finished = false; // Protect against false errors after success
+
     const req = indexedDB.open(dbName, version);
 
     req.onupgradeneeded = (e) => {
       console.warn('[setRecords] 🔼 onupgradeneeded triggered');
-      const db = (e.target as IDBRequest<IDBDatabase>).result;
+      const db = (e.target as IDBOpenDBRequest).result;
 
       if (db.objectStoreNames.contains(storeName)) {
         db.deleteObjectStore(storeName);
@@ -332,10 +336,17 @@ export async function setRecords(payload: IRYMRecordDB[]): Promise<true> {
       const store = db.createObjectStore(storeName, { keyPath: 'id' });
       store.createIndex('idIndex', 'id', { unique: true });
 
-      // The transaction for onupgradeneeded is available via db.transaction(storeName, 'readwrite')
-      const tx = (e.target as IDBOpenDBRequest).result.transaction(storeName, 'readwrite');
+      const tx = req.transaction!;
+      const objectStore = tx.objectStore(storeName);
 
-      payload.forEach((record) => store.put(record));
+      payload.forEach((record) => {
+        try {
+          objectStore.put(record);
+        } catch (err) {
+          console.warn('[setRecords] ⚠️ Failed to insert record:', record, err);
+          tx.abort();
+        }
+      });
 
       tx.oncomplete = () => {
         console.log('[setRecords] ✅ Records inserted during upgrade');
@@ -345,17 +356,29 @@ export async function setRecords(payload: IRYMRecordDB[]): Promise<true> {
       };
 
       tx.onerror = (err) => {
+        console.error('[setRecords] ❌ Insert error:', err);
         db.close();
         finished = true;
-        reject(err.target && 'error' in err.target ? (err.target as IDBRequest).error : new Error('Unknown IndexedDB error'));
+        reject(
+          (err.target && 'error' in err.target)
+            ? (err.target as IDBRequest).error
+            : new Error('Unknown IndexedDB error')
+        );
+      };
+
+      tx.onabort = () => {
+        console.error('[setRecords] ❌ Transaction was aborted');
+        finished = true;
+        reject(tx.error ?? new Error('Transaction aborted'));
       };
     };
 
     req.onsuccess = (e) => {
-      const db = (e.target as IDBRequest<IDBDatabase>).result;
+      const db = (e.target as IDBOpenDBRequest).result;
       db.close();
       if (!finished) {
         console.log('[setRecords] ✅ DB opened successfully (no upgrade needed)');
+        finished = true;
         resolve(true);
       }
     };
@@ -364,6 +387,9 @@ export async function setRecords(payload: IRYMRecordDB[]): Promise<true> {
       if (!finished) {
         console.error('[setRecords] ❌ DB open error:', (e.target as IDBRequest).error);
         reject((e.target as IDBRequest).error);
+      } else {
+        // Safe to ignore — already resolved
+        console.warn('[setRecords] ⚠️ Ignored error after resolution:', (e.target as IDBRequest).error);
       }
     };
   });

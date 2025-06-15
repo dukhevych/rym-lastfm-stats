@@ -160,6 +160,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    font-weight: bold;
+    color: var(--clr-accent);
 
     &.no-rating {
       [data-element="rymstats-track-rating-stars"] {
@@ -195,8 +197,6 @@
 
     [data-element="rymstats-track-format"] {
       display: none;
-      font-weight: bold;
-      color: var(--clr-accent);
     }
 
     .stars-filled,
