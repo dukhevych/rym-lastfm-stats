@@ -69,12 +69,59 @@ interface SetBulkPayload {
 
 type SendMessageResult<T = any> = Promise<T>;
 
+function getByArtistAndTitle(
+  artist: string,
+  title: string,
+  titleFallback?: string,
+  asObject?: false
+): SendMessageResult<IRYMRecordDBMatch[]>;
+
+function getByArtistAndTitle(
+  artist: string,
+  title: string,
+  titleFallback: string | undefined,
+  asObject: true
+): SendMessageResult<Record<string, IRYMRecordDBMatch>>;
+
+function getByArtistAndTitle(
+  artist: string,
+  title: string,
+  titleFallback?: string,
+  asObject?: boolean
+): SendMessageResult<IRYMRecordDBMatch[] | Record<string, IRYMRecordDBMatch>> {
+  return sendMessage('GET_RECORD_BY_ARTIST_AND_TITLE', {
+    artist,
+    title,
+    titleFallback,
+    asObject,
+  } as GetByArtistAndTitlePayload);
+}
+
+function getByIds(
+  ids: string[],
+  asObject?: false
+): SendMessageResult<IRYMRecordDB[]>;
+
+function getByIds(
+  ids: string[],
+  asObject: true
+): SendMessageResult<Record<string, IRYMRecordDB>>;
+
+function getByIds(
+  ids: string[],
+  asObject?: boolean
+): SendMessageResult<IRYMRecordDB[] | Record<string, IRYMRecordDB>> {
+  return sendMessage(
+    'GET_RECORDS_BY_IDS',
+    { ids, asObject } as GetByIdsPayload
+  );
+}
+
 export const RecordsAPI = {
   getById: (id: string): SendMessageResult<IRYMRecordDB> =>
     sendMessage('GET_RECORD_BY_ID', { id } as GetByIdPayload),
 
-  getByIds: (ids: string[], asObject = false): SendMessageResult<IRYMRecordDB[] | Record<string, IRYMRecordDB>> =>
-    sendMessage('GET_RECORDS_BY_IDS', { ids, asObject } as GetByIdsPayload),
+  getByIds,
 
   getAll: (): SendMessageResult<IRYMRecordDB[]> =>
     sendMessage('GET_ALL_RECORDS'),
@@ -85,13 +132,7 @@ export const RecordsAPI = {
   getByArtists: (artists: string[]): SendMessageResult<IRYMRecordDB[]> =>
     sendMessage('GET_RECORDS_BY_ARTISTS', { artists } as GetByArtistsPayload),
 
-  getByArtistAndTitle: (
-    artist: string,
-    title: string,
-    titleFallback?: string,
-    asObject?: boolean
-  ): SendMessageResult<IRYMRecordDBMatch[] | Record<string, IRYMRecordDBMatch>> =>
-    sendMessage('GET_RECORD_BY_ARTIST_AND_TITLE', { artist, title, titleFallback, asObject } as GetByArtistAndTitlePayload),
+  getByArtistAndTitle,
 
   add: (record: IRYMRecordDB): SendMessageResult<boolean> =>
     sendMessage('ADD_RECORD', { record } as AddRecordPayload),

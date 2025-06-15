@@ -1,18 +1,27 @@
 import { RecordsAPI } from '@/helpers/records-api';
 import './userRating.css';
 
+interface ChartItem {
+  id: string,
+  rating?: number,
+}
+
 function getItems() {
   return Array.from(document.querySelectorAll('.page_charts_section_charts_item'));
 }
 
-function getIds() {
+function getIds(): string[] {
   return getItems().map(item => {
     const id = item.id.replace('page_charts_section_charts_item_', '');
-    return id || null;
-  }).filter(Boolean);
+    return id || false;
+  }).filter(item => item !== false);
 }
 
-function addUserRating(album) {
+function addUserRating(album: ChartItem) {
+  if (!album.rating) {
+    return;
+  }
+
   const rating = album.rating / 2;
 
   if (rating < 0 || rating > 5) {

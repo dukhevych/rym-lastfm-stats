@@ -8,9 +8,25 @@ const LIST_ITEM_SELECTOR = 'a.list_album';
 const ARTIST_ITEM_SELECTOR = 'a.list_artist';
 const ART_ITEM_SELECTOR = '.list_art img';
 
+interface ReleaseItem {
+  itemType: string;
+  title: string,
+  artistName: string,
+  releaseId: string,
+  node: HTMLElement,
+  rating?: number,
+}
+
+interface ArtistItem {
+  artistId: string,
+  itemType: string,
+  artistName: string,
+  node: HTMLElement,
+}
+
 function getItems() {
-  const releases = [];
-  const artists = [];
+  const releases: ReleaseItem[] = [];
+  const artists: ArtistItem[] = [];
 
   Array.from(document.querySelectorAll(LIST_ITEMS_SELECTOR)).forEach(item => {
     const albumEl = item.querySelector(LIST_ITEM_SELECTOR);
@@ -24,7 +40,7 @@ function getItems() {
       : constants.RYM_ENTITY_CODES.artist;
 
     if (itemType === constants.RYM_ENTITY_CODES.release) {
-      let releaseId = null;
+      let releaseId = '';
 
       if (artImgEl) {
         releaseId = artImgEl.id.replace(`img_${constants.RYM_ENTITY_CODES.release}_`, '');
@@ -32,17 +48,17 @@ function getItems() {
 
       const itemRelease = {
         itemType,
-        title: albumEl.textContent.trim() || null,
-        artistName: artistEl.textContent.trim() || null,
+        title: (albumEl?.textContent || '').trim(),
+        artistName: (artistEl?.textContent || '').trim(),
         releaseId,
-        node: item,
+        node: item as HTMLElement,
       };
 
       releases.push(itemRelease);
     }
 
     if (itemType === constants.RYM_ENTITY_CODES.artist) {
-      let artistId = null;
+      let artistId = '';
 
       if (artImgEl) {
         artistId = artImgEl.id.replace(`img_${constants.RYM_ENTITY_CODES.artist}_`, '');
@@ -51,9 +67,8 @@ function getItems() {
       const itemArtist = {
         artistId,
         itemType,
-        title: null,
-        artistName: artistEl.textContent.trim() || null,
-        node: item,
+        artistName: (artistEl?.textContent || '').trim(),
+        node: item as HTMLElement,
       };
 
       artists.push(itemArtist);
@@ -63,7 +78,11 @@ function getItems() {
   return { releases, artists };
 }
 
-function addReleaseRating(item) {
+function addReleaseRating(item: ReleaseItem) {
+  if (!item.rating) {
+    return;
+  }
+
   const rating = item.rating / 2;
 
   if (rating < 0 || rating > 5) {
@@ -84,8 +103,8 @@ async function render() {
     releases,
   } = getItems();
 
-  const releasesIds = [];
-  const releasesWithoutId = [];
+  const releasesIds: string[] = [];
+  const releasesWithoutId: ReleaseItem[] = [];
 
   releases.forEach(item => {
     if (item.releaseId) {
