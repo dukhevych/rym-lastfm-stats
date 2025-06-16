@@ -1,10 +1,11 @@
 import * as constants from '@/helpers/constants';
-import * as utils from '@/helpers/utils';
+// import * as utils from '@/helpers/utils';
 
-export async function getDatabaseName() {
-  const userName = await utils.getUserName();
-  if (!userName) constants.RYM_DB_NAME;
-  return `${constants.RYM_DB_NAME}_${userName}`;
+export function getDatabaseName() {
+  // const userName = await utils.getLastfmUserName();
+  // if (!userName) constants.RYM_DB_NAME;
+  // return `${constants.RYM_DB_NAME}_${userName}`;
+  return constants.RYM_DB_NAME;
 }
 
 interface GetRecordResult {

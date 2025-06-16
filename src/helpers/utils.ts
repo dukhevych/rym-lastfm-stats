@@ -96,7 +96,7 @@ export const formatNumber = (
   return formatter.format(number);
 };
 
-export function getHeaderUsername() {
+export function getRYMUsername() {
   const headerProfileUsername = document.querySelector('#header_profile_username');
 
   if (headerProfileUsername) {
@@ -112,7 +112,7 @@ export function isMyCollection() {
 
   if (!urlUsername) return false;
 
-  const headerUsername = getHeaderUsername();
+  const headerUsername = getRYMUsername();
 
   return headerUsername === urlUsername;
 };
@@ -123,7 +123,7 @@ export function isMyProfile() {
 
   if (!urlUsername) return false;
 
-  const headerUsername = getHeaderUsername();
+  const headerUsername = getRYMUsername();
 
   return headerUsername === urlUsername;
 };
@@ -138,7 +138,7 @@ export function isDarkMode() {
   );
 };
 
-export async function getUserName() {
+export async function getLastfmUserName() {
   const userData = await getSyncedUserData() as UserData;
   return userData?.name ?? '';
 };
@@ -267,15 +267,17 @@ export function generateSearchUrl({
 } = {}, strictSearch = true) {
   let url = 'https://rateyourmusic.com';
 
-  const searchterm = [artist, releaseTitle, trackTitle]
+  const query = [artist, releaseTitle, trackTitle]
     .filter((part) => ![undefined, null, ''].includes(part))
     .join(' ');
+  let searchterm: string;
 
-  if (!searchterm) {
+  if (!query) {
     return url;
   } else {
+    searchterm = encodeURIComponent(normalizeForSearch(query));
     url += '/search?';
-    url += `searchterm=${encodeURIComponent(normalizeForSearch(searchterm))}`;
+    url += `searchterm=${searchterm}`;
   }
 
   if (trackTitle) url += `&searchtype=z`;
@@ -284,6 +286,10 @@ export function generateSearchUrl({
 
   // Strict search results are provided by this addon and are not a part of RYM functionality
   if (strictSearch) url += '&strict=true';
+
+  if (artist) url += `&enh_artist=${artist}`;
+  if (releaseTitle) url += `&enh_release=${releaseTitle}`;
+  if (trackTitle) url += `&enh_track=${trackTitle}`;
 
   return url;
 };

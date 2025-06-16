@@ -45,7 +45,7 @@ export async function render(_config: ProfileOptions & { userName?: string }) {
   }
 
   // SET PAGE DATA
-  state.userName = config.userName || await utils.getUserName();
+  state.userName = config.userName || await utils.getLastfmUserName();
   if (!state.userName) {
     console.warn("No Last.fm username found. Top Artists can't be displayed.");
     return;

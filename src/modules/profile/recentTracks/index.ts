@@ -9,11 +9,15 @@ import unlockSvg from '@/assets/icons/unlock.svg?raw';
 import './recentTracks.css';
 import errorMessages from './errorMessages.json';
 import type {
-  UIPlayHistory,
+  UIElements,
   UIRecentTracks,
   TrackDataNormalized,
   PlayHistoryData,
 } from './types';
+
+interface State {
+
+}
 
 let abortController = new AbortController();
 
@@ -24,21 +28,22 @@ const PROFILE_LISTENING_CURRENT_TRACK_SELECTOR = '#profile_play_history_containe
 const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history_btn';
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
 
-interface ReleaseStatsConfig extends ProfileOptions {
+interface RecentTracksConfig extends ProfileOptions {
   isMyProfile: boolean;
   userName?: string;
 }
 
 let volumeIcon: SVGElement;
 let starIcon: SVGElement;
-let config: ReleaseStatsConfig;
+let config: RecentTracksConfig;
 let userName: string;
 let intervalId: ReturnType<typeof setInterval> | null = null;
 let lastTick: number;
 let progressLoopActive: boolean = false;
 let failedToFetch = false;
+let rymSyncTimestamp: number | null = null;
 
-const uiPlayHistory = {} as UIPlayHistory;
+const uiElements = {} as UIElements;
 const uiRecentTracks = {} as UIRecentTracks;
 
 const PLAY_HISTORY_ITEM_CLASSES = {
@@ -62,82 +67,94 @@ function createPlayHistoryItem() {
   volumeIcon = utils.createSvgUse('svg-volume-symbol', '0 0 40 40');
   starIcon = utils.createSvgUse('svg-star-symbol');
 
-  uiPlayHistory.item = h('div', {
+  uiElements.item = h('div', {
     class: PLAY_HISTORY_ITEM_CLASSES.item,
     dataset: { element: 'rymstats-track-item' },
   });
 
-  uiPlayHistory.artbox = h('div', {
+  uiElements.artbox = h('div', {
     class: PLAY_HISTORY_ITEM_CLASSES.artbox,
     dataset: { element: 'rymstats-track-artbox' },
   }, [
-    uiPlayHistory.artLink = h('a', {}, [
-      uiPlayHistory.itemArt = h('img', {
+    uiElements.artLink = h('a', {}, [
+      uiElements.itemArt = h('img', {
         class: PLAY_HISTORY_ITEM_CLASSES.itemArt,
         dataset: { element: 'rymstats-track-item-art' },
       }),
     ]),
   ]);
 
-  uiPlayHistory.infobox = h('div', {
+  uiElements.infobox = h('div', {
     class: PLAY_HISTORY_ITEM_CLASSES.infobox,
     dataset: { element: 'rymstats-track-infobox' },
   }, [
-    uiPlayHistory.customMyRating = h('div', {
+    uiElements.customMyRating = h('div', {
       class: PLAY_HISTORY_ITEM_CLASSES.customMyRating,
       dataset: { element: 'rymstats-track-rating' },
     }, config.isMyProfile ? [
-      uiPlayHistory.starsWrapper = h('div', {
+      !rymSyncTimestamp ? h('span', {
+        title: 'RYM Sync not performed yet',
+        style: {
+          cursor: 'default',
+        },
+      }, [
+        '⚠️',
+        h('a', {
+          href: '/music_export?sync',
+          target: '_blank',
+        }, 'Run RYM Sync'),
+      ]) : null,
+      uiElements.starsWrapper = h('div', {
         dataset: { element: 'rymstats-track-rating-stars' },
       }, [
-        uiPlayHistory.starsFilled = h('div', {
+        uiElements.starsFilled = h('div', {
           class: 'stars-filled',
           dataset: { element: 'rymstats-track-rating-stars-filled' },
         }),
-        uiPlayHistory.starsEmpty = h('div', {
+        uiElements.starsEmpty = h('div', {
           class: 'stars-empty',
           dataset: { element: 'rymstats-track-rating-stars-empty' },
         }),
       ]),
-      uiPlayHistory.format = h('div', {
+      uiElements.format = h('div', {
         class: 'rymstats-track-format',
         dataset: { element: 'rymstats-track-format' },
       }),
     ] : config.userName),
-    uiPlayHistory.itemDate = h('div', {
+    uiElements.itemDate = h('div', {
       class: PLAY_HISTORY_ITEM_CLASSES.itemDate,
       dataset: { element: 'rymstats-track-item-date' },
     }, [
-      uiPlayHistory.statusSpan = h('span'),
+      uiElements.statusSpan = h('span'),
       volumeIcon.cloneNode(true),
     ]),
-    uiPlayHistory.infoboxLower = h('div', {
+    uiElements.infoboxLower = h('div', {
       class: PLAY_HISTORY_ITEM_CLASSES.infoboxLower,
       dataset: { element: 'rymstats-track-infobox-lower' },
     }, [
-      uiPlayHistory.release = h('div', {
+      uiElements.release = h('div', {
         class: PLAY_HISTORY_ITEM_CLASSES.release,
         dataset: { element: 'rymstats-track-release' },
       }, [
-        uiPlayHistory.artistSpan = h('span', {
+        uiElements.artistSpan = h('span', {
           class: PLAY_HISTORY_ITEM_CLASSES.artistSpan,
           dataset: { element: 'rymstats-track-artist' },
         }, [
-          uiPlayHistory.artistLink = h('a', {
+          uiElements.artistLink = h('a', {
             class: PLAY_HISTORY_ITEM_CLASSES.artistLink,
             dataset: { element: 'rymstats-track-artist-link' },
           }),
         ]),
-        uiPlayHistory.separator = h('span', {
+        uiElements.separator = h('span', {
           class: PLAY_HISTORY_ITEM_CLASSES.separator,
         }, ' - '),
-        uiPlayHistory.trackLink = h('a', {
+        uiElements.trackLink = h('a', {
           class: PLAY_HISTORY_ITEM_CLASSES.trackLink,
           dataset: { element: 'rymstats-track-link' },
         }),
       ]),
     ]),
-    uiPlayHistory.customFromAlbum = h('div', {
+    uiElements.customFromAlbum = h('div', {
       class: PLAY_HISTORY_ITEM_CLASSES.customFromAlbum,
       dataset: { element: 'rymstats-from-album' },
     }),
@@ -145,13 +162,13 @@ function createPlayHistoryItem() {
 
   if (config.isMyProfile) {
     for (let i = 0; i < 5; i++) {
-      uiPlayHistory.starsFilled.appendChild(starIcon.cloneNode(true));
-      uiPlayHistory.starsEmpty.appendChild(starIcon.cloneNode(true));
+      uiElements.starsFilled.appendChild(starIcon.cloneNode(true));
+      uiElements.starsEmpty.appendChild(starIcon.cloneNode(true));
     }
   }
 
-  uiPlayHistory.item.appendChild(uiPlayHistory.artbox);
-  uiPlayHistory.item.appendChild(uiPlayHistory.infobox);
+  uiElements.item.appendChild(uiElements.artbox);
+  uiElements.item.appendChild(uiElements.infobox);
 }
 
 async function populateRecentTrackCard(data: PlayHistoryData) {
@@ -168,32 +185,32 @@ async function populateRecentTrackCard(data: PlayHistoryData) {
   } = data;
 
   if (nowPlaying) {
-    uiPlayHistory.item.classList.add('is-now-playing');
+    uiElements.item.classList.add('is-now-playing');
   } else {
-    uiPlayHistory.item.classList.remove('is-now-playing');
+    uiElements.item.classList.remove('is-now-playing');
   }
 
-  uiPlayHistory.artLink.href = albumUrl;
-  uiPlayHistory.artLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
+  uiElements.artLink.href = albumUrl;
+  uiElements.artLink.title = `Search for "${artistName} - ${albumName}" on RateYourMusic`;
 
-  uiPlayHistory.itemArt.src = coverLargeUrl;
+  uiElements.itemArt.src = coverLargeUrl;
 
   if (nowPlaying) {
-    uiPlayHistory.itemDate.dataset.label = 'Scrobbling now';
-    uiPlayHistory.itemDate.title = '';
+    uiElements.itemDate.dataset.label = 'Scrobbling now';
+    uiElements.itemDate.title = '';
   } else {
     const date = new Date((timestamp as number) * 1000);
     const dateFormatted = formatDistanceToNow(date, { addSuffix: true });
-    uiPlayHistory.itemDate.dataset.label = `Last scrobble (${dateFormatted})`;
-    uiPlayHistory.itemDate.title = date.toLocaleString();
+    uiElements.itemDate.dataset.label = `Last scrobble (${dateFormatted})`;
+    uiElements.itemDate.title = date.toLocaleString();
   }
 
-  uiPlayHistory.trackLink.href = trackUrl;
-  uiPlayHistory.trackLink.title = `Search for "${artistName} - ${trackName}" on RateYourMusic`;
-  uiPlayHistory.trackLink.textContent = trackName;
-  uiPlayHistory.artistLink.href = artistUrl;
-  uiPlayHistory.artistLink.title = `Search for "${artistName}" on RateYourMusic`;
-  uiPlayHistory.artistLink.textContent = artistName;
+  uiElements.trackLink.href = trackUrl;
+  uiElements.trackLink.title = `Search for "${artistName} - ${trackName}" on RateYourMusic`;
+  uiElements.trackLink.textContent = trackName;
+  uiElements.artistLink.href = artistUrl;
+  uiElements.artistLink.title = `Search for "${artistName}" on RateYourMusic`;
+  uiElements.artistLink.textContent = artistName;
 
   if (config.isMyProfile) {
     const albumNameFallback = utils.cleanupReleaseEdition(albumName);
@@ -207,9 +224,9 @@ async function populateRecentTrackCard(data: PlayHistoryData) {
 
     if (constants.isDev) console.log('Albums from DB:', albumsFromDB);
 
-    uiPlayHistory.customMyRating.classList.remove('no-rating');
-    uiPlayHistory.customMyRating.classList.remove('has-ownership');
-    uiPlayHistory.customMyRating.title = '';
+    uiElements.customMyRating.classList.remove('no-rating');
+    uiElements.customMyRating.classList.remove('has-ownership');
+    uiElements.customMyRating.title = '';
 
     if (Array.isArray(albumsFromDB) && albumsFromDB.length > 0) {
       let formats = new Set<ERYMFormat>();
@@ -237,37 +254,37 @@ async function populateRecentTrackCard(data: PlayHistoryData) {
       let rating = earliestFullMatchRating || earliestPartialMatchRating;
 
       if (rating > 0) {
-        uiPlayHistory.starsFilled.style.width = `${rating * 10}%`;
-        uiPlayHistory.starsWrapper.title = `${rating / 2} / 5`;
+        uiElements.starsFilled.style.width = `${rating * 10}%`;
+        uiElements.starsWrapper.title = `${rating / 2} / 5`;
       }
 
       if (rating === 0) {
-        uiPlayHistory.starsFilled.style.width = '';
-        uiPlayHistory.starsWrapper.title = '';
-        uiPlayHistory.customMyRating.classList.add('no-rating');
+        uiElements.starsFilled.style.width = '';
+        uiElements.starsWrapper.title = '';
+        uiElements.customMyRating.classList.add('no-rating');
       }
 
-      uiPlayHistory.format.textContent = Array.from(formats).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
+      uiElements.format.textContent = Array.from(formats).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
 
       if (formats.size > 0) {
-        uiPlayHistory.customMyRating.classList.add('has-ownership');
+        uiElements.customMyRating.classList.add('has-ownership');
       }
     } else {
-      uiPlayHistory.starsFilled.style.width = '';
-      uiPlayHistory.starsWrapper.title = '';
-      uiPlayHistory.customMyRating.classList.add('no-rating');
+      uiElements.starsFilled.style.width = '';
+      uiElements.starsWrapper.title = '';
+      uiElements.customMyRating.classList.add('no-rating');
     }
   }
 
   if (albumName && albumUrl) {
-    uiPlayHistory.customFromAlbum.textContent = '';
+    uiElements.customFromAlbum.textContent = '';
     const albumLink = h('a', {
       href: albumUrl,
       title: `Search for "${artistName} - ${albumName}" on RateYourMusic`,
     }, albumName);
-    uiPlayHistory.customFromAlbum.appendChild(albumLink);
+    uiElements.customFromAlbum.appendChild(albumLink);
   } else {
-    uiPlayHistory.customFromAlbum.textContent = '';
+    uiElements.customFromAlbum.textContent = '';
   }
 }
 
@@ -359,7 +376,7 @@ function initUI() {
   if (currentTrackContainer) {
     currentTrackContainer.classList.add('recent-tracks-current');
     createPlayHistoryItem();
-    currentTrackContainer.replaceChildren(uiPlayHistory.item);
+    currentTrackContainer.replaceChildren(uiElements.item);
     const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
     icon.classList.add('loader');
     currentTrackContainer.appendChild(icon);
@@ -521,7 +538,7 @@ async function populateRecentTracks (data: TrackDataNormalized[], timestamp: num
     trackUrl,
   });
 
-  uiPlayHistory.item.classList.add('is-loaded');
+  uiElements.item.classList.add('is-loaded');
 
   uiRecentTracks.panelContainer.style.setProperty('--bg-image', `url(${recentTrack.coverExtraLargeUrl})`);
 
@@ -643,7 +660,7 @@ async function handleVisibilityChange() {
   }
 };
 
-async function render(_config: ReleaseStatsConfig) {
+async function render(_config: RecentTracksConfig) {
   // SET CONFIG
   if (!_config) return;
   config = _config;
@@ -652,7 +669,7 @@ async function render(_config: ReleaseStatsConfig) {
     return;
   }
 
-  userName = config.userName || await utils.getUserName();
+  userName = config.userName || await utils.getLastfmUserName();
 
   if (!userName) {
     console.warn(errorMessages.noUserName);
@@ -668,6 +685,8 @@ async function render(_config: ReleaseStatsConfig) {
 
   uiRecentTracks.panelContainer = rymPlayHistoryContainer.cloneNode(true) as HTMLElement;
   rymPlayHistoryContainer.insertAdjacentElement('afterend', uiRecentTracks.panelContainer);
+
+  rymSyncTimestamp = await utils.storageGet('rymSyncTimestamp', 'local');
 
   if (config.rymPlayHistoryHide) {
     rymPlayHistoryContainer.style.display = 'none';

@@ -374,7 +374,7 @@ async function render(_config: ProfileOptions) {
   state.artistQuery = await utils.storageGet(state.artistQueryCacheKey, 'local') || state.artistName;
 
   // SET USER NAME
-  const userName = await utils.getUserName();
+  const userName = await utils.getLastfmUserName();
   if (userName) state.userName = userName;
 
   // PREPARE ARTIST NAMES DIALOG

@@ -40,10 +40,7 @@ async function syncWithDB(data: Record<string, any>) {
     format,
   });
 
-  if (constants.isDev) {
-    console.log('DB RECORD', dbRecord);
-    console.log('PARSED RECORD', parsedRecord);
-  }
+  constants.isDev && console.log('DB RECORD', dbRecord, 'PARSED RECORD', parsedRecord);
 
   if (!dbRecord) {
     if (
