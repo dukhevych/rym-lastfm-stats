@@ -7,6 +7,8 @@ import * as api from '@/api';
 import lockSvg from '@/assets/icons/lock.svg?raw';
 import unlockSvg from '@/assets/icons/unlock.svg?raw';
 import './recentTracks.css';
+import RecentTracks from '@/components/svelte/RecentTracks.svelte';
+import { mount } from 'svelte';
 import errorMessages from './errorMessages.json';
 import type {
   UIPlayHistory,
@@ -679,6 +681,11 @@ async function render(_config: ProfileOptions & { userName?: string }) {
     console.warn(errorMessages.noPanelContainer);
     return;
   }
+
+  const mountPoint = document.createElement('div');
+  parent.insertAdjacentElement('afterend', mountPoint);
+
+  mount(RecentTracks, { target: mountPoint, props: { config } });
 
   uiElements.list.panelContainer = parent.cloneNode(true) as HTMLElement;
   parent.insertAdjacentElement('afterend', uiElements.list.panelContainer);

@@ -15,11 +15,13 @@ const packageJson = require('./package.json');
 
 const appVersion = packageJson.version;
 
-const entries = glob.sync('./src/*.{js,ts}').reduce((acc, file) => {
-  const name = path.basename(file, path.extname(file));
-  acc[name] = path.resolve(__dirname, file);
-  return acc;
-}, {});
+const entries = glob.sync('./src/*.{js,ts}')
+  .filter(f => !/\.d\.ts$/.test(f))
+  .reduce((acc, file) => {
+    const name = path.basename(file, path.extname(file));
+    acc[name] = path.resolve(__dirname, file);
+    return acc;
+  }, {});
 
 module.exports = (env) => {
   const browserTarget = env.browser;
@@ -84,10 +86,22 @@ module.exports = (env) => {
         '@': path.resolve(__dirname, 'src'),
         vue$: 'vue/dist/vue.runtime.esm-browser.prod.js',
       },
-      extensions: ['.ts', '.js', '.vue']
+      extensions: ['.ts', '.js', '.vue', '.svelte'],
     },
     module: {
       rules: [
+        {
+          test: /\.svelte$/,
+          use: {
+            loader: 'svelte-loader',
+            options: {
+              compilerOptions: {
+                dev: process.env.NODE_ENV !== 'production',
+              },
+              preprocess: require('svelte-preprocess')(),
+            },
+          },
+        },
         {
           test: /\.vue$/,
           loader: 'vue-loader',
@@ -127,7 +141,7 @@ module.exports = (env) => {
         },
         {
           test: /\.ts$/,
-          exclude: [/node_modules/],
+          exclude: [/node_modules/, /\.d\.ts$/],
           use: {
             loader: 'ts-loader',
             options: {
