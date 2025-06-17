@@ -129,7 +129,7 @@ export const RecordsAPI = {
   getByArtist: (artist: string): SendMessageResult<IRYMRecordDB[]> =>
     sendMessage('GET_RECORDS_BY_ARTIST', { artist } as GetByArtistPayload),
 
-  getByArtists: (artists: string[]): SendMessageResult<IRYMRecordDB[]> =>
+  getByArtists: (artists: string[]): SendMessageResult<Record<string, IRYMRecordDB[]>> =>
     sendMessage('GET_RECORDS_BY_ARTISTS', { artists } as GetByArtistsPayload),
 
   getByArtistAndTitle,

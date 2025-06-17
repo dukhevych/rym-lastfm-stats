@@ -390,7 +390,11 @@ interface GetWindowDataMessage {
   deep?: boolean;
 }
 
-type BackgroundMessage = DatabaseMessage | FetchImageMessage | GetWindowDataMessage;
+interface RestartBackgroundMessage {
+  type: 'RESTART_BACKGROUND';
+}
+
+type BackgroundMessage = DatabaseMessage | FetchImageMessage | GetWindowDataMessage | RestartBackgroundMessage;
 
 browser.runtime.onMessage.addListener(
   (
@@ -408,6 +412,13 @@ browser.runtime.onMessage.addListener(
     }
 
     switch (type) {
+      case 'RESTART_BACKGROUND': {
+        (async () => {
+          await db.initDatabase();
+          await buildSearchIndex();
+        })();
+        return true;
+      }
       case 'FETCH_IMAGE': {
         fetch((message as FetchImageMessage).url, { mode: 'cors' })
           .then((response) => response.blob())

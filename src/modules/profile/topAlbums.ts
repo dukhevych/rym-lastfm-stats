@@ -59,7 +59,7 @@ export async function render(_config: ProfileOptions & { userName?: string }) {
     return;
   }
 
-  state.userName = config.userName || await utils.getUserName();
+  state.userName = config.userName || await utils.getLastfmUserName();
   if (!state.userName) {
     console.warn("No Last.fm username found. Top Albums can't be displayed.");
     return;

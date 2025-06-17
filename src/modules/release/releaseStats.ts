@@ -8,6 +8,11 @@ import './releaseStats.css';
 import type { ReleaseType } from '@/api/getReleaseInfo';
 import type { AlbumSearchResult } from '@/api/searchAlbums';
 
+interface SearchCache {
+  data: AlbumSearchResult[] | null;
+  timestamp: number;
+}
+
 import {
   PARENT_SELECTOR,
   INFO_TABLE_SELECTOR,
@@ -133,12 +138,7 @@ function populateSearchDialog() {
     return;
   }
 
-  uiElements.searchListItems = [...state.searchResults, {
-    artist: 'asdsa asdasidasdiasda2',
-    name: 'asdasdsadasf0dasf0asgha0',
-    url: 'https://www.last.fm/music/asdsa+asdasidasdiasda2/asdasdsadasf0dasf0asgha0',
-    image: [{ '#text': 'https://lastfm.fuckyou.com/image.jpg' }],
-  }].map((item) => {
+  uiElements.searchListItems = state.searchResults.map((item) => {
     const isSelected = item.artist === state.artistQuery && item.name === state.releaseTitleQuery;
     const classNames = ['list-dialog-item'];
 
@@ -189,7 +189,7 @@ function populateSearchDialog() {
 }
 
 function updateDialogState() {
-  if (!uiElements.searchDialog) return;
+  if (!uiElements.searchDialog || !uiElements.searchListItems) return;
 
   uiElements.searchListItems.forEach((item) => {
     const artist = item.dataset.artist;
@@ -203,13 +203,32 @@ function updateDialogState() {
   });
 }
 
-function initUI() {
+function prepareSearchDialog() {
   const { dialog: searchDialog, list: searchList } = createSearchDialog();
-
-  uiElements.infoTable = document.querySelector(INFO_TABLE_SELECTOR) as HTMLTableElement;
 
   uiElements.searchDialog = searchDialog;
   uiElements.searchList = searchList;
+
+  uiElements.searchDialogOpener = h(
+    'a',
+    {
+      title: 'Search Last.fm for this release',
+      className: 'incorrect-stats-link',
+      onClick: (e: MouseEvent) => {
+        e.preventDefault();
+        uiElements.searchDialog.showModal();
+      },
+    },
+    'Incorrect stats?'
+  );
+
+  uiElements.statsWrapper.appendChild(uiElements.searchDialogOpener);
+
+  document.body.appendChild(uiElements.searchDialog);
+}
+
+function initUI() {
+  uiElements.infoTable = document.querySelector(INFO_TABLE_SELECTOR) as HTMLTableElement;
 
   uiElements.statsList = h('ul', { className: 'list-stats' }, [
     uiElements.listeners = h('li', { className: 'is-listeners' }, 'listeners'),
@@ -225,19 +244,6 @@ function initUI() {
       title: 'View on Last.fm'
     },
     utils.createSvgUse('svg-lastfm-square-symbol')
-  );
-
-  uiElements.searchDialogOpener = h(
-    'a',
-    {
-      title: 'Search Last.fm for this release',
-      className: 'incorrect-stats-link',
-      onClick: (e: MouseEvent) => {
-        e.preventDefault();
-        uiElements.searchDialog.showModal();
-      },
-    },
-    'Incorrect stats?'
   );
 
   uiElements.statsWrapper = h(
@@ -261,7 +267,6 @@ function initUI() {
   uiElements.tr = h('tr', {}, [uiElements.heading, uiElements.content]);
 
   uiElements.infoTable.appendChild(uiElements.tr);
-  document.body.appendChild(uiElements.searchDialog);
 }
 
 function setNoData() {
@@ -293,13 +298,13 @@ function populateReleaseStats(
 
   if (playcount !== undefined && listeners !== undefined) {
     uiElements.playcount.classList.remove('is-hidden');
-    uiElements.playcount.title = `${playcount}, ${Math.trunc(playcount / listeners)} per listener ${cacheTimeHint}`;
+    uiElements.playcount.title = `${playcount} plays, ${Math.trunc(playcount / listeners)} per listener ${cacheTimeHint}`;
     uiElements.playcount.dataset.value = utils.shortenNumber(Math.trunc(playcount));
   } else {
     uiElements.playcount.classList.add('is-hidden');
   }
 
-  if (userplaycount !== undefined) {
+  if (userplaycount !== undefined && userplaycount !== null) {
     uiElements.userplaycount.classList.remove('is-hidden');
     uiElements.userplaycount.title = `${userplaycount} scrobbles`;
     uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(Math.trunc(userplaycount || 0))}`;
@@ -311,26 +316,69 @@ function populateReleaseStats(
 }
 
 async function initSearchResults() {
-  const searchResultsCache: AlbumSearchResult[] | undefined = await utils.storageGet(state.searchCacheKey, 'local');
+  const searchResultsCache: SearchCache | undefined = await utils.storageGet(state.searchCacheKey, 'local');
+
+  const oneDayMs = 1000 * 60 * 60 * 24;
 
   if (searchResultsCache) {
-    if (constants.isDev) console.log('Using cached search results:', searchResultsCache);
-    state.searchResults = searchResultsCache;
-    return;
+    const { data, timestamp } = searchResultsCache;
+
+    const tooSoonToUpdate = Date.now() - timestamp < oneDayMs;
+
+    if (tooSoonToUpdate) {
+      if (constants.isDev) console.log('Using cached search results:', data);
+      state.searchResults = data || [];
+      return;
+    }
   }
 
-  const searchAlbumsResponse = await api.searchAlbums({
-    apiKey: config.lastfmApiKey || process.env.LASTFM_API_KEY as string,
-    params: {
-      query: utils.normalizeForSearch(state.artists[0]) + ' ' + utils.normalizeForSearch(state.releaseTitle)
-    },
-  });
+  let searchResults: AlbumSearchResult[] | undefined;
 
-  const { results: { albummatches: { album: searchResults } } } = searchAlbumsResponse;
+  const apiKey = config.lastfmApiKey || process.env.LASTFM_API_KEY as string;
+  const titleNormalized = utils.normalizeForSearch(state.releaseTitle);
+
+  for (const artist of state.artists) {
+    console.log('search for', artist);
+    const searchAlbumsResponse = await api.searchAlbums({
+      apiKey,
+      params: {
+        query: utils.normalizeForSearch(artist) + ' ' + titleNormalized,
+      },
+    });
+
+    const albums = searchAlbumsResponse?.results?.albummatches?.album;
+
+    if (albums && albums.length > 0) {
+      searchResults = albums;
+      break;
+    }
+  }
+
+  if (!searchResults || searchResults.length === 0) {
+    await utils.wait(100);
+    const searchAlbumsResponse = await api.searchAlbums({
+      apiKey,
+      params: {
+        query: utils.normalizeForSearch(state.artists[0]) + ' ' + titleNormalized.split(' ')[0],
+      }
+    });
+
+    const albums = searchAlbumsResponse?.results?.albummatches?.album;
+
+    if (albums && albums.length > 0) {
+      searchResults = albums;
+    }
+  }
 
   if (!searchResults || searchResults.length === 0) {
     console.warn('No search results returned from api for:', state.artists, state.releaseTitle);
-    return null;
+    await utils.storageSet({
+      [state.searchCacheKey]: {
+        data: null,
+        timestamp: Date.now(),
+      },
+    }, 'local');
+    return;
   }
 
   const searchResultsFiltered = searchResults.filter((item) => {
@@ -347,7 +395,13 @@ async function initSearchResults() {
 
   if (searchResultsFiltered.length === 0) {
     console.warn('No matching search results found for:', state.artists, state.releaseTitle);
-    return null;
+    await utils.storageSet({
+      [state.searchCacheKey]: {
+        data: null,
+        timestamp: Date.now()
+      }
+    }, 'local');
+    return;
   }
 
   const isFullMatch = (item: AlbumSearchResult) => {
@@ -369,9 +423,14 @@ async function initSearchResults() {
     return 0;
   });
 
-  if (constants.isDev) console.log('Search results found:', searchResultsFilteredSorted);
+  constants.isDev && console.log('Search results found:', searchResultsFilteredSorted);
 
-  await utils.storageSet({ [state.searchCacheKey]: searchResultsFilteredSorted }, 'local');
+  await utils.storageSet({
+    [state.searchCacheKey]: {
+      data: searchResultsFilteredSorted,
+      timestamp: Date.now(),
+    },
+  }, 'local');
 
   state.searchResults = searchResultsFilteredSorted;
 }
@@ -405,6 +464,8 @@ async function initQueries() {
 }
 
 async function fetchReleaseInfo(artist: string, title: string) {
+  constants.isDev && console.log('fetchReleaseInfo', artist, title);
+
   try {
     const releaseInfoResponse = await api.getReleaseInfo({
       params: {
@@ -433,7 +494,7 @@ async function fetchReleaseInfo(artist: string, title: string) {
     if (releaseInfoResponse && !releaseInfoResponse.error) {
       stats.playcount = +releaseTypeData.playcount;
       stats.listeners = +releaseTypeData.listeners;
-      stats.userplaycount = releaseTypeData.userplaycount ? +releaseTypeData.userplaycount : null;
+      stats.userplaycount = typeof releaseTypeData.userplaycount === 'number' ? releaseTypeData.userplaycount : null;
       stats.url = releaseTypeData.url;
 
       return stats;
@@ -456,9 +517,10 @@ async function updateStats() {
   if (
     cachedData
       && cachedData.timestamp
+      && cachedData.userName === state.userName
       && ((Date.now() - cachedData.timestamp) <= cacheLifetime)
   ) {
-    constants.isDev && console.log('Using cached data');
+    constants.isDev && console.log('Using cached data for user:', state.userName);
 
     stats = cachedData.data;
     timestamp = cachedData.timestamp;
@@ -474,6 +536,7 @@ async function updateStats() {
       [state.cacheStorageKey]: {
         timestamp,
         data: stats,
+        userName: state.userName,
       },
     }, 'local');
   }
@@ -528,6 +591,11 @@ async function render(_config: ProfileOptions) {
   // FETCH SEARCH RESULTS
   await initSearchResults();
 
+  // PREPARE SEARCH DIALOG
+  if (state.searchResults && state.searchResults.length > 0) {
+    prepareSearchDialog();
+  }
+
   // INIT QUERIES
   await initQueries();
 
@@ -537,7 +605,9 @@ async function render(_config: ProfileOptions) {
   if (userName) state.userName = userName;
 
   // POPULATE SEARCH DIALOG
-  populateSearchDialog();
+  if (state.searchResults && state.searchResults.length > 0) {
+    populateSearchDialog();
+  }
 
   // FETCH AND POPULATE STATS
   await updateStats();

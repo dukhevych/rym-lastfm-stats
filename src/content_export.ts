@@ -132,9 +132,7 @@ import { createElement as h } from '@/helpers/utils';
         parsedData.push(item);
       });
 
-      if (constants.isDev) {
-        console.log('Parsed Data:', parsedData);
-      }
+      constants.isDev && console.log('Parsed Data:', parsedData);
 
       if (parsedData.length === 0) {
         statusMessage.textContent = 'No records found to sync.';

@@ -13,7 +13,10 @@ import * as utils from '@/helpers/utils';
   const isMyProfile = await utils.checkDOMCondition(targetSelectors, () => utils.isMyProfile());
 
   if (isMyProfile) {
-    await renderContent(profile, config, 'profile');
+    await renderContent(profile, {
+      ...config,
+      isMyProfile,
+    }, 'profile');
     return;
   }
 
@@ -28,6 +31,7 @@ import * as utils from '@/helpers/utils';
     await renderContent(profile, {
       ...config,
       userName,
+      isMyProfile,
     }, 'profile');
   }
 })();

@@ -25,7 +25,11 @@ const PROFILE_LISTENING_BUTTONS_CONTAINER_SELECTOR = '.profile_view_play_history
 const PROFILE_LISTENING_PLAY_HISTORY_BTN = '.profile_view_play_history_btn a.btn[href^="/play-history/"]';
 
 // CONFIG
-let config: ProfileOptions & { userName?: string };
+interface RecentTracksConfig extends ProfileOptions {
+  isMyProfile: boolean;
+  userName?: string;
+}
+let config: RecentTracksConfig;
 
 // TEMPLATES
 interface Templates {
@@ -42,6 +46,7 @@ interface State {
   abortController: AbortController,
   progressLoopActive: boolean,
   failedToFetch: boolean,
+  rymSyncTimestamp: number | null,
 }
 const state = {
   abortController: new AbortController(),
@@ -105,7 +110,19 @@ function createPlayHistoryItem() {
     uiElements.card.customMyRating = h('div', {
       class: PLAY_HISTORY_ITEM_CLASSES.customMyRating,
       dataset: { element: 'rymstats-track-rating' },
-    }, [
+    }, config.isMyProfile ? [
+      !state.rymSyncTimestamp ? h('span', {
+        title: 'RYM Sync not performed yet',
+        style: {
+          cursor: 'default',
+        },
+      }, [
+        '⚠️',
+        h('a', {
+          href: '/music_export?sync',
+          target: '_blank',
+        }, 'Run RYM Sync'),
+      ]) : null,
       uiElements.card.starsWrapper = h('div', {
         dataset: { element: 'rymstats-track-rating-stars' },
       }, [
@@ -122,7 +139,7 @@ function createPlayHistoryItem() {
         class: 'rymstats-track-format',
         dataset: { element: 'rymstats-track-format' },
       }),
-    ]),
+    ] : config.userName),
     uiElements.card.itemDate = h('div', {
       class: PLAY_HISTORY_ITEM_CLASSES.itemDate,
       dataset: { element: 'rymstats-track-item-date' },
@@ -143,7 +160,6 @@ function createPlayHistoryItem() {
           dataset: { element: 'rymstats-track-artist' },
         }, [
           uiElements.card.artistLink = h('a', {
-            class: PLAY_HISTORY_ITEM_CLASSES.artistLink,
             dataset: { element: 'rymstats-track-artist-link' },
           }),
         ]),
@@ -162,9 +178,11 @@ function createPlayHistoryItem() {
     }),
   ]);
 
-  for (let i = 0; i < 5; i++) {
-    uiElements.card.starsFilled.appendChild(templates.starIcon.cloneNode(true));
-    uiElements.card.starsEmpty.appendChild(templates.starIcon.cloneNode(true));
+  if (config.isMyProfile) {
+    for (let i = 0; i < 5; i++) {
+      uiElements.card.starsFilled.appendChild(templates.starIcon.cloneNode(true));
+      uiElements.card.starsEmpty.appendChild(templates.starIcon.cloneNode(true));
+    }
   }
 
   uiElements.card.item.appendChild(uiElements.card.artbox);
@@ -212,61 +230,63 @@ async function populateRecentTrackCard(data: PlayHistoryData) {
   uiElements.card.artistLink.title = `Search for "${artistName}" on RateYourMusic`;
   uiElements.card.artistLink.textContent = artistName;
 
-  const albumNameFallback = utils.cleanupReleaseEdition(albumName);
+  if (config.isMyProfile) {
+    const albumNameFallback = utils.cleanupReleaseEdition(albumName);
 
-  const albumsFromDB = await RecordsAPI.getByArtistAndTitle(
-    artistName,
-    albumName,
-    albumNameFallback,
-    true,
-  );
+    const albumsFromDB = await RecordsAPI.getByArtistAndTitle(
+      artistName,
+      albumName,
+      albumNameFallback,
+      true,
+    );
 
-  if (constants.isDev) console.log('Albums from DB:', albumsFromDB);
+    if (constants.isDev) console.log('Albums from DB:', albumsFromDB);
 
-  uiElements.card.customMyRating.classList.remove('no-rating');
-  uiElements.card.customMyRating.classList.remove('has-ownership');
-  uiElements.card.customMyRating.title = '';
+    uiElements.card.customMyRating.classList.remove('no-rating');
+    uiElements.card.customMyRating.classList.remove('has-ownership');
+    uiElements.card.customMyRating.title = '';
 
-  if (Array.isArray(albumsFromDB) && albumsFromDB.length > 0) {
-    let formats = new Set<ERYMFormat>();
+    if (Array.isArray(albumsFromDB) && albumsFromDB.length > 0) {
+      let formats = new Set<ERYMFormat>();
 
-    const albumsFromDBFullMatch: IRYMRecordDBMatch[] = [];
-    const albumsFromDBPartialMatch: IRYMRecordDBMatch[] = [];
+      const albumsFromDBFullMatch: IRYMRecordDBMatch[] = [];
+      const albumsFromDBPartialMatch: IRYMRecordDBMatch[] = [];
 
-    albumsFromDB.forEach((album) => {
-      if (album.ownership === 'o' && album.format) {
-        formats.add(album.format);
+      albumsFromDB.forEach((album) => {
+        if (album.ownership === 'o' && album.format) {
+          formats.add(album.format);
+        }
+
+        if (album._match === 'full') {
+          albumsFromDBFullMatch.push(album);
+        } else if (album._match === 'partial') {
+          albumsFromDBPartialMatch.push(album);
+        } else {
+          albumsFromDBPartialMatch.push(album);
+        }
+      });
+
+      const earliestFullMatchRating = utils.getEarliestRating(albumsFromDBFullMatch);
+      const earliestPartialMatchRating = utils.getEarliestRating(albumsFromDBPartialMatch);
+
+      let rating = earliestFullMatchRating || earliestPartialMatchRating;
+
+      if (rating > 0) {
+        uiElements.card.starsFilled.style.width = `${rating * 10}%`;
+        uiElements.card.starsWrapper.title = `${rating / 2} / 5`;
       }
 
-      if (album._match === 'full') {
-        albumsFromDBFullMatch.push(album);
-      } else if (album._match === 'partial') {
-        albumsFromDBPartialMatch.push(album);
-      } else {
-        albumsFromDBPartialMatch.push(album);
+      if (rating === 0) {
+        uiElements.card.starsFilled.style.width = '';
+        uiElements.card.starsWrapper.title = '';
+        uiElements.card.customMyRating.classList.add('no-rating');
       }
-    });
 
-    const earliestFullMatchRating = utils.getEarliestRating(albumsFromDBFullMatch);
-    const earliestPartialMatchRating = utils.getEarliestRating(albumsFromDBPartialMatch);
+      uiElements.card.format.textContent = Array.from(formats).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
 
-    let rating = earliestFullMatchRating || earliestPartialMatchRating;
-
-    if (rating > 0) {
-      uiElements.card.starsFilled.style.width = `${rating * 10}%`;
-      uiElements.card.starsWrapper.title = `${rating / 2} / 5`;
-    }
-
-    if (rating === 0) {
-      uiElements.card.starsFilled.style.width = '';
-      uiElements.card.starsWrapper.title = '';
-      uiElements.card.customMyRating.classList.add('no-rating');
-    }
-
-    uiElements.card.format.textContent = Array.from(formats).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
-
-    if (formats.size > 0) {
-      uiElements.card.customMyRating.classList.add('has-ownership');
+      if (formats.size > 0) {
+        uiElements.card.customMyRating.classList.add('has-ownership');
+      }
     }
   } else {
     uiElements.card.starsFilled.style.width = '';
@@ -502,8 +522,6 @@ async function populateRecentTracks (data: TrackDataNormalized[], timestamp: num
 
   const recentTrack = data[0];
 
-  console.log(recentTrack);
-
   try {
     colors = await utils.getImageColors(recentTrack.coverExtraLargeUrl);
   } catch {
@@ -586,8 +604,6 @@ async function fetchAndRenderRecentTracks() {
       }
     }, 'local');
 
-    console.log('Recent tracks fetched:', normalizedData);
-
     await populateRecentTracks(
       normalizedData,
       timestamp,
@@ -659,7 +675,7 @@ async function handleVisibilityChange() {
   }
 };
 
-async function render(_config: ProfileOptions & { userName?: string }) {
+async function render(_config: RecentTracksConfig) {
   // SET CONFIG
   if (!_config) return;
   config = _config;
@@ -669,7 +685,7 @@ async function render(_config: ProfileOptions & { userName?: string }) {
   }
 
   // SET USER NAME
-  state.userName = config.userName || await utils.getUserName();
+  state.userName = config.userName || await utils.getLastfmUserName();
   if (!state.userName) {
     console.warn(errorMessages.noUserName);
     return;
@@ -689,6 +705,8 @@ async function render(_config: ProfileOptions & { userName?: string }) {
 
   uiElements.list.panelContainer = parent.cloneNode(true) as HTMLElement;
   parent.insertAdjacentElement('afterend', uiElements.list.panelContainer);
+
+  state.rymSyncTimestamp = await utils.storageGet('rymSyncTimestamp', 'local');
 
   if (config.rymPlayHistoryHide) {
     parent.style.display = 'none';

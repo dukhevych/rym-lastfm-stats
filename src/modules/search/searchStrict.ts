@@ -256,6 +256,8 @@ async function render(config: ProfileOptions) {
           className: ['rym-warning'],
         }, h('p', {}, `No direct matches found on the #${page} page.`));
 
+        const navigation = h('div');
+
         if (searchType === RYMEntityCode.Artist) {
           const p = h('p', {}, [
             'This artist may not be added yet into RYM database or too obscure.',
@@ -273,13 +275,29 @@ async function render(config: ProfileOptions) {
         }
 
         header.insertAdjacentElement('afterend', warning);
+        warning.insertAdjacentElement('afterend', navigation);
 
         if (searchMoreLink) {
           const tryNextPageLink = searchMoreLink.cloneNode(true) as typeof searchMoreLink;
           tryNextPageLink.classList.add(...['btn', 'blue_btn', 'btn_small']);
           tryNextPageLink.textContent = 'Try next page';
           tryNextPageLink.style.marginBottom = '1rem';
-          warning.insertAdjacentElement('afterend', tryNextPageLink);
+          navigation.appendChild(tryNextPageLink);
+        }
+
+        if (searchType === RYMEntityCode.Release) {
+          const url = new URL(window.location.href);
+          const searchParams = new URLSearchParams(url.search);
+          searchParams.delete('page');
+          searchParams.set('searchtype', RYMEntityCode.Artist);
+          const newRelativeUrl = url.pathname + '?' + searchParams.toString();
+
+          const searchArtistInsteadLink = h('a', {
+            href: newRelativeUrl,
+            className: ['btn', 'blue_btn', 'btn_small'],
+          }, 'Search artist instead');
+
+          navigation.appendChild(searchArtistInsteadLink);
         }
       }
     }

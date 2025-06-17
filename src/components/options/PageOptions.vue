@@ -127,8 +127,16 @@
           "
         >
           <div>
-            <p><strong>{{ rymSyncMessage }}</strong></p>
+            <p>
+              <strong v-if="!rymSyncTimestamp">⚠️ RYM Sync not performed yet</strong>
+              <template v-else>
+                <strong>✅ Last full RYM Sync:</strong>
+                &nbsp;
+                <code>{{ rymSyncTimestampDateString }} {{ rymSyncTimestampTimeString }}</code>
+              </template>
+            </p>
             <strong><code>{{ dbRecordsQty }}</code></strong> records synced with RYM
+            <em v-if="!rymSyncTimestamp"><u>so far</u></em>
           </div>
           <button
             type="button"
@@ -645,11 +653,17 @@ const dirty = ref(false);
 const signinInProgress = ref(false);
 const showModal = ref(false);
 const rymSyncTimestamp = ref(null);
-
-const rymSyncMessage = computed(() => {
-  if (!rymSyncTimestamp.value) return '⚠️ RYM Sync not performed yet';
-  const date = new Date(rymSyncTimestamp.value);
-  return `✅ Last full RYM Sync: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+const rymSyncTimestampDate = computed(() => {
+  if (!rymSyncTimestamp.value) return null;
+  return new Date(rymSyncTimestamp.value);
+});
+const rymSyncTimestampDateString = computed(() => {
+  if (!rymSyncTimestamp.value) return null;
+  return new Date(rymSyncTimestamp.value).toLocaleDateString();
+});
+const rymSyncTimestampTimeString = computed(() => {
+  if (!rymSyncTimestamp.value) return null;
+  return new Date(rymSyncTimestamp.value).toLocaleTimeString();
 });
 
 const lastfmApiInputType = ref('password');

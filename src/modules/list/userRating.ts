@@ -22,6 +22,8 @@ interface ArtistItem {
   itemType: string,
   artistName: string,
   node: HTMLElement,
+  avgRating?: number,
+  ratedReleasesQty?: number,
 }
 
 function getItems() {
@@ -94,13 +96,30 @@ function addReleaseRating(item: ReleaseItem) {
   item.node.dataset.rymRating = `${rating} / 5`;
 }
 
-// function addArtistStats(item) {
-//   // TODO Add artist stats to the item
-// };
+async function addArtistStats(item: ArtistItem) {
+  if (!item.artistId) {
+    return;
+  }
+
+  const artistName = item.artistName;
+  if (!artistName) {
+    return;
+  }
+
+  if (!item.avgRating || item.ratedReleasesQty === 0) {
+    return;
+  }
+
+  const rating = item.avgRating / 2;
+
+  item.node.classList.add('rym-lastfm-stats--item');
+  item.node.dataset.rymRating = `${rating.toFixed(1)} / 5 (${item.ratedReleasesQty} rating${item.ratedReleasesQty === 1 ? '' : 's'})`;
+};
 
 async function render() {
   const {
     releases,
+    artists,
   } = getItems();
 
   const releasesIds: string[] = [];
@@ -140,6 +159,26 @@ async function render() {
       item.rating = release.rating;
       addReleaseRating(item);
     }
+  });
+
+  const artistsData = await RecordsAPI.getByArtists(artists.map(item => item.artistName));
+
+  artists.forEach(async (item) => {
+    let avgRating: number | undefined;
+    let ratedReleasesQty: number | undefined;
+
+    if (artistsData[item.artistName]) {
+      const records = artistsData[item.artistName] || [];
+      const ratedRecords = records.filter(record => record.rating > 0);
+      ratedReleasesQty = ratedRecords.length;
+      avgRating = ratedRecords.reduce((sum, record) => sum + record.rating, 0) / ratedRecords.length;
+    }
+
+    await addArtistStats({
+      ...item,
+      avgRating,
+      ratedReleasesQty,
+    });
   });
 }
 

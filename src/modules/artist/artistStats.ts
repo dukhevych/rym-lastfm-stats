@@ -85,7 +85,7 @@ function createArtistNamesDialog() {
 
 async function updateStats() {
   let stats: ArtistStats | null = null;
-  let timestamp: number | null = null;
+  let timestamp: number | undefined;
 
   const cachedData = await utils.storageGet(state.cacheStorageKey, 'local');
 
@@ -94,9 +94,10 @@ async function updateStats() {
   if (
     cachedData
       && cachedData.timestamp
+      && cachedData.userName === state.userName
       && ((Date.now() - cachedData.timestamp) <= cacheLifetime)
   ) {
-    constants.isDev && console.log('Using cached data');
+    constants.isDev && console.log('Using cached data for user:', state.userName);
 
     stats = cachedData.data;
     timestamp = cachedData.timestamp;
@@ -112,6 +113,7 @@ async function updateStats() {
       [state.cacheStorageKey]: {
         timestamp,
         data: stats,
+        userName: state.userName,
       },
     }, 'local');
   }
@@ -316,7 +318,7 @@ function populateArtistStats(
     uiElements.playcount.style.display = 'none';
   }
 
-  if (userplaycount !== undefined) {
+  if (userplaycount !== undefined && userplaycount !== null) {
     uiElements.userplaycount.style.display = 'block';
     uiElements.userplaycount.title = `${userplaycount} scrobbles`;
     uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(Math.trunc(userplaycount || 0))}`;
@@ -372,7 +374,7 @@ async function render(_config: ProfileOptions) {
   state.artistQuery = await utils.storageGet(state.artistQueryCacheKey, 'local') || state.artistName;
 
   // SET USER NAME
-  const userName = await utils.getUserName();
+  const userName = await utils.getLastfmUserName();
   if (userName) state.userName = userName;
 
   // PREPARE ARTIST NAMES DIALOG
