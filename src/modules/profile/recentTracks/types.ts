@@ -1,4 +1,4 @@
-export interface UIElements {
+export interface UIPlayHistory {
   item: HTMLElement;
   artbox: HTMLElement;
   infobox: HTMLElement;
