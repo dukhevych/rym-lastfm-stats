@@ -121,9 +121,8 @@
           data-label="Scrobbling now"
           title=""
         >
-          <span></span><svg viewBox="0 0 40 40"
-            ><use xlink:href="#svg-volume-symbol"></use></svg
-          >
+          <span></span>
+          <svg viewBox="0 0 40 40"><use xlink:href="#svg-volume-symbol"></use></svg>
         </div>
         <div
           class="play_history_infobox_lower"
@@ -138,24 +137,26 @@
               data-element="rymstats-track-artist"
               ><a
                 data-element="rymstats-track-artist-link"
-                href="https://rateyourmusic.com/search?searchterm=the%20callous%20daoboys&amp;searchtype=a&amp;strict=true&amp;enh_artist=The Callous Daoboys"
-                title="Search for &quot;The Callous Daoboys&quot; on RateYourMusic"
-                >The Callous Daoboys</a
-              ></span
-            ><span class="play_history_separator"> - </span><a
+                href="{searchArtistUrl()}"
+                title="{searchArtistHint()}"
+              >
+                {latestTrack.artistName}
+              </a>
+            </span>
+            <span class="play_history_separator"> - </span>
+            <a
               class="album play_history_item_release"
               data-element="rymstats-track-link"
-              href="https://rateyourmusic.com/search?searchterm=the%20callous%20daoboys%20full%20moon%20guidance&amp;searchtype=z&amp;strict=true&amp;enh_artist=The Callous Daoboys&amp;enh_track=Full Moon Guidance"
-              title="Search for &quot;The Callous Daoboys - Full Moon Guidance&quot; on RateYourMusic"
-              >Full Moon Guidance</a
-            >
+              href="{searchReleaseUrl()}"
+              title="{searchReleaseHint()}"
+            >{latestTrack.albumName}</a>
           </div>
         </div>
         <div class="custom-from-album" data-element="rymstats-from-album">
           <a
-            href="https://rateyourmusic.com/search?searchterm=the%20callous%20daoboys%20i%20dont%20want%20to%20see%20you%20in%20heaven&amp;searchtype=l&amp;strict=true&amp;enh_artist=The Callous Daoboys&amp;enh_release=I Don't Want to See You in Heaven"
-            title="Search for &quot;The Callous Daoboys - I Don't Want to See You in Heaven&quot; on RateYourMusic"
-            >I Don't Want to See You in Heaven</a
+            href="{searchTrackUrl()}"
+            title="{searchTrackHint()}"
+            >{latestTrack.trackName}</a
           >
         </div>
       </div>
