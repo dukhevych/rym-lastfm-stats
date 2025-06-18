@@ -351,6 +351,8 @@ import playlistSvg from '@/assets/icons/playlist.svg?raw';
 import volumeSvg from '@/assets/icons/volume.svg?raw';
 import brushSvg from '@/assets/icons/brush.svg?raw';
 import closeSvg from '@/assets/icons/close.svg?raw';
+import lockSvg from '@/assets/icons/lock.svg?raw';
+import unlockSvg from '@/assets/icons/unlock.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 
@@ -371,6 +373,8 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(volumeSvg, 'svg-volume-symbol');
   addIconToSVGSprite(brushSvg, 'svg-brush-symbol');
   addIconToSVGSprite(closeSvg, 'svg-close-symbol');
+  addIconToSVGSprite(lockSvg, 'svg-lock-symbol');
+  addIconToSVGSprite(unlockSvg, 'svg-unlock-symbol');
 
   return svgSprite;
 }

@@ -111,18 +111,6 @@ function createPlayHistoryItem() {
       class: PLAY_HISTORY_ITEM_CLASSES.customMyRating,
       dataset: { element: 'rymstats-track-rating' },
     }, config.isMyProfile ? [
-      !state.rymSyncTimestamp ? h('span', {
-        title: 'RYM Sync not performed yet',
-        style: {
-          cursor: 'default',
-        },
-      }, [
-        '⚠️',
-        h('a', {
-          href: '/music_export?sync',
-          target: '_blank',
-        }, 'Run RYM Sync'),
-      ]) : null,
       uiElements.card.starsWrapper = h('div', {
         dataset: { element: 'rymstats-track-rating-stars' },
       }, [
@@ -287,11 +275,11 @@ async function populateRecentTrackCard(data: PlayHistoryData) {
       if (formats.size > 0) {
         uiElements.card.customMyRating.classList.add('has-ownership');
       }
+    } else {
+      uiElements.card.starsFilled.style.width = '';
+      uiElements.card.starsWrapper.title = '';
+      uiElements.card.customMyRating.classList.add('no-rating');
     }
-  } else {
-    uiElements.card.starsFilled.style.width = '';
-    uiElements.card.starsWrapper.title = '';
-    uiElements.card.customMyRating.classList.add('no-rating');
   }
 
   if (albumName && albumUrl) {
@@ -701,7 +689,14 @@ async function render(_config: RecentTracksConfig) {
   const mountPoint = document.createElement('div');
   parent.insertAdjacentElement('afterend', mountPoint);
 
-  mount(RecentTracks, { target: mountPoint, props: { config } });
+  mount(RecentTracks, {
+    target: mountPoint,
+    props: {
+      config,
+      userName: state.userName,
+      rymSyncTimestamp: state.rymSyncTimestamp,
+    },
+  });
 
   uiElements.list.panelContainer = parent.cloneNode(true) as HTMLElement;
   parent.insertAdjacentElement('afterend', uiElements.list.panelContainer);
