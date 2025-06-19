@@ -17,6 +17,20 @@ declare global {
     rymPlayHistoryHide: boolean;
     lastfmApiKey: string;
   }
+
+  interface VibrantUiColorSet {
+    bgColor: string;
+    accentColor: string;
+    accentColorHSL: [number, number, number];
+    readonly bgColorContrast: string;
+    readonly accentColorContrast: string;
+  }
+
+  interface VibrantUiColors {
+    light: VibrantUiColorSet;
+    dark: VibrantUiColorSet;
+    palette: VibrantPalette;
+  }
 }
 
 export {};

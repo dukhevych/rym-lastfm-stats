@@ -1,71 +1,154 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
-  import {
-    generateSearchUrl,
-  } from '@/helpers/utils';
+import errorMessages from '@/modules/profile/recentTracks/errorMessages.json';
+import type {
+  TrackDataNormalized,
+  PlayHistoryData,
+} from '@/modules/profile/recentTracks/types';
+import * as utils from '@/helpers/utils';
+import * as constants from '@/helpers/constants';
+import * as api from '@/api';
 
-  let count = $state(0);
-  count = 5;
+const { config, rymSyncTimestamp = null, userName } = $props<{
+  config: ProfileOptions;
+  rymSyncTimestamp?: number | null;
+  userName: string;
+}>();
 
-  const { config, rymSyncTimestamp = null, userName } = $props<{
-    config: ProfileOptions;
-    rymSyncTimestamp?: number | null;
-    userName: string;
-  }>();
+let intervalId: ReturnType<typeof setInterval> | null = null;
+let lastTick: number = 0;
+let lastTimestamp: number;
+let progressLoopActive: boolean = false;
+let abortController: AbortController = new AbortController();
+let failedToFetch: boolean = false;
+let colors: VibrantUiColors;
+let isLoaded: boolean = false;
 
-  let intervalId: ReturnType<typeof setInterval> | null = null;
-  let lastTick: number = 0;
-  let abortController: AbortController = new AbortController();
-  let progressLoopActive: boolean = false;
-  let failedToFetch: boolean = false;
+let recentTracks = $state<TrackDataNormalized[]>([]);
+let latestTrack = $derived(recentTracks[0]);
+let recentTracksTimestamp = $state<number>(0);
 
-  const latestTrack = $state({
-    albumName: '',
-    artistName: '',
-    coverExtraLargeUrl: '',
-    coverLargeUrl: '',
-    coverUrl: '',
-    nowPlaying: false,
-    timestamp: 0,
-    trackName: '',
-  });
+const searchReleaseUrl = $derived(() => utils.generateSearchUrl({
+  artist: latestTrack.artistName,
+  releaseTitle: latestTrack.albumName,
+}));
+const searchReleaseHint = $derived(() => getSearchLinkHint([
+  latestTrack.artistName,
+  latestTrack.albumName,
+]));
 
-  const searchReleaseUrl = $derived(() => generateSearchUrl({
-    artist: latestTrack.artistName,
-    releaseTitle: latestTrack.albumName,
-  }));
-  const searchReleaseHint = $derived(() => getSearchLinkHint([
-    latestTrack.artistName,
-    latestTrack.albumName,
-  ]));
+const searchArtistUrl = $derived(() => utils.generateSearchUrl({ artist: latestTrack.artistName }));
+const searchArtistHint = $derived(() => getSearchLinkHint([latestTrack.artistName]));
 
-  const searchArtistUrl = $derived(() => generateSearchUrl({ artist: latestTrack.artistName }));
-  const searchArtistHint = $derived(() => getSearchLinkHint([latestTrack.artistName]));
+const searchTrackUrl = $derived(() => utils.generateSearchUrl({
+  artist: latestTrack.artistName,
+  releaseTitle: latestTrack.albumName,
+  trackTitle: latestTrack.trackName,
+}));
+const searchTrackHint = $derived(() => getSearchLinkHint([
+  latestTrack.artistName,
+  latestTrack.albumName,
+  latestTrack.trackName,
+]));
 
-  const searchTrackUrl = $derived(() => generateSearchUrl({
-    artist: latestTrack.artistName,
-    releaseTitle: latestTrack.albumName,
-    trackTitle: latestTrack.trackName,
-  }));
-  const searchTrackHint = $derived(() => getSearchLinkHint([
-    latestTrack.artistName,
-    latestTrack.albumName,
-    latestTrack.trackName,
-  ]));
+const getSearchLinkHint = (strings: string[]) => `Search for "${strings.join(' - ')}" on RateYourMusic`;
 
-  const getSearchLinkHint = (strings: string[]) => `Search for "${strings.join(' - ')}" on RateYourMusic`;
+const init = async () => {
+  const { recentTracksCache } = await utils.storageGet(['recentTracksCache', 'local']);
+
+  if (
+    recentTracksCache
+    && recentTracksCache.data
+    && recentTracksCache.timestamp
+    && recentTracksCache.userName === userName
+  ) {
+    if (
+      Date.now() - recentTracksCache.timestamp >
+      constants.RECENT_TRACKS_INTERVAL_MS
+    ) {
+      // Cache is outdated, fetch new data
+      await fetchAndRenderRecentTracks();
+    } else {
+      // await populateRecentTracks(recentTracksCache.data, recentTracksCache.timestamp);
+      // latestTrack = {
+      //   ...latestTrack,
+      //   ...recentTracksCache.data[0],
+      //   timestamp: recentTracksCache.timestamp,
+      // };
+      // uiElements.list.tracksWrapper.dataset.timestamp = `Updated at ${new Date(recentTracksCache.timestamp).toLocaleString()}`;
+      // lastTimestamp = recentTracksCache.timestamp;
+    }
+  } else {
+    // No cache available for this user, fetch new data
+    if (document.visibilityState === 'visible') {
+      await fetchAndRenderRecentTracks();
+    }
+  }
+
+  isLoaded = true;
+}
+
+async function fetchAndRenderRecentTracks() {
+  abortController?.abort();
+  abortController = new AbortController();
+
+  try {
+    const recentTracksResponse = await api.getRecentTracks({
+      apiKey: config.lastfmApiKey,
+      params: {
+        username: userName,
+        limit: config.recentTracksLimit,
+      },
+      signal: abortController.signal,
+    });
+
+    const { recenttracks: { track: data } } = recentTracksResponse;
+
+    const timestamp = Date.now();
+
+    const normalizedData = data.map((item): TrackDataNormalized => ({
+      nowPlaying: item["@attr"]?.nowplaying === 'true',
+      coverUrl: item.image[0]['#text'],
+      coverLargeUrl: item.image[3]['#text'],
+      coverExtraLargeUrl: item.image[item.image.length - 1]['#text'],
+      trackName: item.name,
+      timestamp: item.date?.uts ? Number(item.date.uts) : null,
+      albumName: item.album['#text'],
+      artistName: item.artist['#text'],
+    }));
+
+    recentTracks = normalizedData;
+    recentTracksTimestamp = timestamp;
+
+    try {
+      colors = await utils.getImageColors(latestTrack.coverExtraLargeUrl);
+    } catch {
+      console.warn(errorMessages.failedToFetchColors);
+    }
+
+    if (latestTrack.nowPlaying) {
+
+    }
+
+    await utils.storageSet({
+      recentTracksCache: {
+        data: normalizedData,
+        timestamp,
+        userName: userName,
+      }
+    }, 'local');
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name !== 'AbortError') {
+      failedToFetch = true;
+    }
+  }
+};
+
+init();
 </script>
 
-<div class="recent-tracks-container">
-  <!--
-  <svg viewBox="0 0 40 40">
-    <use href="#svg-volume-symbol"></use>
-  </svg>
-  <svg>
-    <use href="#svg-star-symbol"></use>
-  </svg>
-   -->
-
-  {count} count
+<div class="recent-tracks-container" class:is-now-playing={latestTrack.nowPlaying}>
   <div id="profile_play_history_container" class="recent-tracks-current">
     <div
       class="play_history_item is-now-playing is-loaded"
@@ -156,34 +239,38 @@
           <a
             href="{searchTrackUrl()}"
             title="{searchTrackHint()}"
-            >{latestTrack.trackName}</a
-          >
+          >{latestTrack.trackName}</a>
         </div>
       </div>
     </div>
   </div>
   <div class="profile_view_play_history_btn">
-    <button class="btn-lastfm-lock" aria-label="Lock Last.fm scrobbles">
-      <svg><use href="#svg-unlock-symbol"></use></svg>
-      <svg><use href="#svg-lock-symbol"></use></svg>
-    </button>
-    <button
-      class="btn-lastfm btn blue_btn btn_small"
-      aria-label="Toggle scrobbles list"
-    >
-      <svg viewBox="0 0 24 24">
-        <use xlink:href="#svg-playlist-symbol"></use>
-      </svg>
-    </button>
-    <a
-      class="btn-profile btn blue_btn btn_small"
-      href="https://www.last.fm/user/{{ userName }}"
-      aria-label="Open Last.fm profile"
-    >
-      <svg viewBox="0 0 24 24">
-        <use xlink:href="#svg-lastfm-symbol"></use>
-      </svg>
-    </a>
+    {#if listEnabled}
+      <button class="btn-lastfm-lock" aria-label="Lock Last.fm scrobbles">
+        <svg><use href="#svg-unlock-symbol"></use></svg>
+        <svg><use href="#svg-lock-symbol"></use></svg>
+      </button>
+      <button
+        class="btn-lastfm btn blue_btn btn_small"
+        aria-label="Toggle scrobbles list"
+      >
+        <svg viewBox="0 0 24 24">
+          <use xlink:href="#svg-playlist-symbol"></use>
+        </svg>
+      </button>
+    {/if}
+    {#if userName}
+      <a
+        class="btn-profile btn blue_btn btn_small"
+        href="https://www.last.fm/user/{userName}"
+        aria-label="Open Last.fm profile"
+      >
+        <svg viewBox="0 0 24 24">
+          <use xlink:href="#svg-lastfm-symbol"></use>
+        </svg>
+        Profile
+      </a>
+    {/if}
   </div>
   <button class="btn-bg-switcher">Text</button>
 </div>

@@ -686,6 +686,10 @@ async function render(_config: RecentTracksConfig) {
     return;
   }
 
+  uiElements.list.panelContainer = parent.cloneNode(true) as HTMLElement;
+  parent.insertAdjacentElement('afterend', uiElements.list.panelContainer);
+
+  // SVELTE START
   const mountPoint = document.createElement('div');
   parent.insertAdjacentElement('afterend', mountPoint);
 
@@ -697,9 +701,7 @@ async function render(_config: RecentTracksConfig) {
       rymSyncTimestamp: state.rymSyncTimestamp,
     },
   });
-
-  uiElements.list.panelContainer = parent.cloneNode(true) as HTMLElement;
-  parent.insertAdjacentElement('afterend', uiElements.list.panelContainer);
+  // SVELTE END
 
   state.rymSyncTimestamp = await utils.storageGet('rymSyncTimestamp', 'local');
 
