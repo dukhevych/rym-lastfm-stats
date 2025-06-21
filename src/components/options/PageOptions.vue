@@ -293,6 +293,7 @@
               name="lastfmApiKey"
               clearable
               placeholder="Add your lastfm API key here"
+              class="font-mono"
               min="32"
               max="32"
               :type="lastfmApiInputType"
