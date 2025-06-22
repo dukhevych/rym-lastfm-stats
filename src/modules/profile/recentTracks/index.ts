@@ -7,7 +7,7 @@ import * as api from '@/api';
 import lockSvg from '@/assets/icons/lock.svg?raw';
 import unlockSvg from '@/assets/icons/unlock.svg?raw';
 import './recentTracks.css';
-import RecentTracks from '@/components/svelte/RecentTracks.svelte';
+import ScrobblesActivity from '@/components/svelte/ScrobblesActivity.svelte';
 import { mount } from 'svelte';
 import errorMessages from './errorMessages.json';
 import type {
@@ -693,7 +693,7 @@ async function render(_config: RecentTracksConfig) {
   const mountPoint = document.createElement('div');
   parent.insertAdjacentElement('afterend', mountPoint);
 
-  mount(RecentTracks, {
+  mount(ScrobblesActivity, {
     target: mountPoint,
     props: {
       config,

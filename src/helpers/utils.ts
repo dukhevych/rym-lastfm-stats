@@ -294,6 +294,10 @@ export function generateSearchUrl({
   return url;
 };
 
+export function generateSearchHint(params: string[]) {
+  return `Search for "${params.join(' - ')}" on RateYourMusic`;
+}
+
 export function waitForDOMReady() {
   return new Promise((resolve) => {
     if (document.readyState === 'interactive' || document.readyState === 'complete') {
