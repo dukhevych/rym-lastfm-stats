@@ -5,6 +5,8 @@ import { Vibrant } from "node-vibrant/browser";
 import { MD5 } from 'crypto-js';
 import { remove as removeDiacritics } from 'diacritics';
 import * as constants from './constants';
+import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
+import type { RecentTrack } from '@/api/getRecentTracks';
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
@@ -576,39 +578,6 @@ export function getContrastingColor(
   return relativeLuminance(r, g, b) > 0.179 ? darkColor : lightColor;
 }
 
-export interface VibrantSwatch {
-  hex: string;
-  hsl: [number, number, number];
-  rgb: [number, number, number];
-  population: number;
-  bodyTextColor?: string;
-  titleTextColor?: string;
-}
-
-export interface VibrantPalette {
-  Vibrant?: VibrantSwatch;
-  Muted?: VibrantSwatch;
-  DarkVibrant?: VibrantSwatch;
-  DarkMuted?: VibrantSwatch;
-  LightVibrant?: VibrantSwatch;
-  LightMuted?: VibrantSwatch;
-  [key: string]: VibrantSwatch | undefined;
-}
-
-export interface VibrantUiColorSet {
-  bgColor: string;
-  accentColor: string;
-  accentColorHSL: [number, number, number];
-  readonly bgColorContrast: string;
-  readonly accentColorContrast: string;
-}
-
-export interface VibrantUiColors {
-  light: VibrantUiColorSet;
-  dark: VibrantUiColorSet;
-  palette: VibrantPalette;
-}
-
 export async function getVibrantUiColors(palette: VibrantPalette): Promise<VibrantUiColors> {
   const lightColors = {
     bgColor: (palette.LightMuted || palette.Muted || palette.LightVibrant)?.hex || '#222',
@@ -1113,4 +1082,17 @@ export function removeArtistNameBrackets(artistName: string) {
 
 export async function restartBackground() {
   await browser.runtime.sendMessage({ type: 'RESTART_BACKGROUND' });
+}
+
+export function normalizeLastFmTrack(track: RecentTrack): TrackDataNormalized {
+  return {
+    nowPlaying: track["@attr"]?.nowplaying === 'true',
+    coverUrl: track.image[0]['#text'],
+    coverLargeUrl: track.image[3]['#text'],
+    coverExtraLargeUrl: track.image[track.image.length - 1]['#text'],
+    trackName: track.name,
+    timestamp: track.date?.uts ? Number(track.date.uts) : null,
+    albumName: track.album['#text'],
+    artistName: track.artist['#text'],
+  }
 }

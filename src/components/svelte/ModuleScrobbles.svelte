@@ -1,6 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+import { tick } from 'svelte';
 import ScrobblesHistory from './ScrobblesHIstory.svelte';
 import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 import errorMessages from '@/modules/profile/recentTracks/errorMessages.json';
@@ -19,6 +20,7 @@ const { config, rymSyncTimestamp = null, userName } = $props<{
 }>();
 
 let isScrobblesHistoryOpen: boolean = $state(config.recentTracksShowOnLoad);
+let isScrobblesHistoryLocked: boolean = $state(config.recentTracksShowOnLoad);
 
 let abortController: AbortController = new AbortController();
 let failedToFetch: boolean = false;
@@ -44,7 +46,7 @@ const init = async () => {
       constants.RECENT_TRACKS_INTERVAL_MS
     ) {
       // Cache is outdated, fetch new data
-      await fetchAndRenderRecentTracks();
+      await loadRecentTracks();
     } else {
       // await populateRecentTracks(recentTracksCache.data, recentTracksCache.timestamp);
       // latestTrack = {
@@ -58,14 +60,24 @@ const init = async () => {
   } else {
     // No cache available for this user, fetch new data
     if (document.visibilityState === 'visible') {
-      await fetchAndRenderRecentTracks();
+      await loadRecentTracks();
     }
   }
 
   isLoaded = true;
 }
 
-async function fetchAndRenderRecentTracks() {
+async function trySetColorsFromTrack(track: TrackDataNormalized | undefined) {
+  const coverUrl = track?.coverExtraLargeUrl;
+  if (!coverUrl) return;
+  try {
+    colors = await utils.getImageColors(coverUrl);
+  } catch {
+    console.warn(errorMessages.failedToFetchColors);
+  }
+}
+
+async function loadRecentTracks() {
   abortController?.abort();
   abortController = new AbortController();
 
@@ -83,25 +95,14 @@ async function fetchAndRenderRecentTracks() {
 
     const timestamp = Date.now();
 
-    const normalizedData = data.map((item): TrackDataNormalized => ({
-      nowPlaying: item["@attr"]?.nowplaying === 'true',
-      coverUrl: item.image[0]['#text'],
-      coverLargeUrl: item.image[3]['#text'],
-      coverExtraLargeUrl: item.image[item.image.length - 1]['#text'],
-      trackName: item.name,
-      timestamp: item.date?.uts ? Number(item.date.uts) : null,
-      albumName: item.album['#text'],
-      artistName: item.artist['#text'],
-    }));
+    const normalizedData = data.map(utils.normalizeLastFmTrack);
 
     recentTracks = normalizedData;
     recentTracksTimestamp = timestamp;
 
-    try {
-      colors = await utils.getImageColors(nowPlayingTrack.coverExtraLargeUrl);
-    } catch {
-      console.warn(errorMessages.failedToFetchColors);
-    }
+    await tick();
+
+    await trySetColorsFromTrack(nowPlayingTrack);
 
     await utils.storageSet({
       recentTracksCache: {
@@ -119,10 +120,10 @@ async function fetchAndRenderRecentTracks() {
 
 type CSSVarName = `--${string}`;
 
-const colorsMap = $derived(colors ? getColorsMap(colors) : {});
+const colorsMap = $derived(() => colors ? getColorsMap(colors) : {});
 
-function getColorsMap(colors: utils.VibrantUiColors) {
-  const colorsMap: Record<CSSVarName, string> = {
+function getColorsMap(colors: VibrantUiColors) {
+  const result: Record<CSSVarName, string> = {
     '--clr-light-bg': colors.light.bgColor,
     '--clr-light-bg-contrast': colors.light.bgColorContrast,
     '--clr-light-accent': colors.light.accentColor,
@@ -141,20 +142,36 @@ function getColorsMap(colors: utils.VibrantUiColors) {
 
   Object.keys(colors.palette).forEach((key) => {
     if (colors.palette[key]?.hex) {
-      colorsMap[`--clr-palette-${key.toLowerCase()}`] = colors.palette[key].hex;
+      result[`--clr-palette-${key.toLowerCase()}`] = colors.palette[key].hex;
     }
   });
 
-  return colorsMap;
+  return result;
 }
 
-const setRootElement = (node: HTMLSpanElement) => {
-  const target = node?.parentElement;
-  if (!target) return;
+let rootTarget: HTMLElement | null = null;
 
-  for (const [key, value] of Object.entries(colorsMap)) {
-    target.style.setProperty(key, value as string);
+const setRootElement = (node: HTMLSpanElement) => {
+  rootTarget = node?.parentElement ?? null;
+};
+
+$effect(() => {
+  if (!rootTarget) return;
+  for (const [key, value] of Object.entries(colorsMap())) {
+    rootTarget.style.setProperty(key, String(value));
   }
+});
+
+const onToggleScrobblesHistoryLock = async () => {
+  isScrobblesHistoryLocked = !isScrobblesHistoryLocked;
+  await utils.storageSet({
+    recentTracksShowOnLoad: isScrobblesHistoryLocked,
+  });
+  isScrobblesHistoryOpen = isScrobblesHistoryLocked;
+}
+
+const onToggleScrobblesHistory = () => {
+  isScrobblesHistoryOpen = !isScrobblesHistoryOpen;
 }
 
 init();
@@ -163,13 +180,16 @@ init();
 <span style="display: contents" use:setRootElement></span>
 
 {#if isLoaded}
+  {#if nowPlayingTrack}
   <ScrobblesNowPlaying
     track={nowPlayingTrack}
     userName={userName}
     config={config}
-    bind:isScrobblesHistoryOpen
-  />
-  {isScrobblesHistoryOpen ? 'true' : 'false'}
+      isScrobblesHistoryLocked={isScrobblesHistoryLocked}
+      onToggleScrobblesHistory={onToggleScrobblesHistory}
+      onToggleScrobblesHistoryLock={onToggleScrobblesHistoryLock}
+    />
+  {/if}
   <ScrobblesHistory
     scrobbles={tracksHistory}
     timestamp={recentTracksTimestamp}

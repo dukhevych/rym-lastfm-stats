@@ -7,7 +7,7 @@ import * as api from '@/api';
 import lockSvg from '@/assets/icons/lock.svg?raw';
 import unlockSvg from '@/assets/icons/unlock.svg?raw';
 import './recentTracks.css';
-import ScrobblesActivity from '@/components/svelte/ScrobblesActivity.svelte';
+import ModuleScrobbles from '@/components/svelte/ModuleScrobbles.svelte';
 import { mount } from 'svelte';
 import errorMessages from './errorMessages.json';
 import type {
@@ -686,14 +686,16 @@ async function render(_config: RecentTracksConfig) {
     return;
   }
 
-  uiElements.list.panelContainer = parent.cloneNode(true) as HTMLElement;
-  parent.insertAdjacentElement('afterend', uiElements.list.panelContainer);
+  // uiElements.list.panelContainer = parent.cloneNode(true) as HTMLElement;
+  // parent.insertAdjacentElement('afterend', uiElements.list.panelContainer);
+
+  state.rymSyncTimestamp = await utils.storageGet('rymSyncTimestamp', 'local');
 
   // SVELTE START
   const mountPoint = document.createElement('div');
   parent.insertAdjacentElement('afterend', mountPoint);
 
-  mount(ScrobblesActivity, {
+  mount(ModuleScrobbles, {
     target: mountPoint,
     props: {
       config,
@@ -703,11 +705,11 @@ async function render(_config: RecentTracksConfig) {
   });
   // SVELTE END
 
-  state.rymSyncTimestamp = await utils.storageGet('rymSyncTimestamp', 'local');
-
   if (config.rymPlayHistoryHide) {
     parent.style.display = 'none';
   }
+
+  return;
 
   prepareRecentTracksUI();
 
