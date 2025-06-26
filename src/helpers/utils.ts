@@ -275,7 +275,7 @@ export function generateSearchUrl({
   let searchterm: string;
 
   if (!query) {
-    return url;
+    return '';
   } else {
     searchterm = encodeURIComponent(normalizeForSearch(query));
     url += '/search?';

@@ -1,14 +1,10 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-import { tick } from 'svelte';
 import ScrobblesHistory from './ScrobblesHIstory.svelte';
 import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 import errorMessages from '@/modules/profile/recentTracks/errorMessages.json';
-import type {
-  TrackDataNormalized,
-  PlayHistoryData,
-} from '@/modules/profile/recentTracks/types';
+import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import * as api from '@/api';
@@ -20,48 +16,50 @@ const { config, rymSyncTimestamp = null, userName } = $props<{
 }>();
 
 let isScrobblesHistoryOpen: boolean = $state(config.recentTracksShowOnLoad);
-let isScrobblesHistoryLocked: boolean = $state(config.recentTracksShowOnLoad);
+let isScrobblesHistoryPinned: boolean = $state(config.recentTracksShowOnLoad);
 
 let abortController: AbortController = new AbortController();
-let failedToFetch: boolean = false;
+let failedToFetch: boolean = $state(false);
 let colors: VibrantUiColors | null = $state(null);
 let isLoaded: boolean = $state(false);
-
 let recentTracks = $state<TrackDataNormalized[]>([]);
-let nowPlayingTrack = $derived(recentTracks[0]);
-let tracksHistory = $derived(recentTracks[0].nowPlaying ? recentTracks.slice(1) : recentTracks);
 let recentTracksTimestamp = $state<number>(0);
 
-const init = async () => {
-  const { recentTracksCache } = await utils.storageGet(['recentTracksCache', 'local']);
+const nowPlayingTrack = $derived(() => recentTracks[0]);
+const tracksHistory = $derived(() => recentTracks[0]?.nowPlaying ? recentTracks.slice(1) : recentTracks);
 
-  if (
-    recentTracksCache
-    && recentTracksCache.data
-    && recentTracksCache.timestamp
-    && recentTracksCache.userName === userName
-  ) {
-    if (
-      Date.now() - recentTracksCache.timestamp >
-      constants.RECENT_TRACKS_INTERVAL_MS
-    ) {
-      // Cache is outdated, fetch new data
-      await loadRecentTracks();
-    } else {
-      // await populateRecentTracks(recentTracksCache.data, recentTracksCache.timestamp);
-      // latestTrack = {
-      //   ...latestTrack,
-      //   ...recentTracksCache.data[0],
-      //   timestamp: recentTracksCache.timestamp,
-      // };
-      // uiElements.list.tracksWrapper.dataset.timestamp = `Updated at ${new Date(recentTracksCache.timestamp).toLocaleString()}`;
-      // lastTimestamp = recentTracksCache.timestamp;
-    }
+interface RecentTracksCache {
+  data: TrackDataNormalized[];
+  timestamp: number;
+  colors: VibrantUiColors;
+  userName: string;
+}
+
+const checkCacheValidity = (cache: RecentTracksCache | null): boolean => {
+  return !!(
+    cache
+    && cache.data
+    && cache.timestamp
+    && cache.colors
+    && cache.userName === userName
+    && Date.now() - cache.timestamp <= constants.RECENT_TRACKS_INTERVAL_MS
+  );
+}
+
+const init = async () => {
+  const recentTracksCache: RecentTracksCache | null = await utils.storageGet('recentTracksCache', 'local');
+
+  if (recentTracksCache && checkCacheValidity(recentTracksCache)) {
+    recentTracks = recentTracksCache.data;
+    recentTracksTimestamp = recentTracksCache.timestamp;
+    colors = recentTracksCache.colors;
   } else {
-    // No cache available for this user, fetch new data
-    if (document.visibilityState === 'visible') {
-      await loadRecentTracks();
-    }
+    await utils.storageRemove('recentTracksCache', 'local');
+    await loadRecentTracks();
+  }
+
+  if (document.visibilityState === 'visible') {
+    // INIT POLLING
   }
 
   isLoaded = true;
@@ -69,11 +67,12 @@ const init = async () => {
 
 async function trySetColorsFromTrack(track: TrackDataNormalized | undefined) {
   const coverUrl = track?.coverExtraLargeUrl;
-  if (!coverUrl) return;
+  if (!coverUrl) return null;
   try {
-    colors = await utils.getImageColors(coverUrl);
+    return await utils.getImageColors(coverUrl);
   } catch {
     console.warn(errorMessages.failedToFetchColors);
+    return null;
   }
 }
 
@@ -99,16 +98,14 @@ async function loadRecentTracks() {
 
     recentTracks = normalizedData;
     recentTracksTimestamp = timestamp;
-
-    await tick();
-
-    await trySetColorsFromTrack(nowPlayingTrack);
+    colors = await trySetColorsFromTrack(normalizedData[0]);
 
     await utils.storageSet({
       recentTracksCache: {
         data: normalizedData,
+        colors: $state.snapshot(colors),
         timestamp,
-        userName: userName,
+        userName,
       }
     }, 'local');
   } catch (error: unknown) {
@@ -162,12 +159,14 @@ $effect(() => {
   }
 });
 
-const onToggleScrobblesHistoryLock = async () => {
-  isScrobblesHistoryLocked = !isScrobblesHistoryLocked;
+const onToggleScrobblesHistoryPinned = async () => {
+  isScrobblesHistoryPinned = !isScrobblesHistoryPinned;
   await utils.storageSet({
-    recentTracksShowOnLoad: isScrobblesHistoryLocked,
+    recentTracksShowOnLoad: isScrobblesHistoryPinned,
   });
-  isScrobblesHistoryOpen = isScrobblesHistoryLocked;
+  if (isScrobblesHistoryPinned) {
+    isScrobblesHistoryOpen = true;
+  }
 }
 
 const onToggleScrobblesHistory = () => {
@@ -179,23 +178,21 @@ init();
 
 <span style="display: contents" use:setRootElement></span>
 
-{#if isLoaded}
-  {#if nowPlayingTrack}
-  <ScrobblesNowPlaying
-    track={nowPlayingTrack}
-    userName={userName}
-    config={config}
-      isScrobblesHistoryLocked={isScrobblesHistoryLocked}
-      onToggleScrobblesHistory={onToggleScrobblesHistory}
-      onToggleScrobblesHistoryLock={onToggleScrobblesHistoryLock}
-    />
-  {/if}
-  <ScrobblesHistory
-    scrobbles={tracksHistory}
-    timestamp={recentTracksTimestamp}
-    open={isScrobblesHistoryOpen}
-    config={config}
-  />
+{#if !failedToFetch}
+<ScrobblesNowPlaying
+  track={nowPlayingTrack()}
+  userName={userName}
+  config={config}
+  isScrobblesHistoryPinned={isScrobblesHistoryPinned}
+  onToggleScrobblesHistory={onToggleScrobblesHistory}
+  onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
+/>
+<ScrobblesHistory
+  scrobbles={tracksHistory()}
+  timestamp={recentTracksTimestamp}
+  open={isScrobblesHistoryOpen}
+  config={config}
+/>
 {/if}
 
 <!-- <style>

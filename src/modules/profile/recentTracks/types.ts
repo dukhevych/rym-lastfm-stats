@@ -38,9 +38,3 @@ export interface TrackDataNormalized {
   timestamp: number | null;
   trackName: string;
 }
-
-export interface PlayHistoryData extends TrackDataNormalized {
-  albumUrl: string;
-  artistUrl: string;
-  trackUrl: string;
-}

@@ -471,7 +471,7 @@ function createTrackDate(track: TrackDataNormalized) {
   ]);
 }
 
-function initializeColors(colors: utils.VibrantUiColors) {
+function initializeColors(colors: VibrantUiColors) {
   utils.setColorVar('--clr-light-bg', colors.light.bgColor);
   utils.setColorVar('--clr-light-bg-contrast', colors.light.bgColorContrast);
   utils.setColorVar('--clr-light-accent', colors.light.accentColor);
@@ -686,10 +686,7 @@ async function render(_config: RecentTracksConfig) {
     return;
   }
 
-  // uiElements.list.panelContainer = parent.cloneNode(true) as HTMLElement;
-  // parent.insertAdjacentElement('afterend', uiElements.list.panelContainer);
-
-  state.rymSyncTimestamp = await utils.storageGet('rymSyncTimestamp', 'local');
+  const rymSyncTimestamp: number = await utils.storageGet('rymSyncTimestamp', 'local');
 
   // SVELTE START
   const mountPoint = document.createElement('div');
@@ -700,7 +697,7 @@ async function render(_config: RecentTracksConfig) {
     props: {
       config,
       userName: state.userName,
-      rymSyncTimestamp: state.rymSyncTimestamp,
+      rymSyncTimestamp,
     },
   });
   // SVELTE END
@@ -712,34 +709,6 @@ async function render(_config: RecentTracksConfig) {
   return;
 
   prepareRecentTracksUI();
-
-  uiElements.list.profileButton.href = `https://www.last.fm/user/${state.userName}`;
-  uiElements.list.panelContainer.insertAdjacentElement('afterend', uiElements.list.tracksWrapper);
-
-  const { recentTracksCache } = await utils.storageGet(['recentTracksCache']);
-
-  if (
-    recentTracksCache
-    && recentTracksCache.data
-    && recentTracksCache.timestamp
-    && recentTracksCache.userName === state.userName
-  ) {
-    if (
-      Date.now() - recentTracksCache.timestamp >
-      constants.RECENT_TRACKS_INTERVAL_MS
-    ) {
-      // Cache is outdated, fetch new data
-      await fetchAndRenderRecentTracks();
-    } else {
-      await populateRecentTracks(recentTracksCache.data, recentTracksCache.timestamp);
-      uiElements.list.tracksWrapper.dataset.timestamp = `Updated at ${new Date(recentTracksCache.timestamp).toLocaleString()}`;
-    }
-  } else {
-    // No cache available for this user, fetch new data
-    if (document.visibilityState === 'visible') {
-      await fetchAndRenderRecentTracks();
-    }
-  }
 
   if (state.failedToFetch) {
     uiElements.list.tracksWrapper.style.display = 'none';

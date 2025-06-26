@@ -1,26 +1,24 @@
 <div
-  class="profile_listening_container"
-  class:is-now-playing={track.nowPlaying}
-  style={`--bg-image: url(${track.coverExtraLargeUrl})`}
+  class={containerClasses()}
+  style={`--bg-image: url(${_track().coverExtraLargeUrl})`}
   data-element="rymstats-track-panel"
 >
   <div id="profile_play_history_container" class="recent-tracks-current">
     <div
       class="play_history_item"
-      class:is-now-playing={track.nowPlaying}
-      class:is-loaded={albumsFromDB.length > 0}
+      class:is-now-playing={_track().nowPlaying}
       data-element="rymstats-track-item"
     >
       <div class="play_history_artbox" data-element="rymstats-track-artbox">
         <a
-          href="{searchLinks.searchAlbumUrl || searchLinks.searchTrackUrl}"
-          title="{searchLinks.searchAlbumHint || searchLinks.searchTrackHint}"
-          aria-label="{searchLinks.searchAlbumHint || searchLinks.searchTrackHint}"
+          href="{coverSearchUrl()}"
+          title="{coverSearchHint()}"
+          aria-label="{coverSearchHint()}"
         >
           <img
             class="play_history_item_art"
             data-element="rymstats-track-item-art"
-            src="{searchLinks.coverLargeUrl}"
+            src="{_track().coverLargeUrl}"
             alt=""
           />
         </a>
@@ -87,42 +85,39 @@
               data-element="rymstats-track-artist"
               ><a
                 data-element="rymstats-track-artist-link"
-                href="{searchLinks.searchArtistUrl}"
-                title="{searchLinks.searchArtistHint}"
+                href="{searchLinks().searchArtistUrl}"
+                title="{searchLinks().searchArtistHint}"
               >
-                {searchLinks.artistName}
+                {_track().artistName}
               </a>
             </span>
             <span class="play_history_separator"> - </span>
             <a
               class="album play_history_item_release"
               data-element="rymstats-track-link"
-              href="{searchLinks.searchTrackUrl}"
-              title="{searchLinks.searchTrackHint}"
-            >{track.trackName}</a>
+              href="{searchLinks().searchTrackUrl}"
+              title="{searchLinks().searchTrackHint}"
+            >{_track().trackName}</a>
           </div>
         </div>
         <div class="custom-from-album" data-element="rymstats-from-album">
-          {#if track.albumName}
+          {#if _track().albumName}
           <a
-            href="{searchLinks.searchAlbumUrl}"
-            title="{searchLinks.searchAlbumHint}"
-          >{track.albumName}</a>
+            href="{searchLinks().searchAlbumUrl}"
+            title="{searchLinks().searchAlbumHint}"
+          >{_track().albumName}</a>
           {/if}
         </div>
       </div>
-    </div>
-    <div class="loader">
-      <svg viewBox="0 0 300 150"><use xlink:href="#svg-loader-symbol"></use></svg>
     </div>
   </div>
   <div class="profile_view_play_history_btn">
     {#if config.recentTracksHistory}
       <button
         class="btn-lastfm-lock"
-        class:is-locked={isScrobblesHistoryLocked}
+        class:is-locked={isScrobblesHistoryPinned}
         aria-label="Lock Last.fm scrobbles"
-        onclick={onToggleScrobblesHistoryLock}
+        onclick={onToggleScrobblesHistoryPinned}
       >
         <svg><use href="#svg-unlock-symbol"></use></svg>
         <svg><use href="#svg-lock-symbol"></use></svg>
@@ -150,7 +145,24 @@
       Profile
     </a>
   </div>
-  <button class="btn-bg-switcher">Text</button>
+
+  <button
+    class="btn-bg-switcher"
+    aria-label="Change background"
+    onclick={onToggleBackground}
+    data-option={backgroundName()}
+    title={`Background option ${bgOption + 1} / ${bgOptionsQty}`}
+  >
+    <svg viewBox="0 0 24 24">
+      <use xlink:href="#svg-brush-symbol"></use>
+    </svg>
+  </button>
+
+  {#if !isLoaded}
+    <div class="loader">
+      <svg viewBox="0 0 300 150"><use xlink:href="#svg-loader-symbol"></use></svg>
+    </div>
+  {/if}
 </div>
 
 <script lang="ts">
@@ -167,31 +179,55 @@ const {
   track,
   config,
   userName,
-  isScrobblesHistoryLocked,
+  isScrobblesHistoryPinned,
   onToggleScrobblesHistory,
-  onToggleScrobblesHistoryLock,
+  onToggleScrobblesHistoryPinned,
 } = $props<{
   track: TrackDataNormalized;
   config: ProfileOptions;
   userName: string;
-  isScrobblesHistoryLocked: boolean;
+  isScrobblesHistoryPinned: boolean;
   onToggleScrobblesHistory: () => void;
-  onToggleScrobblesHistoryLock: () => void;
+  onToggleScrobblesHistoryPinned: () => void;
 }>();
 
 let albumsFromDB: IRYMRecordDBMatch[] = $state([]);
+let isLoaded = $state(false);
+let bgOption = $state(config.recentTracksBackground);
 
 // COMPUTED
-let rating = $derived(() => {
-  if (!config.isMyProfile) {
-    console.warn('Rating is not available for non-my profile');
-    return 0;
+const _track = $derived(() => track ? track : {});
+
+const containerClasses = $derived(() => {
+  const classes = ['profile_listening_container'];
+
+  if (_track().nowPlaying) {
+    classes.push('is-now-playing');
   }
 
+  if (isLoaded) {
+    classes.push('is-loaded');
+  }
+
+  classes.push(`bg-option-${bgOption}`);
+
+  return classes.join(' ');
+});
+
+let rating = $derived(() => {
   let value = 0;
 
+  if (!config.isMyProfile) {
+    console.warn('Rating is not available for non-my profile');
+    return value;
+  }
+
+  if (!isLoaded) {
+    return value;
+  }
+
   if (albumsFromDB.length === 0) {
-    console.warn('No albums found for non-my profile');
+    console.warn('No albums found in user\'s RYM database');
     return value;
   }
 
@@ -235,57 +271,87 @@ const formats = $derived(() => {
 
 const formatsLabel = $derived(() => Array.from(formats()).map(key => constants.RYMFormatsLabels[key] || key).join(', '));
 
-const albumNameFallback = $derived(() => track.albumName ? utils.cleanupReleaseEdition(track.albumName) : '');
+const albumNameFallback = $derived(() => track?.albumName ? utils.cleanupReleaseEdition(_track().albumName) : '');
 
-const searchLinks = $derived<TrackDataNormalized & {
-  searchArtistUrl: string;
-  searchArtistHint: string;
-  searchAlbumUrl: string;
-  searchAlbumHint: string;
-  searchTrackUrl: string;
-  searchTrackHint: string;
-}>({
-  ...track,
-  searchArtistUrl: utils.generateSearchUrl({ artist: track.artistName }),
-  searchArtistHint: utils.generateSearchHint([track.artistName]),
-  searchAlbumUrl: track.albumName ? utils.generateSearchUrl({
-    artist: track.artistName,
-    releaseTitle: track.albumName,
-  }) : '',
-  searchAlbumHint: track.albumName ? utils.generateSearchHint([track.artistName, track.albumName]) : '',
-  searchTrackUrl: utils.generateSearchUrl({
-    artist: track.artistName,
-    releaseTitle: track.albumName,
-    trackTitle: track.trackName,
-  }),
-  searchTrackHint: utils.generateSearchHint([track.artistName, track.albumName, track.trackName]),
+const searchLinks = $derived(() => {
+  const {
+    artistName = '',
+    albumName = '',
+    trackName = '',
+  } = _track();
+
+  return {
+    searchArtistUrl: utils.generateSearchUrl({ artist: artistName }),
+    searchArtistHint: utils.generateSearchHint([artistName]),
+    searchAlbumUrl: albumName ? utils.generateSearchUrl({
+      artist: artistName,
+      releaseTitle: albumName,
+    }) : '',
+    searchAlbumHint: albumName ? utils.generateSearchHint([artistName, albumName]) : '',
+    searchTrackUrl: utils.generateSearchUrl({
+      artist: artistName,
+      releaseTitle: albumName,
+      trackTitle: trackName,
+    }),
+    searchTrackHint: utils.generateSearchHint([artistName, albumName, trackName]),
+  };
 });
 
 const itemDateLabel = $derived(() => {
-  const date = new Date((track.timestamp as number) * 1000);
+  if (!isLoaded) return '';
+
+  const date = new Date((_track().timestamp as number) * 1000);
   const dateFormatted = formatDistanceToNow(date, { addSuffix: true });
-  return track.nowPlaying ? 'Scrobbling now' : `Last scrobble (${dateFormatted})`;
+  return _track().nowPlaying ? 'Scrobbling now' : `Last scrobble (${dateFormatted})`;
 });
 
 const itemDateTitle = $derived(() => {
-  if (track.nowPlaying) return '';
+  if (!isLoaded) return '';
 
-  const date = new Date((track.timestamp as number) * 1000);
+  if (_track().nowPlaying) return '';
+
+  const date = new Date((_track().timestamp as number) * 1000);
   return date.toLocaleString();
 });
+
+const coverSearchUrl = $derived(() => searchLinks().searchAlbumUrl || searchLinks().searchTrackUrl);
+const coverSearchHint = $derived(() => searchLinks().searchAlbumHint || searchLinks().searchTrackHint);
+
+const bgOptionsQty = 22;
+
+const backgroundName = $derived(() => {
+  return constants.RECENT_TRACK_BACKGROUND_NAMES[config.recentTracksBackground] ||
+    `${config.recentTracksBackground + 1} / ${bgOptionsQty}`;
+});
+
 // COMPUTED END
 
 // METHODS
+const onToggleBackground = async () => {
+  console.log('pre', bgOption);
+  bgOption = bgOption === bgOptionsQty - 1 ? 0 : bgOption + 1;
+  await utils.storageSet({
+    recentTracksBackground: bgOption,
+  });
+  console.log('post', bgOption);
+};
+
 const getReleaseRYMData = async () => {
   albumsFromDB = await RecordsAPI.getByArtistAndTitle(
-    track.artistName,
-    track.albumName,
+    _track().artistName,
+    _track().albumName,
     albumNameFallback(),
   );
+
+  isLoaded = true;
 };
 // METHODS END
 
-getReleaseRYMData();
+// EFFECTS
+$effect(() => {
+  if (track) getReleaseRYMData();
+});
+// EFFECTS END
 </script>
 
 <style></style>
