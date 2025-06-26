@@ -320,8 +320,8 @@ const coverSearchHint = $derived(() => searchLinks().searchAlbumHint || searchLi
 const bgOptionsQty = 22;
 
 const backgroundName = $derived(() => {
-  return constants.RECENT_TRACK_BACKGROUND_NAMES[config.recentTracksBackground] ||
-    `${config.recentTracksBackground + 1} / ${bgOptionsQty}`;
+  return constants.RECENT_TRACK_BACKGROUND_NAMES[bgOption] ||
+    `${bgOption + 1} / ${bgOptionsQty}`;
 });
 
 // COMPUTED END

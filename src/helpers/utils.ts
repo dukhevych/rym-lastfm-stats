@@ -1096,3 +1096,10 @@ export function normalizeLastFmTrack(track: RecentTrack): TrackDataNormalized {
     artistName: track.artist['#text'],
   }
 }
+
+export function rgbToHex([r, g, b]: [number, number, number]): string {
+  const clamp = (val: number) => Math.max(0, Math.min(255, Math.trunc(val)));
+  const toHex = (val: number) => clamp(val).toString(16).padStart(2, '0');
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}

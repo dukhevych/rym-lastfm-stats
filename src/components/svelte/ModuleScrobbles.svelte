@@ -138,8 +138,8 @@ function getColorsMap(colors: VibrantUiColors) {
   };
 
   Object.keys(colors.palette).forEach((key) => {
-    if (colors.palette[key]?.hex) {
-      result[`--clr-palette-${key.toLowerCase()}`] = colors.palette[key].hex;
+    if (colors.palette[key]?.rgb) {
+      result[`--clr-palette-${key.toLowerCase()}`] = utils.rgbToHex(colors.palette[key].rgb);
     }
   });
 
