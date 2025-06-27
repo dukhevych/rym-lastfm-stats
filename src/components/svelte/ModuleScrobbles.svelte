@@ -30,9 +30,6 @@ let colors: VibrantUiColors | null = $state(null);
 let isLoaded: boolean = $state(false);
 let recentTracks = $state<TrackDataNormalized[]>([]);
 let recentTracksTimestamp = $state<number>(0);
-let intervalId: ReturnType<typeof setInterval> | null = $state(null);
-let lastTick: number = $state(0);
-let progressLoopActive: boolean = $state(false);
 
 const nowPlayingTrack = $derived(() => recentTracks[0]);
 const tracksHistory = $derived(() => recentTracks[0]?.nowPlaying ? recentTracks.slice(1) : recentTracks);
@@ -75,35 +72,6 @@ const init = async () => {
 onDestroy(() => {
   polling.cleanup();
 });
-
-let pollingProgress = $state(0);
-
-function startProgressLoop() {
-  if (progressLoopActive) return;
-  progressLoopActive = true;
-
-  const loop = () => {
-    if (!progressLoopActive) return;
-    if (!lastTick) return 0;
-    const elapsed = Date.now() - lastTick;
-    pollingProgress = Math.min(elapsed / constants.RECENT_TRACKS_INTERVAL_MS, 1);
-    requestAnimationFrame(loop);
-  };
-
-  requestAnimationFrame(loop);
-}
-
-function startInterval() {
-  if (!intervalId) {
-    lastTick = Date.now();
-    intervalId = setInterval(async () => {
-      await loadRecentTracks();
-      lastTick = Date.now();
-    }, constants.RECENT_TRACKS_INTERVAL_MS);
-
-    startProgressLoop();
-  }
-};
 
 async function trySetColorsFromTrack(track: TrackDataNormalized | undefined) {
   const coverUrl = track?.coverExtraLargeUrl;

@@ -1,4 +1,3 @@
-// usePolling.ts
 import { writable, type Writable } from 'svelte/store';
 import { createAccuratePolling } from '@/helpers/polling';
 
@@ -8,46 +7,63 @@ export function usePolling(
   enableAbort = true
 ) {
   const progress: Writable<number> = writable(0);
+  const polling = createAccuratePolling(fn, { interval, enableAbort });
 
-  const polling = createAccuratePolling(fn, {
-    interval,
-    enableAbort,
-  });
+  let watcherRaf = 0;
+  const updateLoop = () => {
+    progress.set(polling.getProgress());
+    watcherRaf = requestAnimationFrame(updateLoop);
+  };
 
-  // Watch progress in real-time
-  let rafId: number = 0;
-
-  function startProgressWatcher() {
-    cancelAnimationFrame(rafId);
-
-    const loop = () => {
-      progress.set(polling.getProgress());
-      rafId = requestAnimationFrame(loop);
-    };
-
-    loop();
+  function startWatcher() {
+    if (!watcherRaf) updateLoop();
   }
 
-  function stopProgressWatcher() {
-    cancelAnimationFrame(rafId);
+  function stopWatcher() {
+    if (watcherRaf) {
+      cancelAnimationFrame(watcherRaf);
+      watcherRaf = 0;
+    }
+  }
+
+  function handleVisibility() {
+    if (document.visibilityState === 'visible' && polling.isRunning()) {
+      startWatcher();
+    } else {
+      stopWatcher();
+    }
   }
 
   return {
     start() {
       polling.start();
-      startProgressWatcher();
+      // kick off watcher only if poll is live AND tab is visible
+      if (polling.isRunning() && document.visibilityState === 'visible') {
+        startWatcher();
+      }
+      document.addEventListener('visibilitychange', handleVisibility);
     },
-    pause: polling.pauseManual,
-    resume: polling.resumeManual,
+    pause() {
+      polling.pauseManual();
+      stopWatcher();
+    },
+    resume() {
+      polling.resumeManual();
+      if (document.visibilityState === 'visible') {
+        startWatcher();
+      }
+    },
     stop() {
-      polling.stop();
-      stopProgressWatcher();
+      polling.stop();      // stops timer & abort
+      stopWatcher();
+      document.removeEventListener('visibilitychange', handleVisibility);
     },
     isRunning: polling.isRunning,
     progress,
     cleanup() {
       polling.cleanup();
-      stopProgressWatcher();
+      stopWatcher();
+      document.removeEventListener('visibilitychange', handleVisibility);
     },
   };
 }

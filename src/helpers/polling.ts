@@ -1,3 +1,5 @@
+// polling.ts
+
 type PollingCallback = (signal?: AbortSignal) => void | Promise<void>;
 
 interface PollingOptions {
@@ -22,154 +24,133 @@ export function createAccuratePolling(
   const { interval = 15000, enableAbort = false } = options;
 
   let pollingProgress = 0;
-  let progressLoopActive = false;
-  let rafId: number = 0;
-
+  let rafId: number;
   let timerId: ReturnType<typeof setTimeout> | null = null;
+  let controller: AbortController | null = null;
   let isManuallyPaused = false;
   let isTabVisible = true;
-
+  let isStarted = false;
   let lastStartTime = 0;
   let remainingTime = interval;
 
-  let controller: AbortController | null = null;
-
-  function isPollingAllowed(): boolean {
-    return !isManuallyPaused && isTabVisible;
-  }
-
-  function getProgress(): number {
+  function getProgress() {
     return pollingProgress;
   }
 
-  function startProgressLoop(): void {
-    if (progressLoopActive) return;
-    progressLoopActive = true;
-
+  function startProgressLoop() {
+    cancelAnimationFrame(rafId);
     const loop = () => {
-      if (!progressLoopActive) return;
       const now = Date.now();
       const elapsed = now - lastStartTime;
       pollingProgress = Math.min(elapsed / interval, 1);
       rafId = requestAnimationFrame(loop);
     };
-
     loop();
   }
 
-  function stopProgressLoop(): void {
-    progressLoopActive = false;
+  function stopProgressLoop() {
     cancelAnimationFrame(rafId);
   }
 
-  function scheduleNextPoll(delay: number): void {
-    lastStartTime = Date.now();
-    remainingTime = delay;
-    pollingProgress = 0;
-    startProgressLoop();
-    timerId = setTimeout(poll, delay);
+  function isAllowed() {
+    return !isManuallyPaused && isTabVisible;
   }
 
-  async function poll(): Promise<void> {
-    if (!isPollingAllowed()) return;
-
+  async function doFetch() {
+    // 1. Stop showing the waiting progress
     stopProgressLoop();
-    pollingProgress = 1; // optional: show full bar during execution
 
-    if (enableAbort) {
-      controller = new AbortController();
-    }
-
+    // 2. Run your async operation
+    if (enableAbort) controller = new AbortController();
     try {
-      await fn(enableAbort && controller ? controller.signal : undefined);
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "AbortError") {
-        console.warn("[polling] Aborted async fn due to visibility change");
+      await fn(controller?.signal);
+    } catch (e: any) {
+      if (e.name === 'AbortError') {
+        console.warn('[polling] fetch aborted');
       } else {
-        console.error("[polling] fn error:", e);
+        console.error('[polling] fetch error', e);
       }
     } finally {
       controller = null;
-      if (isPollingAllowed()) {
-        scheduleNextPoll(interval);
-      }
     }
+
+    // 3. Schedule the next wait → fetch cycle
+    if (!isAllowed()) return;
+    lastStartTime = Date.now();
+    pollingProgress = 0;
+    startProgressLoop();
+    timerId = setTimeout(doFetch, interval);
   }
 
-  function pauseTimer(): void {
+  function start() {
+    if (isStarted) return;
+    isStarted = true;
+    if (!isAllowed()) {
+      // wait until visible
+      const onVis = () => {
+        if (isAllowed()) {
+          document.removeEventListener('visibilitychange', onVis);
+          start();
+        }
+      };
+      document.addEventListener('visibilitychange', onVis);
+      return;
+    }
+    // kick off the very first wait → fetch cycle
+    lastStartTime = Date.now();
+    pollingProgress = 0;
+    startProgressLoop();
+    timerId = setTimeout(doFetch, interval);
+  }
+
+  function pauseTimer() {
     if (timerId) {
       clearTimeout(timerId);
       timerId = null;
       const elapsed = Date.now() - lastStartTime;
       remainingTime = Math.max(interval - elapsed, 0);
+      stopProgressLoop();
     }
-
-    if (enableAbort && controller) {
-      controller.abort();
-    }
-
-    stopProgressLoop();
+    if (enableAbort && controller) controller.abort();
   }
 
-  function resumeTimer(): void {
-    if (remainingTime <= 0) {
-      void poll();
-    } else {
-      scheduleNextPoll(remainingTime);
-    }
+  function resumeTimer() {
+    if (!isAllowed()) return;
+    lastStartTime = Date.now() - (interval - remainingTime);
+    startProgressLoop();
+    timerId = setTimeout(doFetch, remainingTime);
   }
 
-  function pauseManual(): void {
+  function pauseManual() {
     isManuallyPaused = true;
     pauseTimer();
   }
-
-  function resumeManual(): void {
+  function resumeManual() {
     isManuallyPaused = false;
+    resumeTimer();
+  }
+
+  function handleVisChange() {
+    isTabVisible = document.visibilityState === 'visible';
+    if (isManuallyPaused) return;
     if (isTabVisible) resumeTimer();
+    else pauseTimer();
   }
 
-  function handleVisibilityChange(): void {
-    isTabVisible = document.visibilityState === "visible";
-    if (!isManuallyPaused) {
-      if (isTabVisible) {
-        resumeTimer();
-      } else {
-        pauseTimer();
-      }
-    }
-  }
-
-  function start(): void {
-    if (timerId !== null) return;
-
-    if (isPollingAllowed()) {
-      scheduleNextPoll(interval);
-    } else {
-      const onVisible = () => {
-        if (isPollingAllowed() && timerId === null) {
-          void poll();
-        }
-        document.removeEventListener("visibilitychange", onVisible);
-      };
-
-      document.addEventListener("visibilitychange", onVisible);
-    }
-  }
-
-  document.addEventListener("visibilitychange", handleVisibilityChange);
+  document.addEventListener('visibilitychange', handleVisChange);
 
   return {
     start,
     pauseManual,
     resumeManual,
     stop: pauseTimer,
-    isRunning: isPollingAllowed,
+    isRunning: isAllowed,
     getProgress,
     cleanup() {
       pauseTimer();
       stopProgressLoop();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisChange);
     },
   };
 }
+
