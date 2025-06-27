@@ -2,9 +2,6 @@ import * as constants from '@/helpers/constants';
 // import * as utils from '@/helpers/utils';
 
 export function getDatabaseName() {
-  // const userName = await utils.getLastfmUserName();
-  // if (!userName) constants.RYM_DB_NAME;
-  // return `${constants.RYM_DB_NAME}_${userName}`;
   return constants.RYM_DB_NAME;
 }
 
@@ -14,7 +11,7 @@ interface GetRecordResult {
 }
 
 export async function getRecord(id: string | number): Promise<GetRecordResult | undefined> {
-  const dbName = await getDatabaseName();
+  const dbName = getDatabaseName();
   const storeName = getStoreName();
 
   return new Promise<GetRecordResult | undefined>((resolve, reject) => {
@@ -47,7 +44,7 @@ export async function getRecord(id: string | number): Promise<GetRecordResult | 
 }
 
 export async function getAllRecords(): Promise<IRYMRecordDB[]> {
-  const dbName = await getDatabaseName();
+  const dbName = getDatabaseName();
   const storeName = getStoreName();
 
   console.log(`[getAllRecords] DB Name: ${dbName}, Version: ${constants.RYM_DB_VERSION}`);
@@ -101,7 +98,7 @@ export async function getRecords(
   ids: Array<string | number>,
   asObject: boolean = false
 ): Promise<Array<GetRecordResult | undefined> | Record<string | number, GetRecordResult>> {
-  const dbName = await getDatabaseName();
+  const dbName = getDatabaseName();
   const storeName = getStoreName();
 
   return new Promise<Array<GetRecordResult | undefined> | Record<string | number, GetRecordResult>>((resolve, reject) => {
@@ -147,7 +144,7 @@ export async function getRecords(
 }
 
 export async function addRecord(payload: IRYMRecordDB) {
-  const dbName = await getDatabaseName();
+  const dbName = getDatabaseName();
   const storeName = getStoreName();
 
   console.log(`[addRecord] DB Name: ${dbName}, Version: ${constants.RYM_DB_VERSION}`);
@@ -183,7 +180,7 @@ export async function addRecord(payload: IRYMRecordDB) {
 }
 
 export async function updateRecord(id: string, payload: Partial<IRYMRecordDB>) {
-  const dbName = await getDatabaseName();
+  const dbName = getDatabaseName();
   const storeName = getStoreName();
 
   console.log(`[updateRecord] DB Name: ${dbName}, Version: ${constants.RYM_DB_VERSION}`);
@@ -236,7 +233,7 @@ export async function updateRecordRating(id: string, rating: number) {
 }
 
 export async function deleteRecord(id: string) {
-  const dbName = await getDatabaseName();
+  const dbName = getDatabaseName();
   const storeName = getStoreName();
 
   return new Promise((resolve, reject) => {
@@ -269,7 +266,7 @@ function getStoreName() {
 }
 
 export async function initDatabase() {
-  const dbName = await getDatabaseName();
+  const dbName = getDatabaseName();
   const storeName = getStoreName();
   const version = constants.RYM_DB_VERSION;
 
@@ -301,7 +298,7 @@ export async function initDatabase() {
 }
 
 export async function setRecords(payload: IRYMRecordDB[]): Promise<true> {
-  const dbName = await getDatabaseName();
+  const dbName = getDatabaseName();
   const storeName = getStoreName();
   const version = constants.RYM_DB_VERSION;
 

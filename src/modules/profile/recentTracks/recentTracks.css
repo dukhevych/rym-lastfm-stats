@@ -56,6 +56,8 @@
 
 [data-element="rymstats-track-artist-link"],
 [data-element="rymstats-track-link"] {
+  font-weight: bold;
+
   &:hover { text-decoration: underline; }
 }
 
@@ -789,4 +791,14 @@ html[data-scheme="dark"] {
   &.is-fetching {
     animation: progress-animation 1.5s linear infinite;
   }
+}
+
+.rymstats-rym-sync-hint {
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.rymstats-rym-sync-hint-icon {
+  cursor: help;
 }

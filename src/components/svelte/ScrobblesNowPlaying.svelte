@@ -59,6 +59,17 @@
             >
               {formatsLabel()}
             </div>
+            {#if !isRymSynced}
+              <span
+                class="rymstats-rym-sync-hint-icon"
+                title="Some ratings may not be available until RYM sync is run"
+              >⚠️</span>
+              <a
+                href="https://rateyourmusic.com/music_export?sync"
+                target="_blank"
+                class="rymstats-rym-sync-hint"
+              >Run RYM sync</a>
+            {/if}
           {:else}
             {userName}
           {/if}
@@ -126,6 +137,8 @@
         class="btn-lastfm btn blue_btn btn_small"
         data-element="rymstats-lastfm-button"
         aria-label="Toggle scrobbles list"
+        style={`--progress: ${pollingProgressAngle()}deg`}
+        class:is-fetching={pollingProgress >= 1}
         onclick={onToggleScrobblesHistory}
       >
         <svg viewBox="0 0 24 24">
@@ -179,16 +192,20 @@ const {
   track,
   config,
   userName,
+  isRymSynced,
   isScrobblesHistoryPinned,
   onToggleScrobblesHistory,
   onToggleScrobblesHistoryPinned,
+  pollingProgress,
 } = $props<{
   track: TrackDataNormalized;
   config: ProfileOptions;
   userName: string;
+  isRymSynced: boolean;
   isScrobblesHistoryPinned: boolean;
   onToggleScrobblesHistory: () => void;
   onToggleScrobblesHistoryPinned: () => void;
+  pollingProgress: number;
 }>();
 
 let albumsFromDB: IRYMRecordDBMatch[] = $state([]);
@@ -197,6 +214,10 @@ let bgOption = $state(config.recentTracksBackground);
 
 // COMPUTED
 const _track = $derived(() => track ? track : {});
+
+const pollingProgressAngle = $derived(() => {
+  return Math.trunc(pollingProgress * 360);
+});
 
 const containerClasses = $derived(() => {
   const classes = ['profile_listening_container'];

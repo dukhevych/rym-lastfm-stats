@@ -1,6 +1,9 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+import { onDestroy } from 'svelte';
+import { usePolling } from '@/composables/usePolling';
+
 import ScrobblesHistory from './ScrobblesHIstory.svelte';
 import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 import errorMessages from '@/modules/profile/recentTracks/errorMessages.json';
@@ -9,9 +12,12 @@ import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import * as api from '@/api';
 
+const polling = usePolling(loadRecentTracks, constants.RECENT_TRACKS_INTERVAL_MS, true);
+const { progress } = polling;
+
 const { config, rymSyncTimestamp = null, userName } = $props<{
   config: ProfileOptions;
-  rymSyncTimestamp?: number | null;
+  rymSyncTimestamp: number | null;
   userName: string;
 }>();
 
@@ -24,6 +30,9 @@ let colors: VibrantUiColors | null = $state(null);
 let isLoaded: boolean = $state(false);
 let recentTracks = $state<TrackDataNormalized[]>([]);
 let recentTracksTimestamp = $state<number>(0);
+let intervalId: ReturnType<typeof setInterval> | null = $state(null);
+let lastTick: number = $state(0);
+let progressLoopActive: boolean = $state(false);
 
 const nowPlayingTrack = $derived(() => recentTracks[0]);
 const tracksHistory = $derived(() => recentTracks[0]?.nowPlaying ? recentTracks.slice(1) : recentTracks);
@@ -58,12 +67,43 @@ const init = async () => {
     await loadRecentTracks();
   }
 
-  if (document.visibilityState === 'visible') {
-    // INIT POLLING
-  }
-
   isLoaded = true;
+
+  polling.start();
 }
+
+onDestroy(() => {
+  polling.cleanup();
+});
+
+let pollingProgress = $state(0);
+
+function startProgressLoop() {
+  if (progressLoopActive) return;
+  progressLoopActive = true;
+
+  const loop = () => {
+    if (!progressLoopActive) return;
+    if (!lastTick) return 0;
+    const elapsed = Date.now() - lastTick;
+    pollingProgress = Math.min(elapsed / constants.RECENT_TRACKS_INTERVAL_MS, 1);
+    requestAnimationFrame(loop);
+  };
+
+  requestAnimationFrame(loop);
+}
+
+function startInterval() {
+  if (!intervalId) {
+    lastTick = Date.now();
+    intervalId = setInterval(async () => {
+      await loadRecentTracks();
+      lastTick = Date.now();
+    }, constants.RECENT_TRACKS_INTERVAL_MS);
+
+    startProgressLoop();
+  }
+};
 
 async function trySetColorsFromTrack(track: TrackDataNormalized | undefined) {
   const coverUrl = track?.coverExtraLargeUrl;
@@ -91,14 +131,12 @@ async function loadRecentTracks() {
     });
 
     const { recenttracks: { track: data } } = recentTracksResponse;
-
     const timestamp = Date.now();
-
     const normalizedData = data.map(utils.normalizeLastFmTrack);
 
+    colors = await trySetColorsFromTrack(normalizedData[0]);
     recentTracks = normalizedData;
     recentTracksTimestamp = timestamp;
-    colors = await trySetColorsFromTrack(normalizedData[0]);
 
     await utils.storageSet({
       recentTracksCache: {
@@ -115,36 +153,7 @@ async function loadRecentTracks() {
   }
 };
 
-type CSSVarName = `--${string}`;
-
-const colorsMap = $derived(() => colors ? getColorsMap(colors) : {});
-
-function getColorsMap(colors: VibrantUiColors) {
-  const result: Record<CSSVarName, string> = {
-    '--clr-light-bg': colors.light.bgColor,
-    '--clr-light-bg-contrast': colors.light.bgColorContrast,
-    '--clr-light-accent': colors.light.accentColor,
-    '--clr-light-accent-contrast': colors.light.accentColorContrast,
-    '--clr-dark-bg': colors.dark.bgColor,
-    '--clr-dark-bg-contrast': colors.dark.bgColorContrast,
-    '--clr-dark-accent': colors.dark.accentColor,
-    '--clr-dark-accent-contrast': colors.dark.accentColorContrast,
-    '--clr-light-accent-hue': String(Math.trunc(colors.light.accentColorHSL[0] * 360)),
-    '--clr-light-accent-saturation': (colors.light.accentColorHSL[1] * 100).toFixed(2),
-    '--clr-light-accent-lightness': (colors.light.accentColorHSL[2] * 100).toFixed(2),
-    '--clr-dark-accent-hue': String(Math.trunc(colors.dark.accentColorHSL[0] * 360)),
-    '--clr-dark-accent-saturation': (colors.dark.accentColorHSL[1] * 100).toFixed(2),
-    '--clr-dark-accent-lightness': (colors.dark.accentColorHSL[2] * 100).toFixed(2),
-  };
-
-  Object.keys(colors.palette).forEach((key) => {
-    if (colors.palette[key]?.rgb) {
-      result[`--clr-palette-${key.toLowerCase()}`] = utils.rgbToHex(colors.palette[key].rgb);
-    }
-  });
-
-  return result;
-}
+const colorsMap = $derived(() => colors ? utils.getColorsMap(colors) : {});
 
 let rootTarget: HTMLElement | null = null;
 
@@ -181,12 +190,15 @@ init();
 {#if !failedToFetch}
 <ScrobblesNowPlaying
   track={nowPlayingTrack()}
-  userName={userName}
   config={config}
+  userName={userName}
+  isRymSynced={rymSyncTimestamp !== null}
   isScrobblesHistoryPinned={isScrobblesHistoryPinned}
   onToggleScrobblesHistory={onToggleScrobblesHistory}
   onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
+  pollingProgress={$progress}
 />
+{$progress}
 <ScrobblesHistory
   scrobbles={tracksHistory()}
   timestamp={recentTracksTimestamp}

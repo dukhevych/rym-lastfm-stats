@@ -1103,3 +1103,32 @@ export function rgbToHex([r, g, b]: [number, number, number]): string {
 
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
+
+type CSSVarName = `--${string}`;
+
+export function getColorsMap(colors: VibrantUiColors) {
+  const result: Record<CSSVarName, string> = {
+    '--clr-light-bg': colors.light.bgColor,
+    '--clr-light-bg-contrast': colors.light.bgColorContrast,
+    '--clr-light-accent': colors.light.accentColor,
+    '--clr-light-accent-contrast': colors.light.accentColorContrast,
+    '--clr-dark-bg': colors.dark.bgColor,
+    '--clr-dark-bg-contrast': colors.dark.bgColorContrast,
+    '--clr-dark-accent': colors.dark.accentColor,
+    '--clr-dark-accent-contrast': colors.dark.accentColorContrast,
+    '--clr-light-accent-hue': String(Math.trunc(colors.light.accentColorHSL[0] * 360)),
+    '--clr-light-accent-saturation': (colors.light.accentColorHSL[1] * 100).toFixed(2),
+    '--clr-light-accent-lightness': (colors.light.accentColorHSL[2] * 100).toFixed(2),
+    '--clr-dark-accent-hue': String(Math.trunc(colors.dark.accentColorHSL[0] * 360)),
+    '--clr-dark-accent-saturation': (colors.dark.accentColorHSL[1] * 100).toFixed(2),
+    '--clr-dark-accent-lightness': (colors.dark.accentColorHSL[2] * 100).toFixed(2),
+  };
+
+  Object.keys(colors.palette).forEach((key) => {
+    if (colors.palette[key]?.rgb) {
+      result[`--clr-palette-${key.toLowerCase()}`] = rgbToHex(colors.palette[key].rgb);
+    }
+  });
+
+  return result;
+}

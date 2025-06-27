@@ -686,6 +686,10 @@ async function render(_config: RecentTracksConfig) {
     return;
   }
 
+  if (config.rymPlayHistoryHide) {
+    parent.style.display = 'none';
+  }
+
   const rymSyncTimestamp: number = await utils.storageGet('rymSyncTimestamp', 'local');
 
   // SVELTE START
@@ -702,19 +706,7 @@ async function render(_config: RecentTracksConfig) {
   });
   // SVELTE END
 
-  if (config.rymPlayHistoryHide) {
-    parent.style.display = 'none';
-  }
-
   return;
-
-  prepareRecentTracksUI();
-
-  if (state.failedToFetch) {
-    uiElements.list.tracksWrapper.style.display = 'none';
-    uiElements.list.panelContainer.style.display = 'none';
-    return;
-  }
 
   if (document.visibilityState === 'visible') {
     startInterval();
