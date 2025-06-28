@@ -290,6 +290,7 @@ async function render(config: ProfileOptions) {
           const searchParams = new URLSearchParams(url.search);
           searchParams.delete('page');
           searchParams.set('searchtype', RYMEntityCode.Artist);
+          searchParams.set('searchterm', utils.normalizeForSearch(searchParams.get('enh_artist') || ''));
           const newRelativeUrl = url.pathname + '?' + searchParams.toString();
 
           const searchArtistInsteadLink = h('a', {
