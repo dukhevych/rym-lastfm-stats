@@ -692,13 +692,6 @@ html[data-scheme="dark"] {
   &:active {
     background-color: rgba(0, 0, 0, 0.2);
   }
-/*
-  &.size-lg {
-    svg {
-      width: 24px;
-      height: 24px;
-    }
-  } */
 
   svg {
     width: 100%;
