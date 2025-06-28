@@ -52,6 +52,7 @@ async function handlePeriodChange(
 export async function render(_config: ProfileOptions & { userName?: string }) {
   config = _config;
   if (!config) return;
+
   if (!config.lastfmApiKey) {
     console.warn(
       'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
@@ -59,36 +60,34 @@ export async function render(_config: ProfileOptions & { userName?: string }) {
     return;
   }
 
-  state.userName = config.userName || await utils.getLastfmUserName();
-  if (!state.userName) {
+  const userName = config.userName || await utils.getLastfmUserName();
+  if (!userName) {
     console.warn("No Last.fm username found. Top Albums can't be displayed.");
     return;
   }
 
-  initUI();
+  // let initialPeriod = config.topAlbumsPeriod;
 
-  let initialPeriod = config.topAlbumsPeriod;
+  // uiElements.topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
+  //   const period: TopAlbumsPeriod = (event.target as HTMLSelectElement).value as TopAlbumsPeriod;
 
-  uiElements.topAlbumsPeriodSwitcher.addEventListener('change', async (event) => {
-    const period: TopAlbumsPeriod = (event.target as HTMLSelectElement).value as TopAlbumsPeriod;
+  //   uiElements.topAlbumsContainer.classList.add('is-loading');
 
-    uiElements.topAlbumsContainer.classList.add('is-loading');
+  //   await handlePeriodChange(period);
 
-    await handlePeriodChange(period);
+  //   if (period !== initialPeriod) {
+  //     uiElements.topAlbumsPeriodSaveButton.style.display = 'block';
+  //   } else {
+  //     uiElements.topAlbumsPeriodSaveButton.style.display = 'none';
+  //   }
+  // });
 
-    if (period !== initialPeriod) {
-      uiElements.topAlbumsPeriodSaveButton.style.display = 'block';
-    } else {
-      uiElements.topAlbumsPeriodSaveButton.style.display = 'none';
-    }
-  });
+  // const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
+  // icon.classList.add('loader');
 
-  const icon = utils.createSvgUse('svg-loader-symbol', '0 0 300 150');
-  icon.classList.add('loader');
+  // uiElements.topAlbumsContainer.appendChild(icon);
 
-  uiElements.topAlbumsContainer.appendChild(icon);
-
-  insertTopAlbumsIntoDOM();
+  // insertTopAlbumsIntoDOM();
 
   const updateAction = async () => {
     const topAlbumsResponse = await getTopAlbums({

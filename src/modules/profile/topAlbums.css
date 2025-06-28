@@ -170,15 +170,12 @@
   }
 }
 
-#top-albums-period-label::before { content: '('; }
-#top-albums-period-label::after { content: ')'; }
-
 html[data-scheme="light"] {
   .top-albums {
     &::after {
       background: rgba(255,255,255,.5);
     }
-     .album-image::after {
+    .album-image::after {
       background-image: linear-gradient(180deg,transparent 0,rgba(255,255,255,.55) 70%,rgba(255,255,255,.9));
     }
      .album-details {
