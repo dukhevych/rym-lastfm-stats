@@ -5,6 +5,8 @@ import { Vibrant } from "node-vibrant/browser";
 import { MD5 } from 'crypto-js';
 import { remove as removeDiacritics } from 'diacritics';
 import * as constants from './constants';
+import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
+import type { RecentTrack } from '@/api/getRecentTracks';
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
@@ -273,7 +275,7 @@ export function generateSearchUrl({
   let searchterm: string;
 
   if (!query) {
-    return url;
+    return '';
   } else {
     searchterm = encodeURIComponent(normalizeForSearch(query));
     url += '/search?';
@@ -293,6 +295,10 @@ export function generateSearchUrl({
 
   return url;
 };
+
+export function generateSearchHint(params: string[]) {
+  return `Search for "${params.join(' - ')}" on RateYourMusic`;
+}
 
 export function waitForDOMReady() {
   return new Promise((resolve) => {
@@ -351,6 +357,10 @@ import playlistSvg from '@/assets/icons/playlist.svg?raw';
 import volumeSvg from '@/assets/icons/volume.svg?raw';
 import brushSvg from '@/assets/icons/brush.svg?raw';
 import closeSvg from '@/assets/icons/close.svg?raw';
+import lockSvg from '@/assets/icons/lock.svg?raw';
+import unlockSvg from '@/assets/icons/unlock.svg?raw';
+import pollingStartSvg from '@/assets/icons/polling-start.svg?raw';
+import pollingStopSvg from '@/assets/icons/polling-stop.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 
@@ -371,6 +381,10 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(volumeSvg, 'svg-volume-symbol');
   addIconToSVGSprite(brushSvg, 'svg-brush-symbol');
   addIconToSVGSprite(closeSvg, 'svg-close-symbol');
+  addIconToSVGSprite(lockSvg, 'svg-lock-symbol');
+  addIconToSVGSprite(unlockSvg, 'svg-unlock-symbol');
+  addIconToSVGSprite(pollingStartSvg, 'svg-polling-start-symbol');
+  addIconToSVGSprite(pollingStopSvg, 'svg-polling-stop-symbol');
 
   return svgSprite;
 }
@@ -566,39 +580,6 @@ export function getContrastingColor(
   };
 
   return relativeLuminance(r, g, b) > 0.179 ? darkColor : lightColor;
-}
-
-export interface VibrantSwatch {
-  hex: string;
-  hsl: [number, number, number];
-  rgb: [number, number, number];
-  population: number;
-  bodyTextColor?: string;
-  titleTextColor?: string;
-}
-
-export interface VibrantPalette {
-  Vibrant?: VibrantSwatch;
-  Muted?: VibrantSwatch;
-  DarkVibrant?: VibrantSwatch;
-  DarkMuted?: VibrantSwatch;
-  LightVibrant?: VibrantSwatch;
-  LightMuted?: VibrantSwatch;
-  [key: string]: VibrantSwatch | undefined;
-}
-
-export interface VibrantUiColorSet {
-  bgColor: string;
-  accentColor: string;
-  accentColorHSL: [number, number, number];
-  readonly bgColorContrast: string;
-  readonly accentColorContrast: string;
-}
-
-export interface VibrantUiColors {
-  light: VibrantUiColorSet;
-  dark: VibrantUiColorSet;
-  palette: VibrantPalette;
 }
 
 export async function getVibrantUiColors(palette: VibrantPalette): Promise<VibrantUiColors> {
@@ -1105,4 +1086,53 @@ export function removeArtistNameBrackets(artistName: string) {
 
 export async function restartBackground() {
   await browser.runtime.sendMessage({ type: 'RESTART_BACKGROUND' });
+}
+
+export function normalizeLastFmTrack(track: RecentTrack): TrackDataNormalized {
+  return {
+    nowPlaying: track["@attr"]?.nowplaying === 'true',
+    coverUrl: track.image[0]['#text'],
+    coverLargeUrl: track.image[3]['#text'],
+    coverExtraLargeUrl: track.image[track.image.length - 1]['#text'],
+    trackName: track.name,
+    timestamp: track.date?.uts ? Number(track.date.uts) : null,
+    albumName: track.album['#text'],
+    artistName: track.artist['#text'],
+  }
+}
+
+export function rgbToHex([r, g, b]: [number, number, number]): string {
+  const clamp = (val: number) => Math.max(0, Math.min(255, Math.trunc(val)));
+  const toHex = (val: number) => clamp(val).toString(16).padStart(2, '0');
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+type CSSVarName = `--${string}`;
+
+export function getColorsMap(colors: VibrantUiColors) {
+  const result: Record<CSSVarName, string> = {
+    '--clr-light-bg': colors.light.bgColor,
+    '--clr-light-bg-contrast': colors.light.bgColorContrast,
+    '--clr-light-accent': colors.light.accentColor,
+    '--clr-light-accent-contrast': colors.light.accentColorContrast,
+    '--clr-dark-bg': colors.dark.bgColor,
+    '--clr-dark-bg-contrast': colors.dark.bgColorContrast,
+    '--clr-dark-accent': colors.dark.accentColor,
+    '--clr-dark-accent-contrast': colors.dark.accentColorContrast,
+    '--clr-light-accent-hue': String(Math.trunc(colors.light.accentColorHSL[0] * 360)),
+    '--clr-light-accent-saturation': (colors.light.accentColorHSL[1] * 100).toFixed(2),
+    '--clr-light-accent-lightness': (colors.light.accentColorHSL[2] * 100).toFixed(2),
+    '--clr-dark-accent-hue': String(Math.trunc(colors.dark.accentColorHSL[0] * 360)),
+    '--clr-dark-accent-saturation': (colors.dark.accentColorHSL[1] * 100).toFixed(2),
+    '--clr-dark-accent-lightness': (colors.dark.accentColorHSL[2] * 100).toFixed(2),
+  };
+
+  Object.keys(colors.palette).forEach((key) => {
+    if (colors.palette[key]?.rgb) {
+      result[`--clr-palette-${key.toLowerCase()}`] = rgbToHex(colors.palette[key].rgb);
+    }
+  });
+
+  return result;
 }

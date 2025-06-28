@@ -56,40 +56,15 @@
 
 [data-element="rymstats-track-artist-link"],
 [data-element="rymstats-track-link"] {
+  font-weight: bold;
+
   &:hover { text-decoration: underline; }
 }
 
 [data-element="rymstats-track-item"] {
   padding-top: 0;
-  left: -9999px;
-  right: -9999px;
   position: relative;
   align-items: center;
-  opacity: 0;
-  transform: translateX(-20px);
-  transition: all .15s ease-in-out;
-  transition-property: opacity, transform;
-
-  &.is-loaded {
-    left: auto;
-    right: auto;
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  & + .loader {
-    position: absolute;
-    top: 50%;
-    left: 15px;
-    transform: translateY(-50%);
-    width: 45px;
-    height: 45px;
-    color: var(--clr-lastfm);
-  }
-
-  &.is-loaded + .loader {
-    display: none;
-  }
 
   [data-element="rymstats-track-artbox"] {
     max-width: none;
@@ -399,6 +374,45 @@ html[data-scheme="light"] {
   margin-top: .4em;
   margin-bottom: .4em;
 
+  & > *:not(.loader, .btn-bg-switcher) {
+    left: -9999px;
+    right: -9999px;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all .15s ease-in-out;
+    transition-property: opacity, transform;
+  }
+
+  & > .loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    aspect-ratio: 1 / 1;
+    height: 100%;
+    color: var(--clr-lastfm);
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &.is-loaded {
+    & > *:not(.loader, .btn-bg-switcher) {
+      left: auto;
+      right: auto;
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  &.is-loaded {
+    & > .loader {
+      display: none;
+    }
+  }
+
   &:before {
     content: '';
     position: absolute;
@@ -655,7 +669,7 @@ html[data-scheme="dark"] {
   }
 }
 
-.btn-lastfm-lock {
+.btn-toggle-icon {
   display: inline-block;
   border: none;
   background: none;
@@ -666,16 +680,22 @@ html[data-scheme="dark"] {
   color: currentColor;
   opacity: 0.75;
   padding: 10px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   transition: background-color 0.3s ease-out, color 0.3s ease-out;
+
+  &.size-lg {
+    padding: 5px;
+  }
 
   &:active {
     background-color: rgba(0, 0, 0, 0.2);
   }
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 100%;
+    height: 100%;
 
     &:first-child {
       display: block;
@@ -686,7 +706,7 @@ html[data-scheme="dark"] {
     }
   }
 
-  &.is-locked {
+  &.is-active {
     svg {
       &:first-child {
         display: none;
@@ -776,5 +796,49 @@ html[data-scheme="dark"] {
 
   &.is-fetching {
     animation: progress-animation 1.5s linear infinite;
+  }
+}
+
+.rymstats-rym-sync-hint {
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.rymstats-rym-sync-hint-icon {
+  cursor: help;
+}
+
+.profile_view_play_history_btn_group {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+
+  @media (pointer: fine) and (hover: hover) {
+    .btn-toggle-history-pinned,
+    .btn-toggle-polling {
+      position: relative;
+      opacity: 0;
+      transition-duration: 0.15s;
+      transition-property: opacity, transform;
+    }
+
+    .btn-toggle-history-pinned {
+      transform: translateY(10px);
+    }
+
+    .btn-toggle-polling {
+      transform: translateY(-10px);
+    }
+
+    &:hover {
+      .btn-toggle-history-pinned,
+      .btn-toggle-polling {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   }
 }

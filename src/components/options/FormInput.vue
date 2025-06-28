@@ -17,7 +17,10 @@
           disabled:cursor-not-allowed disabled:opacity-50
           dark:bg-gray-800
         "
-        :class="{'pr-10': props.clearable}"
+        :class="[
+          {'pr-10': props.clearable},
+          props.inputClass
+        ]"
         :value="props.modelValue"
         type="text"
         :name="props.name"
@@ -109,6 +112,10 @@ const props = defineProps({
   clearable: {
     type: Boolean,
     default: false
+  },
+  inputClass: {
+    type: [String, Array, Object],
+    default: ''
   }
 });
 

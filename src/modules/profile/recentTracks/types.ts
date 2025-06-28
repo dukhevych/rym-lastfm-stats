@@ -1,4 +1,4 @@
-export interface UIElements {
+export interface UIPlayHistory {
   item: HTMLElement;
   artbox: HTMLElement;
   infobox: HTMLElement;
@@ -37,10 +37,4 @@ export interface TrackDataNormalized {
   nowPlaying: boolean;
   timestamp: number | null;
   trackName: string;
-}
-
-export interface PlayHistoryData extends TrackDataNormalized {
-  albumUrl: string;
-  artistUrl: string;
-  trackUrl: string;
 }

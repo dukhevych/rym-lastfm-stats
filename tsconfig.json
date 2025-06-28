@@ -20,6 +20,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
     "types": [
       "node",
       "firefox-webext-browser"

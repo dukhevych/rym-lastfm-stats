@@ -91,8 +91,10 @@ export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
 export const PROFILE_OPTIONS_DEFAULT = {
   recentTracks: true,
+  recentTracksHistory: true,
   recentTracksShowOnLoad: false,
   recentTracksBackground: 1,
+  recentTracksPollingEnabled: true,
   rymPlayHistoryHide: false,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
   topArtists: true,
