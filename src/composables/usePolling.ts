@@ -1,53 +1,81 @@
-// usePolling.ts
 import { writable, type Writable } from 'svelte/store';
-import { createAccuratePolling } from '@/helpers/polling';
+import { createAccuratePolling, type PollingController } from '@/helpers/polling';
 
 export function usePolling(
-  fn: (signal?: AbortSignal) => void | Promise<void>,
+  callback: (signal?: AbortSignal) => void | Promise<void>,
   interval = 15000,
-  enableAbort = true
+  enableAbort = true,
+  continueInBackground = false
 ) {
   const progress: Writable<number> = writable(0);
+  const isRunning: Writable<boolean> = writable(false);
 
-  const polling = createAccuratePolling(fn, {
+  const controller: PollingController = createAccuratePolling(callback, {
     interval,
     enableAbort,
+    continueInBackground,
   });
 
-  // Watch progress in real-time
   let rafId: number = 0;
+  let isWatching = false;
 
-  function startProgressWatcher() {
-    cancelAnimationFrame(rafId);
+  function startProgressWatcher(): void {
+    if (isWatching) return;
+    isWatching = true;
 
-    const loop = () => {
-      progress.set(polling.getProgress());
-      rafId = requestAnimationFrame(loop);
+    const updateProgress = () => {
+      if (!isWatching) return;
+
+      progress.set(controller.getProgress());
+      isRunning.set(controller.isRunning());
+
+      rafId = requestAnimationFrame(updateProgress);
     };
 
-    loop();
+    updateProgress();
   }
 
-  function stopProgressWatcher() {
-    cancelAnimationFrame(rafId);
+  function stopProgressWatcher(): void {
+    isWatching = false;
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
   }
 
   return {
+    // Core controls
     start() {
-      polling.start();
+      controller.start();
       startProgressWatcher();
     },
-    pause: polling.pauseManual,
-    resume: polling.resumeManual,
+
+    pause() {
+      controller.pause();
+    },
+
+    resume() {
+      controller.resume();
+    },
+
     stop() {
-      polling.stop();
+      controller.stop();
       stopProgressWatcher();
+      progress.set(0);
+      isRunning.set(false);
     },
-    isRunning: polling.isRunning,
-    progress,
+
     cleanup() {
-      polling.cleanup();
+      controller.cleanup();
       stopProgressWatcher();
     },
+
+    // Reactive stores
+    progress,
+    isRunning,
+
+    // Getters for one-time values
+    getProgress: () => controller.getProgress(),
+    getIsRunning: () => controller.isRunning(),
   };
 }

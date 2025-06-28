@@ -94,6 +94,7 @@ export const PROFILE_OPTIONS_DEFAULT = {
   recentTracksHistory: true,
   recentTracksShowOnLoad: false,
   recentTracksBackground: 1,
+  recentTracksPollingEnabled: true,
   rymPlayHistoryHide: false,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
   topArtists: true,

@@ -3,173 +3,252 @@ type PollingCallback = (signal?: AbortSignal) => void | Promise<void>;
 interface PollingOptions {
   interval?: number;
   enableAbort?: boolean;
+  continueInBackground?: boolean;
 }
 
 export interface PollingController {
   start: () => void;
-  pauseManual: () => void;
-  resumeManual: () => void;
+  pause: () => void;
+  resume: () => void;
   stop: () => void;
   isRunning: () => boolean;
   cleanup: () => void;
   getProgress: () => number;
 }
 
+enum PollingState {
+  STOPPED = 'stopped',
+  RUNNING = 'running',
+  PAUSED = 'paused',
+  EXECUTING = 'executing',
+  READY_TO_EXECUTE = 'ready_to_execute'
+}
+
 export function createAccuratePolling(
-  fn: PollingCallback,
+  callback: PollingCallback,
   options: PollingOptions = {}
 ): PollingController {
-  const { interval = 15000, enableAbort = false } = options;
+  const { interval = 15000, enableAbort = false, continueInBackground = false } = options;
 
-  let pollingProgress = 0;
-  let progressLoopActive = false;
-  let rafId: number = 0;
-
+  let state = PollingState.STOPPED;
   let timerId: ReturnType<typeof setTimeout> | null = null;
+  let abortController: AbortController | null = null;
+
+  // Progress tracking
+  let progressStartTime = 0;
+  let progressDuration = interval;
+  let pausedProgress = 0;
+
+  // Visibility tracking
+  let isTabVisible = document.visibilityState === 'visible';
   let isManuallyPaused = false;
-  let isTabVisible = true;
 
-  let lastStartTime = 0;
-  let remainingTime = interval;
+  function shouldPoll(): boolean {
+    return !isManuallyPaused && (continueInBackground || isTabVisible);
+  }
 
-  let controller: AbortController | null = null;
-
-  function isPollingAllowed(): boolean {
+  function shouldExecute(): boolean {
     return !isManuallyPaused && isTabVisible;
   }
 
   function getProgress(): number {
-    return pollingProgress;
+    if (state === PollingState.STOPPED) return 0;
+    if (state === PollingState.EXECUTING) return 1;
+    if (state === PollingState.PAUSED) return pausedProgress;
+    if (state === PollingState.READY_TO_EXECUTE) return 1;
+
+    // Calculate current progress for running state
+    const elapsed = Date.now() - progressStartTime;
+    return Math.min(elapsed / progressDuration, 1);
   }
 
-  function startProgressLoop(): void {
-    if (progressLoopActive) return;
-    progressLoopActive = true;
-
-    const loop = () => {
-      if (!progressLoopActive) return;
-      const now = Date.now();
-      const elapsed = now - lastStartTime;
-      pollingProgress = Math.min(elapsed / interval, 1);
-      rafId = requestAnimationFrame(loop);
-    };
-
-    loop();
-  }
-
-  function stopProgressLoop(): void {
-    progressLoopActive = false;
-    cancelAnimationFrame(rafId);
-  }
-
-  function scheduleNextPoll(delay: number): void {
-    lastStartTime = Date.now();
-    remainingTime = delay;
-    pollingProgress = 0;
-    startProgressLoop();
-    timerId = setTimeout(poll, delay);
-  }
-
-  async function poll(): Promise<void> {
-    if (!isPollingAllowed()) return;
-
-    stopProgressLoop();
-    pollingProgress = 1; // optional: show full bar during execution
-
-    if (enableAbort) {
-      controller = new AbortController();
-    }
-
-    try {
-      await fn(enableAbort && controller ? controller.signal : undefined);
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "AbortError") {
-        console.warn("[polling] Aborted async fn due to visibility change");
-      } else {
-        console.error("[polling] fn error:", e);
-      }
-    } finally {
-      controller = null;
-      if (isPollingAllowed()) {
-        scheduleNextPoll(interval);
-      }
-    }
-  }
-
-  function pauseTimer(): void {
+  function clearTimer(): void {
     if (timerId) {
       clearTimeout(timerId);
       timerId = null;
-      const elapsed = Date.now() - lastStartTime;
-      remainingTime = Math.max(interval - elapsed, 0);
-    }
-
-    if (enableAbort && controller) {
-      controller.abort();
-    }
-
-    stopProgressLoop();
-  }
-
-  function resumeTimer(): void {
-    if (remainingTime <= 0) {
-      void poll();
-    } else {
-      scheduleNextPoll(remainingTime);
     }
   }
 
-  function pauseManual(): void {
-    isManuallyPaused = true;
-    pauseTimer();
+  function abortExecution(): void {
+    if (enableAbort && abortController) {
+      abortController.abort();
+      abortController = null;
+    }
   }
 
-  function resumeManual(): void {
-    isManuallyPaused = false;
-    if (isTabVisible) resumeTimer();
-  }
+  async function executeCallback(): Promise<void> {
+    if (!shouldExecute()) {
+      // Timer finished but we can't execute yet - wait for tab to become visible
+      state = PollingState.READY_TO_EXECUTE;
+      return;
+    }
 
-  function handleVisibilityChange(): void {
-    isTabVisible = document.visibilityState === "visible";
-    if (!isManuallyPaused) {
-      if (isTabVisible) {
-        resumeTimer();
+    state = PollingState.EXECUTING;
+
+    if (enableAbort) {
+      abortController = new AbortController();
+    }
+
+    try {
+      await callback(enableAbort ? abortController?.signal : undefined);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.warn('[Polling] Execution aborted');
       } else {
-        pauseTimer();
+        console.error('[Polling] Callback error:', error);
+      }
+    } finally {
+      abortController = null;
+
+      // Only continue if we're still supposed to be running
+      if ((state === PollingState.EXECUTING) && shouldPoll()) {
+        scheduleNext();
+      } else if (state === PollingState.EXECUTING) {
+        // We were paused/stopped during execution
+        state = PollingState.PAUSED;
+        pausedProgress = 0;
       }
     }
   }
 
-  function start(): void {
-    if (timerId !== null) return;
+  function scheduleNext(): void {
+    if (!shouldPoll()) {
+      pauseInternal();
+      return;
+    }
 
-    if (isPollingAllowed()) {
-      scheduleNextPoll(interval);
+    state = PollingState.RUNNING;
+    progressStartTime = Date.now();
+    progressDuration = interval;
+    pausedProgress = 0;
+
+    timerId = setTimeout(() => {
+      executeCallback();
+    }, interval);
+  }
+
+  function pauseInternal(): void {
+    if (state === PollingState.STOPPED || state === PollingState.PAUSED) return;
+
+    clearTimer();
+    abortExecution();
+
+    // Save progress if we were running
+    if (state === PollingState.RUNNING) {
+      const elapsed = Date.now() - progressStartTime;
+      pausedProgress = Math.min(elapsed / progressDuration, 1);
+    } else if (state === PollingState.READY_TO_EXECUTE) {
+      // Keep progress at 100% when ready to execute
+      pausedProgress = 1;
+    }
+
+    state = PollingState.PAUSED;
+  }
+
+  function resumeInternal(): void {
+    if (state !== PollingState.PAUSED && state !== PollingState.READY_TO_EXECUTE) return;
+    if (!shouldPoll()) return;
+
+    // If we were ready to execute, do it immediately
+    if (state === PollingState.READY_TO_EXECUTE || pausedProgress >= 1) {
+      executeCallback();
+      return;
+    }
+
+    // Calculate remaining time based on saved progress
+    const remainingTime = Math.max((1 - pausedProgress) * interval, 0);
+
+    if (remainingTime <= 0) {
+      executeCallback();
     } else {
-      const onVisible = () => {
-        if (isPollingAllowed() && timerId === null) {
-          void poll();
-        }
-        document.removeEventListener("visibilitychange", onVisible);
-      };
+      // Resume with remaining time
+      state = PollingState.RUNNING;
+      progressStartTime = Date.now() - (pausedProgress * interval);
+      progressDuration = interval;
 
-      document.addEventListener("visibilitychange", onVisible);
+      timerId = setTimeout(() => {
+        executeCallback();
+      }, remainingTime);
     }
   }
 
-  document.addEventListener("visibilitychange", handleVisibilityChange);
+  function handleVisibilityChange(): void {
+    const wasVisible = isTabVisible;
+    isTabVisible = document.visibilityState === 'visible';
+
+    // Only act if visibility actually changed and we're not manually paused
+    if (wasVisible === isTabVisible || isManuallyPaused) return;
+
+    if (isTabVisible) {
+      // If we were ready to execute, do it now
+      if (state === PollingState.READY_TO_EXECUTE) {
+        executeCallback();
+      } else if (!continueInBackground) {
+        // Only resume if we don't continue in background
+        resumeInternal();
+      }
+    } else {
+      // Tab became inactive
+      if (!continueInBackground) {
+        pauseInternal();
+      }
+      // If continueInBackground is true, we let the timer continue running
+    }
+  }
+
+  // Public API
+  function start(): void {
+    if (state !== PollingState.STOPPED) return;
+
+    isManuallyPaused = false;
+
+    if (shouldPoll()) {
+      scheduleNext();
+    } else {
+      state = PollingState.PAUSED;
+      pausedProgress = 0;
+    }
+  }
+
+  function pause(): void {
+    isManuallyPaused = true;
+    pauseInternal();
+  }
+
+  function resume(): void {
+    isManuallyPaused = false;
+    resumeInternal();
+  }
+
+  function stop(): void {
+    clearTimer();
+    abortExecution();
+    state = PollingState.STOPPED;
+    pausedProgress = 0;
+    isManuallyPaused = false;
+  }
+
+  function isRunning(): boolean {
+    return state === PollingState.RUNNING ||
+           state === PollingState.EXECUTING ||
+           state === PollingState.READY_TO_EXECUTE;
+  }
+
+  function cleanup(): void {
+    stop();
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }
+
+  // Set up event listeners
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 
   return {
     start,
-    pauseManual,
-    resumeManual,
-    stop: pauseTimer,
-    isRunning: isPollingAllowed,
+    pause,
+    resume,
+    stop,
+    isRunning,
     getProgress,
-    cleanup() {
-      pauseTimer();
-      stopProgressLoop();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    },
+    cleanup
   };
 }

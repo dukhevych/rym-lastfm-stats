@@ -12,7 +12,7 @@ import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import * as api from '@/api';
 
-const polling = usePolling(loadRecentTracks, constants.RECENT_TRACKS_INTERVAL_MS, true);
+const polling = usePolling(loadRecentTracks, constants.RECENT_TRACKS_INTERVAL_MS, true, true);
 const { progress } = polling;
 
 const { config, rymSyncTimestamp = null, userName } = $props<{
@@ -21,8 +21,11 @@ const { config, rymSyncTimestamp = null, userName } = $props<{
   userName: string;
 }>();
 
+console.log('config', config);
+
 let isScrobblesHistoryOpen: boolean = $state(config.recentTracksShowOnLoad);
 let isScrobblesHistoryPinned: boolean = $state(config.recentTracksShowOnLoad);
+let isScrobblesPollingEnabled: boolean = $state(config.recentTracksPollingEnabled);
 
 let abortController: AbortController = new AbortController();
 let failedToFetch: boolean = $state(false);
@@ -30,9 +33,6 @@ let colors: VibrantUiColors | null = $state(null);
 let isLoaded: boolean = $state(false);
 let recentTracks = $state<TrackDataNormalized[]>([]);
 let recentTracksTimestamp = $state<number>(0);
-let intervalId: ReturnType<typeof setInterval> | null = $state(null);
-let lastTick: number = $state(0);
-let progressLoopActive: boolean = $state(false);
 
 const nowPlayingTrack = $derived(() => recentTracks[0]);
 const tracksHistory = $derived(() => recentTracks[0]?.nowPlaying ? recentTracks.slice(1) : recentTracks);
@@ -69,41 +69,30 @@ const init = async () => {
 
   isLoaded = true;
 
-  polling.start();
+  console.log('isScrobblesPollingEnabled', isScrobblesPollingEnabled);
+
+  if (isScrobblesPollingEnabled) {
+    polling.start();
+  }
+}
+
+async function onPollingToggle() {
+  isScrobblesPollingEnabled = !isScrobblesPollingEnabled;
+
+  await utils.storageSet({
+    recentTracksPollingEnabled: isScrobblesPollingEnabled,
+  });
+
+  if (isScrobblesPollingEnabled) {
+    polling.start();
+  } else {
+    polling.stop();
+  }
 }
 
 onDestroy(() => {
   polling.cleanup();
 });
-
-let pollingProgress = $state(0);
-
-function startProgressLoop() {
-  if (progressLoopActive) return;
-  progressLoopActive = true;
-
-  const loop = () => {
-    if (!progressLoopActive) return;
-    if (!lastTick) return 0;
-    const elapsed = Date.now() - lastTick;
-    pollingProgress = Math.min(elapsed / constants.RECENT_TRACKS_INTERVAL_MS, 1);
-    requestAnimationFrame(loop);
-  };
-
-  requestAnimationFrame(loop);
-}
-
-function startInterval() {
-  if (!intervalId) {
-    lastTick = Date.now();
-    intervalId = setInterval(async () => {
-      await loadRecentTracks();
-      lastTick = Date.now();
-    }, constants.RECENT_TRACKS_INTERVAL_MS);
-
-    startProgressLoop();
-  }
-};
 
 async function trySetColorsFromTrack(track: TrackDataNormalized | undefined) {
   const coverUrl = track?.coverExtraLargeUrl;
@@ -196,9 +185,10 @@ init();
   isScrobblesHistoryPinned={isScrobblesHistoryPinned}
   onToggleScrobblesHistory={onToggleScrobblesHistory}
   onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
+  onPollingToggle={onPollingToggle}
+  isScrobblesPollingEnabled={isScrobblesPollingEnabled}
   pollingProgress={$progress}
 />
-{$progress}
 <ScrobblesHistory
   scrobbles={tracksHistory()}
   timestamp={recentTracksTimestamp}

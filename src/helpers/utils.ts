@@ -359,6 +359,8 @@ import brushSvg from '@/assets/icons/brush.svg?raw';
 import closeSvg from '@/assets/icons/close.svg?raw';
 import lockSvg from '@/assets/icons/lock.svg?raw';
 import unlockSvg from '@/assets/icons/unlock.svg?raw';
+import pollingStartSvg from '@/assets/icons/polling-start.svg?raw';
+import pollingStopSvg from '@/assets/icons/polling-stop.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 
@@ -381,6 +383,8 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(closeSvg, 'svg-close-symbol');
   addIconToSVGSprite(lockSvg, 'svg-lock-symbol');
   addIconToSVGSprite(unlockSvg, 'svg-unlock-symbol');
+  addIconToSVGSprite(pollingStartSvg, 'svg-polling-start-symbol');
+  addIconToSVGSprite(pollingStopSvg, 'svg-polling-stop-symbol');
 
   return svgSprite;
 }

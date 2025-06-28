@@ -124,32 +124,52 @@
   </div>
   <div class="profile_view_play_history_btn">
     {#if config.recentTracksHistory}
-      <button
-        class="btn-lastfm-lock"
-        class:is-locked={isScrobblesHistoryPinned}
-        aria-label="Lock Last.fm scrobbles"
-        onclick={onToggleScrobblesHistoryPinned}
-      >
-        <svg><use href="#svg-unlock-symbol"></use></svg>
-        <svg><use href="#svg-lock-symbol"></use></svg>
-      </button>
-      <button
-        class="btn-lastfm btn blue_btn btn_small"
-        data-element="rymstats-lastfm-button"
-        aria-label="Toggle scrobbles list"
-        style={`--progress: ${pollingProgressAngle()}deg`}
-        class:is-fetching={pollingProgress >= 1}
-        onclick={onToggleScrobblesHistory}
-      >
-        <svg viewBox="0 0 24 24">
-          <use xlink:href="#svg-playlist-symbol"></use>
-        </svg>
-      </button>
+      <div class="profile_view_play_history_btn_group">
+        <button
+          class="btn-toggle-icon btn-toggle-history-pinned"
+          class:is-active={isScrobblesHistoryPinned}
+          aria-label="Lock Last.fm scrobbles"
+          title="Lock Last.fm scrobbles"
+          onclick={onToggleScrobblesHistoryPinned}
+        >
+          <svg><use href="#svg-unlock-symbol"></use></svg>
+          <svg><use href="#svg-lock-symbol"></use></svg>
+        </button>
+
+        <button
+          class="btn-lastfm btn blue_btn btn_small"
+          data-element="rymstats-lastfm-button"
+          aria-label="Toggle scrobbles list"
+          title="Toggle scrobbles list"
+          style={`--progress: ${pollingProgressAngle()}deg`}
+          class:is-fetching={pollingProgress >= 1}
+          onclick={onToggleScrobblesHistory}
+        >
+          <svg viewBox="0 0 300 150" style:display={pollingProgress >= 1 ? 'block' : 'none'}>
+            <use xlink:href="#svg-loader-symbol"></use>
+          </svg>
+          <svg viewBox="0 0 24 24" style:display={pollingProgress < 1 ? 'block' : 'none'}>
+            <use xlink:href="#svg-playlist-symbol"></use>
+          </svg>
+        </button>
+
+        <button
+          class="btn-toggle-icon size-lg btn-toggle-polling"
+          class:is-active={isScrobblesPollingEnabled}
+          aria-label="Toggle scrobbles periodic update"
+          title="Toggle scrobbles periodic update"
+          onclick={onPollingToggle}
+        >
+          <svg><use href="#svg-polling-start-symbol"></use></svg>
+          <svg><use href="#svg-polling-stop-symbol"></use></svg>
+        </button>
+      </div>
     {/if}
     <a
       class="btn-profile btn blue_btn btn_small"
       href="https://www.last.fm/user/{userName}"
       aria-label="Open Last.fm profile"
+      title="Open Last.fm profile"
       target="_blank"
     >
       <svg viewBox="0 0 24 24">
@@ -196,7 +216,9 @@ const {
   isScrobblesHistoryPinned,
   onToggleScrobblesHistory,
   onToggleScrobblesHistoryPinned,
+  onPollingToggle,
   pollingProgress,
+  isScrobblesPollingEnabled,
 } = $props<{
   track: TrackDataNormalized;
   config: ProfileOptions;
@@ -205,7 +227,9 @@ const {
   isScrobblesHistoryPinned: boolean;
   onToggleScrobblesHistory: () => void;
   onToggleScrobblesHistoryPinned: () => void;
+  onPollingToggle: () => void;
   pollingProgress: number;
+  isScrobblesPollingEnabled: boolean;
 }>();
 
 let albumsFromDB: IRYMRecordDBMatch[] = $state([]);
@@ -344,7 +368,6 @@ const backgroundName = $derived(() => {
   return constants.RECENT_TRACK_BACKGROUND_NAMES[bgOption] ||
     `${bgOption + 1} / ${bgOptionsQty}`;
 });
-
 // COMPUTED END
 
 // METHODS
