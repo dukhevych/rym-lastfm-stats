@@ -7,7 +7,7 @@
   </div>
   <div>
     <button
-      style:display={periodValue !== config.topAlbumsPeriod ? 'block' : 'none'}
+      style:display={periodValue !== savedPeriodValue ? 'block' : 'none'}
       onclick={handlePeriodSave}
     >
       Save
@@ -97,6 +97,7 @@ const albums = $derived(albumsData.map(album => ({
   plays: album.playcount,
 })));
 
+let savedPeriodValue = $state(config.topAlbumsPeriod);
 let periodValue = $state<TopAlbumsPeriod>(config.topAlbumsPeriod);
 const cacheKey = $derived(() => `topAlbumsCache_${periodValue}`);
 
@@ -171,10 +172,10 @@ async function handlePeriodChange(event: Event) {
 }
 
 async function handlePeriodSave() {
-  config.topAlbumsPeriod = periodValue;
   await utils.storageSet({
     topAlbumsPeriod: periodValue,
   });
+  savedPeriodValue = periodValue;
 }
 
 function imgOnLoad() {
