@@ -20,7 +20,7 @@
   </div>
 </div>
 
-<div class="bubble_content top-albums">
+<div class="bubble_content top-albums" class:is-loading={isLoading}>
   {#each albums as album}
     <div class="album-wrapper">
       <div class="album-image">
@@ -81,43 +81,87 @@ import type { TopAlbumsPeriod, TopAlbum } from '@/api/getTopAlbums';
 const {
   config,
   userName,
-} = $props();
+} = $props<{
+  config: ProfileOptions;
+  userName: string;
+}>();
 
 let isLoaded = $state(false);
+let isLoading = $state(false);
+
 let albumsData = $state<TopAlbum[]>([]);
-let periodValue = $state<TopAlbumsPeriod>(config.topAlbumsPeriod);
 const albums = $derived(albumsData.map(album => ({
-  image: album.image[0]['#text'],
+  image: album.image[2]['#text'],
   title: album.name,
   artist: album.artist.name,
   plays: album.playcount,
 })));
 
+let periodValue = $state<TopAlbumsPeriod>(config.topAlbumsPeriod);
+const cacheKey = $derived(() => `topAlbumsCache_${periodValue}`);
+
+async function loadCache(periodValue: TopAlbumsPeriod) {
+  const topAlbumsCache: TopAlbumsCache | null = await utils.storageGet(cacheKey(), 'local');
+
+  if (topAlbumsCache && checkCacheValidity(topAlbumsCache)) {
+    return topAlbumsCache;
+  } else {
+    await utils.storageRemove(cacheKey(), 'local');
+    return null;
+  }
+}
+
 async function loadTopAlbums(periodValue: TopAlbumsPeriod) {
-  const topAlbumsResponse = await getTopAlbums({
-    params: {
-      username: userName,
-      period: periodValue,
-    },
-    apiKey: config.lastfmApiKey,
-  });
+  isLoading = true;
 
-  const data = topAlbumsResponse.topalbums.album;
-  const timestamp = Date.now();
-  albumsData = data;
+  let data: TopAlbum[] = [];
+  const topAlbumsCache: TopAlbumsCache | null = await loadCache(periodValue);
 
-  await utils.storageSet({
-    topAlbumsCache: {
-      data,
-      timestamp,
-      userName,
-      topAlbumsPeriod: periodValue,
-    },
-  }, 'local');
+  if (topAlbumsCache) {
+    data = topAlbumsCache.data;
+  } else {
+    const topAlbumsResponse = await getTopAlbums({
+      params: {
+        username: userName,
+        period: periodValue,
+      },
+      apiKey: config.lastfmApiKey,
+    });
+    data = topAlbumsResponse.topalbums.album;
+
+    await utils.storageSet({
+      [`topAlbumsCache_${periodValue}`]: {
+        data,
+        timestamp: Date.now(),
+        userName,
+      },
+    }, 'local');
+  }
+
+  albumsData = data.slice();
+
+  isLoading = false;
+}
+
+interface TopAlbumsCache {
+  data: TopAlbum[];
+  timestamp: number;
+  userName: string;
+  topAlbumsPeriod: TopAlbumsPeriod;
+}
+
+function checkCacheValidity(cache: TopAlbumsCache) {
+  return (
+    cache
+    && cache.data
+    && cache.timestamp
+    && cache.userName === userName
+    && Date.now() - cache.timestamp <= constants.TOP_ALBUMS_INTERVAL_MS
+  );
 }
 
 async function init() {
-  await loadTopAlbums(config.topAlbumsPeriod);
+  await loadTopAlbums(periodValue);
   isLoaded = true;
 }
 

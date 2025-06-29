@@ -1,8 +1,11 @@
-import * as utils from '@/helpers/utils';
-import './recentTracks.css';
-import ModuleScrobbles from '@/components/svelte/ModuleScrobbles.svelte';
 import { mount } from 'svelte';
+
+import * as utils from '@/helpers/utils';
+import ModuleScrobbles from '@/components/svelte/ModuleScrobbles.svelte';
+
 import errorMessages from './errorMessages.json';
+
+import './recentTracks.css';
 
 const PARENT_SELECTOR = '.profile_listening_container';
 

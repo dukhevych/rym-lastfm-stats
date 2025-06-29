@@ -21,8 +21,6 @@ const { config, rymSyncTimestamp = null, userName } = $props<{
   userName: string;
 }>();
 
-console.log('config', config);
-
 let isScrobblesHistoryOpen: boolean = $state(config.recentTracksShowOnLoad);
 let isScrobblesHistoryPinned: boolean = $state(config.recentTracksShowOnLoad);
 let isScrobblesPollingEnabled: boolean = $state(config.recentTracksPollingEnabled);
@@ -55,7 +53,7 @@ const checkCacheValidity = (cache: RecentTracksCache | null): boolean => {
   );
 }
 
-const init = async () => {
+async function init() {
   const recentTracksCache: RecentTracksCache | null = await utils.storageGet('recentTracksCache', 'local');
 
   if (recentTracksCache && checkCacheValidity(recentTracksCache)) {
@@ -68,8 +66,6 @@ const init = async () => {
   }
 
   isLoaded = true;
-
-  console.log('isScrobblesPollingEnabled', isScrobblesPollingEnabled);
 
   if (isScrobblesPollingEnabled) {
     polling.start();
