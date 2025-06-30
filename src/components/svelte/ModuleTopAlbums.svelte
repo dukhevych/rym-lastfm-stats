@@ -172,7 +172,6 @@ async function loadTopAlbums(periodValue: TopAlbumsPeriod) {
     }, 'local');
   }
 
-  // Only update data and clear images after new data is ready
   if (currentPeriod !== periodValue) {
     currentPeriod = periodValue;
     loadedImages = {};

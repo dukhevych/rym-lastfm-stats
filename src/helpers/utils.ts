@@ -474,6 +474,8 @@ export const wait: Wait = function(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
+export const sleep = wait;
+
 export interface DebouncedFunction<T extends (...args: any[]) => any> {
   (...args: Parameters<T>): void;
 }
