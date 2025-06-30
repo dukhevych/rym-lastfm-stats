@@ -50,19 +50,19 @@
       <div class="album-details">
         <a
           class="album-title"
-          href="{utils.generateSearchUrl({
+          href={utils.generateSearchUrl({
             artist: album.artist,
             releaseTitle: album.title,
-          })}"
-          title="{album.artist} - {album.title}"
+          })}
+          title={`${album.artist} - ${album.title}`}
         >
           {album.title}
         </a>
         <a
           class="album-artist"
-          href="{utils.generateSearchUrl({
+          href={utils.generateSearchUrl({
             artist: album.artist,
-          })}"
+          })}
           title={album.artist}
         >
           {album.artist}
@@ -71,10 +71,10 @@
       </div>
       <a
         class="album-link"
-        href="{utils.generateSearchUrl({
+        href={utils.generateSearchUrl({
           artist: album.artist,
           releaseTitle: album.title,
-        })}"
+        })}
       >
         {album.artist} - {album.title}
       </a>
