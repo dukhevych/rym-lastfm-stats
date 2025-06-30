@@ -1,5 +1,11 @@
 <svelte:options runes={true} />
 
+{#snippet loader()}
+  <div class="loader">
+    <svg viewBox="0 0 300 150"><use xlink:href="#svg-loader-symbol"></use></svg>
+  </div>
+{/snippet}
+
 <div class="bubble_header top-albums-header">
   <div>
     Top Albums
@@ -25,12 +31,13 @@
     <div class="album-wrapper">
       <div class="album-image">
         <img
-          class="fade-in loaded"
+          class="fade-in"
           src={album.image}
           alt={album.title}
           onload={imgOnLoad}
           onerror={imgOnError}
         />
+        {@render loader()}
       </div>
       <div class="album-details">
         <a
@@ -66,9 +73,7 @@
     </div>
   {/each}
   {#if !isLoaded}
-    <div class="loader">
-      <svg viewBox="0 0 300 150"><use xlink:href="#svg-loader-symbol"></use></svg>
-    </div>
+    {@render loader()}
   {/if}
 </div>
 
@@ -178,12 +183,15 @@ async function handlePeriodSave() {
   savedPeriodValue = periodValue;
 }
 
-function imgOnLoad() {
-  isLoaded = true;
+function imgOnLoad(event: Event) {
+  const img = event.target as HTMLImageElement;
+  img.classList.add('loaded');
 }
 
-function imgOnError() {
-  isLoaded = true;
+function imgOnError(event: Event) {
+  const img = event.target as HTMLImageElement;
+  img.classList.add('loaded');
+  img.src = 'https://lastfm.freetls.fastly.net/i/u/avatar300s/c6f59c1e5e7240a4c0d427abd71f3dbb.jpg';
 }
 
 init();
