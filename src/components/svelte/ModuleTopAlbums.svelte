@@ -33,15 +33,17 @@
   class:is-empty={isLoaded && albums.length === 0}
 >
   {@render loader()}
-  {#each albums as album}
+  {#each albums as album, index (album.id)}
     <div class="album-wrapper">
       <div class="album-image">
         <img
           class="fade-in"
+          class:loaded={loadedImages[album.id]}
           src={album.image}
           alt={album.title}
-          onload={imgOnLoad}
-          onerror={imgOnError}
+          loading="lazy"
+          onload={(e) => handleImageLoad(e, album.id)}
+          onerror={(e) => handleImageError(e, album.id)}
         />
         {@render loader()}
       </div>
@@ -99,14 +101,34 @@ const {
 
 let isLoaded = $state(false);
 let isLoading = $state(false);
+let loadedImages = $state<Record<string, boolean>>({});
 
 let albumsData = $state<TopAlbum[]>([]);
-const albums = $derived(albumsData.map(album => ({
+let currentPeriod = $state<TopAlbumsPeriod>(config.topAlbumsPeriod);
+
+const albums = $derived(albumsData.map((album, index) => ({
+  id: `${album.name}-${album.artist.name}-${currentPeriod}-${index}`,
   image: album.image[2]['#text'],
   title: album.name,
   artist: album.artist.name,
   plays: album.playcount,
 })));
+
+function handleImageLoad(event: Event, albumId: string) {
+  loadedImages[albumId] = true;
+}
+
+function handleImageError(event: Event, albumId: string) {
+  const img = event.target as HTMLImageElement;
+  img.src = 'https://lastfm.freetls.fastly.net/i/u/avatar300s/c6f59c1e5e7240a4c0d427abd71f3dbb.jpg';
+  loadedImages[albumId] = true;
+}
+
+$effect(() => {
+  if (currentPeriod) {
+    loadedImages = {};
+  }
+});
 
 let savedPeriodValue = $state(config.topAlbumsPeriod);
 let periodValue = $state<TopAlbumsPeriod>(config.topAlbumsPeriod);
@@ -150,8 +172,13 @@ async function loadTopAlbums(periodValue: TopAlbumsPeriod) {
     }, 'local');
   }
 
-  albumsData = data.slice();
+  // Only update data and clear images after new data is ready
+  if (currentPeriod !== periodValue) {
+    currentPeriod = periodValue;
+    loadedImages = {};
+  }
 
+  albumsData = data.slice();
   isLoading = false;
 }
 
@@ -178,8 +205,8 @@ async function init() {
 }
 
 async function handlePeriodChange(event: Event) {
-  const periodValue = (event.target as HTMLSelectElement).value;
-  await loadTopAlbums(periodValue as TopAlbumsPeriod);
+  const newPeriodValue = (event.target as HTMLSelectElement).value as TopAlbumsPeriod;
+  await loadTopAlbums(newPeriodValue);
 }
 
 async function handlePeriodSave() {
@@ -187,17 +214,6 @@ async function handlePeriodSave() {
     topAlbumsPeriod: periodValue,
   });
   savedPeriodValue = periodValue;
-}
-
-function imgOnLoad(event: Event) {
-  const img = event.target as HTMLImageElement;
-  img.classList.add('loaded');
-}
-
-function imgOnError(event: Event) {
-  const img = event.target as HTMLImageElement;
-  img.classList.add('loaded');
-  img.src = 'https://lastfm.freetls.fastly.net/i/u/avatar300s/c6f59c1e5e7240a4c0d427abd71f3dbb.jpg';
 }
 
 init();
