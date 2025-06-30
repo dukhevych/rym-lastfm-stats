@@ -1,4 +1,4 @@
-export type ReleaseType = 'album' | 'single';
+export type ReleaseType = 'album' | 'single' | 'music video';
 
 interface ReleaseGetInfoParams {
   artist: string;
@@ -25,6 +25,7 @@ export async function getReleaseInfo({
   const methodMap: Record<ReleaseType, string> = {
     album: 'album.getInfo',
     single: 'track.getInfo',
+    'music video': 'track.getInfo',
   };
 
   const method = methodMap[releaseType] ?? methodMap.album;
@@ -38,7 +39,7 @@ export async function getReleaseInfo({
     url.searchParams.set('mbid', params.mbid);
   } else {
     url.searchParams.set('artist', params.artist);
-    url.searchParams.set(releaseType === 'single' ? 'track' : 'album', params.title);
+    url.searchParams.set(methodMap[releaseType].split('.')[0], params.title);
   }
 
   if ('autocorrect' in params) {

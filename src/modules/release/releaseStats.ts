@@ -487,6 +487,7 @@ async function fetchReleaseInfo(artist: string, title: string) {
     const releaseTypeDataMap = {
       album: 'album',
       single: 'track',
+      'music video': 'track',
     };
 
     const releaseTypeData = releaseInfoResponse[releaseTypeDataMap[state.releaseType] ?? 'album'];
@@ -494,7 +495,7 @@ async function fetchReleaseInfo(artist: string, title: string) {
     if (releaseInfoResponse && !releaseInfoResponse.error) {
       stats.playcount = +releaseTypeData.playcount;
       stats.listeners = +releaseTypeData.listeners;
-      stats.userplaycount = typeof releaseTypeData.userplaycount === 'number' ? releaseTypeData.userplaycount : null;
+      stats.userplaycount = isNaN(+releaseTypeData.userplaycount) ? null : +releaseTypeData.userplaycount;
       stats.url = releaseTypeData.url;
 
       return stats;
