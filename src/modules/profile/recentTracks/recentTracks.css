@@ -416,7 +416,11 @@ html[data-scheme="light"] {
   &:before {
     content: '';
     position: absolute;
-    inset: 0;
+    left: 0;
+    right: 0;
+    top: 50%;
+    aspect-ratio: 1 / 1;
+    transform: translateY(-50%);
     background-image: var(--bg-image);
     background-size: cover;
     background-position: center;

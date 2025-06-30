@@ -2,8 +2,15 @@ import browser from 'webextension-polyfill';
 import * as enums from '@/helpers/enums';
 
 const manifest = browser.runtime.getManifest();
-
 export const isDev = process.env.NODE_ENV === 'development';
+
+// Interval constants for fetching data
+export const RECENT_TRACKS_INTERVAL_MS = isDev ? (15 * 1000) : (2 * 60 * 1000); // 15 seconds / 2 minutes
+export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = RECENT_TRACKS_INTERVAL_MS / 2;
+export const TOP_ALBUMS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+export const TOP_ARTISTS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+export const STATS_CACHE_LIFETIME_GUEST_MS = 3 * 60 * 60 * 1000; // 3 hours
+export const STATS_CACHE_LIFETIME_MS = isDev ? 10 * 1000 : 10 * 60 * 1000; // 10 seconds /10 minutes
 
 export const APP_VERSION = manifest.version;
 export const APP_NAME = manifest.name;
@@ -108,14 +115,6 @@ export const OPTIONS_DEFAULT = {
   lastfmApiKey: '',
   ...PROFILE_OPTIONS_DEFAULT,
 };
-
-// Interval constants for fetching data
-export const RECENT_TRACKS_INTERVAL_MS = isDev ? (15 * 1000) : (2 * 60 * 1000); // 15 seconds / 2 minutes
-export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = RECENT_TRACKS_INTERVAL_MS / 2;
-export const TOP_ALBUMS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
-export const TOP_ARTISTS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
-export const STATS_CACHE_LIFETIME_GUEST_MS = 3 * 60 * 60 * 1000; // 3 hours
-export const STATS_CACHE_LIFETIME_MS = isDev ? 10 * 1000 : 10 * 60 * 1000; // 10 seconds /10 minutes
 
 // [Addon entity type]: [RYM entity code]
 export const RYM_ENTITY_CODES = {
