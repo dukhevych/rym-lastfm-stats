@@ -26,7 +26,13 @@
   </div>
 </div>
 
-<div class="bubble_content top-albums" class:is-loading={isLoading}>
+<div
+  class="bubble_content top-albums"
+  class:is-loading={isLoading}
+  class:is-loaded={isLoaded}
+  class:is-empty={isLoaded && albums.length === 0}
+>
+  {@render loader()}
   {#each albums as album}
     <div class="album-wrapper">
       <div class="album-image">

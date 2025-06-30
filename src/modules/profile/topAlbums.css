@@ -27,6 +27,8 @@
     aspect-ratio: 1 / 1;
   }
 
+  &.is-loaded > .loader { display: none; }
+
   &::after {
     content: '';
     inset: 0;
