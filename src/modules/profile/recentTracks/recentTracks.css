@@ -840,8 +840,12 @@ html[data-scheme="dark"] {
     &:hover {
       .btn-toggle-history-pinned,
       .btn-toggle-polling {
-        opacity: 1;
+        opacity: 0.5;
         transform: translateY(0);
+
+        &:hover {
+          opacity: 1;
+        }
       }
     }
   }
