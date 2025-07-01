@@ -7,6 +7,7 @@ import { remove as removeDiacritics } from 'diacritics';
 import * as constants from './constants';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import type { RecentTrack } from '@/api/getRecentTracks';
+import { RYMEntityCode } from './enums';
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
@@ -270,28 +271,32 @@ export function generateSearchUrl({
   let url = 'https://rateyourmusic.com';
 
   const query = [artist, releaseTitle, trackTitle]
-    .filter((part) => ![undefined, null, ''].includes(part))
+    .filter(Boolean)
     .join(' ');
   let searchterm: string;
 
   if (!query) {
     return '';
   } else {
-    searchterm = encodeURIComponent(normalizeForSearch(query));
+    searchterm = encodeURIComponent(query);
     url += '/search?';
     url += `searchterm=${searchterm}`;
   }
 
-  if (trackTitle) url += `&searchtype=z`;
-  else if (releaseTitle) url += `&searchtype=l`;
-  else if (artist) url += `&searchtype=a`;
+  if (trackTitle) url += `&searchtype=${RYMEntityCode.Song}`;
+  else if (releaseTitle) url += `&searchtype=${RYMEntityCode.Release}`;
+  else if (artist) url += `&searchtype=${RYMEntityCode.Artist}`;
 
   // Strict search results are provided by this addon and are not a part of RYM functionality
   if (strictSearch) url += '&strict=true';
 
-  if (artist) url += `&enh_artist=${artist}`;
-  if (releaseTitle) url += `&enh_release=${releaseTitle}`;
-  if (trackTitle) url += `&enh_track=${trackTitle}`;
+  console.log(encodeURIComponent(artist));
+
+  if (artist) url += `&enh_artist=${encodeURIComponent(artist)}`;
+  if (releaseTitle) url += `&enh_release=${encodeURIComponent(releaseTitle)}`;
+  if (trackTitle) url += `&enh_track=${encodeURIComponent(trackTitle)}`;
+
+  console.log(url);
 
   return url;
 };
@@ -1009,7 +1014,13 @@ export function extractReleaseEditionType(releaseTitle: string): string | null {
   if (!matched) return null;
 
   const lower = matched.toLowerCase();
-  return constants.EDITION_KEYWORDS.find(keyword => lower.includes(keyword)) ?? null;
+  for (const keyword of constants.EDITION_KEYWORDS) {
+    if (lower.includes(keyword)) {
+      return keyword;
+    }
+  }
+
+  return null;
 }
 
 export interface CreateElementProps {
@@ -1146,4 +1157,16 @@ export function getColorsMap(colors: VibrantUiColors) {
   });
 
   return result;
+}
+
+export function lazy<T>(fn: () => T): () => T {
+  let val: T | undefined;
+  let evaluated = false;
+  return () => {
+    if (!evaluated) {
+      val = fn();
+      evaluated = true;
+    }
+    return val!;
+  };
 }

@@ -140,7 +140,6 @@ export const RYM_ENTITY_CODES_INVERTED = Object.entries(RYM_ENTITY_CODES).reduce
 // (Deluxe Edition), (Remastered), [Digipack], (Live in London) etc.
 export const EDITION_KEYWORDS = [
   'deluxe',
-  'version',
   'digipack',
   'edition',
   'part',
@@ -163,6 +162,7 @@ export const EDITION_KEYWORDS = [
   'instrumental',
   'ost',
   'soundtrack',
+  'version',
 ];
 
 export const EDITION_KEYWORDS_REPLACE_PATTERN = new RegExp(
