@@ -747,7 +747,7 @@ export function normalizeForSearch(str: string): string {
 
   return deburr(str
     .toLowerCase()
-    .replace(/\sand\s/g, ' & ')
+    .replace(/\s&\s/g, ' and ')
     .replace(/\./g, '')
     .replace(/_/g, '')
     .replace(/"/g, '')
@@ -991,16 +991,25 @@ export function omit<T extends OmitObject, K extends keyof T>(
   return result;
 }
 
-export interface CleanupReleaseEdition {
-  (releaseTitle: string): string;
-}
-
 export function cleanupReleaseEdition(releaseTitle: string): string {
   if (!releaseTitle) return '';
 
   return releaseTitle
     .replace(constants.EDITION_KEYWORDS_REPLACE_PATTERN, '')
     .trim();
+}
+
+function matchEditionSuffix(title: string): string | null {
+  const match = title.match(constants.EDITION_KEYWORDS_REPLACE_PATTERN);
+  return match ? match[1] : null;
+}
+
+export function extractReleaseEditionType(releaseTitle: string): string | null {
+  const matched = matchEditionSuffix(releaseTitle);
+  if (!matched) return null;
+
+  const lower = matched.toLowerCase();
+  return constants.EDITION_KEYWORDS.find(keyword => lower.includes(keyword)) ?? null;
 }
 
 export interface CreateElementProps {

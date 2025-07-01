@@ -47,36 +47,40 @@ const validationRules = {
       artistNameLocalizedSelector: 'a.searchpage.artist + span.smallgray',
       artistAkaSelector: '.subinfo',
     },
-    validate: function (item: HTMLElement, query: string) {
+    validate: function (item: HTMLElement, query: string, enhArtist: string) {
       const {
         artistNameSelector,
         artistNameLocalizedSelector,
         artistAkaSelector,
       } = this.selectors;
 
-      const _query = utils.normalizeForSearch(query);
-
-      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
-
+      // Enhanced artist validation
       const artistNameLocalized = utils.normalizeForSearch(
         utils.removeArtistNameBrackets(
           item.querySelector(artistNameLocalizedSelector)?.textContent || ''
         )
       );
+      if (artistNameLocalized === enhArtist) return 'full';
 
-      const artistAka =
-        utils.getNodeDirectTextContent(item.querySelector(artistAkaSelector)).trim();
+      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
+      if (artistName === enhArtist) return 'full';
 
+      const artistAka = utils.getNodeDirectTextContent(item.querySelector(artistAkaSelector)).trim();
       const akaValues = artistAka.replace(/^a\.k\.a:\s*/, '')
         .split(', ')
         .map((aka) => utils.normalizeForSearch(aka))
         .filter(Boolean);
+      if (akaValues.includes(enhArtist)) return 'full';
 
-      return (
-        utils.checkPartialStringsMatch(artistName, _query)
-        || utils.checkPartialStringsMatch(artistNameLocalized, _query)
-        || akaValues.some((aka) => utils.checkPartialStringsMatch(aka, _query))
-      );
+      // Alternative validation with normalized search term
+      // Will be used if the above validation against original artist name from custom query parameter fails
+      const _query = utils.normalizeForSearch(query);
+      if (artistName === _query) return 'full';
+      if (artistNameLocalized === _query) return 'full';
+      if (akaValues.includes(_query)) return 'full';
+      if (artistName.includes(_query)) return 'partial';
+      if (artistNameLocalized.includes(_query)) return 'partial';
+      return false;
     },
   },
   [RYMEntityCode.Release]: {
@@ -84,67 +88,94 @@ const validationRules = {
       artistNameSelector: 'a.artist',
       releaseTitleSelector: 'a.searchpage',
     },
-    validate: function (item: HTMLElement, query: string) {
+    validate: function (item: HTMLElement, query: string, enhArtist: string, enhRelease: string) {
       const {
         artistNameSelector,
         releaseTitleSelector,
       } = this.selectors;
 
-      let _query = utils.normalizeForSearch(query);
+      // let _query = utils.normalizeForSearch(query);
 
-      const artistLinks = Array.from(item.querySelectorAll(artistNameSelector));
-      const artistNames = artistLinks.map((artistLink) => {
-        return utils.getNodeDirectTextContent(artistLink).trim();
-      }).filter(Boolean);
-      const artistNamesNormalized = artistNames.map((name) => {
-        return utils.normalizeForSearch(name);
-      });
-      const artistNamesLocalized = artistLinks.map((artistLink) => {
-        return (artistLink.querySelector('.subtext')?.textContent || '').replace(/^\[(.*)\]$/, '$1');
-      });
-      const artistNamesLocalizedNormalized = artistNamesLocalized.map((name) => {
-        return utils.normalizeForSearch(name);
-      });
+      function validateArtist(target: string) {
+        const artistLinks = Array.from(item.querySelectorAll(artistNameSelector));
+        const values = [];
+        const valuesNormalized = [];
 
-      const releaseTitleNormalized = utils
-        .normalizeForSearch(item.querySelector(releaseTitleSelector)?.textContent || '');
+        const artistNamesLocalized = artistLinks.map((artistLink) => {
+          return (artistLink.querySelector('.subtext')?.textContent || '').replace(/^\[(.*)\]$/, '$1');
+        });
+        if (artistNamesLocalized.includes(target)) return 'full';
+        else values.push(...artistNamesLocalized);
 
-      let hasArtist = false;
-      let hasReleaseTitle = false;
-      let partialMatch = false;
+        const artistNames = artistLinks.map((artistLink) => {
+          return utils.getNodeDirectTextContent(artistLink).trim();
+        }).filter(Boolean);
+        if (artistNames.includes(target)) return 'full';
+        else values.push(...artistNames);
 
-      [...artistNamesNormalized, ...artistNamesLocalizedNormalized].forEach((name) => {
-        if (name && utils.checkPartialStringsMatch(name, _query)) {
-          hasArtist = true;
-          _query = _query.replace(name, '').trim();
-        }
-      });
+        const targetNormalized = utils.normalizeForSearch(target);
 
-      if (!hasArtist) return false;
+        const artistNamesLocalizedNormalized = artistNamesLocalized.map((name) => {
+          return utils.normalizeForSearch(name);
+        });
+        if (artistNamesLocalizedNormalized.includes(targetNormalized)) return 'full';
+        else valuesNormalized.push(...artistNamesLocalizedNormalized);
 
-      const _queryNoParenthesis = _query.replace(/[()]/g, '').trim();
-      const _queryCleaned = utils.cleanupReleaseEdition(_query);
+        const artistNamesNormalized = artistNames.map((name) => {
+          return utils.normalizeForSearch(name);
+        });
+        if (artistNamesNormalized.includes(targetNormalized)) return 'full';
+        else valuesNormalized.push(...artistNamesNormalized);
 
-      if (
-        releaseTitleNormalized === _query ||
-        releaseTitleNormalized === _queryNoParenthesis
-      ) {
-        hasReleaseTitle = true;
-      } else if (
-        releaseTitleNormalized === _queryCleaned ||
-        utils.checkPartialStringsMatch(releaseTitleNormalized, _query) ||
-        utils.checkPartialStringsMatch(releaseTitleNormalized, _queryNoParenthesis) ||
-        utils.checkPartialStringsMatch(releaseTitleNormalized, _queryCleaned)
-      ) {
-        hasReleaseTitle = true;
-        partialMatch = true;
+        if (values.some((value) => utils.checkPartialStringsMatch(value, target))) return 'partial';
+        if (valuesNormalized.some((value) => utils.checkPartialStringsMatch(value, targetNormalized))) return 'partial';
+
+        return false;
       }
 
-      const matched = hasArtist && hasReleaseTitle;
+      const hasArtist = validateArtist(enhArtist);
 
-      if (!matched) return false;
+      function validateRelease(target: string) {
+        const values = [];
+        const valuesNormalized = [];
+        let targetNormalized;
+        let targetNoEdition;
+        let targetNoEditionNormalized;
 
-      return partialMatch ? 'partial' : 'full';
+        const releaseTitle = (item.querySelector(releaseTitleSelector)?.textContent || '').trim();
+        if (releaseTitle === target) return 'full';
+        else values.push(releaseTitle);
+
+        targetNormalized = utils.normalizeForSearch(target);
+
+        const releaseTitleNormalized = utils.normalizeForSearch(releaseTitle);
+        if (releaseTitleNormalized === targetNormalized) return 'full';
+        else valuesNormalized.push(releaseTitleNormalized);
+
+        targetNoEdition = utils.cleanupReleaseEdition(target);
+        if (releaseTitle === targetNoEdition) return 'full';
+
+        targetNoEditionNormalized = utils.normalizeForSearch(targetNoEdition);
+        if (releaseTitleNormalized === targetNoEditionNormalized) return 'full';
+
+        if (values.some((value) => utils.checkPartialStringsMatch(value, target))) return 'partial';
+        if (values.some((value) => utils.checkPartialStringsMatch(value, targetNoEdition))) return 'partial';
+        if (valuesNormalized.some((value) => utils.checkPartialStringsMatch(value, targetNormalized))) return 'partial';
+        if (valuesNormalized.some((value) => utils.checkPartialStringsMatch(value, targetNoEditionNormalized))) return 'partial';
+
+        return false;
+      }
+
+      const hasReleaseTitle = validateRelease(enhRelease);
+
+      console.log('==================');
+      console.log(item);
+      console.log(hasArtist, hasReleaseTitle);
+
+      if (!hasArtist || !hasReleaseTitle) return false;
+      if (hasArtist === 'full' && hasReleaseTitle === 'full') return 'full';
+
+      return 'partial';
     },
   },
   [RYMEntityCode.Song]: {
@@ -191,6 +222,9 @@ async function render(config: ProfileOptions) {
   if (strict !== 'true' || !Object.values(RYMEntityCode).includes(searchType)) return;
 
   const searchTerm = utils.deburr(urlParams.get('searchterm')?.toLowerCase() || '');
+  const enhArtist = urlParams.get('enh_artist')?.toLowerCase() || '';
+  const enhRelease = urlParams.get('enh_release')?.toLowerCase() || '';
+  const enhTrack = urlParams.get('enh_track')?.toLowerCase() || '';
 
   searchItems = document.querySelectorAll(SEARCH_ITEMS_SELECTOR);
 
@@ -207,11 +241,11 @@ async function render(config: ProfileOptions) {
       // addReleaseIdAsOrder(item);
     }
 
-    const validity = validationRules[searchType].validate(item, searchTerm);
+    const validity = validationRules[searchType].validate(item, searchTerm, enhArtist, enhRelease);
 
     if (validity !== false) {
-      if (isReleaseSearch) {
-        item.dataset.validity = String(validity);
+      if (typeof validity === 'string') {
+        item.dataset.validity = validity;
       }
       searchItemsFiltered.push(item);
     } else {
