@@ -170,6 +170,16 @@ export const EDITION_KEYWORDS_REPLACE_PATTERN = new RegExp(
   'i'
 );
 
+export const NUMBERED_SUFFIX_KEYWORDS = [
+  'part',
+  'volume',
+  'vol',
+  'episode',
+  'chapter',
+  'disc',
+  'book',
+];
+
 // [DB value]: [display value]
 export const RYMFormatsLabels: Record<ERYMFormat, string> = {
   [enums.ERYMFormat.CD]: 'CD',
