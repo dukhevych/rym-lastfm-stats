@@ -1,9 +1,11 @@
 import * as api from '@/api';
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
+
 import { createSvgUse } from '@/helpers/sprite';
 import { createElement as h } from '@/helpers/dom';
 import { storageGet, storageSet, generateStorageKey, getLastfmUserName } from '@/helpers/storageUtils';
+import { shortenNumber } from '@/helpers/string';
 
 import {
   getArtistId,
@@ -306,7 +308,7 @@ function populateArtistStats(
 
   if (listeners !== undefined) {
     uiElements.listeners.style.display = 'block';
-    uiElements.listeners.dataset.value = utils.shortenNumber(Math.trunc(listeners));
+    uiElements.listeners.dataset.value = shortenNumber(Math.trunc(listeners));
     uiElements.listeners.title = `${listeners} listeners ${cacheTimeHint}`;
   } else {
     uiElements.listeners.style.display = 'none';
@@ -314,7 +316,7 @@ function populateArtistStats(
 
   if (playcount !== undefined) {
     uiElements.playcount.style.display = 'block';
-    uiElements.playcount.dataset.value = utils.shortenNumber(Math.trunc(playcount));
+    uiElements.playcount.dataset.value = shortenNumber(Math.trunc(playcount));
     uiElements.playcount.title = `${playcount}, ${Math.trunc(playcount / listeners)} per listener ${cacheTimeHint}`;
   } else {
     uiElements.playcount.style.display = 'none';
@@ -323,7 +325,7 @@ function populateArtistStats(
   if (userplaycount !== undefined && userplaycount !== null) {
     uiElements.userplaycount.style.display = 'block';
     uiElements.userplaycount.title = `${userplaycount} scrobbles`;
-    uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(Math.trunc(userplaycount || 0))}`;
+    uiElements.userplaycount.textContent = `My scrobbles: ${shortenNumber(Math.trunc(userplaycount || 0))}`;
   } else {
     uiElements.userplaycount.style.display = 'none';
   }

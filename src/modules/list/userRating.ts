@@ -1,5 +1,5 @@
 import * as constants from '@/helpers/constants';
-import * as utils from '@/helpers/utils';
+import { normalizeForSearch } from '@/helpers/string';
 import { RecordsAPI } from '@/helpers/records-api';
 import './userRating.css';
 
@@ -137,8 +137,8 @@ async function render() {
 
   await Promise.all(releasesWithoutId.map(async (item) => {
     const releases = await RecordsAPI.getByArtistAndTitle(
-      utils.normalizeForSearch(item.artistName),
-      utils.normalizeForSearch(item.title),
+      normalizeForSearch(item.artistName),
+      normalizeForSearch(item.title),
     );
 
     const release = releases?.[0] || null;

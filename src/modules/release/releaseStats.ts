@@ -1,10 +1,11 @@
 import * as api from '@/api';
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
+import { normalizeForSearch } from '@/helpers/string';
 import { createSvgUse } from '@/helpers/sprite';
 import { storageGet, storageSet, getSyncedUserData, generateStorageKey } from '@/helpers/storageUtils';
 import { createElement as h } from '@/helpers/dom';
-import { checkPartialStringsMatch } from '@/helpers/string';
+import { checkPartialStringsMatch, shortenNumber } from '@/helpers/string';
 
 import './releaseStats.css';
 
@@ -76,9 +77,9 @@ const state = {
     const result: string[] = [];
     this.artistNames.forEach((artist) => {
       if (artist.artistNameLocalized) {
-        result.push(utils.normalizeForSearch(artist.artistNameLocalized));
+        result.push(normalizeForSearch(artist.artistNameLocalized));
       }
-      result.push(utils.normalizeForSearch(artist.artistName));
+      result.push(normalizeForSearch(artist.artistName));
     });
     return result;
   },
@@ -292,7 +293,7 @@ function populateReleaseStats(
     uiElements.listeners.classList.remove('is-hidden');
     uiElements.listeners.style.display = 'block';
     uiElements.listeners.title = `${listeners} listeners ${cacheTimeHint}`;
-    uiElements.listeners.dataset.value = utils.shortenNumber(Math.trunc(listeners));
+    uiElements.listeners.dataset.value = shortenNumber(Math.trunc(listeners));
   } else {
     uiElements.listeners.classList.add('is-hidden');
   }
@@ -300,7 +301,7 @@ function populateReleaseStats(
   if (playcount !== undefined && listeners !== undefined) {
     uiElements.playcount.classList.remove('is-hidden');
     uiElements.playcount.title = `${playcount} plays, ${Math.trunc(playcount / listeners)} per listener ${cacheTimeHint}`;
-    uiElements.playcount.dataset.value = utils.shortenNumber(Math.trunc(playcount));
+    uiElements.playcount.dataset.value = shortenNumber(Math.trunc(playcount));
   } else {
     uiElements.playcount.classList.add('is-hidden');
   }
@@ -308,7 +309,7 @@ function populateReleaseStats(
   if (userplaycount !== undefined && userplaycount !== null) {
     uiElements.userplaycount.classList.remove('is-hidden');
     uiElements.userplaycount.title = `${userplaycount} scrobbles`;
-    uiElements.userplaycount.textContent = `My scrobbles: ${utils.shortenNumber(Math.trunc(userplaycount || 0))}`;
+    uiElements.userplaycount.textContent = `My scrobbles: ${shortenNumber(Math.trunc(userplaycount || 0))}`;
   } else {
     uiElements.userplaycount.classList.add('is-hidden');
   }
@@ -336,14 +337,14 @@ async function initSearchResults() {
   let searchResults: AlbumSearchResult[] | undefined;
 
   const apiKey = config.lastfmApiKey || process.env.LASTFM_API_KEY as string;
-  const titleNormalized = utils.normalizeForSearch(state.releaseTitle);
+  const titleNormalized = normalizeForSearch(state.releaseTitle);
 
   for (const artist of state.artists) {
     console.log('search for', artist);
     const searchAlbumsResponse = await api.searchAlbums({
       apiKey,
       params: {
-        query: utils.normalizeForSearch(artist) + ' ' + titleNormalized,
+        query: normalizeForSearch(artist) + ' ' + titleNormalized,
       },
     });
 
@@ -360,7 +361,7 @@ async function initSearchResults() {
     const searchAlbumsResponse = await api.searchAlbums({
       apiKey,
       params: {
-        query: utils.normalizeForSearch(state.artists[0]) + ' ' + titleNormalized.split(' ')[0],
+        query: normalizeForSearch(state.artists[0]) + ' ' + titleNormalized.split(' ')[0],
       }
     });
 
@@ -383,15 +384,15 @@ async function initSearchResults() {
   }
 
   const searchResultsFiltered = searchResults.filter((item) => {
-    const itemArtistNormalized = utils.normalizeForSearch(item.artist);
-    const itemTitleNormalized = utils.normalizeForSearch(item.name);
+    const itemArtistNormalized = normalizeForSearch(item.artist);
+    const itemTitleNormalized = normalizeForSearch(item.name);
 
     const hasArtist = state.artistNamesFlatNormalized
       .some((name) => checkPartialStringsMatch(itemArtistNormalized, name));
 
     if (!hasArtist) return false;
 
-    return checkPartialStringsMatch(itemTitleNormalized, utils.normalizeForSearch(state.releaseTitle));
+    return checkPartialStringsMatch(itemTitleNormalized, normalizeForSearch(state.releaseTitle));
   });
 
   if (searchResultsFiltered.length === 0) {
@@ -406,9 +407,9 @@ async function initSearchResults() {
   }
 
   const isFullMatch = (item: AlbumSearchResult) => {
-    const itemTitleNormalized = utils.normalizeForSearch(item.name);
-    const itemArtistNormalized = utils.normalizeForSearch(item.artist);
-    const hasFullTitleMatch = itemTitleNormalized === utils.normalizeForSearch(state.releaseTitle);
+    const itemTitleNormalized = normalizeForSearch(item.name);
+    const itemArtistNormalized = normalizeForSearch(item.artist);
+    const hasFullTitleMatch = itemTitleNormalized === normalizeForSearch(state.releaseTitle);
     if (!hasFullTitleMatch) return false;
     const hasArtistFullMatch = state.artistNamesFlatNormalized.some((name) => itemArtistNormalized === name);
     if (!hasArtistFullMatch) return false;

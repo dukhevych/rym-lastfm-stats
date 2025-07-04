@@ -4,11 +4,12 @@
 import { onDestroy } from 'svelte';
 import { usePolling } from '@/composables/usePolling';
 
-import ScrobblesHistory from './ScrobblesHIstory.svelte';
+import ScrobblesHistory from './ScrobblesHistory.svelte';
 import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 import errorMessages from '@/modules/profile/recentTracks/errorMessages.json';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import * as utils from '@/helpers/utils';
+import { getImageColors, getColorsMap } from '@/helpers/colors';
 import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import * as api from '@/api';
@@ -95,7 +96,7 @@ async function trySetColorsFromTrack(track: TrackDataNormalized | undefined) {
   const coverUrl = track?.coverExtraLargeUrl;
   if (!coverUrl) return null;
   try {
-    return await utils.getImageColors(coverUrl);
+    return await getImageColors(coverUrl);
   } catch {
     console.warn(errorMessages.failedToFetchColors);
     return null;
@@ -139,7 +140,7 @@ async function loadRecentTracks() {
   }
 };
 
-const colorsMap = $derived(() => colors ? utils.getColorsMap(colors) : {});
+const colorsMap = $derived(() => colors ? getColorsMap(colors) : {});
 
 let rootTarget: HTMLElement | null = null;
 

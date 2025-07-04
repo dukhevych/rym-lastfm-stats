@@ -1,4 +1,5 @@
 import * as utils from '@/helpers/utils';
+import { normalizeForSearch, deburr } from '@/helpers/string';
 import { getDirectInnerText, createElement as h } from '@/helpers/dom';
 import * as constants from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
@@ -56,26 +57,26 @@ const validationRules = {
       } = this.selectors;
 
       // Enhanced artist validation
-      const artistNameLocalized = utils.normalizeForSearch(
+      const artistNameLocalized = normalizeForSearch(
         removeBrackets(
           item.querySelector(artistNameLocalizedSelector)?.textContent || ''
         )
       );
       if (artistNameLocalized === targetArtist.value) return 'full';
 
-      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
+      const artistName = normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
       if (artistName === targetArtist.value) return 'full';
 
       const artistAka = getDirectInnerText(item.querySelector(artistAkaSelector));
       const akaValues = artistAka.replace(/^a\.k\.a:\s*/, '')
         .split(', ')
-        .map((aka) => utils.normalizeForSearch(aka))
+        .map((aka) => normalizeForSearch(aka))
         .filter(Boolean);
       if (akaValues.includes(targetArtist.value)) return 'full';
 
       // Alternative validation with normalized search term
       // Will be used if the above validation against original artist name from custom query parameter fails
-      const _query = utils.normalizeForSearch(query);
+      const _query = normalizeForSearch(query);
       if (artistName === _query) return 'full';
       if (artistNameLocalized === _query) return 'full';
       if (akaValues.includes(_query)) return 'full';
@@ -95,7 +96,7 @@ const validationRules = {
         releaseTitleSelector,
       } = this.selectors;
 
-      // let _query = utils.normalizeForSearch(query);
+      // let _query = normalizeForSearch(query);
 
       function validateArtist() {
         const getArtistLinks = utils.lazy(() => Array.from(item.querySelectorAll(artistNameSelector)));
@@ -107,10 +108,10 @@ const validationRules = {
           .filter(Boolean)
         );
         const getArtistNamesLocalizedNormalized = utils.lazy(() => getArtistNamesLocalized()
-          .map((name) => utils.normalizeForSearch(name))
+          .map((name) => normalizeForSearch(name))
         );
         const getArtistNamesNormalized = utils.lazy(() => getArtistNames()
-          .map((name) => utils.normalizeForSearch(name))
+          .map((name) => normalizeForSearch(name))
         );
 
         const values = [];
@@ -138,9 +139,9 @@ const validationRules = {
 
       function validateRelease() {
         const getReleaseTitle = utils.lazy(() => (item.querySelector(releaseTitleSelector)?.textContent || '').trim());
-        const getReleaseTitleNormalized = utils.lazy(() => utils.normalizeForSearch(getReleaseTitle()));
+        const getReleaseTitleNormalized = utils.lazy(() => normalizeForSearch(getReleaseTitle()));
         const getReleaseTitleNoEdition = utils.lazy(() => utils.cleanupReleaseEdition(getReleaseTitle()));
-        const getReleaseTitleNoEditionNormalized = utils.lazy(() => utils.normalizeForSearch(getReleaseTitleNoEdition()));
+        const getReleaseTitleNoEditionNormalized = utils.lazy(() => normalizeForSearch(getReleaseTitleNoEdition()));
         const getReleaseTitleEdition = utils.lazy(() => utils.extractReleaseEditionType(getReleaseTitle()));
 
         // Ideal match
@@ -206,10 +207,10 @@ const validationRules = {
         trackNameSelector,
       } = this.selectors;
 
-      const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
-      const trackName = utils.normalizeForSearch(item.querySelector(trackNameSelector)?.textContent || '');
+      const artistName = normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
+      const trackName = normalizeForSearch(item.querySelector(trackNameSelector)?.textContent || '');
 
-      let _query = utils.normalizeForSearch(query);
+      let _query = normalizeForSearch(query);
 
       let hasArtist = false;
       let hasTrackName = false;
@@ -238,7 +239,7 @@ async function render(config: ProfileOptions) {
 
   if (strict !== 'true' || !Object.values(RYMEntityCode).includes(searchType)) return;
 
-  const searchTerm = utils.deburr(urlParams.get('searchterm') || '');
+  const searchTerm = deburr(urlParams.get('searchterm') || '');
   const enhArtist = urlParams.get('enh_artist') || '';
   const enhRelease = urlParams.get('enh_release') || '';
   const enhTrack = urlParams.get('enh_track') || '';
@@ -249,20 +250,20 @@ async function render(config: ProfileOptions) {
 
   const targetRelease = {
     get value() { return enhRelease },
-    get getNormalized() { return utils.normalizeForSearch(this.value) },
+    get getNormalized() { return normalizeForSearch(this.value) },
     get getNoEdition() { return utils.cleanupReleaseEdition(this.value) },
-    get getNoEditionNormalized() { return utils.normalizeForSearch(this.value) },
+    get getNoEditionNormalized() { return normalizeForSearch(this.value) },
     get getEdition() { return utils.extractReleaseEditionType(this.value) },
   }
 
   const targetArtist = {
     get value() { return enhArtist },
-    get getNormalized() { return utils.normalizeForSearch(this.value) },
+    get getNormalized() { return normalizeForSearch(this.value) },
   }
 
   const targetTrack = {
     get value() { return enhTrack },
-    get getNormalized() { return utils.normalizeForSearch(this.value) },
+    get getNormalized() { return normalizeForSearch(this.value) },
   }
 
   Array.from(searchItems).forEach((item) => {
@@ -367,7 +368,7 @@ async function render(config: ProfileOptions) {
           const searchParams = new URLSearchParams(url.search);
           searchParams.delete('page');
           searchParams.set('searchtype', RYMEntityCode.Artist);
-          searchParams.set('searchterm', utils.normalizeForSearch(searchParams.get('enh_artist') || ''));
+          searchParams.set('searchterm', normalizeForSearch(searchParams.get('enh_artist') || ''));
           const newRelativeUrl = url.pathname + '?' + searchParams.toString();
 
           const searchArtistInsteadLink = h('a', {

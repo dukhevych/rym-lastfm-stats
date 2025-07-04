@@ -1,5 +1,6 @@
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
+import { normalizeForSearch } from '@/helpers/string';
 import { isMyCollection } from '@/helpers/rym-dom';
 import { getDirectInnerText } from '@/helpers/dom';
 import { ERYMOwnershipStatus, ERYMOwnershipAltText, ERYMFormat } from '@/helpers/enums';
@@ -66,9 +67,9 @@ import { RecordsAPI } from '@/helpers/records-api';
         artistNameLocalized: artistNameLocalized,
         ownership,
         format,
-        $artistName: utils.normalizeForSearch(artistName),
-        $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
-        $title: utils.normalizeForSearch(title),
+        $artistName: normalizeForSearch(artistName),
+        $artistNameLocalized: normalizeForSearch(artistNameLocalized),
+        $title: normalizeForSearch(title),
       }
 
       return itemData;

@@ -203,6 +203,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { RecordsAPI } from '@/helpers/records-api';
 import { ERYMOwnershipStatus } from '@/helpers/enums';
 import * as utils from '@/helpers/utils';
+import { generateSearchUrl, generateSearchHint } from '@/helpers/string';
 import { storageSet } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import type {
@@ -327,19 +328,19 @@ const searchLinks = $derived(() => {
   } = _track();
 
   return {
-    searchArtistUrl: utils.generateSearchUrl({ artist: artistName }),
-    searchArtistHint: utils.generateSearchHint([artistName]),
-    searchAlbumUrl: albumName ? utils.generateSearchUrl({
+    searchArtistUrl: generateSearchUrl({ artist: artistName }),
+    searchArtistHint: generateSearchHint([artistName]),
+    searchAlbumUrl: albumName ? generateSearchUrl({
       artist: artistName,
       releaseTitle: albumName,
     }) : '',
-    searchAlbumHint: albumName ? utils.generateSearchHint([artistName, albumName]) : '',
-    searchTrackUrl: utils.generateSearchUrl({
+    searchAlbumHint: albumName ? generateSearchHint([artistName, albumName]) : '',
+    searchTrackUrl: generateSearchUrl({
       artist: artistName,
       releaseTitle: albumName,
       trackTitle: trackName,
     }),
-    searchTrackHint: utils.generateSearchHint([artistName, albumName, trackName]),
+    searchTrackHint: generateSearchHint([artistName, albumName, trackName]),
   };
 });
 

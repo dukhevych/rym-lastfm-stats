@@ -2,7 +2,7 @@ import browser from 'webextension-polyfill';
 
 import FlexSearch from 'flexsearch';
 import * as db from '@/helpers/db';
-import * as utils from '@/helpers/utils';
+import { normalizeForSearch } from '@/helpers/string';
 import * as constants from '@/helpers/constants';
 import getWindowDataInjected from '@/background/getWindowDataInjected';
 import { checkPartialStringsMatch } from '@/helpers/string';
@@ -142,7 +142,7 @@ async function handleDatabaseMessages(message: DatabaseMessage, sender: browser.
 
         const artist = payload.artist.trim();
 
-        const query = utils.normalizeForSearch(artist);
+        const query = normalizeForSearch(artist);
         const hits = flexIndex.search(query, { limit: 100 });
 
         result = hits
@@ -167,7 +167,7 @@ async function handleDatabaseMessages(message: DatabaseMessage, sender: browser.
             return;
           }
 
-          const query = utils.normalizeForSearch(artist);
+          const query = normalizeForSearch(artist);
           const hits = flexIndex.search(query, { limit: 100 });
 
           const records: IRYMRecordDB[] = hits
@@ -190,8 +190,8 @@ async function handleDatabaseMessages(message: DatabaseMessage, sender: browser.
           throw new Error('Invalid payload for GET_RECORD_BY_ARTIST_AND_TITLE');
         }
 
-        const artistQuery = utils.normalizeForSearch(payload.artist);
-        const titleQuery = utils.normalizeForSearch(payload.title);
+        const artistQuery = normalizeForSearch(payload.artist);
+        const titleQuery = normalizeForSearch(payload.title);
 
         const hits = flexIndex.search(artistQuery, { limit: 50 });
         const matchedRecords = hits.map(id => recordMap.get(String(id))).filter(notNull);
@@ -229,7 +229,7 @@ async function handleDatabaseMessages(message: DatabaseMessage, sender: browser.
 
         result = filterByTitleAndArtist(matchedRecords, titleQuery);
 
-        const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
+        const titleFallbackQuery = normalizeForSearch(payload.titleFallback);
 
         const shouldTryTitleFallback =
           !(result as [])?.length &&
@@ -237,7 +237,7 @@ async function handleDatabaseMessages(message: DatabaseMessage, sender: browser.
           titleQuery !== titleFallbackQuery;
 
         if (shouldTryTitleFallback) {
-          const titleFallbackQuery = utils.normalizeForSearch(payload.titleFallback);
+          const titleFallbackQuery = normalizeForSearch(payload.titleFallback);
           result = filterByTitleAndArtist(matchedRecords, titleFallbackQuery);
         }
 
@@ -273,7 +273,7 @@ async function handleDatabaseMessages(message: DatabaseMessage, sender: browser.
         // const shouldTrySearchByTitle = !result?.length;
 
         // if (shouldTrySearchByTitle) {
-        //   const titleQuery = utils.normalizeForSearch(payload.titleFallback || payload.title);
+        //   const titleQuery = normalizeForSearch(payload.titleFallback || payload.title);
         //   const titleHits = flexIndex.search(titleQuery, { limit: 50 });
         //   console.log('titleHits', titleHits);
         // }

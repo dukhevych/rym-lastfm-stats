@@ -1,91 +1,11 @@
 import browser from 'webextension-polyfill';
-import { Vibrant } from "node-vibrant/browser";
 import { MD5 } from 'crypto-js';
-import { remove as removeDiacritics } from 'diacritics';
 import * as constants from './constants';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import type { RecentTrack } from '@/api/getRecentTracks';
-import { getSyncedUserData } from './storageUtils';
-import { RYMEntityCode } from './enums';
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
-
-export function shortenNumber(num: number): string {
-  if (num >= 1000000) {
-    return parseFloat((num / 1000000).toFixed(1)) + 'M';
-  } else if (num >= 1000) {
-    return parseFloat((num / 1000).toFixed(1)) + 'k';
-  } else {
-    return num.toString();
-  }
-};
-
-export interface FormatNumberOptions {
-  minimumFractionDigits?: number;
-  maximumFractionDigits?: number;
-  locale?: string;
-}
-
-export const formatNumber = (
-  number: number,
-  options: FormatNumberOptions = {}
-): string => {
-  const {
-    minimumFractionDigits = 0,
-    maximumFractionDigits = 20,
-    locale = 'en-US',
-  } = options;
-
-  const formatter = new Intl.NumberFormat(locale, {
-    minimumFractionDigits,
-    maximumFractionDigits,
-  });
-
-  return formatter.format(number);
-};
-
-export function generateSearchUrl({
-  artist = '',
-  releaseTitle = '',
-  trackTitle = '',
-} = {}, strictSearch = true) {
-  let url = 'https://rateyourmusic.com';
-
-  const query = [artist, releaseTitle, trackTitle]
-    .filter(Boolean)
-    .join(' ');
-  let searchterm: string;
-
-  if (!query) {
-    return '';
-  } else {
-    searchterm = encodeURIComponent(query);
-    url += '/search?';
-    url += `searchterm=${searchterm}`;
-  }
-
-  if (trackTitle) url += `&searchtype=${RYMEntityCode.Song}`;
-  else if (releaseTitle) url += `&searchtype=${RYMEntityCode.Release}`;
-  else if (artist) url += `&searchtype=${RYMEntityCode.Artist}`;
-
-  // Strict search results are provided by this addon and are not a part of RYM functionality
-  if (strictSearch) url += '&strict=true';
-
-  console.log(encodeURIComponent(artist));
-
-  if (artist) url += `&enh_artist=${encodeURIComponent(artist)}`;
-  if (releaseTitle) url += `&enh_release=${encodeURIComponent(releaseTitle)}`;
-  if (trackTitle) url += `&enh_track=${encodeURIComponent(trackTitle)}`;
-
-  console.log(url);
-
-  return url;
-};
-
-export function generateSearchHint(params: string[]) {
-  return `Search for "${params.join(' - ')}" on RateYourMusic`;
-}
 
 export interface Wait {
   (ms: number): Promise<void>;
@@ -131,113 +51,6 @@ export function throttle<T extends (...args: any[]) => any>(fn: T, wait: number)
       clearTimeout(timeout);
       timeout = setTimeout(() => invoke(), wait - (now - lastCall));
     }
-  };
-}
-
-export interface Deburr {
-  (string: string): string;
-}
-
-export const deburr: Deburr = function(string: string): string {
-  if (typeof string !== 'string') {
-    throw new TypeError('Expected a string');
-  }
-  return removeDiacritics(string);
-}
-
-interface FetchImageResponse {
-  success: boolean;
-  dataUrl?: string;
-  error?: string;
-}
-
-export async function getImageColors(imageUrl: string): Promise<ReturnType<typeof getVibrantUiColors>> {
-  const dataUrl: string = await new Promise<string>((resolve, reject) => {
-    browser.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl }, (response: FetchImageResponse) => {
-      if (!response?.success) {
-        return reject(new Error(response?.error || 'Failed to fetch image'));
-      }
-      resolve(response.dataUrl as string);
-    });
-  });
-
-  const v = new Vibrant(dataUrl);
-
-  const rawPalette = await v.getPalette();
-
-  // Convert null swatches to undefined to match VibrantPalette type
-  const palette: VibrantPalette = Object.fromEntries(
-    Object.entries(rawPalette).map(([key, value]) => [key, value === null ? undefined : value])
-  );
-
-  return getVibrantUiColors(palette);
-}
-
-export interface GetContrastingColorOptions {
-  darkColor?: string;
-  lightColor?: string;
-}
-
-export function getContrastingColor(
-  hexColor: string,
-  darkColor: string = '#000',
-  lightColor: string = '#fff'
-): string {
-  if (!/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(hexColor)) {
-    throw new Error('Invalid hex color format');
-  }
-
-  const hex: string = hexColor.slice(1);
-  const parseHex = (hex: string): number => parseInt(hex.length === 1 ? hex + hex : hex, 16);
-
-  const r: number = parseHex(hex.length === 3 ? hex[0] : hex.substring(0, 2));
-  const g: number = parseHex(hex.length === 3 ? hex[1] : hex.substring(2, 4));
-  const b: number = parseHex(hex.length === 3 ? hex[2] : hex.substring(4, 6));
-
-  const relativeLuminance = (r: number, g: number, b: number): number => {
-    const [R, G, B]: number[] = [r, g, b].map((c: number) => {
-      c /= 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    });
-    return 0.2126 * R + 0.7152 * G + 0.0722 * B;
-  };
-
-  return relativeLuminance(r, g, b) > 0.179 ? darkColor : lightColor;
-}
-
-export async function getVibrantUiColors(palette: VibrantPalette): Promise<VibrantUiColors> {
-  const lightColors = {
-    bgColor: (palette.LightMuted || palette.Muted || palette.LightVibrant)?.hex || '#222',
-    accentColor: (palette.Vibrant || palette.DarkVibrant)?.hex || '#ff4081',
-    accentColorHSL: (palette.Vibrant || palette.DarkVibrant)?.hsl || [0.9444444, 1, 0.63],
-  };
-
-  const darkColors = {
-    bgColor: (palette.DarkMuted || palette.Muted || palette.DarkVibrant)?.hex || '#222',
-    accentColor: (palette.Vibrant || palette.LightVibrant)?.hex || '#ff4081',
-    accentColorHSL: (palette.Vibrant || palette.LightVibrant)?.hsl || [0.9444444, 1, 0.63],
-  };
-
-  return {
-    light: {
-      ...lightColors,
-      get bgColorContrast() {
-        return getContrastingColor(this.bgColor);
-      },
-      get accentColorContrast() {
-        return getContrastingColor(this.accentColor);
-      },
-    },
-    dark: {
-      ...darkColors,
-      get bgColorContrast() {
-        return getContrastingColor(this.bgColor);
-      },
-      get accentColorContrast() {
-        return getContrastingColor(this.accentColor);
-      },
-    },
-    palette,
   };
 }
 
@@ -329,35 +142,6 @@ interface GenerateMd5 {
 
 const generateMd5: GenerateMd5 = function(string: string): string {
   return MD5(string).toString();
-}
-
-export interface NormalizeForSearch {
-  (str: string): string;
-}
-
-export function normalizeForSearch(str: string): string {
-  if (!str) return '';
-
-  return deburr(str
-    .toLowerCase()
-    .replace(/\s&\s/g, ' and ')
-    .replace(/\./g, '')
-    .replace(/_/g, '')
-    .replace(/"/g, '')
-    .replace(/ - /g, ' ')
-    .replace(/'/g, '')
-    .replace(/\s\/\s/g, ' ')
-    .replace(/\//g, ' ')
-    .replace(/’/g, '')
-    .replace(/\\/g, '')
-    .replace(/:/g, '')
-    .replace(/,/g, '')
-    .replace(/\[/g, '')
-    .replace(/\]/g, '')
-    .replace(/\s+/g, ' ')
-    .replace(/ pt /g, ' part ')
-    .replace(/ vol /g, ' volume ')
-    .trim());
 }
 
 export interface DecodeHtmlEntities {
@@ -593,42 +377,6 @@ export function normalizeLastFmTrack(track: RecentTrack): TrackDataNormalized {
     albumName: track.album['#text'],
     artistName: track.artist['#text'],
   }
-}
-
-export function rgbToHex([r, g, b]: [number, number, number]): string {
-  const clamp = (val: number) => Math.max(0, Math.min(255, Math.trunc(val)));
-  const toHex = (val: number) => clamp(val).toString(16).padStart(2, '0');
-
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
-
-type CSSVarName = `--${string}`;
-
-export function getColorsMap(colors: VibrantUiColors) {
-  const result: Record<CSSVarName, string> = {
-    '--clr-light-bg': colors.light.bgColor,
-    '--clr-light-bg-contrast': colors.light.bgColorContrast,
-    '--clr-light-accent': colors.light.accentColor,
-    '--clr-light-accent-contrast': colors.light.accentColorContrast,
-    '--clr-dark-bg': colors.dark.bgColor,
-    '--clr-dark-bg-contrast': colors.dark.bgColorContrast,
-    '--clr-dark-accent': colors.dark.accentColor,
-    '--clr-dark-accent-contrast': colors.dark.accentColorContrast,
-    '--clr-light-accent-hue': String(Math.trunc(colors.light.accentColorHSL[0] * 360)),
-    '--clr-light-accent-saturation': (colors.light.accentColorHSL[1] * 100).toFixed(2),
-    '--clr-light-accent-lightness': (colors.light.accentColorHSL[2] * 100).toFixed(2),
-    '--clr-dark-accent-hue': String(Math.trunc(colors.dark.accentColorHSL[0] * 360)),
-    '--clr-dark-accent-saturation': (colors.dark.accentColorHSL[1] * 100).toFixed(2),
-    '--clr-dark-accent-lightness': (colors.dark.accentColorHSL[2] * 100).toFixed(2),
-  };
-
-  Object.keys(colors.palette).forEach((key) => {
-    if (colors.palette[key]?.rgb) {
-      result[`--clr-palette-${key.toLowerCase()}`] = rgbToHex(colors.palette[key].rgb);
-    }
-  });
-
-  return result;
 }
 
 /**

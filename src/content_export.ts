@@ -1,4 +1,5 @@
 import * as utils from '@/helpers/utils';
+import { normalizeForSearch } from '@/helpers/string';
 import { storageSet } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import { LASTFM_COLOR } from '@/helpers/constants';
@@ -121,9 +122,9 @@ import { createElement as h } from '@/helpers/dom';
           artistNameLocalized,
           ownership,
           format,
-          $artistName: utils.normalizeForSearch(artistName),
-          $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
-          $title: utils.normalizeForSearch(title),
+          $artistName: normalizeForSearch(artistName),
+          $artistNameLocalized: normalizeForSearch(artistNameLocalized),
+          $title: normalizeForSearch(title),
         };
 
         if (constants.isDev) {

@@ -3,7 +3,7 @@
 <script lang="ts">
 import { formatDistanceToNow } from 'date-fns';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
-import * as utils from '@/helpers/utils';
+import { generateSearchUrl, generateSearchHint } from '@/helpers/string';
 
 const { scrobbles = [], timestamp, open = true, config } = $props<{
   scrobbles: TrackDataNormalized[];
@@ -17,12 +17,12 @@ const scrobblesEnriched = $derived(scrobbles.map((scrobble: TrackDataNormalized)
   ...scrobble,
   timestampFormatted: scrobble.timestamp ? new Date((scrobble.timestamp) * 1000).toLocaleString() : null,
   timestampRelative: scrobble.timestamp ? formatDistanceToNow(new Date((scrobble.timestamp) * 1000), { addSuffix: true }) : null,
-  searchArtistUrl: utils.generateSearchUrl({ artist: scrobble.artistName }),
-  searchArtistHint: utils.generateSearchHint([scrobble.artistName]),
-  searchAlbumUrl: utils.generateSearchUrl({ artist: scrobble.artistName, releaseTitle: scrobble.albumName }),
-  searchAlbumHint: utils.generateSearchHint([scrobble.artistName, scrobble.albumName]),
-  searchTrackUrl: utils.generateSearchUrl({ artist: scrobble.artistName, releaseTitle: scrobble.albumName, trackTitle: scrobble.trackName }),
-  searchTrackHint: utils.generateSearchHint([scrobble.artistName, scrobble.albumName, scrobble.trackName]),
+  searchArtistUrl: generateSearchUrl({ artist: scrobble.artistName }),
+  searchArtistHint: generateSearchHint([scrobble.artistName]),
+  searchAlbumUrl: generateSearchUrl({ artist: scrobble.artistName, releaseTitle: scrobble.albumName }),
+  searchAlbumHint: generateSearchHint([scrobble.artistName, scrobble.albumName]),
+  searchTrackUrl: generateSearchUrl({ artist: scrobble.artistName, releaseTitle: scrobble.albumName, trackTitle: scrobble.trackName }),
+  searchTrackHint: generateSearchHint([scrobble.artistName, scrobble.albumName, scrobble.trackName]),
 })));
 </script>
 

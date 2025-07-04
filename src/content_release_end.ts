@@ -1,6 +1,7 @@
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import { ERYMOwnershipStatus } from '@/helpers/enums';
+import { normalizeForSearch } from '@/helpers/string';
 import { RecordsAPI } from '@/helpers/records-api';
 import {
   getReleaseYear,
@@ -82,9 +83,9 @@ function prepareFullData(syncedData: SyncedData): IRYMRecordDB {
     releaseDate: getReleaseYear(uiElements.parent),
     artistName,
     artistNameLocalized: artistNameLocalized,
-    $artistName: utils.normalizeForSearch(artistName),
-    $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
-    $title: utils.normalizeForSearch(title),
+    $artistName: normalizeForSearch(artistName),
+    $artistNameLocalized: normalizeForSearch(artistNameLocalized),
+    $title: normalizeForSearch(title),
     ...syncedData,
   };
 };

@@ -4,6 +4,7 @@ import { isMyProfile } from '@/helpers/rym-dom';
 import { getDirectInnerText } from '@/helpers/dom';
 import { ERYMOwnershipStatus, ERYMOwnershipAltText, ERYMFormat } from '@/helpers/enums';
 import { RecordsAPI } from '@/helpers/records-api';
+import { normalizeForSearch } from '@/helpers/string';
 
 (async function () {
   window.addEventListener('load', async () => {
@@ -64,9 +65,9 @@ import { RecordsAPI } from '@/helpers/records-api';
         artistNameLocalized: artistNameLocalized,
         ownership,
         format,
-        $artistName: utils.normalizeForSearch(artistName),
-        $artistNameLocalized: utils.normalizeForSearch(artistNameLocalized),
-        $title: utils.normalizeForSearch(title),
+        $artistName: normalizeForSearch(artistName),
+        $artistNameLocalized: normalizeForSearch(artistNameLocalized),
+        $title: normalizeForSearch(title),
       }
 
       return itemData;

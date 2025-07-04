@@ -39,7 +39,7 @@
       style:animation-delay={`${index * 0.07}s`}
       style:--hue={artist.hue}
       style:--playcountPercentage={artist.playcountPercentage}
-      href={utils.generateSearchUrl({ artist: artist.name })}
+      href={generateSearchUrl({ artist: artist.name })}
       title={artist.name}
     >
       <span class="artist-name">{artist.name}</span>
@@ -51,6 +51,7 @@
 <script lang="ts">
 import * as utils from '@/helpers/utils';
 import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
+import { generateSearchUrl } from '@/helpers/string';
 import * as constants from '@/helpers/constants';
 import { getTopArtists } from '@/api/getTopArtists';
 import type { TopArtistsPeriod, TopArtist } from '@/api/getTopArtists';

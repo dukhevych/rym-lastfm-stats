@@ -50,7 +50,7 @@
       <div class="album-details">
         <a
           class="album-title"
-          href={utils.generateSearchUrl({
+          href={generateSearchUrl({
             artist: album.artist,
             releaseTitle: album.title,
           })}
@@ -60,7 +60,7 @@
         </a>
         <a
           class="album-artist"
-          href={utils.generateSearchUrl({
+          href={generateSearchUrl({
             artist: album.artist,
           })}
           title={album.artist}
@@ -71,7 +71,7 @@
       </div>
       <a
         class="album-link"
-        href={utils.generateSearchUrl({
+        href={generateSearchUrl({
           artist: album.artist,
           releaseTitle: album.title,
         })}
@@ -87,6 +87,7 @@
 
 <script lang="ts">
 import * as utils from '@/helpers/utils';
+import { generateSearchUrl } from '@/helpers/string';
 import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import { getTopAlbums } from '@/api/getTopAlbums';
