@@ -629,35 +629,45 @@
 </template>
 
 <script setup>
+import browser from 'webextension-polyfill';
 import { ref, reactive, watch, computed } from 'vue';
+
+// HELPERS
 import { RecordsAPI } from '@/helpers/records-api';
 import * as utils from '@/helpers/utils';
-import * as constants from '@/helpers/constants';
 import * as api from '@/helpers/api';
+import {
+  storageGet,
+  storageSet,
+  getSyncedUserData,
+  getSyncedOptions,
+} from '@/helpers/storageUtils';
+import * as constants from '@/helpers/constants';
+
+// COMPONENTS
 import FormInput from '@/components/options/FormInput.vue';
 import FormCheckbox from '@/components/options/FormCheckbox.vue';
 import FormFieldset from '@/components/options/FormFieldset.vue';
 import FormRange from './FormRange.vue';
 import FormSeparator from './FormSeparator.vue';
 
+// ENVIRONMENT CONSTANTS
 const appVersion = process.env.APP_VERSION;
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 
-const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+// FLAGS
 const loading = ref(true);
-const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
-
-const config = ref(null);
-const userData = ref(null);
 const saved = ref(false);
 const dirty = ref(false);
 const signinInProgress = ref(false);
 const showModal = ref(false);
+
+// STATE
+const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
+const config = ref<typeof options | null>(null);
+const userData = ref(null);
 const rymSyncTimestamp = ref(null);
-const rymSyncTimestampDate = computed(() => {
-  if (!rymSyncTimestamp.value) return null;
-  return new Date(rymSyncTimestamp.value);
-});
+
 const rymSyncTimestampDateString = computed(() => {
   if (!rymSyncTimestamp.value) return null;
   return new Date(rymSyncTimestamp.value).toLocaleDateString();
@@ -690,7 +700,7 @@ const submit = async () => {
     }
   });
 
-  await utils.storageSet(newConfig);
+  await storageSet(newConfig);
 
   config.value = newConfig;
   saved.value = true;
@@ -721,11 +731,11 @@ const openAuthPage = async () => {
   signinInProgress.value = true;
 
   try {
-    const redirectUri = browserAPI.identity.getRedirectURL();
+    const redirectUri = browser.identity.getRedirectURL();
 
     const authUrl = `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&cb=${encodeURIComponent(redirectUri)}`;
 
-    const redirectUrl = await browserAPI.identity.launchWebAuthFlow({
+    const redirectUrl = await browser.identity.launchWebAuthFlow({
       url: authUrl,
       interactive: true
     });
@@ -750,7 +760,7 @@ const openAuthPage = async () => {
 
     userData.value = normalizedData;
 
-    await utils.storageSet({
+    await storageSet({
       userData: normalizedData,
       lastfmSession: sessionKey,
     });
@@ -770,18 +780,18 @@ const closeModalHandler = (e) => {
 
 const init = async () => {
   try {
-    const syncedOptions = await utils.getSyncedOptions();
+    const syncedOptions = await getSyncedOptions();
     dbRecordsQty.value = await RecordsAPI.getQty()
 
     config.value = syncedOptions;
 
     Object.assign(options, config.value);
 
-    const syncedUserData = await utils.getSyncedUserData();
+    const syncedUserData = await getSyncedUserData();
 
     userData.value = syncedUserData;
 
-    rymSyncTimestamp.value = await utils.storageGet('rymSyncTimestamp', 'local');
+    rymSyncTimestamp.value = await storageGet('rymSyncTimestamp', 'local');
 
     const debouncedSubmit = utils.debounce(() => {
       submit();
@@ -826,7 +836,7 @@ const openRymSync = () => {
 const logout = async () => {
   const doConfirm = confirm('Are you sure you want to logout?');
   if (!doConfirm) return;
-  await browserAPI.storage.sync.remove('userData');
+  await browser.storage.sync.remove('userData');
   userData.value = null;
 };
 
@@ -836,7 +846,7 @@ const reportIssueUrl = computed(() => {
   const params = new URLSearchParams({
     template: 'bug_report.yml',
     browser: navigator.userAgent,
-    'extension-version': browserAPI.runtime.getManifest().version,
+    'extension-version': browser.runtime.getManifest().version,
   });
 
   return `${baseUrl}?${params.toString()}`;

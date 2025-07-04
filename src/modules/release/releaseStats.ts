@@ -1,7 +1,10 @@
 import * as api from '@/api';
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
-import { createElement as h } from '@/helpers/utils';
+import { createSvgUse } from '@/helpers/sprite';
+import { storageGet, storageSet, getSyncedUserData, generateStorageKey } from '@/helpers/storageUtils';
+import { createElement as h } from '@/helpers/dom';
+import { checkPartialStringsMatch } from '@/helpers/string';
 
 import './releaseStats.css';
 
@@ -80,22 +83,20 @@ const state = {
     return result;
   },
   get cacheStorageKey() {
-    let value = `releaseStats_${this.releaseId}`;
-
-    if (this.userName) {
-      value += `_${this.userName}`;
-    }
-
-    value += `_${utils.slugify(this.artistQuery)}_${utils.slugify(this.releaseTitleQuery)}`;
-
-    return value;
+    return generateStorageKey(
+      'releaseStats',
+      this.releaseId,
+      this.userName,
+      this.artistQuery,
+      this.releaseTitleQuery,
+    );
   },
-  get artistQueryCacheKey() { return `artistQuery_${this.releaseId}`; },
-  get releaseTitleQueryCacheKey() { return `releaseTitleQuery_${this.releaseId}`; },
+  get artistQueryCacheKey() { return generateStorageKey('artistQuery', this.releaseId); },
+  get releaseTitleQueryCacheKey() { return generateStorageKey('releaseTitleQuery', this.releaseId); },
   get searchCacheKey() {
-    return `searchResults_${this.releaseId}`;
+    return generateStorageKey('searchResults', this.releaseId);
   },
-  get releaseTitleCacheKey() { return `releaseTitleQuery_${this.releaseId}`; }
+  get releaseTitleCacheKey() { return generateStorageKey('releaseTitleQuery', this.releaseId); }
 } as State;
 
 function createSearchDialog() {
@@ -117,7 +118,7 @@ function createSearchDialog() {
               dialog.close();
             },
           },
-          utils.createSvgUse('svg-close-symbol')
+          createSvgUse('svg-close-symbol')
         ),
       ],
     ),
@@ -162,7 +163,7 @@ function populateSearchDialog() {
           state.releaseTitleQuery = item.name;
 
           // UPDATE VALUES IN CACHE
-          await utils.storageSet({
+          await storageSet({
             [state.artistQueryCacheKey]: item.artist,
             [state.releaseTitleQueryCacheKey]: item.name,
           }, 'local');
@@ -243,7 +244,7 @@ function initUI() {
       target: '_blank',
       title: 'View on Last.fm'
     },
-    utils.createSvgUse('svg-lastfm-square-symbol')
+    createSvgUse('svg-lastfm-square-symbol')
   );
 
   uiElements.statsWrapper = h(
@@ -316,7 +317,7 @@ function populateReleaseStats(
 }
 
 async function initSearchResults() {
-  const searchResultsCache: SearchCache | undefined = await utils.storageGet(state.searchCacheKey, 'local');
+  const searchResultsCache: SearchCache | undefined = await storageGet(state.searchCacheKey, 'local');
 
   const oneDayMs = 1000 * 60 * 60 * 24;
 
@@ -372,7 +373,7 @@ async function initSearchResults() {
 
   if (!searchResults || searchResults.length === 0) {
     console.warn('No search results returned from api for:', state.artists, state.releaseTitle);
-    await utils.storageSet({
+    await storageSet({
       [state.searchCacheKey]: {
         data: null,
         timestamp: Date.now(),
@@ -386,16 +387,16 @@ async function initSearchResults() {
     const itemTitleNormalized = utils.normalizeForSearch(item.name);
 
     const hasArtist = state.artistNamesFlatNormalized
-      .some((name) => utils.checkPartialStringsMatch(itemArtistNormalized, name));
+      .some((name) => checkPartialStringsMatch(itemArtistNormalized, name));
 
     if (!hasArtist) return false;
 
-    return utils.checkPartialStringsMatch(itemTitleNormalized, utils.normalizeForSearch(state.releaseTitle));
+    return checkPartialStringsMatch(itemTitleNormalized, utils.normalizeForSearch(state.releaseTitle));
   });
 
   if (searchResultsFiltered.length === 0) {
     console.warn('No matching search results found for:', state.artists, state.releaseTitle);
-    await utils.storageSet({
+    await storageSet({
       [state.searchCacheKey]: {
         data: null,
         timestamp: Date.now()
@@ -425,7 +426,7 @@ async function initSearchResults() {
 
   constants.isDev && console.log('Search results found:', searchResultsFilteredSorted);
 
-  await utils.storageSet({
+  await storageSet({
     [state.searchCacheKey]: {
       data: searchResultsFilteredSorted,
       timestamp: Date.now(),
@@ -436,7 +437,7 @@ async function initSearchResults() {
 }
 
 async function initQueries() {
-  const cachedQueries = await utils.storageGet([
+  const cachedQueries = await storageGet([
     state.artistQueryCacheKey,
     state.releaseTitleQueryCacheKey,
   ], 'local');
@@ -453,7 +454,7 @@ async function initQueries() {
       releaseTitleQuery = state.releaseTitle;
     }
 
-    await utils.storageSet({
+    await storageSet({
       [state.artistQueryCacheKey]: artistQuery,
       [state.releaseTitleQueryCacheKey]: releaseTitleQuery,
     }, 'local');
@@ -477,6 +478,8 @@ async function fetchReleaseInfo(artist: string, title: string) {
       releaseType: state.releaseType,
     });
 
+    console.log('releaseInfoResponse', releaseInfoResponse);
+
     const stats: ReleaseStats = {
       playcount: 0,
       listeners: 0,
@@ -488,6 +491,7 @@ async function fetchReleaseInfo(artist: string, title: string) {
       album: 'album',
       single: 'track',
       'music video': 'track',
+      ep: 'album',
     };
 
     const releaseTypeData = releaseInfoResponse[releaseTypeDataMap[state.releaseType] ?? 'album'];
@@ -502,7 +506,9 @@ async function fetchReleaseInfo(artist: string, title: string) {
     } else {
       return null;
     }
-  } catch {
+  } catch (error) {
+    console.error(error);
+    console.error('Error fetching release info!!!!!!!!!!!!!!!');
     return null;
   }
 }
@@ -511,8 +517,7 @@ async function updateStats() {
   let stats: ReleaseStats | null = null;
   let timestamp: number | null = null;
 
-  const cachedData = await utils.storageGet(state.cacheStorageKey, 'local');
-
+  const cachedData = await storageGet(state.cacheStorageKey, 'local');
   const cacheLifetime = state.userName ? constants.STATS_CACHE_LIFETIME_MS : constants.STATS_CACHE_LIFETIME_GUEST_MS;
 
   if (
@@ -533,7 +538,7 @@ async function updateStats() {
     stats = await fetchReleaseInfo(state.artistQuery, state.releaseTitleQuery);
     timestamp = Date.now();
 
-    await utils.storageSet({
+    await storageSet({
       [state.cacheStorageKey]: {
         timestamp,
         data: stats,
@@ -601,7 +606,7 @@ async function render(_config: ProfileOptions) {
   await initQueries();
 
   // SET USER NAME
-  const userData = await utils.getSyncedUserData();
+  const userData = await getSyncedUserData();
   const userName = userData?.name;
   if (userName) state.userName = userName;
 

@@ -1,37 +1,39 @@
 import profile, { targetSelectors } from '@/modules/profile';
 import { renderContent } from '@/helpers/renderContent';
-import * as utils from '@/helpers/utils';
+import { initColorSchemeDetection, isMyProfile, detectLastfmUserName } from '@/helpers/rym-dom';
+import { checkDOMCondition, waitForDOMReady } from '@/helpers/dom';
+import { createSVGSprite, insertSVGSprite } from '@/helpers/sprite';
+import { getFullConfig } from '@/helpers/storageUtils';
 
 (async function () {
-  utils.initColorSchemeDetection();
+  initColorSchemeDetection();
+  await insertSVGSprite(createSVGSprite());
 
-  const sprite = utils.createSVGSprite();
-  await utils.insertSVGSprite(sprite);
+  const config = await getFullConfig();
 
-  const config = await utils.getFullConfig();
+  await checkDOMCondition(targetSelectors);
+  const _isMyProfile = isMyProfile();
 
-  const isMyProfile = await utils.checkDOMCondition(targetSelectors, () => utils.isMyProfile());
-
-  if (isMyProfile) {
+  if (_isMyProfile) {
     await renderContent(profile, {
       ...config,
-      isMyProfile,
+      isMyProfile: true,
     }, 'profile');
     return;
   }
 
   // Wait for the full profile page to load
   // This is necessary because last.fm link can be added anywhere on the page
-  await utils.waitForDOMReady();
+  await waitForDOMReady();
 
   // Parse links on the page to find the last.fm username
-  const userName = utils.detectLastfmUserName();
+  const userName = detectLastfmUserName();
 
   if (userName) {
     await renderContent(profile, {
       ...config,
       userName,
-      isMyProfile,
+      isMyProfile: _isMyProfile,
     }, 'profile');
   }
 })();

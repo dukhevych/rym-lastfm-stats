@@ -1,8 +1,9 @@
 import * as utils from '@/helpers/utils';
+import { storageSet } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import { LASTFM_COLOR } from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
-import { createElement as h } from '@/helpers/utils';
+import { createElement as h } from '@/helpers/dom';
 
 (async function () {
   const form: HTMLFormElement | null = document.querySelector('form.music_export');
@@ -67,12 +68,12 @@ import { createElement as h } from '@/helpers/utils';
 
     try {
       const response = await fetch(form.action, {
-        method: "POST",
+        method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error("Request failed: " + response.status);
+        throw new Error(`Request failed: ${response.status}`);
       }
 
       const exportData = await response.text();
@@ -144,7 +145,7 @@ import { createElement as h } from '@/helpers/utils';
 
       if (parsedData.length === recordsQty) {
         statusMessage.textContent = `✅ Synced successfully ${recordsQty} records.`;
-        await utils.storageSet({
+        await storageSet({
           rymSyncTimestamp: Date.now(),
         }, 'local');
       } else {

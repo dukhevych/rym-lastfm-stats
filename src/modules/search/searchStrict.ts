@@ -1,8 +1,9 @@
 import * as utils from '@/helpers/utils';
+import { getDirectInnerText, createElement as h } from '@/helpers/dom';
 import * as constants from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
 import { RYMEntityCode } from '@/helpers/enums';
-import { createElement as h } from '@/helpers/utils';
+import { removeBrackets, checkPartialStringsMatch, extractNumbers } from '@/helpers/string';
 
 import './searchStrict.css';
 
@@ -56,7 +57,7 @@ const validationRules = {
 
       // Enhanced artist validation
       const artistNameLocalized = utils.normalizeForSearch(
-        utils.removeArtistNameBrackets(
+        removeBrackets(
           item.querySelector(artistNameLocalizedSelector)?.textContent || ''
         )
       );
@@ -65,7 +66,7 @@ const validationRules = {
       const artistName = utils.normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
       if (artistName === targetArtist.value) return 'full';
 
-      const artistAka = utils.getNodeDirectTextContent(item.querySelector(artistAkaSelector)).trim();
+      const artistAka = getDirectInnerText(item.querySelector(artistAkaSelector));
       const akaValues = artistAka.replace(/^a\.k\.a:\s*/, '')
         .split(', ')
         .map((aka) => utils.normalizeForSearch(aka))
@@ -99,10 +100,10 @@ const validationRules = {
       function validateArtist() {
         const getArtistLinks = utils.lazy(() => Array.from(item.querySelectorAll(artistNameSelector)));
         const getArtistNamesLocalized = utils.lazy(() => getArtistLinks()
-          .map((artistLink) => (artistLink.querySelector('.subtext')?.textContent || '').replace(/^\[(.*)\]$/, '$1'))
+          .map((artistLink) => removeBrackets((artistLink.querySelector('.subtext')?.textContent || '')))
         );
         const getArtistNames = utils.lazy(() => getArtistLinks()
-          .map((artistLink) => utils.getNodeDirectTextContent(artistLink).trim())
+          .map((artistLink) => getDirectInnerText(artistLink))
           .filter(Boolean)
         );
         const getArtistNamesLocalizedNormalized = utils.lazy(() => getArtistNamesLocalized()
@@ -127,8 +128,8 @@ const validationRules = {
         if (getArtistNamesNormalized().includes(targetArtist.getNormalized())) return 'full';
         else valuesNormalized.push(...getArtistNamesNormalized());
 
-        if (values.some((value) => utils.checkPartialStringsMatch(value, targetArtist.value))) return 'partial';
-        if (valuesNormalized.some((value) => utils.checkPartialStringsMatch(value, targetArtist.getNormalized()))) return 'partial';
+        if (values.some((value) => checkPartialStringsMatch(value, targetArtist.value))) return 'partial';
+        if (valuesNormalized.some((value) => checkPartialStringsMatch(value, targetArtist.getNormalized()))) return 'partial';
 
         return false;
       }
@@ -173,9 +174,9 @@ const validationRules = {
           )) return 'full';
         }
 
-        if (utils.checkPartialStringsMatch(getReleaseTitle(), targetRelease.value)) return 'partial';
+        if (checkPartialStringsMatch(getReleaseTitle(), targetRelease.value)) return 'partial';
 
-        if (utils.checkPartialStringsMatch(getReleaseTitleNormalized(), targetRelease.getNormalized())) return 'partial';
+        if (checkPartialStringsMatch(getReleaseTitleNormalized(), targetRelease.getNormalized())) return 'partial';
 
         return false;
       }
@@ -213,12 +214,12 @@ const validationRules = {
       let hasArtist = false;
       let hasTrackName = false;
 
-      if (utils.checkPartialStringsMatch(_query, artistName)) {
+      if (checkPartialStringsMatch(_query, artistName)) {
         hasArtist = true;
         _query = query.replace(artistName, '').trim();
       }
 
-      if (utils.checkPartialStringsMatch(_query, trackName)) {
+      if (checkPartialStringsMatch(_query, trackName)) {
         hasTrackName = true;
         _query = query.replace(trackName, '').trim();
       }
@@ -304,15 +305,14 @@ async function render(config: ProfileOptions) {
 
   async function addReleaseUserRating(item: HTMLElement) {
     const releaseIdEl: HTMLElement | null = item.querySelector(validationRules[RYMEntityCode.Release].selectors.releaseTitleSelector);
-    const releaseId = releaseIdEl?.title || '';
-    const id = utils.extractIdFromTitle(releaseId);
+    const releaseId = extractNumbers(releaseIdEl?.title || '');
 
-    if (id) {
-      const record = await RecordsAPI.getById(id);
+    if (!releaseId) return;
 
-      if (record && record.rating) {
-        item.dataset.rymRating = String(record.rating / 2);
-      }
+    const record = await RecordsAPI.getById(releaseId);
+
+    if (record && record.rating) {
+      item.dataset.rymRating = String(record.rating / 2);
     }
   }
 

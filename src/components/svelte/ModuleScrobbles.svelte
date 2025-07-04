@@ -9,6 +9,7 @@ import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 import errorMessages from '@/modules/profile/recentTracks/errorMessages.json';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import * as utils from '@/helpers/utils';
+import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import * as api from '@/api';
 
@@ -54,14 +55,14 @@ const checkCacheValidity = (cache: RecentTracksCache | null): boolean => {
 }
 
 async function init() {
-  const recentTracksCache: RecentTracksCache | null = await utils.storageGet('recentTracksCache', 'local');
+  const recentTracksCache: RecentTracksCache | null = await storageGet('recentTracksCache', 'local');
 
   if (recentTracksCache && checkCacheValidity(recentTracksCache)) {
     recentTracks = recentTracksCache.data;
     recentTracksTimestamp = recentTracksCache.timestamp;
     colors = recentTracksCache.colors;
   } else {
-    await utils.storageRemove('recentTracksCache', 'local');
+    await storageRemove('recentTracksCache', 'local');
     await loadRecentTracks();
   }
 
@@ -75,7 +76,7 @@ async function init() {
 async function onPollingToggle() {
   isScrobblesPollingEnabled = !isScrobblesPollingEnabled;
 
-  await utils.storageSet({
+  await storageSet({
     recentTracksPollingEnabled: isScrobblesPollingEnabled,
   });
 
@@ -123,7 +124,7 @@ async function loadRecentTracks() {
     recentTracks = normalizedData;
     recentTracksTimestamp = timestamp;
 
-    await utils.storageSet({
+    await storageSet({
       recentTracksCache: {
         data: normalizedData,
         colors: $state.snapshot(colors),
@@ -155,7 +156,7 @@ $effect(() => {
 
 const onToggleScrobblesHistoryPinned = async () => {
   isScrobblesHistoryPinned = !isScrobblesHistoryPinned;
-  await utils.storageSet({
+  await storageSet({
     recentTracksShowOnLoad: isScrobblesHistoryPinned,
   });
   if (isScrobblesHistoryPinned) {

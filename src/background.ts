@@ -5,6 +5,7 @@ import * as db from '@/helpers/db';
 import * as utils from '@/helpers/utils';
 import * as constants from '@/helpers/constants';
 import getWindowDataInjected from '@/background/getWindowDataInjected';
+import { checkPartialStringsMatch } from '@/helpers/string';
 
 import './background/runtime/onInstalled';
 
@@ -207,9 +208,9 @@ async function handleDatabaseMessages(message: DatabaseMessage, sender: browser.
               };
             };
 
-            const isTitleMatch = utils.checkPartialStringsMatch(record.$title, title);
-            const isArtistMatch = utils.checkPartialStringsMatch(record.$artistName, artistQuery) ||
-              utils.checkPartialStringsMatch(record.$artistNameLocalized, artistQuery);
+            const isTitleMatch = checkPartialStringsMatch(record.$title, title);
+            const isArtistMatch = checkPartialStringsMatch(record.$artistName, artistQuery) ||
+              checkPartialStringsMatch(record.$artistNameLocalized, artistQuery);
 
             if (isTitleMatch && isArtistMatch) {
               return {

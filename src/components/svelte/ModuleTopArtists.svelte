@@ -49,8 +49,8 @@
 </div>
 
 <script lang="ts">
-
 import * as utils from '@/helpers/utils';
+import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import { getTopArtists } from '@/api/getTopArtists';
 import type { TopArtistsPeriod, TopArtist } from '@/api/getTopArtists';
@@ -94,12 +94,12 @@ let periodValue = $state<TopArtistsPeriod>(config.topArtistsPeriod);
 const cacheKey = $derived(() => `topArtistsCache_${periodValue}`);
 
 async function loadCache(periodValue: TopArtistsPeriod) {
-  const topArtistsCache: TopArtistsCache | null = await utils.storageGet(cacheKey(), 'local');
+  const topArtistsCache: TopArtistsCache | null = await storageGet(cacheKey(), 'local');
 
   if (topArtistsCache && checkCacheValidity(topArtistsCache)) {
     return topArtistsCache;
   } else {
-    await utils.storageRemove(cacheKey(), 'local');
+    await storageRemove(cacheKey(), 'local');
     return null;
   }
 }
@@ -123,7 +123,7 @@ async function loadTopArtists(periodValue: TopArtistsPeriod) {
     });
     data = topArtistsResponse.topartists.artist;
 
-    await utils.storageSet({
+    await storageSet({
       [`topArtistsCache_${periodValue}`]: {
         data,
         timestamp: Date.now(),
@@ -165,7 +165,7 @@ async function handlePeriodChange(event: Event) {
 }
 
 async function handlePeriodSave() {
-  await utils.storageSet({
+  await storageSet({
     topArtistsPeriod: periodValue,
   });
   savedPeriodValue = periodValue;

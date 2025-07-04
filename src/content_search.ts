@@ -1,11 +1,8 @@
 import search from '@/modules/search';
 import { renderContent } from '@/helpers/renderContent';
-import * as utils from '@/helpers/utils';
-import * as constants from '@/helpers/constants';
+import { getFullConfig } from '@/helpers/storageUtils';
 
 (async function () {
-  const storageItems = await utils.getSyncedOptions();
-  const config = { ...constants.OPTIONS_DEFAULT, ...storageItems };
-
+  const config = await getFullConfig();
   await renderContent(search, config);
 })();

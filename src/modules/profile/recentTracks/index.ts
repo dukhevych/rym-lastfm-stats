@@ -1,6 +1,5 @@
 import { mount } from 'svelte';
-
-import * as utils from '@/helpers/utils';
+import { storageGet, getLastfmUserName } from '@/helpers/storageUtils';
 import ModuleScrobbles from '@/components/svelte/ModuleScrobbles.svelte';
 
 import errorMessages from './errorMessages.json';
@@ -25,7 +24,7 @@ async function render(_config: RecentTracksConfig) {
   }
 
   // SET USER NAME
-  const userName = config.userName || await utils.getLastfmUserName();
+  const userName = config.userName || await getLastfmUserName();
   if (!userName) {
     console.warn(errorMessages.noUserName);
     return;
@@ -42,7 +41,7 @@ async function render(_config: RecentTracksConfig) {
     parent.style.display = 'none';
   }
 
-  const rymSyncTimestamp: number = await utils.storageGet('rymSyncTimestamp', 'local');
+  const rymSyncTimestamp: number = await storageGet('rymSyncTimestamp', 'local');
 
   // SVELTE START
   const mountPoint = document.createElement('div');

@@ -50,8 +50,9 @@
 
 [data-element="rymstats-track-panel"] {
   &.bg-option-20:after {
+    --gap: 5px;
     --n: 12;
-    --bar-width: calc((100% / var(--n)) - 2%);
+    --bar-width: calc((100% / var(--n)) - var(--gap));
 
     --clr-1: var(--clr-palette-lightvibrant);
     --clr-3: var(--clr-palette-vibrant);

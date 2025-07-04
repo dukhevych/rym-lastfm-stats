@@ -1,5 +1,6 @@
 import type { ReleaseType } from '@/api/getReleaseInfo';
-import * as utils from '@/helpers/utils';
+import { getDirectInnerText } from '@/helpers/dom';
+import { extractNumbers } from '@/helpers/string';
 
 export const PARENT_SELECTOR = '#column_container_right .section_main_info';
 export const INFO_TABLE_SELECTOR = '.album_info tbody';
@@ -27,7 +28,7 @@ export function getArtistNames(parentEl: HTMLElement): { artistNameLocalized: st
       }
       return {
         artistNameLocalized: localizedName,
-        artistName: utils.getDirectInnerText(artist),
+        artistName: getDirectInnerText(artist),
       };
     });
 }
@@ -52,5 +53,5 @@ export function getReleaseType(parentEl: HTMLElement): ReleaseType | null {
 export function getReleaseId(parentEl: HTMLElement): string {
   const element = parentEl.querySelector(INFO_RELEASE_ID) as HTMLInputElement | null;
   if (!element) return '';
-  return utils.extractIdFromTitle(element.value);
+  return extractNumbers(element.value);
 }

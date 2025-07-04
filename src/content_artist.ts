@@ -1,13 +1,10 @@
 import artist from '@/modules/artist';
 import { renderContent } from '@/helpers/renderContent';
-import * as utils from '@/helpers/utils';
-import * as constants from '@/helpers/constants';
+import { getFullConfig } from '@/helpers/storageUtils';
+import { createSVGSprite, insertSVGSprite } from '@/helpers/sprite';
 
 (async function () {
-  const storageItems = await utils.getSyncedOptions();
-  const config = { ...constants.OPTIONS_DEFAULT, ...storageItems };
-
-  await utils.insertSVGSprite(utils.createSVGSprite());
-
+  const config = await getFullConfig();
+  await insertSVGSprite(createSVGSprite());
   await renderContent(artist, config);
 })();

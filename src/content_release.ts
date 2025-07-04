@@ -1,13 +1,10 @@
 import release from '@/modules/release';
 import { renderContent } from '@/helpers/renderContent';
-import * as utils from '@/helpers/utils';
-import * as constants from '@/helpers/constants';
+import { getFullConfig } from '@/helpers/storageUtils';
+import { createSVGSprite, insertSVGSprite } from '@/helpers/sprite';
 
 (async function () {
-  const sprite = utils.createSVGSprite();
-  await utils.insertSVGSprite(sprite);
-
-  const storageItems = await utils.getSyncedOptions();
-  const config = { ...constants.OPTIONS_DEFAULT, ...storageItems };
+  const config = await getFullConfig();
+  await insertSVGSprite(createSVGSprite());
   await renderContent(release, config);
 })();

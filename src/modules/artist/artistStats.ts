@@ -1,7 +1,9 @@
 import * as api from '@/api';
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
-import { createElement as h } from '@/helpers/utils';
+import { createSvgUse } from '@/helpers/sprite';
+import { createElement as h } from '@/helpers/dom';
+import { storageGet, storageSet, generateStorageKey, getLastfmUserName } from '@/helpers/storageUtils';
 
 import {
   getArtistId,
@@ -50,8 +52,8 @@ const state = {
   get artistNameOptions(): string[] {
     return Array.from(new Set([this.artistNameLocalized, this.artistName, ...this.artistAkaNames, ...this.artistAdditionalNames].filter(Boolean)));
   },
-  get artistQueryCacheKey(): string { return `artistQuery_${this.artistId}`; },
-  get cacheStorageKey(): string { return `artistStats_${this.artistId}_${this.artistQuery}`; },
+  get artistQueryCacheKey(): string { return generateStorageKey('artistQuery', this.artistId); },
+  get cacheStorageKey(): string { return generateStorageKey('artistStats', this.artistId, this.artistQuery); },
 } as State;
 
 function createArtistNamesDialog() {
@@ -73,7 +75,7 @@ function createArtistNamesDialog() {
               dialog.close();
             },
           },
-          utils.createSvgUse('svg-close-symbol')
+          createSvgUse('svg-close-symbol')
         ),
       ],
     ),
@@ -87,7 +89,7 @@ async function updateStats() {
   let stats: ArtistStats | null = null;
   let timestamp: number | undefined;
 
-  const cachedData = await utils.storageGet(state.cacheStorageKey, 'local');
+  const cachedData = await storageGet(state.cacheStorageKey, 'local');
 
   const cacheLifetime = state.userName ? constants.STATS_CACHE_LIFETIME_MS : constants.STATS_CACHE_LIFETIME_GUEST_MS;
 
@@ -109,7 +111,7 @@ async function updateStats() {
     stats = await fetchArtistInfo(state.artistQuery);
     timestamp = Date.now();
 
-    await utils.storageSet({
+    await storageSet({
       [state.cacheStorageKey]: {
         timestamp,
         data: stats,
@@ -198,9 +200,9 @@ function createArtistNamesDialogListItem(artistName: string) {
           state.artistQuery = artistName;
 
           // UPDATE VALUES IN CACHE
-          utils.storageSet({
+          storageSet({
             [state.artistQueryCacheKey]: state.artistQuery,
-          }, 'local'),
+          }, 'local');
 
           // CLOSE DIALOG
           uiElements.artistNamesDialog.close();
@@ -252,7 +254,7 @@ function initUI() {
       className: [ 'lastfm-link', 'is-localized' ],
       target: '_blank',
     },
-    utils.createSvgUse('svg-lastfm-square-symbol')
+    createSvgUse('svg-lastfm-square-symbol')
   );
 
   uiElements.statsWrapper = h(
@@ -371,10 +373,10 @@ async function render(_config: ProfileOptions) {
   }
 
   // INIT QUERIES
-  state.artistQuery = await utils.storageGet(state.artistQueryCacheKey, 'local') || state.artistName;
+  state.artistQuery = await storageGet(state.artistQueryCacheKey, 'local') || state.artistName;
 
   // SET USER NAME
-  const userName = await utils.getLastfmUserName();
+  const userName = await getLastfmUserName();
   if (userName) state.userName = userName;
 
   // PREPARE ARTIST NAMES DIALOG

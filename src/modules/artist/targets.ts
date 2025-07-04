@@ -1,5 +1,7 @@
 import * as utils from '@/helpers/utils';
 import { RYMDiscographyType } from '@/helpers/enums';
+import { getDirectInnerText } from '@/helpers/dom';
+import { removeBrackets, extractNumbers } from '@/helpers/string';
 
 export const PARENT_SELECTOR = '.artist_left_col';
 export const ARTIST_ID_SELECTOR = 'input.rym_shortcut';
@@ -7,7 +9,7 @@ export const ARTIST_INFO_SELECTOR = '.artist_info_main';
 
 export function getArtistId(parent: HTMLElement) {
   const artistIdInput: HTMLInputElement = parent.querySelector(ARTIST_ID_SELECTOR)!;
-  return utils.extractIdFromTitle(artistIdInput.value);
+  return extractNumbers(artistIdInput.value);
 }
 
 export function getArtistNames(parent: HTMLElement) {
@@ -15,7 +17,7 @@ export function getArtistNames(parent: HTMLElement) {
   const currentRelativeUrl = decodeURIComponent(window.location.pathname);
 
   const artistNameHeader = parent.querySelector('.artist_name_hdr');
-  const artistName = utils.getNodeDirectTextContent(artistNameHeader);
+  const artistName = getDirectInnerText(artistNameHeader);
   const artistNameHeaderSpan = artistNameHeader?.querySelector('span');
   const artistNameLocalized = (artistNameHeaderSpan?.textContent ?? '').trim();
 
@@ -49,11 +51,11 @@ export function getArtistNames(parent: HTMLElement) {
         if (!possibleIds.includes(child.id)) return;
         const artists = new Set<string>();
         Array.from(child.querySelectorAll(`.disco_subline a.disco_sub_artist[href="${currentRelativeUrl}"]`)).forEach(artistLink => {
-          const artistName = utils.getDirectInnerText(artistLink);
+          const artistName = getDirectInnerText(artistLink);
           artistName && artists.add(artistName);
 
           const localizedName = (artistLink.querySelector('span.subtext')?.textContent ?? '').trim();
-          localizedName && artists.add(utils.removeArtistNameBrackets(localizedName));
+          localizedName && artists.add(removeBrackets(localizedName));
         });
         artists.forEach(artist => additionalArtists.add(artist));
       });

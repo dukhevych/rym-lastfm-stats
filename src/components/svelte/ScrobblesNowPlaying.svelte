@@ -203,6 +203,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { RecordsAPI } from '@/helpers/records-api';
 import { ERYMOwnershipStatus } from '@/helpers/enums';
 import * as utils from '@/helpers/utils';
+import { storageSet } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import type {
   TrackDataNormalized,
@@ -289,8 +290,8 @@ let rating = $derived(() => {
     }
   });
 
-  const earliestFullMatchRating = utils.getEarliestRating(albumsFromDBFullMatch);
-  const earliestPartialMatchRating = utils.getEarliestRating(albumsFromDBPartialMatch);
+  const earliestFullMatchRating = getEarliestRating(albumsFromDBFullMatch);
+  const earliestPartialMatchRating = getEarliestRating(albumsFromDBPartialMatch);
 
   value = earliestFullMatchRating || earliestPartialMatchRating;
 
@@ -374,7 +375,7 @@ const backgroundName = $derived(() => {
 const onToggleBackground = async () => {
   console.log('pre', bgOption);
   bgOption = bgOption === bgOptionsQty - 1 ? 0 : bgOption + 1;
-  await utils.storageSet({
+  await storageSet({
     recentTracksBackground: bgOption,
   });
   console.log('post', bgOption);
@@ -389,6 +390,21 @@ const getReleaseRYMData = async () => {
 
   isLoaded = true;
 };
+
+function getEarliestRating(albums: IRYMRecordDBMatch[]) {
+  let earliestRating = 0;
+  let minId = Infinity;
+  albums.forEach((album) => {
+    if (!album.rating) return;
+
+    const id = +album.id;
+    if (id && id < minId) {
+      minId = id;
+      earliestRating = album.rating;
+    }
+  });
+  return earliestRating;
+}
 // METHODS END
 
 // EFFECTS

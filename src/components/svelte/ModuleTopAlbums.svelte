@@ -87,6 +87,7 @@
 
 <script lang="ts">
 import * as utils from '@/helpers/utils';
+import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import { getTopAlbums } from '@/api/getTopAlbums';
 import type { TopAlbumsPeriod, TopAlbum } from '@/api/getTopAlbums';
@@ -135,12 +136,12 @@ let periodValue = $state<TopAlbumsPeriod>(config.topAlbumsPeriod);
 const cacheKey = $derived(() => `topAlbumsCache_${periodValue}`);
 
 async function loadCache(periodValue: TopAlbumsPeriod) {
-  const topAlbumsCache: TopAlbumsCache | null = await utils.storageGet(cacheKey(), 'local');
+  const topAlbumsCache: TopAlbumsCache | null = await storageGet(cacheKey(), 'local');
 
   if (topAlbumsCache && checkCacheValidity(topAlbumsCache)) {
     return topAlbumsCache;
   } else {
-    await utils.storageRemove(cacheKey(), 'local');
+    await storageRemove(cacheKey(), 'local');
     return null;
   }
 }
@@ -163,7 +164,7 @@ async function loadTopAlbums(periodValue: TopAlbumsPeriod) {
     });
     data = topAlbumsResponse.topalbums.album;
 
-    await utils.storageSet({
+    await storageSet({
       [`topAlbumsCache_${periodValue}`]: {
         data,
         timestamp: Date.now(),
@@ -209,7 +210,7 @@ async function handlePeriodChange(event: Event) {
 }
 
 async function handlePeriodSave() {
-  await utils.storageSet({
+  await storageSet({
     topAlbumsPeriod: periodValue,
   });
   savedPeriodValue = periodValue;

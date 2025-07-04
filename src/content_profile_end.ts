@@ -1,13 +1,13 @@
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
+import { isMyProfile } from '@/helpers/rym-dom';
+import { getDirectInnerText } from '@/helpers/dom';
 import { ERYMOwnershipStatus, ERYMOwnershipAltText, ERYMFormat } from '@/helpers/enums';
 import { RecordsAPI } from '@/helpers/records-api';
 
 (async function () {
   window.addEventListener('load', async () => {
-    const isMyProfile = utils.isMyProfile();
-
-    if (!isMyProfile) return;
+    if (!isMyProfile()) return;
 
     const recentItems = Array.from(document.querySelectorAll('#musicrecent tr[id^="page_catalog_item_"]'));
 
@@ -49,7 +49,7 @@ import { RecordsAPI } from '@/helpers/records-api';
           }
           return {
             artistNameLocalized: localizedName,
-            artistName: utils.getDirectInnerText(artist),
+            artistName: getDirectInnerText(artist),
           };
         });
 

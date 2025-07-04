@@ -1,13 +1,13 @@
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
+import { isMyCollection } from '@/helpers/rym-dom';
+import { getDirectInnerText } from '@/helpers/dom';
 import { ERYMOwnershipStatus, ERYMOwnershipAltText, ERYMFormat } from '@/helpers/enums';
 import { RecordsAPI } from '@/helpers/records-api';
 
 (async function () {
   window.addEventListener('load', async () => {
-    const isMyCollection = utils.isMyCollection();
-
-    if (!isMyCollection) return;
+    if (!isMyCollection()) return;
 
     const collectionPageItems = Array.from(
       document.querySelectorAll('table.mbgen > tbody > tr[id^="page_catalog_item_"]:has(.or_q_rating_date_s)')
@@ -51,7 +51,7 @@ import { RecordsAPI } from '@/helpers/records-api';
           }
           return {
             artistNameLocalized: localizedName,
-            artistName: utils.getDirectInnerText(artist),
+            artistName: getDirectInnerText(artist),
           };
         });
 

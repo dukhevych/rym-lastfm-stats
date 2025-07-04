@@ -1,6 +1,6 @@
 import { mount } from 'svelte';
 import ModuleTopArtists from '@/components/svelte/ModuleTopArtists.svelte';
-import * as utils from '@/helpers/utils';
+import { getLastfmUserName } from '@/helpers/storageUtils';
 import './topArtists.css';
 
 const PROFILE_CONTAINER_SELECTOR = '.bubble_header.profile_header + .bubble_content';
@@ -18,7 +18,7 @@ export async function render(_config: ProfileOptions & { userName?: string }) {
     return;
   }
 
-  const userName = config.userName || await utils.getLastfmUserName();
+  const userName = config.userName || await getLastfmUserName();
   if (!userName) {
     console.warn("No Last.fm username found. Top Artists can't be displayed.");
     return;
