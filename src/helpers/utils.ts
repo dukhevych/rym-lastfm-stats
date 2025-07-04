@@ -157,26 +157,14 @@ export interface ArtistNameItem {
   artistNameLocalized: string;
 }
 
-export interface CombinedArtistNamesResult {
-  artistName: string;
-  artistNameLocalized: string;
-}
-
-export function combineArtistNames(artistNames: ArtistNameItem[]): CombinedArtistNamesResult {
+export function combineArtistNames(artistNames: ArtistNameItem[]): ArtistNameItem {
   if (artistNames.length === 1) return artistNames[0];
-
   if (artistNames.length === 0) return { artistName: '', artistNameLocalized: '' };
-
   const lastArtistNames: ArtistNameItem = artistNames.pop() as ArtistNameItem;
-
   let combinedArtistName: string = `${artistNames.map((name) => name.artistName).join(', ')}`;
-
   combinedArtistName += ' & ' + lastArtistNames.artistName;
-
   let combinedArtistNameLocalized: string = `${artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ')}`;
-
   combinedArtistNameLocalized += ' & ' + (lastArtistNames.artistNameLocalized || lastArtistNames.artistName);
-
   return {
     artistName: combinedArtistName,
     artistNameLocalized: combinedArtistNameLocalized !== combinedArtistName ? combinedArtistNameLocalized : '',
@@ -216,11 +204,9 @@ export interface WindowDataEventDetail {
   prop: string;
 }
 
-export type WindowDataOnChange = (data: Record<string, any>) => void;
-
 export function getWindowData(
   paths: string[],
-  onChange?: WindowDataOnChange,
+  onChange?: (data: Record<string, any>) => void,
   options: GetWindowDataOptions = {}
 ): Promise<GetWindowDataResult> {
   return new Promise((resolve) => {
@@ -356,10 +342,6 @@ export function extractReleaseEditionType(releaseTitle: string): string | null {
   }
 
   return null;
-}
-
-export function generateLastFMProfileUrl(artistName: string) {
-  return `https://www.last.fm/music/${encodeURIComponent(artistName)}`;
 }
 
 export async function restartBackground() {

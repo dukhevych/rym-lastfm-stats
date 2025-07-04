@@ -193,7 +193,7 @@ function createArtistNamesDialogListItem(artistName: string) {
     h(
       'a',
       {
-        href: utils.generateLastFMProfileUrl(artistName),
+        href: `https://www.last.fm/music/${encodeURIComponent(artistName)}`,
         className: 'list-dialog-item-link',
         onClick: async (e: MouseEvent) => {
           e.preventDefault();

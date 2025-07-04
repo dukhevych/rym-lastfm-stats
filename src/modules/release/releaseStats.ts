@@ -134,6 +134,9 @@ function populateSearchDialog() {
 
   uiElements.searchList.replaceChildren();
 
+  // need to define default items that will use parsed artist names
+  // and then need to remove them from searchResults, so there will still be up to 5 options in dialog
+
   if (!state.searchResults || state.searchResults.length === 0) {
     const noResultsItem = h('li', { className: 'list-dialog-item is-no-results' }, 'No results found');
     uiElements.searchList.appendChild(noResultsItem);
@@ -583,6 +586,9 @@ async function render(_config: ProfileOptions) {
 
   // SET PAGE DATA
   state.artistNames = getArtistNames(parent);
+
+  console.log('state.artistNames', state.artistNames);
+
   state.releaseType = getReleaseType(parent) ?? 'album';
   state.releaseTitle = getReleaseTitle(parent);
 
