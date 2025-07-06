@@ -1,50 +1,50 @@
 @keyframes bg-option-21-animation {
   0% {
-    --bg-option-21-bar-1: 40; --bg-option-21-bar-2: 70; --bg-option-21-bar-3: 50; --bg-option-21-bar-4: 90;
-    --bg-option-21-bar-5: 30; --bg-option-21-bar-6: 80; --bg-option-21-bar-7: 60; --bg-option-21-bar-8: 50;
-    --bg-option-21-bar-9: 70; --bg-option-21-bar-10: 30; --bg-option-21-bar-11: 90; --bg-option-21-bar-12: 40;
+    --bg-option-bar-1: 40; --bg-option-bar-2: 70; --bg-option-bar-3: 50; --bg-option-bar-4: 90;
+    --bg-option-bar-5: 30; --bg-option-bar-6: 80; --bg-option-bar-7: 60; --bg-option-bar-8: 50;
+    --bg-option-bar-9: 70; --bg-option-bar-10: 30; --bg-option-bar-11: 90; --bg-option-bar-12: 40;
   }
 
   10% {
-    --bg-option-21-bar-1: 60; --bg-option-21-bar-2: 40; --bg-option-21-bar-3: 80; --bg-option-21-bar-4: 30;
-    --bg-option-21-bar-5: 70; --bg-option-21-bar-6: 50; --bg-option-21-bar-7: 90; --bg-option-21-bar-8: 30;
-    --bg-option-21-bar-9: 40; --bg-option-21-bar-10: 80; --bg-option-21-bar-11: 60; --bg-option-21-bar-12: 50;
+    --bg-option-bar-1: 60; --bg-option-bar-2: 40; --bg-option-bar-3: 80; --bg-option-bar-4: 30;
+    --bg-option-bar-5: 70; --bg-option-bar-6: 50; --bg-option-bar-7: 90; --bg-option-bar-8: 30;
+    --bg-option-bar-9: 40; --bg-option-bar-10: 80; --bg-option-bar-11: 60; --bg-option-bar-12: 50;
   }
 
   25% {
-    --bg-option-21-bar-1: 30; --bg-option-21-bar-2: 90; --bg-option-21-bar-3: 60; --bg-option-21-bar-4: 70;
-    --bg-option-21-bar-5: 50; --bg-option-21-bar-6: 20; --bg-option-21-bar-7: 70; --bg-option-21-bar-8: 80;
-    --bg-option-21-bar-9: 20; --bg-option-21-bar-10: 60; --bg-option-21-bar-11: 30; --bg-option-21-bar-12: 90;
+    --bg-option-bar-1: 30; --bg-option-bar-2: 90; --bg-option-bar-3: 60; --bg-option-bar-4: 70;
+    --bg-option-bar-5: 50; --bg-option-bar-6: 20; --bg-option-bar-7: 70; --bg-option-bar-8: 80;
+    --bg-option-bar-9: 20; --bg-option-bar-10: 60; --bg-option-bar-11: 30; --bg-option-bar-12: 90;
   }
 
   40% {
-    --bg-option-21-bar-1: 70; --bg-option-21-bar-2: 30; --bg-option-21-bar-3: 90; --bg-option-21-bar-4: 40;
-    --bg-option-21-bar-5: 80; --bg-option-21-bar-6: 40; --bg-option-21-bar-7: 90; --bg-option-21-bar-8: 60;
-    --bg-option-21-bar-9: 30; --bg-option-21-bar-10: 80; --bg-option-21-bar-11: 50; --bg-option-21-bar-12: 70;
+    --bg-option-bar-1: 70; --bg-option-bar-2: 30; --bg-option-bar-3: 90; --bg-option-bar-4: 40;
+    --bg-option-bar-5: 80; --bg-option-bar-6: 40; --bg-option-bar-7: 90; --bg-option-bar-8: 60;
+    --bg-option-bar-9: 30; --bg-option-bar-10: 80; --bg-option-bar-11: 50; --bg-option-bar-12: 70;
   }
 
   60% {
-    --bg-option-21-bar-1: 50; --bg-option-21-bar-2: 60; --bg-option-21-bar-3: 30; --bg-option-21-bar-4: 80;
-    --bg-option-21-bar-5: 20; --bg-option-21-bar-6: 90; --bg-option-21-bar-7: 40; --bg-option-21-bar-8: 70;
-    --bg-option-21-bar-9: 90; --bg-option-21-bar-10: 20; --bg-option-21-bar-11: 70; --bg-option-21-bar-12: 60;
+    --bg-option-bar-1: 50; --bg-option-bar-2: 60; --bg-option-bar-3: 30; --bg-option-bar-4: 80;
+    --bg-option-bar-5: 20; --bg-option-bar-6: 90; --bg-option-bar-7: 40; --bg-option-bar-8: 70;
+    --bg-option-bar-9: 90; --bg-option-bar-10: 20; --bg-option-bar-11: 70; --bg-option-bar-12: 60;
   }
 
   75% {
-    --bg-option-21-bar-1: 80; --bg-option-21-bar-2: 20; --bg-option-21-bar-3: 70; --bg-option-21-bar-4: 50;
-    --bg-option-21-bar-5: 90; --bg-option-21-bar-6: 30; --bg-option-21-bar-7: 20; --bg-option-21-bar-8: 90;
-    --bg-option-21-bar-9: 60; --bg-option-21-bar-10: 40; --bg-option-21-bar-11: 20; --bg-option-21-bar-12: 80;
+    --bg-option-bar-1: 80; --bg-option-bar-2: 20; --bg-option-bar-3: 70; --bg-option-bar-4: 50;
+    --bg-option-bar-5: 90; --bg-option-bar-6: 30; --bg-option-bar-7: 20; --bg-option-bar-8: 90;
+    --bg-option-bar-9: 60; --bg-option-bar-10: 40; --bg-option-bar-11: 20; --bg-option-bar-12: 80;
   }
 
   90% {
-    --bg-option-21-bar-1: 60; --bg-option-21-bar-2: 40; --bg-option-21-bar-3: 50; --bg-option-21-bar-4: 60;
-    --bg-option-21-bar-5: 40; --bg-option-21-bar-6: 60; --bg-option-21-bar-7: 80; --bg-option-21-bar-8: 40;
-    --bg-option-21-bar-9: 70; --bg-option-21-bar-10: 50; --bg-option-21-bar-11: 60; --bg-option-21-bar-12: 30;
+    --bg-option-bar-1: 60; --bg-option-bar-2: 40; --bg-option-bar-3: 50; --bg-option-bar-4: 60;
+    --bg-option-bar-5: 40; --bg-option-bar-6: 60; --bg-option-bar-7: 80; --bg-option-bar-8: 40;
+    --bg-option-bar-9: 70; --bg-option-bar-10: 50; --bg-option-bar-11: 60; --bg-option-bar-12: 30;
   }
 
   100% {
-    --bg-option-21-bar-1: 40; --bg-option-21-bar-2: 70; --bg-option-21-bar-3: 50; --bg-option-21-bar-4: 90;
-    --bg-option-21-bar-5: 30; --bg-option-21-bar-6: 80; --bg-option-21-bar-7: 60; --bg-option-21-bar-8: 50;
-    --bg-option-21-bar-9: 70; --bg-option-21-bar-10: 30; --bg-option-21-bar-11: 90; --bg-option-21-bar-12: 40;
+    --bg-option-bar-1: 40; --bg-option-bar-2: 70; --bg-option-bar-3: 50; --bg-option-bar-4: 90;
+    --bg-option-bar-5: 30; --bg-option-bar-6: 80; --bg-option-bar-7: 60; --bg-option-bar-8: 50;
+    --bg-option-bar-9: 70; --bg-option-bar-10: 30; --bg-option-bar-11: 90; --bg-option-bar-12: 40;
   }
 }
 
@@ -80,56 +80,56 @@
     --bar-12-x: calc((11 * 100%) / (var(--n) - 1));
 
     background:
-      linear-gradient(to top, var(--clr-1) calc(var(--bg-option-21-bar-1) * 1%), transparent calc(var(--bg-option-21-bar-1) * 1%))
+      linear-gradient(to top, var(--clr-1) calc(var(--bg-option-bar-1) * 1%), transparent calc(var(--bg-option-bar-1) * 1%))
         var(--bar-1-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-2) calc(var(--bg-option-21-bar-2) * 1%), transparent calc(var(--bg-option-21-bar-2) * 1%))
+      linear-gradient(to top, var(--clr-2) calc(var(--bg-option-bar-2) * 1%), transparent calc(var(--bg-option-bar-2) * 1%))
         var(--bar-2-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-3) calc(var(--bg-option-21-bar-3) * 1%), transparent calc(var(--bg-option-21-bar-3) * 1%))
+      linear-gradient(to top, var(--clr-3) calc(var(--bg-option-bar-3) * 1%), transparent calc(var(--bg-option-bar-3) * 1%))
         var(--bar-3-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-4) calc(var(--bg-option-21-bar-4) * 1%), transparent calc(var(--bg-option-21-bar-4) * 1%))
+      linear-gradient(to top, var(--clr-4) calc(var(--bg-option-bar-4) * 1%), transparent calc(var(--bg-option-bar-4) * 1%))
         var(--bar-4-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-5) calc(var(--bg-option-21-bar-5) * 1%), transparent calc(var(--bg-option-21-bar-5) * 1%))
+      linear-gradient(to top, var(--clr-5) calc(var(--bg-option-bar-5) * 1%), transparent calc(var(--bg-option-bar-5) * 1%))
         var(--bar-5-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-6) calc(var(--bg-option-21-bar-6) * 1%), transparent calc(var(--bg-option-21-bar-6) * 1%))
+      linear-gradient(to top, var(--clr-6) calc(var(--bg-option-bar-6) * 1%), transparent calc(var(--bg-option-bar-6) * 1%))
         var(--bar-6-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-7) calc(var(--bg-option-21-bar-7) * 1%), transparent calc(var(--bg-option-21-bar-7) * 1%))
+      linear-gradient(to top, var(--clr-7) calc(var(--bg-option-bar-7) * 1%), transparent calc(var(--bg-option-bar-7) * 1%))
         var(--bar-7-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-8) calc(var(--bg-option-21-bar-8) * 1%), transparent calc(var(--bg-option-21-bar-8) * 1%))
+      linear-gradient(to top, var(--clr-8) calc(var(--bg-option-bar-8) * 1%), transparent calc(var(--bg-option-bar-8) * 1%))
         var(--bar-8-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-9) calc(var(--bg-option-21-bar-9) * 1%), transparent calc(var(--bg-option-21-bar-9) * 1%))
+      linear-gradient(to top, var(--clr-9) calc(var(--bg-option-bar-9) * 1%), transparent calc(var(--bg-option-bar-9) * 1%))
         var(--bar-9-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-10) calc(var(--bg-option-21-bar-10) * 1%), transparent calc(var(--bg-option-21-bar-10) * 1%))
+      linear-gradient(to top, var(--clr-10) calc(var(--bg-option-bar-10) * 1%), transparent calc(var(--bg-option-bar-10) * 1%))
         var(--bar-10-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-11) calc(var(--bg-option-21-bar-11) * 1%), transparent calc(var(--bg-option-21-bar-11) * 1%))
+      linear-gradient(to top, var(--clr-11) calc(var(--bg-option-bar-11) * 1%), transparent calc(var(--bg-option-bar-11) * 1%))
         var(--bar-11-x) 0 / var(--bar-width) 100% no-repeat,
 
-      linear-gradient(to top, var(--clr-12) calc(var(--bg-option-21-bar-12) * 1%), transparent calc(var(--bg-option-21-bar-12) * 1%))
+      linear-gradient(to top, var(--clr-12) calc(var(--bg-option-bar-12) * 1%), transparent calc(var(--bg-option-bar-12) * 1%))
         var(--bar-12-x) 0 / var(--bar-width) 100% no-repeat;
 
     opacity: 0.2;
 
-    --bg-option-21-bar-1: 0;
-    --bg-option-21-bar-2: 10;
-    --bg-option-21-bar-3: 20;
-    --bg-option-21-bar-4: 30;
-    --bg-option-21-bar-5: 40;
-    --bg-option-21-bar-6: 50;
-    --bg-option-21-bar-7: 55;
-    --bg-option-21-bar-8: 40;
-    --bg-option-21-bar-9: 30;
-    --bg-option-21-bar-10: 20;
-    --bg-option-21-bar-11: 10;
-    --bg-option-21-bar-12: 0;
+    --bg-option-bar-1: 0;
+    --bg-option-bar-2: 10;
+    --bg-option-bar-3: 20;
+    --bg-option-bar-4: 30;
+    --bg-option-bar-5: 40;
+    --bg-option-bar-6: 50;
+    --bg-option-bar-7: 55;
+    --bg-option-bar-8: 40;
+    --bg-option-bar-9: 30;
+    --bg-option-bar-10: 20;
+    --bg-option-bar-11: 10;
+    --bg-option-bar-12: 0;
   }
   &.bg-option-21:after {
     width: 20%;
@@ -143,18 +143,18 @@
 
     --bar-width: calc((100% / var(--n)) - 4%);
 
-    --clr-1: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-1) * 0.5%), calc(var(--bg-option-21-bar-1) / 100));
-    --clr-2: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-2) * 0.5%), calc(var(--bg-option-21-bar-2) / 100));
-    --clr-3: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-3) * 0.5%), calc(var(--bg-option-21-bar-3) / 100));
-    --clr-4: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-4) * 0.5%), calc(var(--bg-option-21-bar-4) / 100));
-    --clr-5: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-5) * 0.5%), calc(var(--bg-option-21-bar-5) / 100));
-    --clr-6: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-6) * 0.5%), calc(var(--bg-option-21-bar-6) / 100));
-    --clr-7: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-7) * 0.5%), calc(var(--bg-option-21-bar-7) / 100));
-    --clr-8: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-8) * 0.5%), calc(var(--bg-option-21-bar-8) / 100));
-    --clr-9: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-9) * 0.5%), calc(var(--bg-option-21-bar-9) / 100));
-    --clr-10: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-10) * 0.5%), calc(var(--bg-option-21-bar-10) / 100));
-    --clr-11: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-11) * 0.5%), calc(var(--bg-option-21-bar-11) / 100));
-    --clr-12: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-21-bar-12) * 0.5%), calc(var(--bg-option-21-bar-12) / 100));
+    --clr-1: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-1) * 0.5%), calc(var(--bg-option-bar-1) / 100));
+    --clr-2: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-2) * 0.5%), calc(var(--bg-option-bar-2) / 100));
+    --clr-3: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-3) * 0.5%), calc(var(--bg-option-bar-3) / 100));
+    --clr-4: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-4) * 0.5%), calc(var(--bg-option-bar-4) / 100));
+    --clr-5: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-5) * 0.5%), calc(var(--bg-option-bar-5) / 100));
+    --clr-6: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-6) * 0.5%), calc(var(--bg-option-bar-6) / 100));
+    --clr-7: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-7) * 0.5%), calc(var(--bg-option-bar-7) / 100));
+    --clr-8: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-8) * 0.5%), calc(var(--bg-option-bar-8) / 100));
+    --clr-9: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-9) * 0.5%), calc(var(--bg-option-bar-9) / 100));
+    --clr-10: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-10) * 0.5%), calc(var(--bg-option-bar-10) / 100));
+    --clr-11: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-11) * 0.5%), calc(var(--bg-option-bar-11) / 100));
+    --clr-12: hsla(calc(var(--clr-dark-accent-hue) * 1deg), calc(var(--clr-dark-accent-saturation) * 1%), calc(var(--bg-option-bar-12) * 0.5%), calc(var(--bg-option-bar-12) / 100));
   }
   &.is-now-playing.bg-option-21:after {
     animation: bg-option-21-animation 1.5s linear infinite;

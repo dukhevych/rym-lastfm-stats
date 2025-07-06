@@ -1,58 +1,138 @@
-@keyframes bg-option-21-animation {
+@keyframes bg-option-22-animation {
   0% {
-    --bg-option-bar-1: 40; --bg-option-bar-2: 70; --bg-option-bar-3: 50; --bg-option-bar-4: 90;
-    --bg-option-bar-5: 30; --bg-option-bar-6: 80; --bg-option-bar-7: 60; --bg-option-bar-8: 50;
-    --bg-option-bar-9: 70; --bg-option-bar-10: 30; --bg-option-bar-11: 90; --bg-option-bar-12: 40;
+    --bg-option-bar-1: 40;
+    --bg-option-bar-2: 70;
+    --bg-option-bar-3: 50;
+    --bg-option-bar-4: 90;
+    --bg-option-bar-5: 30;
+    --bg-option-bar-6: 80;
+    --bg-option-bar-7: 60;
+    --bg-option-bar-8: 50;
+    --bg-option-bar-9: 70;
+    --bg-option-bar-10: 30;
+    --bg-option-bar-11: 90;
+    --bg-option-bar-12: 40;
   }
 
   10% {
-    --bg-option-bar-1: 60; --bg-option-bar-2: 40; --bg-option-bar-3: 80; --bg-option-bar-4: 30;
-    --bg-option-bar-5: 70; --bg-option-bar-6: 50; --bg-option-bar-7: 90; --bg-option-bar-8: 30;
-    --bg-option-bar-9: 40; --bg-option-bar-10: 80; --bg-option-bar-11: 60; --bg-option-bar-12: 50;
+    --bg-option-bar-1: 60;
+    --bg-option-bar-2: 40;
+    --bg-option-bar-3: 80;
+    --bg-option-bar-4: 30;
+    --bg-option-bar-5: 70;
+    --bg-option-bar-6: 50;
+    --bg-option-bar-7: 90;
+    --bg-option-bar-8: 30;
+    --bg-option-bar-9: 40;
+    --bg-option-bar-10: 80;
+    --bg-option-bar-11: 60;
+    --bg-option-bar-12: 50;
   }
 
   25% {
-    --bg-option-bar-1: 30; --bg-option-bar-2: 90; --bg-option-bar-3: 60; --bg-option-bar-4: 70;
-    --bg-option-bar-5: 50; --bg-option-bar-6: 20; --bg-option-bar-7: 70; --bg-option-bar-8: 80;
-    --bg-option-bar-9: 20; --bg-option-bar-10: 60; --bg-option-bar-11: 30; --bg-option-bar-12: 90;
+    --bg-option-bar-1: 30;
+    --bg-option-bar-2: 90;
+    --bg-option-bar-3: 60;
+    --bg-option-bar-4: 70;
+    --bg-option-bar-5: 50;
+    --bg-option-bar-6: 20;
+    --bg-option-bar-7: 70;
+    --bg-option-bar-8: 80;
+    --bg-option-bar-9: 20;
+    --bg-option-bar-10: 60;
+    --bg-option-bar-11: 30;
+    --bg-option-bar-12: 90;
   }
 
   40% {
-    --bg-option-bar-1: 70; --bg-option-bar-2: 30; --bg-option-bar-3: 90; --bg-option-bar-4: 40;
-    --bg-option-bar-5: 80; --bg-option-bar-6: 40; --bg-option-bar-7: 90; --bg-option-bar-8: 60;
-    --bg-option-bar-9: 30; --bg-option-bar-10: 80; --bg-option-bar-11: 50; --bg-option-bar-12: 70;
+    --bg-option-bar-1: 70;
+    --bg-option-bar-2: 30;
+    --bg-option-bar-3: 90;
+    --bg-option-bar-4: 40;
+    --bg-option-bar-5: 80;
+    --bg-option-bar-6: 40;
+    --bg-option-bar-7: 90;
+    --bg-option-bar-8: 60;
+    --bg-option-bar-9: 30;
+    --bg-option-bar-10: 80;
+    --bg-option-bar-11: 50;
+    --bg-option-bar-12: 70;
   }
 
   60% {
-    --bg-option-bar-1: 50; --bg-option-bar-2: 60; --bg-option-bar-3: 30; --bg-option-bar-4: 80;
-    --bg-option-bar-5: 20; --bg-option-bar-6: 90; --bg-option-bar-7: 40; --bg-option-bar-8: 70;
-    --bg-option-bar-9: 90; --bg-option-bar-10: 20; --bg-option-bar-11: 70; --bg-option-bar-12: 60;
+    --bg-option-bar-1: 50;
+    --bg-option-bar-2: 60;
+    --bg-option-bar-3: 30;
+    --bg-option-bar-4: 80;
+    --bg-option-bar-5: 20;
+    --bg-option-bar-6: 90;
+    --bg-option-bar-7: 40;
+    --bg-option-bar-8: 70;
+    --bg-option-bar-9: 90;
+    --bg-option-bar-10: 20;
+    --bg-option-bar-11: 70;
+    --bg-option-bar-12: 60;
   }
 
   75% {
-    --bg-option-bar-1: 80; --bg-option-bar-2: 20; --bg-option-bar-3: 70; --bg-option-bar-4: 50;
-    --bg-option-bar-5: 90; --bg-option-bar-6: 30; --bg-option-bar-7: 20; --bg-option-bar-8: 90;
-    --bg-option-bar-9: 60; --bg-option-bar-10: 40; --bg-option-bar-11: 20; --bg-option-bar-12: 80;
+    --bg-option-bar-1: 80;
+    --bg-option-bar-2: 20;
+    --bg-option-bar-3: 70;
+    --bg-option-bar-4: 50;
+    --bg-option-bar-5: 90;
+    --bg-option-bar-6: 30;
+    --bg-option-bar-7: 20;
+    --bg-option-bar-8: 90;
+    --bg-option-bar-9: 60;
+    --bg-option-bar-10: 40;
+    --bg-option-bar-11: 20;
+    --bg-option-bar-12: 80;
   }
 
   90% {
-    --bg-option-bar-1: 60; --bg-option-bar-2: 40; --bg-option-bar-3: 50; --bg-option-bar-4: 60;
-    --bg-option-bar-5: 40; --bg-option-bar-6: 60; --bg-option-bar-7: 80; --bg-option-bar-8: 40;
-    --bg-option-bar-9: 70; --bg-option-bar-10: 50; --bg-option-bar-11: 60; --bg-option-bar-12: 30;
+    --bg-option-bar-1: 60;
+    --bg-option-bar-2: 40;
+    --bg-option-bar-3: 50;
+    --bg-option-bar-4: 60;
+    --bg-option-bar-5: 40;
+    --bg-option-bar-6: 60;
+    --bg-option-bar-7: 80;
+    --bg-option-bar-8: 40;
+    --bg-option-bar-9: 70;
+    --bg-option-bar-10: 50;
+    --bg-option-bar-11: 60;
+    --bg-option-bar-12: 30;
   }
 
   100% {
-    --bg-option-bar-1: 40; --bg-option-bar-2: 70; --bg-option-bar-3: 50; --bg-option-bar-4: 90;
-    --bg-option-bar-5: 30; --bg-option-bar-6: 80; --bg-option-bar-7: 60; --bg-option-bar-8: 50;
-    --bg-option-bar-9: 70; --bg-option-bar-10: 30; --bg-option-bar-11: 90; --bg-option-bar-12: 40;
+    --bg-option-bar-1: 40;
+    --bg-option-bar-2: 70;
+    --bg-option-bar-3: 50;
+    --bg-option-bar-4: 90;
+    --bg-option-bar-5: 30;
+    --bg-option-bar-6: 80;
+    --bg-option-bar-7: 60;
+    --bg-option-bar-8: 50;
+    --bg-option-bar-9: 70;
+    --bg-option-bar-10: 30;
+    --bg-option-bar-11: 90;
+    --bg-option-bar-12: 40;
   }
 }
 
 [data-element="rymstats-track-panel"] {
-  &.bg-option-20:after {
-    --gap: 5px;
+  container-type: size;
+  height: 162px;
+
+  &.bg-option-22:after {
+    width: calc(100cqh + 1em);
+    height: calc(100cqw + 1em);
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: 0 0;
+
+    --gap: 0;
     --n: 12;
-    --bar-width: calc((100% / var(--n)) - var(--gap));
+    --bar-width: calc((100% / var(--n)));
 
     --clr-1: var(--clr-palette-lightvibrant);
     --clr-3: var(--clr-palette-vibrant);
@@ -117,22 +197,22 @@
       linear-gradient(to top, var(--clr-12) calc(var(--bg-option-bar-12) * 1%), transparent calc(var(--bg-option-bar-12) * 1%))
         var(--bar-12-x) 0 / var(--bar-width) 100% no-repeat;
 
-    opacity: 0.2;
+    opacity: 0.1;
 
-    --bg-option-bar-1: 0;
-    --bg-option-bar-2: 10;
-    --bg-option-bar-3: 20;
-    --bg-option-bar-4: 30;
-    --bg-option-bar-5: 40;
-    --bg-option-bar-6: 50;
-    --bg-option-bar-7: 55;
-    --bg-option-bar-8: 40;
-    --bg-option-bar-9: 30;
-    --bg-option-bar-10: 20;
-    --bg-option-bar-11: 10;
-    --bg-option-bar-12: 0;
+    --bg-option-bar-1: 50;
+    --bg-option-bar-2: 51;
+    --bg-option-bar-3: 52;
+    --bg-option-bar-4: 53;
+    --bg-option-bar-5: 54;
+    --bg-option-bar-6: 55;
+    --bg-option-bar-7: 56;
+    --bg-option-bar-8: 55;
+    --bg-option-bar-9: 54;
+    --bg-option-bar-10: 53;
+    --bg-option-bar-11: 52;
+    --bg-option-bar-12: 51;
   }
-  &.is-now-playing.bg-option-20:after {
-    animation: bg-option-21-animation 1.5s linear infinite;
+  &.is-now-playing.bg-option-22:after {
+    animation: bg-option-22-animation 15s linear infinite;
   }
 }

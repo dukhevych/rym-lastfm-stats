@@ -42,46 +42,72 @@ function injectShowAllButton() {
 //   }
 // };
 
-const validationRules = {
+interface TargetArtist {
+  value: string;
+  multipleValues: string[];
+  getNormalized: string;
+}
+
+interface TargetRelease {
+  value: string;
+  getNormalized: string;
+  getNoEdition: string;
+  getNoEditionNormalized: string;
+  getEdition: string;
+}
+
+interface TargetTrack {
+  value: string;
+  getNormalized: string;
+}
+
+interface ValidationRule {
+  selectors: {
+    [key: string]: string;
+  };
+  validate: (item: HTMLElement, query: string, targetArtist: TargetArtist, targetRelease: TargetRelease, targetTrack: TargetTrack) => string | false;
+}
+
+const validationRules: Record<RYMEntityCode, ValidationRule> = {
   [RYMEntityCode.Artist]: {
     selectors: {
       artistNameSelector: 'a.searchpage.artist',
       artistNameLocalizedSelector: 'a.searchpage.artist + span.smallgray',
       artistAkaSelector: '.subinfo',
     },
-    validate: function (item: HTMLElement, query: string, targetArtist: any) {
-      const {
-        artistNameSelector,
-        artistNameLocalizedSelector,
-        artistAkaSelector,
-      } = this.selectors;
+    validate: function (item, query, targetArtist) {
+      const artistNameLocalized = removeBrackets(item.querySelector(this.selectors.artistNameLocalizedSelector)?.textContent || '');
 
-      // Enhanced artist validation
-      const artistNameLocalized = normalizeForSearch(
-        removeBrackets(
-          item.querySelector(artistNameLocalizedSelector)?.textContent || ''
-        )
-      );
       if (artistNameLocalized === targetArtist.value) return 'full';
 
-      const artistName = normalizeForSearch(item.querySelector(artistNameSelector)?.textContent || '');
+      const artistNameLocalizedNormalized = normalizeForSearch(artistNameLocalized);
+
+      if (artistNameLocalized === targetArtist.value) return 'full';
+
+      const artistName = normalizeForSearch(item.querySelector(this.selectors.artistNameSelector)?.textContent || '');
+
       if (artistName === targetArtist.value) return 'full';
 
-      const artistAka = getDirectInnerText(item.querySelector(artistAkaSelector));
-      const akaValues = artistAka.replace(/^a\.k\.a:\s*/, '')
+      const artistAkaRaw = getDirectInnerText(item.querySelector(this.selectors.artistAkaSelector));
+      const artistAkaNames = artistAkaRaw.replace(/^a\.k\.a:\s*/, '')
         .split(', ')
         .map((aka) => normalizeForSearch(aka))
         .filter(Boolean);
-      if (akaValues.includes(targetArtist.value)) return 'full';
+      if (artistAkaNames.includes(targetArtist.value)) return 'full';
 
       // Alternative validation with normalized search term
       // Will be used if the above validation against original artist name from custom query parameter fails
-      const _query = normalizeForSearch(query);
-      if (artistName === _query) return 'full';
-      if (artistNameLocalized === _query) return 'full';
-      if (akaValues.includes(_query)) return 'full';
-      if (artistName.includes(_query)) return 'partial';
-      if (artistNameLocalized.includes(_query)) return 'partial';
+      const queryNormalized = normalizeForSearch(query);
+      if (artistName === queryNormalized) return 'full';
+      if (artistNameLocalized === queryNormalized) return 'full';
+      if (artistAkaNames.includes(queryNormalized)) return 'full';
+      if (
+        targetArtist.multipleValues.length > 1
+        && targetArtist.multipleValues.some((value) => checkPartialStringsMatch(value, queryNormalized))
+      ) return 'full';
+      if (checkPartialStringsMatch(artistNameLocalized, queryNormalized)) return 'partial';
+      if (checkPartialStringsMatch(artistName, queryNormalized)) return 'partial';
+      if (artistAkaNames.some((aka) => checkPartialStringsMatch(aka, queryNormalized))) return 'partial';
       return false;
     },
   },
@@ -90,108 +116,92 @@ const validationRules = {
       artistNameSelector: 'a.artist',
       releaseTitleSelector: 'a.searchpage',
     },
-    validate: function (item: HTMLElement, query: string, targetArtist: any, targetRelease: any) {
-      const {
-        artistNameSelector,
-        releaseTitleSelector,
-      } = this.selectors;
+    validate: function (item, query, targetArtist, targetRelease) {
+      const artistLinks = Array.from(item.querySelectorAll(this.selectors.artistNameSelector));
+      const artistNames: string[] = [];
+      const artistNamesLocalized: string[] = [];
 
-      // let _query = normalizeForSearch(query);
+      artistLinks.forEach((artistLink) => {
+        artistNames.push(getDirectInnerText(artistLink));
+
+        const artistNameLocalized = removeBrackets(artistLink.querySelector('.subtext')?.textContent || '');
+        artistNameLocalized && artistNamesLocalized.push(artistNameLocalized);
+      });
+
+      const artistNamesNormalized = artistNames.map((name) => normalizeForSearch(name));
+      const artistNamesLocalizedNormalized = artistNamesLocalized.map((name) => normalizeForSearch(name));
 
       function validateArtist() {
-        const getArtistLinks = utils.lazy(() => Array.from(item.querySelectorAll(artistNameSelector)));
-        const getArtistNamesLocalized = utils.lazy(() => getArtistLinks()
-          .map((artistLink) => removeBrackets((artistLink.querySelector('.subtext')?.textContent || '')))
-        );
-        const getArtistNames = utils.lazy(() => getArtistLinks()
-          .map((artistLink) => getDirectInnerText(artistLink))
-          .filter(Boolean)
-        );
-        const getArtistNamesLocalizedNormalized = utils.lazy(() => getArtistNamesLocalized()
-          .map((name) => normalizeForSearch(name))
-        );
-        const getArtistNamesNormalized = utils.lazy(() => getArtistNames()
-          .map((name) => normalizeForSearch(name))
-        );
+        if (artistNames.includes(targetArtist.value)) return 'full';
+        if (artistNamesLocalized.includes(targetArtist.value)) return 'full';
 
-        const values = [];
-        const valuesNormalized = [];
+        if (artistNamesNormalized.includes(targetArtist.getNormalized)) return 'full';
+        if (artistNamesLocalizedNormalized.includes(targetArtist.getNormalized)) return 'full';
 
-        if (getArtistNamesLocalized().includes(targetArtist.value)) return 'full';
-        else values.push(...getArtistNamesLocalized());
-
-        if (getArtistNames().includes(targetArtist.value)) return 'full';
-        else values.push(...getArtistNames());
-
-        if (getArtistNamesLocalizedNormalized().includes(targetArtist.getNormalized())) return 'full';
-        else valuesNormalized.push(...getArtistNamesLocalizedNormalized());
-
-        if (getArtistNamesNormalized().includes(targetArtist.getNormalized())) return 'full';
-        else valuesNormalized.push(...getArtistNamesNormalized());
-
-        if (values.some((value) => checkPartialStringsMatch(value, targetArtist.value))) return 'partial';
-        if (valuesNormalized.some((value) => checkPartialStringsMatch(value, targetArtist.getNormalized()))) return 'partial';
+        if (artistNames.some((value) => checkPartialStringsMatch(value, targetArtist.value))) return 'partial';
+        if (artistNamesLocalized.some((value) => checkPartialStringsMatch(value, targetArtist.value))) return 'partial';
 
         return false;
       }
 
-      const hasArtist = validateArtist();
+      const artistValidity = validateArtist();
+
+      const releaseTitle = (item.querySelector(this.selectors.releaseTitleSelector)?.textContent || '').trim();
 
       function validateRelease() {
-        const getReleaseTitle = utils.lazy(() => (item.querySelector(releaseTitleSelector)?.textContent || '').trim());
-        const getReleaseTitleNormalized = utils.lazy(() => normalizeForSearch(getReleaseTitle()));
-        const getReleaseTitleNoEdition = utils.lazy(() => utils.cleanupReleaseEdition(getReleaseTitle()));
+        const getReleaseTitleNormalized = utils.lazy(() => normalizeForSearch(releaseTitle));
+        const getReleaseTitleNoEdition = utils.lazy(() => utils.cleanupReleaseEdition(releaseTitle));
         const getReleaseTitleNoEditionNormalized = utils.lazy(() => normalizeForSearch(getReleaseTitleNoEdition()));
-        const getReleaseTitleEdition = utils.lazy(() => utils.extractReleaseEditionType(getReleaseTitle()));
+        const getReleaseTitleEdition = utils.lazy(() => utils.extractReleaseEditionType(releaseTitle));
 
         // Ideal match
-        if (getReleaseTitle() === targetRelease.value) return 'full';
+        if (releaseTitle === targetRelease.value) return 'full';
 
         // Ideal normalized match
-        if (getReleaseTitleNormalized() === targetRelease.getNormalized()) return 'full';
+        if (getReleaseTitleNormalized() === targetRelease.getNormalized) return 'full';
 
         // Edition
-        if (getReleaseTitleEdition() && targetRelease.getEdition()) {
+        if (getReleaseTitleEdition() && targetRelease.getEdition) {
           if ((
-            getReleaseTitleNoEdition() === targetRelease.getNoEdition()
-            || getReleaseTitleNoEditionNormalized() === targetRelease.getNoEditionNormalized()
+            getReleaseTitleNoEdition() === targetRelease.getNoEdition
+            || getReleaseTitleNoEditionNormalized() === targetRelease.getNoEditionNormalized
           )) {
             // No edition part match (ideal or normalized) + edition part match
-            if (getReleaseTitleEdition() === targetRelease.getEdition()) return 'full';
+            if (getReleaseTitleEdition() === targetRelease.getEdition) return 'full';
             // No edition part match (ideal or normalized) + edition part mismatch
             else return 'partial';
           } else {
             // Doubtful case?
             // No edition part mismatch (ideal or normalized) + edition part match
-            if (getReleaseTitleEdition() === targetRelease.getEdition()) return 'partial';
+            if (getReleaseTitleEdition() === targetRelease.getEdition) return 'partial';
           }
         }
 
         // No edition part match (ideal or normalized) + no edition for item's release title
-        if (targetRelease.getEdition() && !getReleaseTitleEdition()) {
+        if (targetRelease.getEdition && !getReleaseTitleEdition()) {
           if ((
-            targetRelease.getNoEdition() === getReleaseTitle()
-            || targetRelease.getNoEditionNormalized() === getReleaseTitleNormalized()
+            targetRelease.getNoEdition === releaseTitle
+            || targetRelease.getNoEditionNormalized === getReleaseTitleNormalized()
           )) return 'full';
         }
 
-        if (checkPartialStringsMatch(getReleaseTitle(), targetRelease.value)) return 'partial';
+        if (checkPartialStringsMatch(releaseTitle, targetRelease.value)) return 'partial';
 
-        if (checkPartialStringsMatch(getReleaseTitleNormalized(), targetRelease.getNormalized())) return 'partial';
+        if (checkPartialStringsMatch(getReleaseTitleNormalized(), targetRelease.getNormalized)) return 'partial';
 
         return false;
       }
 
       const hasReleaseTitle = validateRelease();
 
-      if (hasArtist || hasReleaseTitle) {
+      if (artistValidity || hasReleaseTitle) {
         console.log(item);
-        console.log(hasArtist, hasReleaseTitle);
+        console.log(artistValidity, hasReleaseTitle);
       }
       console.log('==================');
 
-      if (!hasArtist || !hasReleaseTitle) return false;
-      if (hasArtist === 'full' && hasReleaseTitle === 'full') return 'full';
+      if (!artistValidity || !hasReleaseTitle) return false;
+      if (artistValidity === 'full' && hasReleaseTitle === 'full') return 'full';
 
       return 'partial';
     },
@@ -201,7 +211,7 @@ const validationRules = {
       artistNameSelector: '.infobox td:nth-child(2) > span .ui_name_locale',
       trackNameSelector: '.infobox td:nth-child(2) > table .ui_name_locale_original',
     },
-    validate: function (item: HTMLElement, query: string) {
+    validate: function (item, query, targetArtist, targetRelease, targetTrack) {
       const {
         artistNameSelector,
         trackNameSelector,
@@ -258,6 +268,7 @@ async function render(config: ProfileOptions) {
 
   const targetArtist = {
     get value() { return enhArtist },
+    get multipleValues() { return this.value.split(' feat. ') },
     get getNormalized() { return normalizeForSearch(this.value) },
   }
 
