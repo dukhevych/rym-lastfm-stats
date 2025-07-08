@@ -72,6 +72,8 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      position: absolute;
+      opacity: 0;
     }
 
     .loader {
@@ -81,12 +83,17 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      inset: 0;
 
       svg {
         height: 60%;
         width: 60%;
         color: var(--clr-lastfm);
       }
+    }
+
+    img.loaded {
+      opacity: 1;
     }
 
     img.loaded + .loader { display: none; }

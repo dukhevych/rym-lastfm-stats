@@ -38,25 +38,19 @@ function injectShowAllButton() {
   if (target) target.appendChild(button);
 }
 
-// function addReleaseIdAsOrder(item) {
-//   const releaseTitleSelector = validationRules[RYMEntityCode.Release].selectors.releaseTitleSelector;
-//   const releaseTitle = item.querySelector(releaseTitleSelector);
-//   let releaseId = releaseTitle?.title || '';
-//   releaseId = utils.extractIdFromTitle(releaseId);
-//   if (releaseId) {
-//     item.style.order = releaseId;
-//   }
-// };
-
-interface TargetArtist {
+interface TargetValues {
   values: Set<string>;
   valuesNormalized: Set<string>;
 }
 
-interface TargetTrack {
+interface TargetValue {
   value: string;
-  normalized: string;
+  valueNormalized: string;
 }
+
+interface TargetArtist extends TargetValues {}
+
+interface TargetTrack extends TargetValue {}
 
 interface Targets {
   artist: TargetArtist;
@@ -97,8 +91,8 @@ const validationRules: Record<RYMEntityCode, ValidationRule> = {
       if (targetArtist.valuesNormalized.has(artistNameLocalizedNormalized())) return 'full';
       if (targetArtist.values.has(artistName())) return 'full';
       if (targetArtist.valuesNormalized.has(artistNameNormalized())) return 'full';
-      if ([...targetArtist.values].some((value) => artistAkaNames().has(value))) return 'full';
-      if ([...targetArtist.valuesNormalized].some((value) => artistAkaNamesNormalized().has(value))) return 'full';
+      if (targetArtist.values.intersection(artistAkaNames()).size > 0) return 'full';
+      if (targetArtist.valuesNormalized.intersection(artistAkaNamesNormalized()).size > 0) return 'full';
 
       // PARTIAL MATCH
       if ([...targetArtist.values].some((value) => checkPartialStringsMatch(value, artistNameLocalized()))) return 'partial';
@@ -132,7 +126,7 @@ const validationRules: Record<RYMEntityCode, ValidationRule> = {
         artistNameLocalized && artistNames.add(artistNameLocalized);
       });
 
-      const artistValidity = validateArtist(artistNames, targetArtist);
+      const artistValidity = validateMultipleValues(artistNames, targetArtist);
 
       if (!targetRelease) return false;
 
@@ -149,34 +143,38 @@ const validationRules: Record<RYMEntityCode, ValidationRule> = {
   },
   [RYMEntityCode.Song]: {
     selectors: {
-      artistNameSelector: '.infobox td:nth-child(2) > span .ui_name_locale',
-      trackNameSelector: '.infobox td:nth-child(2) > table .ui_name_locale_original',
+      artistNameSelector: '.infobox td:nth-child(2) table + span .ui_name_locale_original',
+      artistNameSelectorFallback: '.infobox td:nth-child(2) table + span .ui_name_locale:not(.has_locale_name)',
+      artistNameLocalizedSelector: '.infobox td:nth-child(2) table + span .ui_name_locale_language',
+      trackNameSelector: '.infobox td:nth-child(2) table a.searchpage .ui_name_locale_original',
     },
     validate: function (node, { artist: targetArtist, track: targetTrack }) {
       const {
         artistNameSelector,
+        artistNameSelectorFallback,
+        artistNameLocalizedSelector,
         trackNameSelector,
       } = this.selectors;
 
-      const artistName = normalizeForSearch(node.querySelector(artistNameSelector)?.textContent || '');
-      const trackName = normalizeForSearch(node.querySelector(trackNameSelector)?.textContent || '');
+      const artistNames: Set<string> = new Set();
 
-      // let _query = normalizeForSearch(query);
+      Array.from(node.querySelectorAll(artistNameSelector)).forEach(el => artistNames.add((el.textContent || '').trim()));
+      Array.from(node.querySelectorAll(artistNameLocalizedSelector)).forEach(el => artistNames.add((el.textContent || '').trim()));
+      Array.from(node.querySelectorAll(artistNameSelectorFallback)).forEach(el => artistNames.add((el.textContent || '').trim()));
 
-      let hasArtist = false;
-      let hasTrackName = false;
+      const trackName = node.querySelector(trackNameSelector)?.textContent || '';
 
-      // if (checkPartialStringsMatch(_query, artistName)) {
-      //   hasArtist = true;
-      //   _query = query.replace(artistName, '').trim();
-      // }
+      const artistValidity = validateMultipleValues(artistNames, targetArtist);
 
-      // if (checkPartialStringsMatch(_query, trackName)) {
-      //   hasTrackName = true;
-      //   _query = query.replace(trackName, '').trim();
-      // }
+      if (!targetTrack) return false;
 
-      return hasArtist && hasTrackName;
+      const trackNameValidity = validateSingleValue(trackName, targetTrack);
+
+      if (!artistValidity || !trackNameValidity) return false;
+      if (artistValidity === 'full' && trackNameValidity === 'full') return 'full';
+      if (artistValidity === 'partial' || trackNameValidity === 'partial') return 'partial';
+
+      return false;
     },
   },
 }
@@ -218,7 +216,7 @@ async function render(config: ProfileOptions) {
   if (searchType === RYMEntityCode.Song) {
     targets.track = {
       value: enhTrack,
-      normalized: normalizeForSearch(enhTrack),
+      valueNormalized: normalizeForSearch(enhTrack),
     }
   }
 
@@ -230,7 +228,6 @@ async function render(config: ProfileOptions) {
 
     if (isReleaseSearch) {
       addReleaseUserRating(item);
-      // addReleaseIdAsOrder(item);
     }
 
     const validity = validationRules[searchType].validate(item, targets);
@@ -282,58 +279,79 @@ async function render(config: ProfileOptions) {
     } else {
       const header = document.querySelector(SEARCH_HEADER_SELECTOR);
 
-      if (header) {
+      if (!header) return;
+
+      const url = new URL(window.location.href);
+      const page = url.searchParams.get('page') ?? '1';
+
+      const warning = h('div', {
+        className: ['rym-warning'],
+      }, h('p', {}, `No direct matches found on the #${page} page.`));
+
+      const navigation = h('div');
+
+      if (searchType === RYMEntityCode.Artist) {
+        const p = h('p', {}, [
+          'This artist may not be added yet into RYM database or too obscure.',
+          h('a', {
+            href: '/artist/profile_ac',
+          }, 'Add artist'),
+        ]);
+        warning.appendChild(p);
+      } else if (searchType === RYMEntityCode.Release) {
+        const p = h('p', {}, 'This release may not be added yet into RYM database or too obscure.');
+        warning.appendChild(p);
+      } else if (searchType === RYMEntityCode.Song) {
+        const p = h('p', {}, 'This song may not be added yet into RYM database or too obscure.');
+        warning.appendChild(p);
+      }
+
+      header.insertAdjacentElement('afterend', warning);
+      warning.insertAdjacentElement('afterend', navigation);
+
+      if (searchMoreLink) {
+        const tryNextPageLink = searchMoreLink.cloneNode(true) as typeof searchMoreLink;
+        tryNextPageLink.classList.add(...['btn', 'blue_btn', 'btn_small']);
+        tryNextPageLink.textContent = 'Try next page';
+        tryNextPageLink.style.marginBottom = '1rem';
+        navigation.appendChild(tryNextPageLink);
+      }
+
+      function createSearchArtistInsteadLink() {
         const url = new URL(window.location.href);
-        const page = url.searchParams.get('page') ?? '1';
+        const searchParams = new URLSearchParams(url.search);
+        searchParams.delete('page');
+        searchParams.set('searchtype', RYMEntityCode.Artist);
+        searchParams.set('searchterm', normalizeForSearch(searchParams.get('enh_artist') || ''));
+        const newRelativeUrl = url.pathname + '?' + searchParams.toString();
 
-        const warning = h('div', {
-          className: ['rym-warning'],
-        }, h('p', {}, `No direct matches found on the #${page} page.`));
+        return h('a', {
+          href: newRelativeUrl,
+          className: ['btn', 'blue_btn', 'btn_small'],
+        }, 'Search artist instead');
+      }
 
-        const navigation = h('div');
+      function createSearchReleaseInsteadLink() {
+        const url = new URL(window.location.href);
+        const searchParams = new URLSearchParams(url.search);
+        searchParams.delete('page');
+        searchParams.set('searchtype', RYMEntityCode.Release);
+        searchParams.set('searchterm', normalizeForSearch(searchParams.get('enh_release') || ''));
+        const newRelativeUrl = url.pathname + '?' + searchParams.toString();
 
-        if (searchType === RYMEntityCode.Artist) {
-          const p = h('p', {}, [
-            'This artist may not be added yet into RYM database or too obscure.',
-            h('a', {
-              href: '/artist/profile_ac',
-            }, 'Add artist'),
-          ]);
-          warning.appendChild(p);
-        } else if (searchType === RYMEntityCode.Release) {
-          const p = h('p', {}, 'This release may not be added yet into RYM database or too obscure.');
-          warning.appendChild(p);
-        } else if (searchType === RYMEntityCode.Song) {
-          const p = h('p', {}, 'This song may not be added yet into RYM database or too obscure.');
-          warning.appendChild(p);
-        }
+        return h('a', {
+          href: newRelativeUrl,
+          className: ['btn', 'blue_btn', 'btn_small'],
+        }, 'Search release instead');
+      }
 
-        header.insertAdjacentElement('afterend', warning);
-        warning.insertAdjacentElement('afterend', navigation);
+      if (searchType === RYMEntityCode.Release) {
+        navigation.appendChild(createSearchArtistInsteadLink());
+      }
 
-        if (searchMoreLink) {
-          const tryNextPageLink = searchMoreLink.cloneNode(true) as typeof searchMoreLink;
-          tryNextPageLink.classList.add(...['btn', 'blue_btn', 'btn_small']);
-          tryNextPageLink.textContent = 'Try next page';
-          tryNextPageLink.style.marginBottom = '1rem';
-          navigation.appendChild(tryNextPageLink);
-        }
-
-        if (searchType === RYMEntityCode.Release) {
-          const url = new URL(window.location.href);
-          const searchParams = new URLSearchParams(url.search);
-          searchParams.delete('page');
-          searchParams.set('searchtype', RYMEntityCode.Artist);
-          searchParams.set('searchterm', normalizeForSearch(searchParams.get('enh_artist') || ''));
-          const newRelativeUrl = url.pathname + '?' + searchParams.toString();
-
-          const searchArtistInsteadLink = h('a', {
-            href: newRelativeUrl,
-            className: ['btn', 'blue_btn', 'btn_small'],
-          }, 'Search artist instead');
-
-          navigation.appendChild(searchArtistInsteadLink);
-        }
+      if (searchType === RYMEntityCode.Song) {
+        navigation.appendChild(createSearchArtistInsteadLink());
+        navigation.appendChild(createSearchReleaseInsteadLink());
       }
     }
   }
@@ -388,7 +406,7 @@ function validateRelease(value: string, target: ReleaseTitleExtras) {
   return false;
 }
 
-function validateArtist(values: Set<string>, target: TargetArtist) {
+function validateMultipleValues(values: Set<string>, target: TargetValues) {
   const valuesNormalized: Set<string> = new Set();
 
   [...values].forEach((value) => valuesNormalized.add(normalizeForSearch(value)));
@@ -400,6 +418,19 @@ function validateArtist(values: Set<string>, target: TargetArtist) {
   // PARTIAL MATCH
   if ([...values].some(v1 => [...target.values].some(v2 => checkPartialStringsMatch(v1, v2)))) return 'partial';
   if ([...valuesNormalized].some(v1 => [...target.valuesNormalized].some(v2 => checkPartialStringsMatch(v1, v2)))) return 'partial';
+
+  return false;
+}
+
+function validateSingleValue(value: string, target: TargetValue) {
+  if (target.value === value) return 'full';
+
+  const valueNormalized = normalizeForSearch(value);
+
+  if (target.valueNormalized === valueNormalized) return 'full';
+
+  if (checkPartialStringsMatch(value, target.value)) return 'partial';
+  if (checkPartialStringsMatch(valueNormalized, target.valueNormalized)) return 'partial';
 
   return false;
 }
