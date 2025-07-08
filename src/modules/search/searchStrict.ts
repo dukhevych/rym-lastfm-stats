@@ -11,7 +11,6 @@ import { getDirectInnerText, createElement as h } from '@/helpers/dom';
 import * as constants from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
 import { RYMEntityCode } from '@/helpers/enums';
-import { filterEmptyKeys } from '@/helpers/utils';
 
 import './searchStrict.css';
 
@@ -348,29 +347,34 @@ function validateRelease(value: string, target: ReleaseTitleExtras) {
 
   if (item.suffix || target.suffix) {
     if (item.suffix && target.suffix) {
+      console.log(item);
+      console.log(target);
+
       let baseValidity: ValidationResult = false;
-      if (item.noSuffix === target.noSuffix) baseValidity = 'full';
+      if (
+        item.noSuffix === target.noSuffix
+        || item.noSuffixNormalized === target.noSuffixNormalized
+      ) baseValidity = 'full';
       else if (checkPartialStringsMatch(item.noSuffix, target.noSuffix)) baseValidity = 'partial';
       if (!baseValidity) return false;
 
       let suffixValidity: boolean = false;
-      if (item.editionSuffix || target.editionSuffix) {
-        if (item.editionSuffix && target.editionSuffix) {
-          if (item.editionSuffixType.intersection(target.editionSuffixType).size > 0) {
+      if (item.editionSuffix && target.editionSuffix) {
+        if (item.editionSuffixType.intersection(target.editionSuffixType).size > 0) {
+          suffixValidity = true;
+        }
+      }
+
+      if (item.numericSuffix && target.numericSuffix) {
+        if (item.numericSuffixType.intersection(target.numericSuffixType).size > 0) {
+          console.log(item.numericSuffixValue, target.numericSuffixValue);
+          if (item.numericSuffixValue === target.numericSuffixValue) {
             suffixValidity = true;
           }
         }
       }
-      if (item.numericSuffix || target.numericSuffix) {
-        if (item.numericSuffix && target.numericSuffix) {
-          if (item.numericSuffixType.intersection(target.numericSuffixType).size > 0) {
-            if (item.numericSuffixValue === target.numericSuffixValue) {
-              suffixValidity = true;
-            }
-          }
-        }
-      }
 
+      console.log(baseValidity, suffixValidity);
       return suffixValidity ? baseValidity : 'partial';
     } else {
       if (item.noSuffix === target.noSuffix) return 'partial';

@@ -229,14 +229,11 @@ export function extractReleaseSuffixNumericValue(value: string): number | null {
     .replace(new RegExp(constants.NUMBERED_KEYWORDS.join('|'), 'g'), '')
     .trim();
 
-  console.log('cleaned', cleaned);
-
   // Try direct number
   if (!isNaN(Number(cleaned))) return Number(cleaned);
 
   // Try Roman numeral
   try {
-    // console.log('arabic', cleaned.toUpperCase());
     const roman = toArabic(cleaned.toUpperCase());
     if (roman) return roman;
   } catch {}
@@ -248,46 +245,6 @@ export function extractReleaseSuffixNumericValue(value: string): number | null {
   return null;
 }
 
-// console.log(111, extractReleaseEditionType('111'));
-// console.log(111, extractReleaseEditionType('asd dsdasads (Remastered edition version ffs)'));
-// console.log(111, extractReleaseEditionType('asd dsdasads (Edition version ffs)'));
-// console.log(111, extractReleaseEditionType('asd dsdasads (Vol II)'));
-// console.log(111, extractReleaseEditionType('asd dsdasads (Volume 2)'));
-// console.log(111, extractReleaseEditionType('asd dsdasads (Pt. 2)'));
-// console.log(111, extractReleaseEditionType('asd dsdasads (Pt. V)'));
-// console.log(111, extractReleaseEditionType('asd dsdasads (part VI)'));
-// console.log(222);
-// console.log(222, matchSuffix('asd dsdasads (Remastered edition version ffs)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
-// console.log(222, matchSuffix('asd dsdasads (Edition version ffs)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
-// console.log(222, matchSuffix('asd dsdasads (Vol II)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
-// console.log(222, matchSuffix('asd dsdasads (Volume 2)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
-// console.log(222, matchSuffix('asd dsdasads (Pt. 2)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
-// console.log(222, matchSuffix('asd dsdasads (Pt. V)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
-// console.log(222, matchSuffix('asd dsdasads (part VI)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));console.log(444);
-// console.log(444);
-// console.log(444, matchSuffix('asd dsdasads (Remastered edition version ffs)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
-// console.log(444, matchSuffix('asd dsdasads (Edition version ffs)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
-// console.log(444, matchSuffix('asd dsdasads (Vol II)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
-// console.log(444, matchSuffix('asd dsdasads (Volume 2)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
-// console.log(444, matchSuffix('asd dsdasads (Pt. 2)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
-// console.log(444, matchSuffix('asd dsdasads (Pt. V)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
-// console.log(444, matchSuffix('asd dsdasads (part VI)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
-// console.log(333);
-// console.log(333, matchSuffix('asd dsdasads (Remastered edition version ffs)'));
-// console.log(333, matchSuffix('asd dsdasads (Edition version ffs)'));
-// console.log(333, matchSuffix('asd dsdasads (Vol II)'));
-// console.log(333, matchSuffix('asd dsdasads (Volume 2)'));
-// console.log(333, matchSuffix('asd dsdasads (Pt. 2)'));
-// console.log(333, matchSuffix('asd dsdasads (Pt. V)'));
-// console.log(333, matchSuffix('asd dsdasads (part VI)'));
-// console.log(555);
-// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Remastered edition version ffs)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
-// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Edition version ffs)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
-// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Volume II)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
-// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Volume 2)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
-// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Part 2)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
-// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Part V)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
-// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (part VI)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
 
 export interface ReleaseTitleExtras {
   value: string;
