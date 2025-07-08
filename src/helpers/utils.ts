@@ -399,8 +399,3 @@ export function filterEmptyKeys<T extends object>(obj: T): Partial<T> {
 
   return result;
 }
-
-console.log(filterEmptyKeys({
-  asd: new Set(),
-  title: 'asd',
-}));
