@@ -142,13 +142,16 @@ export const EDITION_KEYWORDS = [
   'deluxe',
   'digipack',
   'edition',
-  'part',
   'bonus',
   'expanded',
   'remaster',
-  'remastered',
+  'vinyl',
+  'remix',
   'reissue',
   're-issue',
+  'tour',
+  'extended',
+  'directors cut',
   'live',
   'redux',
   'limited',
@@ -163,22 +166,35 @@ export const EDITION_KEYWORDS = [
   'ost',
   'soundtrack',
   'version',
+  'original',
 ];
 
-export const EDITION_KEYWORDS_REPLACE_PATTERN = new RegExp(
-  `\\s*[\\[(]([^\\])]*\\b(?:${EDITION_KEYWORDS.join('|')})\\b[^\\])]*)[\\])]$`,
-  'i'
-);
-
-export const NUMBERED_SUFFIX_KEYWORDS = [
+export const NUMBERED_KEYWORDS = [
   'part',
   'volume',
-  'vol',
   'episode',
   'chapter',
   'disc',
   'book',
 ];
+
+export const SUFFIX_KEYWORDS = [
+  ...EDITION_KEYWORDS,
+  ...NUMBERED_KEYWORDS,
+]
+
+export const getSuffixPattern = (keywords: string[] = SUFFIX_KEYWORDS) => {
+  return new RegExp(
+    `\\s*[\\[(]([^\\])]*${
+      `\\b(?:${keywords.join('|')})\\b`
+    }[^\\])]*)[\\])]$`,
+    'i'
+  );
+}
+
+export const SUFFIX_PATTERN = getSuffixPattern();
+export const SUFFIX_EDITION_KEYWORDS_PATTERN = getSuffixPattern(EDITION_KEYWORDS);
+export const SUFFIX_NUMBERED_KEYWORDS_PATTERN = getSuffixPattern(NUMBERED_KEYWORDS);
 
 // [DB value]: [display value]
 export const RYMFormatsLabels: Record<ERYMFormat, string> = {

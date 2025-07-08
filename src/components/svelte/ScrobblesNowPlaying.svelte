@@ -202,8 +202,7 @@
 import { formatDistanceToNow } from 'date-fns';
 import { RecordsAPI } from '@/helpers/records-api';
 import { ERYMOwnershipStatus } from '@/helpers/enums';
-import * as utils from '@/helpers/utils';
-import { generateSearchUrl, generateSearchHint } from '@/helpers/string';
+import { generateSearchUrl, generateSearchHint, cleanupReleaseEdition } from '@/helpers/string';
 import { storageSet } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import type {
@@ -318,7 +317,7 @@ const formats = $derived(() => {
 
 const formatsLabel = $derived(() => Array.from(formats()).map(key => constants.RYMFormatsLabels[key] || key).join(', '));
 
-const albumNameFallback = $derived(() => track?.albumName ? utils.cleanupReleaseEdition(_track().albumName) : '');
+const albumNameFallback = $derived(() => track?.albumName ? cleanupReleaseEdition(_track().albumName) : '');
 
 const searchLinks = $derived(() => {
   const {

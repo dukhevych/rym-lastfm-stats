@@ -664,7 +664,7 @@ const showModal = ref(false);
 
 // STATE
 const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
-const config = ref<typeof options | null>(null);
+const config = ref(null);
 const userData = ref(null);
 const rymSyncTimestamp = ref(null);
 

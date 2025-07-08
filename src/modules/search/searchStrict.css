@@ -55,6 +55,8 @@ td:has(> .rym-search-strict--item) {
 }
 
 .rym-search-strict--item {
+  min-height: 110px;
+
   &[data-validity="full"] {
     position: relative;
     border: 1px solid green;

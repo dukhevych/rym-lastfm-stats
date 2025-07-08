@@ -7,6 +7,21 @@ import type { RecentTrack } from '@/api/getRecentTracks';
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
 
+if (constants.isDev) {
+  const originalStringify = JSON.stringify;
+
+  JSON.stringify = function (value: any, replacer?: any, space?: any) {
+    const customReplacer = (key: string, value: any) => {
+      if (value instanceof Set) {
+        return Array.from(value);
+      }
+      return typeof replacer === 'function' ? replacer(key, value) : value;
+    };
+
+    return originalStringify(value, customReplacer, space);
+  };
+}
+
 export interface Wait {
   (ms: number): Promise<void>;
 }
@@ -317,33 +332,6 @@ export function omit<T extends OmitObject, K extends keyof T>(
   return result;
 }
 
-export function cleanupReleaseEdition(releaseTitle: string): string {
-  if (!releaseTitle) return '';
-
-  return releaseTitle
-    .replace(constants.EDITION_KEYWORDS_REPLACE_PATTERN, '')
-    .trim();
-}
-
-function matchEditionSuffix(title: string): string | null {
-  const match = title.match(constants.EDITION_KEYWORDS_REPLACE_PATTERN);
-  return match ? match[1] : null;
-}
-
-export function extractReleaseEditionType(releaseTitle: string): string | null {
-  const matched = matchEditionSuffix(releaseTitle);
-  if (!matched) return null;
-
-  const lower = matched.toLowerCase();
-  for (const keyword of constants.EDITION_KEYWORDS) {
-    if (lower.includes(keyword)) {
-      return keyword;
-    }
-  }
-
-  return null;
-}
-
 export async function restartBackground() {
   await browser.runtime.sendMessage({ type: 'RESTART_BACKGROUND' });
 }
@@ -389,3 +377,30 @@ export function lazy<T>(fn: () => T): () => T {
     return val!;              // Non-null assertion since val is guaranteed after first call
   };
 }
+
+export function filterEmptyKeys<T extends object>(obj: T): Partial<T> {
+  const result: Partial<T> = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    const isEmpty =
+      value === '' ||
+      value === null ||
+      value === undefined ||
+      (Array.isArray(value) && value.length === 0) ||
+      (value instanceof Set && value.size === 0) ||
+      (Object.prototype.toString.call(value) === '[object Object]' &&
+        Object.keys(value).length === 0);
+
+    if (!isEmpty) {
+      key === 'editionSuffixType' && console.log('not empty', key, value);
+      (result as any)[key] = value;
+    }
+  }
+
+  return result;
+}
+
+console.log(filterEmptyKeys({
+  asd: new Set(),
+  title: 'asd',
+}));

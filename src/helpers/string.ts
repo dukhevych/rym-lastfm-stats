@@ -1,14 +1,93 @@
+import { toArabic } from 'roman-numerals';
 import { remove as removeDiacritics } from 'diacritics';
 
+import * as constants from '@/helpers/constants';
 import { RYMEntityCode } from '@/helpers/enums';
+
+const WORD_NUMBERS: Record<string, number> = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4,
+  five: 5, six: 6, seven: 7, eight: 8, nine: 9,
+  ten: 10, eleven: 11, twelve: 12, thirteen: 13,
+  fourteen: 14, fifteen: 15, sixteen: 16,
+  seventeen: 17, eighteen: 18, nineteen: 19,
+  twenty: 20, thirty: 30, forty: 40, fifty: 50,
+  sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+  hundred: 100, thousand: 1000,
+};
+
+export function wordsToNumbers(text: string): number | null {
+  const words = text.toLowerCase().replace(/[^a-z\s-]/g, '').split(/[\s-]+/);
+  let result = 0;
+  let current = 0;
+
+  for (const word of words) {
+    const value = WORD_NUMBERS[word];
+    if (value != null) {
+      if (value === 100 || value === 1000) {
+        current *= value;
+      } else {
+        current += value;
+      }
+    } else if (current) {
+      result += current;
+      current = 0;
+    }
+  }
+
+  result += current;
+  return result || null;
+}
 
 export function removeBrackets(str: string) {
   return str.replace(/^\[(.*)\]$/, '$1');
 }
 
-export function checkPartialStringsMatch(str1: string, str2: string): boolean {
-  if (!str1 || !str2) return false;
-  return str1 === str2 || str1.includes(str2) || str2.includes(str1);
+export function checkPartialStringsMatch(str1: string, str2: string, options: {
+  allowEmpty?: boolean;
+  ignoreCase?: boolean;
+  edgesOnly?: boolean;
+  startOnly?: boolean;
+  endOnly?: boolean;
+} = {}): boolean {
+  const {
+    allowEmpty = false,
+    ignoreCase = true,
+    edgesOnly = true,
+    startOnly = false,
+    endOnly = false,
+  } = options;
+
+  // Handle empty strings
+  if (allowEmpty) {
+    if (str1 === str2) return true;
+    if (!str1 || !str2) return false;
+  }
+
+  // Apply case normalization if needed
+  const s1 = ignoreCase ? str1.toLowerCase() : str1;
+  const s2 = ignoreCase ? str2.toLowerCase() : str2;
+
+  // Exact match - always return true
+  if (s1 === s2) return true;
+
+  // Word boundary matching using string methods
+  const startsWithWordBoundary = s1.startsWith(s2 + ' ') || s2.startsWith(s1 + ' ');
+  const endsWithWordBoundary = s1.endsWith(' ' + s2) || s2.endsWith(' ' + s1);
+
+  if (startOnly) {
+    return startsWithWordBoundary;
+  }
+
+  if (endOnly) {
+    return endsWithWordBoundary;
+  }
+
+  if (edgesOnly) {
+    return startsWithWordBoundary || endsWithWordBoundary;
+  }
+
+  // Default: substring matching
+  return s1.includes(s2) || s2.includes(s1);
 }
 
 export function extractNumbers(str: string): string {
@@ -101,4 +180,169 @@ export function normalizeForSearch(str: string): string {
     .replace(/ pt /g, ' part ')
     .replace(/ vol /g, ' volume ')
     .trim());
+}
+
+export function cleanupReleaseEdition(releaseTitle: string): string {
+  if (!releaseTitle) return '';
+
+  return releaseTitle
+    .replace(constants.SUFFIX_EDITION_KEYWORDS_PATTERN, '')
+    .trim();
+}
+
+export function cleanupSuffix(releaseTitle: string, pattern?: RegExp): string {
+  if (!releaseTitle) return '';
+
+  return releaseTitle
+    .replace(pattern || constants.SUFFIX_PATTERN, '')
+    .trim();
+}
+
+export function matchSuffix(title: string, pattern?: RegExp): string {
+  const match = title.match(pattern || constants.SUFFIX_PATTERN);
+  return match ? match[1] : '';
+}
+
+export function extractReleaseSuffixType(suffix: string, keywords: string[]): Set<string> {
+  const lower = suffix.toLowerCase();
+  const results = new Set<string>();
+
+  for (const keyword of keywords) {
+    if (lower.includes(keyword)) {
+      results.add(keyword);
+    }
+  }
+
+  return results;
+}
+
+export function extractReleaseSuffixNumericValue(value: string): number | null {
+  if (!value) return null;
+
+  // Strip keywords
+  const cleaned = value
+    .toLowerCase()
+    .trim()
+    .replace(/\./g, '')
+    .replace('pt ', 'part ')
+    .replace('vol ', 'volume ')
+    .replace(new RegExp(constants.NUMBERED_KEYWORDS.join('|'), 'g'), '')
+    .trim();
+
+  console.log('cleaned', cleaned);
+
+  // Try direct number
+  if (!isNaN(Number(cleaned))) return Number(cleaned);
+
+  // Try Roman numeral
+  try {
+    // console.log('arabic', cleaned.toUpperCase());
+    const roman = toArabic(cleaned.toUpperCase());
+    if (roman) return roman;
+  } catch {}
+
+  // Try word-number
+  const wordParsed = wordsToNumbers(cleaned);
+  if (typeof wordParsed === 'number' && !isNaN(wordParsed)) return wordParsed;
+
+  return null;
+}
+
+// console.log(111, extractReleaseEditionType('111'));
+// console.log(111, extractReleaseEditionType('asd dsdasads (Remastered edition version ffs)'));
+// console.log(111, extractReleaseEditionType('asd dsdasads (Edition version ffs)'));
+// console.log(111, extractReleaseEditionType('asd dsdasads (Vol II)'));
+// console.log(111, extractReleaseEditionType('asd dsdasads (Volume 2)'));
+// console.log(111, extractReleaseEditionType('asd dsdasads (Pt. 2)'));
+// console.log(111, extractReleaseEditionType('asd dsdasads (Pt. V)'));
+// console.log(111, extractReleaseEditionType('asd dsdasads (part VI)'));
+// console.log(222);
+// console.log(222, matchSuffix('asd dsdasads (Remastered edition version ffs)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
+// console.log(222, matchSuffix('asd dsdasads (Edition version ffs)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
+// console.log(222, matchSuffix('asd dsdasads (Vol II)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
+// console.log(222, matchSuffix('asd dsdasads (Volume 2)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
+// console.log(222, matchSuffix('asd dsdasads (Pt. 2)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
+// console.log(222, matchSuffix('asd dsdasads (Pt. V)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
+// console.log(222, matchSuffix('asd dsdasads (part VI)', constants.SUFFIX_EDITION_KEYWORDS_PATTERN));console.log(444);
+// console.log(444);
+// console.log(444, matchSuffix('asd dsdasads (Remastered edition version ffs)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
+// console.log(444, matchSuffix('asd dsdasads (Edition version ffs)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
+// console.log(444, matchSuffix('asd dsdasads (Vol II)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
+// console.log(444, matchSuffix('asd dsdasads (Volume 2)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
+// console.log(444, matchSuffix('asd dsdasads (Pt. 2)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
+// console.log(444, matchSuffix('asd dsdasads (Pt. V)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
+// console.log(444, matchSuffix('asd dsdasads (part VI)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
+// console.log(333);
+// console.log(333, matchSuffix('asd dsdasads (Remastered edition version ffs)'));
+// console.log(333, matchSuffix('asd dsdasads (Edition version ffs)'));
+// console.log(333, matchSuffix('asd dsdasads (Vol II)'));
+// console.log(333, matchSuffix('asd dsdasads (Volume 2)'));
+// console.log(333, matchSuffix('asd dsdasads (Pt. 2)'));
+// console.log(333, matchSuffix('asd dsdasads (Pt. V)'));
+// console.log(333, matchSuffix('asd dsdasads (part VI)'));
+// console.log(555);
+// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Remastered edition version ffs)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
+// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Edition version ffs)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
+// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Volume II)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
+// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Volume 2)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
+// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Part 2)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
+// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (Part V)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
+// console.log(555, normalizeNumericSuffix(matchSuffix('asd dsdasads (part VI)', constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN)));
+
+export interface ReleaseTitleExtras {
+  value: string;
+  normalized: string;
+  suffix: string;
+  noSuffix: string;
+  noSuffixNormalized: string;
+  editionSuffix: string;
+  editionSuffixType: Set<string>;
+  numericSuffix: string;
+  numericSuffixType: Set<string>;
+  numericSuffixValue: number | null;
+}
+
+export function getReleaseTitleExtras(value: string): ReleaseTitleExtras {
+  const cache = new Map<string, any>();
+
+  const memoize = <T>(key: string, fn: () => T): T => {
+    if (!cache.has(key)) {
+      cache.set(key, fn());
+    }
+    return cache.get(key);
+  };
+
+  return {
+    value,
+    get normalized() {
+      return memoize('normalized', () => normalizeForSearch(value));
+    },
+
+    get editionSuffix() {
+      return memoize('editionSuffix', () => matchSuffix(value, constants.SUFFIX_EDITION_KEYWORDS_PATTERN));
+    },
+    get editionSuffixType() {
+      return memoize('editionSuffixType', () => extractReleaseSuffixType(this.editionSuffix, constants.EDITION_KEYWORDS));
+    },
+
+    get numericSuffix() {
+      return memoize('numericSuffix', () => matchSuffix(value, constants.SUFFIX_NUMBERED_KEYWORDS_PATTERN));
+    },
+    get numericSuffixType() {
+      return memoize('numericSuffixType', () => extractReleaseSuffixType(this.numericSuffix, constants.NUMBERED_KEYWORDS));
+    },
+    get numericSuffixValue() {
+      return memoize('numericSuffixValue', () => extractReleaseSuffixNumericValue(this.numericSuffix));
+    },
+
+    get suffix() {
+      return memoize('suffix', () => this.editionSuffix || this.numericSuffix || '');
+    },
+    get noSuffix() {
+      return memoize('noSuffix', () => this.suffix && cleanupSuffix(value));
+    },
+    get noSuffixNormalized() {
+      return memoize('noSuffixNormalized', () => normalizeForSearch(this.noSuffix));
+    },
+  };
 }

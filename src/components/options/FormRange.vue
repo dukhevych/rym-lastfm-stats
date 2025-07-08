@@ -38,6 +38,9 @@
               >
                 <span
                   class="inline-flex cursor-pointer px-2"
+                  :class="{
+                    'pointer-events-none': $attrs.disabled,
+                  }"
                   @click="$emit('update:modelValue', n)"
                 >{{ n }}</span>
               </span>

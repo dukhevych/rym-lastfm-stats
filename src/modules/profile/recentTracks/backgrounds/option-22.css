@@ -200,17 +200,17 @@
     opacity: 0.1;
 
     --bg-option-bar-1: 50;
-    --bg-option-bar-2: 51;
-    --bg-option-bar-3: 52;
-    --bg-option-bar-4: 53;
-    --bg-option-bar-5: 54;
-    --bg-option-bar-6: 55;
-    --bg-option-bar-7: 56;
-    --bg-option-bar-8: 55;
-    --bg-option-bar-9: 54;
-    --bg-option-bar-10: 53;
-    --bg-option-bar-11: 52;
-    --bg-option-bar-12: 51;
+    --bg-option-bar-2: 50.1;
+    --bg-option-bar-3: 50.2;
+    --bg-option-bar-4: 50.3;
+    --bg-option-bar-5: 50.4;
+    --bg-option-bar-6: 50.5;
+    --bg-option-bar-7: 50.6;
+    --bg-option-bar-8: 50.5;
+    --bg-option-bar-9: 50.4;
+    --bg-option-bar-10: 50.3;
+    --bg-option-bar-11: 50.2;
+    --bg-option-bar-12: 50.1;
   }
   &.is-now-playing.bg-option-22:after {
     animation: bg-option-22-animation 15s linear infinite;
