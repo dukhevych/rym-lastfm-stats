@@ -1,0 +1,83 @@
+.list-stats-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* gap: 2rem; */
+
+  &:before {
+    content: 'Loading...';
+    font-weight: bold;
+    display: none;
+  }
+
+  &.is-updating {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &.is-loading {
+    & > * {
+      display: none !important;
+    }
+    &:before {
+      display: block;
+    }
+  }
+
+  &.no-data {
+    .list-stats,
+    .lastfm-link {
+      display: none;
+    }
+
+    &:before {
+      content: 'No Last.fm data found';
+      display: inline;
+    }
+  }
+
+  .incorrect-stats-link {
+    margin-left: auto;
+    font-size: 1.1em;
+    line-height: 1em;
+    font-weight: bold;
+    color: var(--mono-c);
+
+    position: relative;
+
+    &:hover {
+      color: var(--mono-6)
+    }
+  }
+
+  .lastfm-link {
+    transition: color .15s ease-in-out;
+    display: inline-flex;
+    gap: 0.5rem;
+
+    &[href=""] { display: none; }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+
+    &:after {
+      content: 'Last.fm';
+      font-weight: bold;
+    }
+
+    &.is-localized {
+      color: var(--clr-lastfm);
+
+      &:hover {
+        color: color-mix(in srgb, var(--clr-lastfm), #fff 60%);
+      }
+    }
+
+    &.is-original:after {
+      content: 'Original name';
+    }
+  }
+}

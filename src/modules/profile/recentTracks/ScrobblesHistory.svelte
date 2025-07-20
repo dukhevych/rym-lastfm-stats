@@ -5,11 +5,10 @@ import { formatDistanceToNow } from 'date-fns';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import { generateSearchUrl, generateSearchHint } from '@/helpers/string';
 
-const { scrobbles = [], timestamp, open = true, config } = $props<{
+const { scrobbles = [], timestamp, open = true } = $props<{
   scrobbles: TrackDataNormalized[];
   timestamp: number;
   open: boolean;
-  config: ProfileOptions;
 }>();
 
 const timestampFormatted = $derived(new Date(timestamp).toLocaleString());

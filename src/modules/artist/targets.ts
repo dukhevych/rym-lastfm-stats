@@ -30,7 +30,16 @@ export function getArtistNames(parent: HTMLElement) {
     const artistAkaNamesText = artistAkaNamesElement?.querySelector('span')?.textContent;
     if (artistAkaNamesText) {
       artistAkaNamesText.split(', ').forEach(name => {
-        const nameCleaned = name.replace(/\s*\[birth name\]$/i, '').trim(); // Check for other patterns to remove
+        const SUFFIXES_TO_REMOVE = [
+          '[birth name]',
+          '[transliterated birth name]',
+          '[Romanized name]',
+        ];
+        let nameCleaned = name;
+        for (const suffix of SUFFIXES_TO_REMOVE) {
+          nameCleaned = nameCleaned.replace(new RegExp(`\\s*${suffix}$`, 'i'), '');
+        }
+        nameCleaned = nameCleaned.trim();
         artistAkaNames.push(nameCleaned);
       });
     }

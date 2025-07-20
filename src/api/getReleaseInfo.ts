@@ -1,4 +1,4 @@
-export type ReleaseType = 'album' | 'single' | 'music video' | 'ep';
+import { RYMReleaseType } from '@/helpers/enums';
 
 interface ReleaseGetInfoParams {
   artist: string;
@@ -6,13 +6,27 @@ interface ReleaseGetInfoParams {
   mbid?: string;
   autocorrect?: 0 | 1;
   lang?: string;
-  username?: string;
+  username?: string | null;
 }
 
+export const ReleaseInfoMethodMap: Record<RYMReleaseType, string> = {
+  [RYMReleaseType.Album]: 'album.getInfo',
+  [RYMReleaseType.Single]: 'track.getInfo',
+  [RYMReleaseType.MusicVideo]: 'track.getInfo',
+  [RYMReleaseType.EP]: 'album.getInfo',
+}
 interface getReleaseInfoOptions {
   apiKey: string;
   params: ReleaseGetInfoParams;
-  releaseType: ReleaseType;
+  releaseType: RYMReleaseType;
+}
+
+interface ReleaseInfoResponse {
+  error?: number;
+  artist: string;
+  album: string;
+  track: string;
+  mbid: string;
 }
 
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
@@ -22,14 +36,7 @@ export async function getReleaseInfo({
   params,
   releaseType,
 }: getReleaseInfoOptions): Promise<any> {
-  const methodMap: Record<ReleaseType, string> = {
-    album: 'album.getInfo',
-    single: 'track.getInfo',
-    'music video': 'track.getInfo',
-    ep: 'album.getInfo',
-  };
-
-  const method = methodMap[releaseType] ?? methodMap.album;
+  const method = ReleaseInfoMethodMap[releaseType] ?? ReleaseInfoMethodMap[RYMReleaseType.Album];
   const url = new URL(BASE_URL);
 
   url.searchParams.set('method', method);
@@ -40,8 +47,7 @@ export async function getReleaseInfo({
     url.searchParams.set('mbid', params.mbid);
   } else {
     url.searchParams.set('artist', params.artist);
-    console.log(123, releaseType, methodMap);
-    url.searchParams.set(methodMap[releaseType].split('.')[0], params.title);
+    url.searchParams.set(method.split('.')[0], params.title);
   }
 
   if ('autocorrect' in params) {

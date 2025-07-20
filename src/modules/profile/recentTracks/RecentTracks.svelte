@@ -3,25 +3,27 @@
 <script lang="ts">
 import { onDestroy } from 'svelte';
 import { usePolling } from '@/composables/usePolling';
-
-import ScrobblesHistory from './ScrobblesHistory.svelte';
-import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
-import errorMessages from '@/modules/profile/recentTracks/errorMessages.json';
-import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import * as utils from '@/helpers/utils';
 import { getImageColors, getColorsMap } from '@/helpers/colors';
 import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import * as api from '@/api';
 
+import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
+import ScrobblesHistory from './ScrobblesHistory.svelte';
+import errorMessages from './errorMessages.json';
+import type { TrackDataNormalized } from './types';
+
 const polling = usePolling(loadRecentTracks, constants.RECENT_TRACKS_INTERVAL_MS, true, true);
 const { progress } = polling;
 
-const { config, rymSyncTimestamp = null, userName } = $props<{
+interface Props {
   config: ProfileOptions;
   rymSyncTimestamp: number | null;
   userName: string;
-}>();
+}
+
+const { config, rymSyncTimestamp = null, userName }: Props = $props();
 
 let isScrobblesHistoryOpen: boolean = $state(config.recentTracksShowOnLoad);
 let isScrobblesHistoryPinned: boolean = $state(config.recentTracksShowOnLoad);
@@ -175,42 +177,21 @@ init();
 <span style="display: contents" use:setRootElement></span>
 
 {#if !failedToFetch}
-<ScrobblesNowPlaying
-  track={nowPlayingTrack()}
-  config={config}
-  userName={userName}
-  isRymSynced={rymSyncTimestamp !== null}
-  isScrobblesHistoryPinned={isScrobblesHistoryPinned}
-  onToggleScrobblesHistory={onToggleScrobblesHistory}
-  onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
-  onPollingToggle={onPollingToggle}
-  isScrobblesPollingEnabled={isScrobblesPollingEnabled}
-  pollingProgress={$progress}
-/>
-<ScrobblesHistory
-  scrobbles={tracksHistory()}
-  timestamp={recentTracksTimestamp}
-  open={isScrobblesHistoryOpen}
-  config={config}
-/>
+  <ScrobblesNowPlaying
+    track={nowPlayingTrack()}
+    config={config}
+    userName={userName}
+    isRymSynced={rymSyncTimestamp !== null}
+    isScrobblesHistoryPinned={isScrobblesHistoryPinned}
+    onToggleScrobblesHistory={onToggleScrobblesHistory}
+    onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
+    onPollingToggle={onPollingToggle}
+    isScrobblesPollingEnabled={isScrobblesPollingEnabled}
+    pollingProgress={$progress}
+  />
+  <ScrobblesHistory
+    scrobbles={tracksHistory()}
+    timestamp={recentTracksTimestamp}
+    open={isScrobblesHistoryOpen}
+  />
 {/if}
-
-<!-- <style>
-  .recent-tracks-container {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: flex-start;
-    align-items: center;
-    flex-basis: 100%;
-    border: solid 1px rgba(0, 0, 0, 0.1);
-    background-color: var(--mono-f);
-    border-radius: 6px;
-    padding: 0.5em;
-    padding-right: 1rem;
-    transition: all 0.3s ease-out;
-    transition-property: background-color, color, border-radius;
-    position: relative;
-    margin: 0.4em;
-    overflow: hidden;
-  }
-</style> -->

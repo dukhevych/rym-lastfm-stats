@@ -1,0 +1,101 @@
+:root { --clr-lastfm: #f71414; }
+
+.btn-icon {
+  display: inline-block;
+  border: none;
+  background: none;
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: currentColor;
+  opacity: 0.75;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.btn-toggle-icon {
+  display: inline-block;
+  border: none;
+  background: none;
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: currentColor;
+  opacity: 0.75;
+  padding: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+
+  &.size-lg {
+    padding: 5px;
+  }
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+
+    &:first-child {
+      display: block;
+    }
+
+    &:last-child {
+      display: none;
+    }
+  }
+
+  &.is-active {
+    svg {
+      &:first-child {
+        display: none;
+      }
+
+      &:last-child {
+        display: block;
+      }
+    }
+  }
+}
+
+[aria-hidden="true"]:is(li, span).separator {
+  margin-inline: 0.8rem;
+  user-select: none;
+}
+
+button.link-alike {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--link-text-default);
+  cursor: pointer;
+}
+
+button.link-alike:hover {
+  color: var(--link-text-hover);
+}
+
+button.link-alike:disabled {
+  color: gray;
+  text-decoration: none;
+  cursor: default;
+}

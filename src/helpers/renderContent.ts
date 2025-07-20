@@ -94,7 +94,9 @@ export function renderContent(
           })
         ).then(() => {
           if (process.env.NODE_ENV === 'development') {
-            console.log(`Rym Last.fm Stats: Rendering all ${renderPromises.length} modules took ${Math.round(performance.now() - start)}ms`);
+            if (renderPromises.length > 1) {
+              console.log(`Rym Last.fm Stats: Rendering all ${renderPromises.length} modules took ${Math.round(performance.now() - start)}ms`);
+            }
           }
 
           resolve({ success, missingSelectors });

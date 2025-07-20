@@ -1,4 +1,3 @@
-import type { ReleaseType } from '@/api/getReleaseInfo';
 import { getDirectInnerText } from '@/helpers/dom';
 import { extractNumbers } from '@/helpers/string';
 
@@ -17,7 +16,7 @@ export function getReleaseYear(parentEl: HTMLElement): number | '' {
   return match ? Number(match[0]) : '';
 }
 
-export function getArtistNames(parentEl: HTMLElement): { artistNameLocalized: string; artistName: string }[] {
+export function getArtistNames(parentEl: HTMLElement): RYMArtistNames {
   const artistLinks = parentEl.querySelectorAll(INFO_ARTISTS_SELECTOR);
 
   return Array.from(artistLinks)
@@ -44,10 +43,10 @@ export function getReleaseTitle(parentEl: HTMLElement): string {
     .join('');
 }
 
-export function getReleaseType(parentEl: HTMLElement): ReleaseType | null {
+export function getReleaseType(parentEl: HTMLElement): RYMReleaseType | null {
   const typeCell = parentEl.querySelector('tr:nth-child(2) td');
   if (!typeCell || !typeCell.textContent) return null;
-  return typeCell.textContent.toLowerCase().split(', ')[0] as ReleaseType;
+  return typeCell.textContent.toLowerCase().split(', ')[0] as RYMReleaseType;
 }
 
 export function getReleaseId(parentEl: HTMLElement): string {

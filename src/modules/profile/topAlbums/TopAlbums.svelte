@@ -86,7 +86,6 @@
 </div>
 
 <script lang="ts">
-import * as utils from '@/helpers/utils';
 import { generateSearchUrl } from '@/helpers/string';
 import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';

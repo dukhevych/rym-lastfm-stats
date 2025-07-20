@@ -30,6 +30,9 @@ declare global {
   interface IRYMRecordDBMatch extends IRYMRecordDB {
     _match?: 'full' | 'partial';
   }
+
+  type RYMArtistName = { artistNameLocalized: string; artistName: string };
+  type RYMArtistNames = RYMArtistName[];
 }
 
 export {};

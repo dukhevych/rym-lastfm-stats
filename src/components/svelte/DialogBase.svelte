@@ -1,125 +1,78 @@
-:root {
-  --clr-lastfm: #f71414;
-}
+<svelte:options runes={true} />
 
-.release-stats-content {}
+<script lang="ts">
+  import { onMount } from 'svelte';
 
-.list-stats {
-  list-style: none;
-  display: flex;
-  align-items: center;
-
-  & > li {
-    display: flex;
-    align-items: center;
-    cursor: default;
-
-    &.is-hidden {
-      display: none;
-    }
-
-    &.is-user-playcount {
-      font-weight: bold;
-    }
-
-    &:after {
-      content: '|';
-      margin-inline: 0.8rem;
-    }
-
-    &[data-value]:before {
-      content: attr(data-value);
-      margin-right: 0.5rem;
-      font-weight: bold;
-    }
-  }
-}
-
-.list-stats-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  /* gap: 2rem; */
-
-  &:before {
-    content: 'Loading...';
-    font-weight: bold;
-    display: none;
+  interface Props {
+    title: string;
+    items: string[];
+    selected: string;
+    handleVariantClick: (artistName: string) => void;
+    visible: boolean;
   }
 
-  &.is-updating {
-    opacity: 0.5;
-    pointer-events: none;
-  }
+  let {
+    title,
+    items,
+    selected,
+    handleVariantClick,
+    visible = $bindable(),
+  }: Props = $props();
 
-  &.is-loading {
-    & > * {
-      display: none !important;
+  let dialog = $state<HTMLDialogElement>();
+
+  onMount(() => {
+    if (!dialog) return;
+
+    dialog.addEventListener('close', () => {
+      visible = false;
+    });
+
+    if (visible) dialog.showModal();
+  });
+
+  $effect(() => {
+    if (!dialog) return;
+
+    if (visible && !dialog.open) {
+      dialog.showModal();
+    } else if (!visible && dialog.open) {
+      dialog.close();
     }
-    &:before {
-      display: block;
-    }
-  }
+  });
+</script>
 
-  &.no-data {
-    .list-stats,
-    .lastfm-link {
-      display: none;
-    }
+<dialog class="dialog-base" bind:this={dialog}>
+  <h2 class="dialog-title">
+    {title}
+    <button
+      type="button"
+      class="dialog-close-btn"
+      aria-label="Close"
+      onclick={() => (visible = false)}
+    >
+      <svg viewBox="0 0 24 24"><use xlink:href="#svg-close-symbol"></use></svg>
+    </button>
+  </h2>
+  <ul class="list-dialog">
+    {#each items as item}
+      <li class:is-selected={item === selected} class="list-dialog-item">
+        <button
+          type="button"
+          onclick={() => {
+            handleVariantClick(item);
+            visible = false;
+          }}
+          class="link-alike list-dialog-item-link"
+        >
+          <span class="list-dialog-item-title">{item}</span>
+        </button>
+      </li>
+    {/each}
+  </ul>
+</dialog>
 
-    &:before {
-      content: 'No Last.fm data found';
-      display: inline;
-    }
-  }
-
-  .incorrect-stats-link {
-    margin-left: auto;
-    font-size: 1.1em;
-    line-height: 1em;
-    font-weight: bold;
-    color: var(--mono-c);
-
-    position: relative;
-
-    &:hover {
-      color: var(--mono-6)
-    }
-  }
-
-  .lastfm-link {
-    transition: color .15s ease-in-out;
-    display: inline-flex;
-    gap: 0.5rem;
-
-    &[href=""] { display: none; }
-
-    svg {
-      width: 20px;
-      height: 20px;
-      display: block;
-    }
-
-    &:after {
-      content: 'Last.fm';
-      font-weight: bold;
-    }
-
-    &.is-localized {
-      color: var(--clr-lastfm);
-
-      &:hover {
-        color: color-mix(in srgb, var(--clr-lastfm), #fff 60%);
-      }
-    }
-
-    &.is-original:after {
-      content: 'Original name';
-    }
-  }
-}
-
-/* Base styling for the dialog box */
+<style>
 dialog.dialog-base {
   top: 50%;
   left: 50%;
@@ -154,7 +107,6 @@ dialog.dialog-base {
   }
 }
 
-/* Backdrop when dialog is shown modally */
 dialog.dialog-base::backdrop {
   opacity: 0;
   transition-property: opacity, display, overlay;
@@ -174,7 +126,6 @@ dialog.dialog-base[open]::backdrop {
   }
 }
 
-/* Close button in top-right corner */
 .dialog-close-btn {
   position: absolute;
   aspect-ratio: 1 / 1;
@@ -203,7 +154,6 @@ dialog.dialog-base[open]::backdrop {
   }
 }
 
-/* Title inside the dialog */
 .dialog-title {
   font-size: 1.5rem;
   text-align: center;
@@ -218,6 +168,7 @@ dialog.dialog-base[open]::backdrop {
   list-style: none;
   margin: 0;
   padding: 0;
+  font-size: 16px;
 }
 
 .list-dialog-item {
@@ -229,6 +180,12 @@ dialog.dialog-base[open]::backdrop {
     gap: 1rem;
     text-decoration: none;
     transition: background-color 0.2s ease;
+    appearance: none;
+    border: none;
+    background: none;
+    margin: 0;
+    cursor: pointer;
+    width: 100%;
 
     &:hover {
       background-color: color-mix(in srgb, var(--text-primary), transparent 90%);
@@ -245,17 +202,18 @@ dialog.dialog-base[open]::backdrop {
     text-wrap: balance;
   }
 
-  .list-dialog-item-image {
+  /* .list-dialog-item-image {
     width: 30px;
     height: 30px;
     background-color: var(--mono-3);
-  }
+  } */
 }
 
-html {
+:global(html) {
   scrollbar-gutter: stable;
 }
 
-body:has(dialog[open]) {
+:global(body:has(dialog[open])) {
   overflow: hidden;
 }
+</style>

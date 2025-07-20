@@ -1,7 +1,9 @@
 module.exports = {
+  plugins: ['prettier-plugin-svelte'],
   semi: true,
   singleQuote: true,
   tabWidth: 2,
   trailingComma: 'all',
-  vueIndentScriptAndStyle: true,
+  vueIndentScriptAndStyle: false,
+  svelteIndentScriptAndStyle: false,
 };

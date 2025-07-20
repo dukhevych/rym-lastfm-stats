@@ -6,6 +6,7 @@ declare global {
   type ERYMFormat = enums.ERYMFormat;
   type RYMEntityCode = enums.RYMEntityCode;
   type RYMDiscographyType = enums.RYMDiscographyType;
+  type RYMReleaseType = enums.RYMReleaseType;
 }
 
 export {};

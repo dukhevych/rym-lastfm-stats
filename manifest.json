@@ -13,6 +13,7 @@
     "https://rateyourmusic.com/release/*",
     "https://rateyourmusic.com/charts/*",
     "https://rateyourmusic.com/list/*",
+    "https://rateyourmusic.com/song/*",
     "https://rateyourmusic.com/collection*",
     "https://rateyourmusic.com/~*",
     "https://rateyourmusic.com/music_export?sync*",
@@ -26,6 +27,11 @@
     }
   ],
   "content_scripts": [
+    {
+      "matches": ["*://rateyourmusic.com/song/*"],
+      "js": ["content_song.js"],
+      "run_at": "document_start"
+    },
     {
       "matches": ["*://rateyourmusic.com/release/*"],
       "js": ["content_release.js"],

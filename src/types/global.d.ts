@@ -4,7 +4,7 @@ declare global {
     // add other properties if needed
   }
 
-  interface ProfileOptions {
+  interface ProfileOptionsBase {
     recentTracks: boolean;
     recentTracksShowOnLoad: boolean;
     recentTracksBackground: number;
@@ -15,7 +15,13 @@ declare global {
     topAlbums: boolean;
     topAlbumsPeriod: string;
     rymPlayHistoryHide: boolean;
+    recentTracksPollingEnabled: boolean;
+    recentTracksHistory: boolean;
+  }
+
+  interface ProfileOptions extends ProfileOptionsBase {
     lastfmApiKey: string;
+    userName?: string;
   }
 
   interface VibrantSwatch {

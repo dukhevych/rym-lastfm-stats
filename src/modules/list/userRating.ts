@@ -1,6 +1,6 @@
-import * as constants from '@/helpers/constants';
 import { normalizeForSearch } from '@/helpers/string';
 import { RecordsAPI } from '@/helpers/records-api';
+import { RYMEntityCode } from '@/helpers/enums';
 import './userRating.css';
 
 const LIST_ITEMS_SELECTOR = '#user_list > tbody > tr';
@@ -38,14 +38,14 @@ function getItems() {
     let itemType = null;
 
     if (artistEl) itemType = albumEl
-      ? constants.RYM_ENTITY_CODES.release
-      : constants.RYM_ENTITY_CODES.artist;
+      ? RYMEntityCode.Release
+      : RYMEntityCode.Artist;
 
-    if (itemType === constants.RYM_ENTITY_CODES.release) {
+    if (itemType === RYMEntityCode.Release) {
       let releaseId = '';
 
       if (artImgEl) {
-        releaseId = artImgEl.id.replace(`img_${constants.RYM_ENTITY_CODES.release}_`, '');
+        releaseId = artImgEl.id.replace(`img_${RYMEntityCode.Release}_`, '');
       }
 
       const itemRelease = {
@@ -59,11 +59,11 @@ function getItems() {
       releases.push(itemRelease);
     }
 
-    if (itemType === constants.RYM_ENTITY_CODES.artist) {
+    if (itemType === RYMEntityCode.Artist) {
       let artistId = '';
 
       if (artImgEl) {
-        artistId = artImgEl.id.replace(`img_${constants.RYM_ENTITY_CODES.artist}_`, '');
+        artistId = artImgEl.id.replace(`img_${RYMEntityCode.Artist}_`, '');
       }
 
       const itemArtist = {

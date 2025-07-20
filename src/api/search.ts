@@ -1,12 +1,15 @@
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
-interface AlbumSearchParams {
+export type SearchType = 'album' | 'artist' | 'track';
+
+interface SearchParams {
   query: string;
   limit?: number;
   page?: number;
+  artist?: string;
 }
 
-export interface AlbumSearchResult {
+export interface SearchResult {
   name: string;
   artist: string;
   url: string;
@@ -14,7 +17,7 @@ export interface AlbumSearchResult {
   mbid: string;
 }
 
-export interface AlbumSearchResponse {
+export interface SearchResponse {
   results: {
     'opensearch:Query': {
       '#text': string;
@@ -26,29 +29,36 @@ export interface AlbumSearchResponse {
     'opensearch:startIndex': string;
     'opensearch:itemsPerPage': string;
     albummatches: {
-      album: AlbumSearchResult[];
+      album: SearchResult[];
     };
   };
 }
 
-interface SearchAlbumsOptions {
-  params: AlbumSearchParams;
+interface SearchOptions {
+  params: SearchParams;
   apiKey: string;
+  searchType: SearchType;
 }
 
-export async function searchAlbums({
+export async function search({
   apiKey,
   params,
-}: SearchAlbumsOptions): Promise<AlbumSearchResponse> {
+  searchType,
+}: SearchOptions): Promise<SearchResponse> {
   const searchParams = new URLSearchParams({
-    method: 'album.search',
-    album: params.query,
+    method: `${searchType}.search`,
     limit: String(params.limit ?? 5),
     api_key: apiKey,
     format: 'json',
   });
 
   if (params.page) searchParams.set('page', params.page.toString());
+
+  searchParams.set(searchType, params.query);
+
+  if (searchType === 'track' && params.artist) {
+    searchParams.set('artist', params.artist);
+  }
 
   const url = `${BASE_URL}?${searchParams.toString()}`;
   const res = await fetch(url);

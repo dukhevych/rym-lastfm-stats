@@ -28,13 +28,12 @@ export enum RYMEntityCode {
   Artist = 'a',
   Release = 'l',
   Song = 'z',
+}
 
-  // Uncomment these if needed in the future
-  // Y = 'v/a release',
-  // B = 'label',
-  // H = 'genre',
-  // U = 'user',
-  // S = 'list',
+export enum RYMEntityType {
+  Artist = 'artist',
+  Release = 'release',
+  Song = 'song',
 }
 
 export enum RYMDiscographyType {
@@ -46,4 +45,11 @@ export enum RYMDiscographyType {
   AppearsOn = 'a',
   VACompilation = 'v',
   AdditionalRelease = 'x',
+}
+
+export enum RYMReleaseType {
+  Album = 'album',
+  Single = 'single',
+  MusicVideo = 'music video',
+  EP = 'ep',
 }

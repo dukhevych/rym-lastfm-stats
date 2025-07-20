@@ -10,7 +10,7 @@ export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = RECENT_TRACKS_INTERVAL_MS / 2
 export const TOP_ALBUMS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const TOP_ARTISTS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const STATS_CACHE_LIFETIME_GUEST_MS = 3 * 60 * 60 * 1000; // 3 hours
-export const STATS_CACHE_LIFETIME_MS = isDev ? 10 * 1000 : 10 * 60 * 1000; // 10 seconds /10 minutes
+export const STATS_CACHE_LIFETIME_MS = isDev ? 30 * 1000 : 10 * 60 * 1000; // 30 seconds /10 minutes
 
 export const APP_VERSION = manifest.version;
 export const APP_NAME = manifest.name;
@@ -96,7 +96,7 @@ export const RECENT_TRACKS_LIMIT_MIN = 1;
 export const RECENT_TRACKS_LIMIT_MAX = 20;
 export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
-export const PROFILE_OPTIONS_DEFAULT = {
+export const PROFILE_OPTIONS_DEFAULT: ProfileOptionsBase = {
   recentTracks: true,
   recentTracksHistory: true,
   recentTracksShowOnLoad: false,
@@ -111,9 +111,9 @@ export const PROFILE_OPTIONS_DEFAULT = {
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
 }
 
-export const OPTIONS_DEFAULT = {
-  lastfmApiKey: '',
+export const OPTIONS_DEFAULT: ProfileOptions = {
   ...PROFILE_OPTIONS_DEFAULT,
+  lastfmApiKey: '',
 };
 
 // [Addon entity type]: [RYM entity code]

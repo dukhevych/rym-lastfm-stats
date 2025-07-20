@@ -14,7 +14,7 @@ import {
   ARTIST_INFO_SELECTOR,
 } from './targets';
 
-import '@/modules/release/releaseStats.css';
+import '@/modules/release/releaseStats/releaseStats.css';
 
 interface UIElements {
   parent: HTMLElement;

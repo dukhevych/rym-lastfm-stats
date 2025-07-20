@@ -35,10 +35,13 @@
     display: none;
     background: rgba(0,0,0,.5);
     position: absolute;
+    opacity: 0;
+    transition: opacity .15s ease-out;
   }
 
   &.is-loading::after {
     display: block;
+    opacity: 1;
   }
 
   .album-link {

@@ -4,6 +4,7 @@ import { initColorSchemeDetection, isMyProfile, detectLastfmUserName } from '@/h
 import { checkDOMCondition, waitForDOMReady } from '@/helpers/dom';
 import { createSVGSprite, insertSVGSprite } from '@/helpers/sprite';
 import { getFullConfig } from '@/helpers/storageUtils';
+import '@/assets/styles/common.css';
 
 (async function () {
   initColorSchemeDetection();

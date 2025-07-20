@@ -1,0 +1,4 @@
+{
+  "noApiKey": "Last.fm credentials not set. Please set Last.fm API Key in the extension options.",
+  "noUserName": "No Last.fm username found. Top Albums can't be displayed."
+}

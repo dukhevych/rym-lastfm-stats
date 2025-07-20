@@ -1,6 +1,6 @@
 import { mount } from 'svelte';
 import { storageGet, getLastfmUserName } from '@/helpers/storageUtils';
-import ModuleScrobbles from '@/components/svelte/ModuleScrobbles.svelte';
+import RecentTracks from './RecentTracks.svelte';
 
 import errorMessages from './errorMessages.json';
 
@@ -47,7 +47,7 @@ async function render(_config: RecentTracksConfig) {
   const mountPoint = document.createElement('div');
   parent.insertAdjacentElement('afterend', mountPoint);
 
-  mount(ModuleScrobbles, {
+  mount(RecentTracks, {
     target: mountPoint,
     props: {
       config,

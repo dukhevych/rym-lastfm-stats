@@ -106,3 +106,44 @@ export function createElement(
 
   return el;
 }
+
+type InsertionPosition =
+  | 'beforebegin' // insert before targetEl
+  | 'afterbegin'  // insert inside targetEl, before first child
+  | 'beforeend'   // insert inside targetEl, after last child
+  | 'afterend'    // insert after targetEl
+  | 'append'      // alias for appendChild
+  | 'prepend'     // alias for prepend
+  | 'replace';    // replace targetEl entirely
+
+interface InsertElementOptions {
+  target: Element;
+  element: Element;
+  position: InsertionPosition;
+}
+
+export function insertElement({ target, element, position }: InsertElementOptions): void {
+  switch (position) {
+    case 'beforebegin':
+    case 'afterbegin':
+    case 'beforeend':
+    case 'afterend':
+      target.insertAdjacentElement(position, element);
+      break;
+
+    case 'append':
+      target.appendChild(element);
+      break;
+
+    case 'prepend':
+      target.insertBefore(element, target.firstChild);
+      break;
+
+    case 'replace':
+      target.replaceWith(element);
+      break;
+
+    default:
+      throw new Error(`Unknown insertion position: ${position}`);
+  }
+}

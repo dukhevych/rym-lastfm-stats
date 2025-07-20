@@ -1,26 +1,26 @@
 import { mount } from 'svelte';
 import { getLastfmUserName } from '@/helpers/storageUtils';
-import ModuleTopAlbums from '@/components/svelte/ModuleTopAlbums.svelte';
+
+import TopAlbums from './TopAlbums.svelte';
+import errorMessages from './errorMessages.json';
 import './topAlbums.css';
 
 const PROFILE_CONTAINER_SELECTOR = '.bubble_header.profile_header + .bubble_content';
 
-let config: ProfileOptions & { userName?: string };
+let config: ProfileOptions;
 
-export async function render(_config: ProfileOptions & { userName?: string }) {
+export async function render(_config: ProfileOptions) {
   config = _config;
   if (!config) return;
 
   if (!config.lastfmApiKey) {
-    console.warn(
-      'Last.fm credentials not set. Please set Last.fm API Key in the extension options.',
-    );
+    console.warn(errorMessages.noApiKey);
     return;
   }
 
   const userName = config.userName || await getLastfmUserName();
   if (!userName) {
-    console.warn("No Last.fm username found. Top Albums can't be displayed.");
+    console.warn(errorMessages.noUserName);
     return;
   }
 
@@ -28,7 +28,7 @@ export async function render(_config: ProfileOptions & { userName?: string }) {
   const target = document.querySelector(PROFILE_CONTAINER_SELECTOR)!;
   target.insertAdjacentElement('afterend', mountPoint);
 
-  mount(ModuleTopAlbums, {
+  mount(TopAlbums, {
     target: mountPoint,
     props: { config, userName },
   });

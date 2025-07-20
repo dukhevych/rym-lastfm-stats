@@ -167,15 +167,10 @@ export const decodeHtmlEntities: DecodeHtmlEntities = function(str: string): str
   return new DOMParser().parseFromString(str, 'text/html').body?.textContent ?? '';
 };;
 
-export interface ArtistNameItem {
-  artistName: string;
-  artistNameLocalized: string;
-}
-
-export function combineArtistNames(artistNames: ArtistNameItem[]): ArtistNameItem {
+export function combineArtistNames(artistNames: RYMArtistNames): RYMArtistName {
   if (artistNames.length === 1) return artistNames[0];
   if (artistNames.length === 0) return { artistName: '', artistNameLocalized: '' };
-  const lastArtistNames: ArtistNameItem = artistNames.pop() as ArtistNameItem;
+  const lastArtistNames: RYMArtistName = artistNames.pop() as RYMArtistName;
   let combinedArtistName: string = `${artistNames.map((name) => name.artistName).join(', ')}`;
   combinedArtistName += ' & ' + lastArtistNames.artistName;
   let combinedArtistNameLocalized: string = `${artistNames.map((name) => name.artistNameLocalized || name.artistName).join(', ')}`;

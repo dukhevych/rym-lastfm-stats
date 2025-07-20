@@ -4,121 +4,118 @@
     class="min-h-viewport flex flex-col"
   >
     <header
-      class="mx-auto flex w-full max-w-[700px] items-center justify-between px-2 py-6"
+      class="
+        bg-gray-200
+        dark:bg-gray-800
+      "
     >
-      <div class="flex items-center gap-3">
-        <img
-          src="/icons/icon48.png"
-          alt=""
-        >
-        <h1 class="relative cursor-default select-none text-2xl font-bold">
-          <span
-            class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
+      <div class="mx-auto flex w-full max-w-[1024px] items-center justify-between px-2 py-6">
+        <div class="flex items-center gap-3">
+          <img
+            src="/icons/icon48.png"
+            alt=""
           >
-            {{ appVersion }}
-            <template v-if="constants.isDev">DEV</template>
-          </span>
-          <span class="text-red-600">RYM Last.fm Stats</span>
-        </h1>
-      </div>
-      <div class="flex items-center gap-5">
-        <a
-          href="https://www.patreon.com/c/BohdanDukhevych"
-          target="_blank"
-          class="
-            font-bold
-            hover:underline
-          "
-        >Patreon</a>
-        <a
-          :href="reportIssueUrl"
-          target="_blank"
-          class="
-            font-bold
-            hover:underline
-          "
-        >Report issue</a>
+          <h1 class="relative cursor-default select-none text-2xl font-bold">
+            <span
+              class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
+            >
+              {{ appVersion }}
+              <template v-if="constants.isDev">DEV</template>
+            </span>
+            <span class="text-red-600">RYM Last.fm Stats</span>
+          </h1>
+        </div>
+        <div class="flex items-center gap-5">
+          <button
+            type="button"
+            class="
+              font-bold
+              hover:underline
+            "
+            @click.prevent="showModal = true"
+          >
+            Help
+          </button>
+          <a
+            href="https://www.patreon.com/c/BohdanDukhevych"
+            target="_blank"
+            class="
+              font-bold
+              hover:underline
+            "
+          >Patreon</a>
+          <a
+            :href="reportIssueUrl"
+            target="_blank"
+            class="
+              font-bold
+              hover:underline
+            "
+          >Report issue</a>
+
+          <div
+            v-if="isLoggedIn"
+            class="flex items-center gap-2"
+          >
+            <a
+              v-if="userData.image"
+              :href="userData.url"
+              target="_blank"
+            >
+              <img
+                :src="userData.image"
+                alt="Last.fm Profile pic"
+                class="h-8 w-8 rounded-full"
+              >
+            </a>
+            <div>
+              <strong><a
+                :href="userData.url"
+                target="_blank"
+              >{{ userData.name }}</a></strong> (<a
+                href="#"
+                class="
+                  text-clr-rym font-bold
+                  hover:underline
+                "
+                @click.prevent="logout"
+              >logout</a>)
+            </div>
+          </div>
+
+          <button
+            v-if="!isLoggedIn"
+            class="
+              bg-clr-lastfm inline-flex min-w-[120px] items-center justify-center gap-3 rounded px-4
+              py-2 font-bold text-white transition-colors
+              hover:bg-clr-lastfm-light
+              disabled:pointer-events-none disabled:bg-gray-400
+            "
+            :disabled="signinInProgress"
+            @click="openAuthPage"
+          >
+            <template v-if="signinInProgress">
+              In progress...
+            </template>
+            <template v-else>
+              <!-- eslint-disable max-len -->
+              <svg
+                fill="currentColor"
+                viewBox="0 0 32 32"
+                class="h-6 w-6"
+              >
+                <path d="M14.131 22.948l-1.172-3.193c0 0-1.912 2.131-4.771 2.131-2.537 0-4.333-2.203-4.333-5.729 0-4.511 2.276-6.125 4.515-6.125 3.224 0 4.245 2.089 5.125 4.772l1.161 3.667c1.161 3.561 3.365 6.421 9.713 6.421 4.548 0 7.631-1.391 7.631-5.068 0-2.968-1.697-4.511-4.844-5.244l-2.344-0.511c-1.624-0.371-2.104-1.032-2.104-2.131 0-1.249 0.985-1.984 2.604-1.984 1.767 0 2.704 0.661 2.865 2.24l3.661-0.444c-0.297-3.301-2.584-4.656-6.323-4.656-3.308 0-6.532 1.251-6.532 5.245 0 2.5 1.204 4.077 4.245 4.807l2.484 0.589c1.865 0.443 2.484 1.224 2.484 2.287 0 1.359-1.323 1.921-3.828 1.921-3.703 0-5.244-1.943-6.124-4.625l-1.204-3.667c-1.541-4.765-4.005-6.531-8.891-6.531-5.287-0.016-8.151 3.385-8.151 9.192 0 5.573 2.864 8.595 8.005 8.595 4.14 0 6.125-1.943 6.125-1.943z" />
+              </svg>
+              <!-- eslint-enable max-len -->
+              <span>Sign in</span>
+            </template>
+          </button>
+        </div>
       </div>
     </header>
 
     <main class="flex flex-col px-2">
-      <div class="mx-auto w-full max-w-[700px]">
-        <div
-          class="
-            flex items-center justify-between gap-2 rounded bg-gray-200 p-4
-            dark:bg-gray-800
-          "
-        >
-          <div>
-            <div
-              v-if="userData"
-              class="flex items-center gap-2"
-            >
-              <a
-                v-if="userData.image"
-                :href="userData.url"
-                target="_blank"
-              >
-                <img
-                  :src="userData.image"
-                  alt="Last.fm Profile pic"
-                  class="h-8 w-8 rounded-full"
-                >
-              </a>
-              <div>
-                Signed in as <strong><a
-                  :href="userData.url"
-                  target="_blank"
-                >{{ userData.name }}</a></strong> (<a
-                  href="#"
-                  class="
-                    text-clr-rym font-bold
-                    hover:underline
-                  "
-                  @click.prevent="logout"
-                >logout</a>)
-              </div>
-            </div>
-            <button
-              v-if="!userData"
-              class="
-                bg-clr-lastfm inline-flex min-w-[120px] items-center justify-center gap-3 rounded
-                px-4 py-2 font-bold text-white transition-colors
-                hover:bg-clr-lastfm-light
-                disabled:pointer-events-none disabled:bg-gray-400
-              "
-              :disabled="signinInProgress"
-              @click="openAuthPage"
-            >
-              <template v-if="signinInProgress">
-                In progress...
-              </template>
-              <template v-else>
-                <!-- eslint-disable max-len -->
-                <svg
-                  fill="currentColor"
-                  viewBox="0 0 32 32"
-                  class="h-6 w-6"
-                >
-                  <path d="M14.131 22.948l-1.172-3.193c0 0-1.912 2.131-4.771 2.131-2.537 0-4.333-2.203-4.333-5.729 0-4.511 2.276-6.125 4.515-6.125 3.224 0 4.245 2.089 5.125 4.772l1.161 3.667c1.161 3.561 3.365 6.421 9.713 6.421 4.548 0 7.631-1.391 7.631-5.068 0-2.968-1.697-4.511-4.844-5.244l-2.344-0.511c-1.624-0.371-2.104-1.032-2.104-2.131 0-1.249 0.985-1.984 2.604-1.984 1.767 0 2.704 0.661 2.865 2.24l3.661-0.444c-0.297-3.301-2.584-4.656-6.323-4.656-3.308 0-6.532 1.251-6.532 5.245 0 2.5 1.204 4.077 4.245 4.807l2.484 0.589c1.865 0.443 2.484 1.224 2.484 2.287 0 1.359-1.323 1.921-3.828 1.921-3.703 0-5.244-1.943-6.124-4.625l-1.204-3.667c-1.541-4.765-4.005-6.531-8.891-6.531-5.287-0.016-8.151 3.385-8.151 9.192 0 5.573 2.864 8.595 8.005 8.595 4.14 0 6.125-1.943 6.125-1.943z" />
-                </svg>
-                <!-- eslint-enable max-len -->
-                <span>Sign in with Lastfm</span>
-              </template>
-            </button>
-          </div>
-          <button
-            type="button"
-            class="
-              rounded bg-blue-500 px-4 py-2 font-bold text-white
-              hover:bg-blue-700
-            "
-            @click.prevent="showModal = true"
-          >
-            How it works?
-          </button>
-        </div>
-
+      <div class="mx-auto w-full max-w-[1024px]">
         <!-- RYM SYNC -->
         <div
           class="
@@ -130,33 +127,56 @@
             <p>
               <strong v-if="!rymSyncTimestamp">⚠️ RYM Sync not performed yet</strong>
               <template v-else>
-                <strong>✅ Last full RYM Sync:</strong>
-                &nbsp;
-                <code>{{ rymSyncTimestampDateString }} {{ rymSyncTimestampTimeString }}</code>
+                <strong>The latest RYM Sync was:</strong>
+                {{ formatDistanceToNow(new Date(rymSyncTimestamp), { addSuffix: true }) }}
               </template>
             </p>
-            <strong><code>{{ dbRecordsQty }}</code></strong> records synced with RYM
-            <em v-if="!rymSyncTimestamp"><u>so far</u></em>
           </div>
-          <button
-            type="button"
-            class="
-              rounded bg-orange-500 px-4 py-2 font-bold text-white
-              hover:bg-orange-700
-            "
-            :class="{
-              'bg-red-500 hover:bg-red-700': !rymSyncTimestamp,
-            }"
-            @click.prevent="openRymSync"
-          >
-            <template v-if="rymSyncTimestamp">
-              Re-sync
-            </template>
-            <template v-else>
-              Run RYM Sync
-            </template>
-          </button>
+          <div class="flex items-center gap-4">
+            <span
+              class="
+                text-sm text-gray-500
+                dark:text-gray-400
+              "
+            >
+              {{ dbRecordsQty }} records
+              <em v-if="!rymSyncTimestamp"><u>so far</u></em>
+            </span>
+            <button
+              type="button"
+              class="
+                rounded bg-orange-500 px-4 py-2 font-bold text-white
+                hover:bg-orange-700
+              "
+              :class="{
+                'bg-red-500 hover:bg-red-700': !rymSyncTimestamp,
+              }"
+              @click.prevent="openRymSync"
+            >
+              <template v-if="rymSyncTimestamp">
+                Re-sync
+              </template>
+              <template v-else>
+                Run RYM Sync
+              </template>
+            </button>
+          </div>
         </div>
+
+        <blockquote
+          class="
+            mt-4 text-center text-sm text-gray-500
+            dark:text-gray-400
+          "
+        >
+          <p>
+            It's recommended to run RYM Sync periodically to keep your data up to date in case of any de-sync.
+          </p>
+          <p>
+            Extension <strong>automatically</strong> tracks your RYM ratings when you rate releases on RYM release page,
+            visit your own Profile page or Collection page.
+          </p>
+        </blockquote>
 
         <!-- Modal -->
         <div
@@ -467,7 +487,11 @@
               />
               <div
                 class="h-10"
-                style="background-size: 100% 100%; background-image: linear-gradient(to right, hsl(var(--hue-start), 100%, 50%), hsl(var(--hue-end), 100%, 50%))"
+                style="
+                  background-size: 100% 100%;
+                  background-image:
+                    linear-gradient(to right, hsl(var(--hue-start), 100%, 50%), hsl(var(--hue-end), 100%, 50%))
+                "
               />
             </div> -->
 
@@ -631,6 +655,7 @@
 <script setup>
 import browser from 'webextension-polyfill';
 import { ref, reactive, watch, computed } from 'vue';
+import { formatDistanceToNow } from 'date-fns';
 
 // HELPERS
 import { RecordsAPI } from '@/helpers/records-api';
@@ -666,16 +691,10 @@ const showModal = ref(false);
 const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
 const config = ref(null);
 const userData = ref(null);
+const isLoggedIn = computed(() => {
+  return userData.value && userData.value.name;
+});
 const rymSyncTimestamp = ref(null);
-
-const rymSyncTimestampDateString = computed(() => {
-  if (!rymSyncTimestamp.value) return null;
-  return new Date(rymSyncTimestamp.value).toLocaleDateString();
-});
-const rymSyncTimestampTimeString = computed(() => {
-  if (!rymSyncTimestamp.value) return null;
-  return new Date(rymSyncTimestamp.value).toLocaleTimeString();
-});
 
 const lastfmApiInputType = ref('password');
 
