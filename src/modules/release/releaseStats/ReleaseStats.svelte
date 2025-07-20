@@ -11,14 +11,15 @@
     generateStorageKey,
   } from '@/helpers/storageUtils';
   import * as constants from '@/helpers/constants';
-  import { getReleaseInfo, ReleaseInfoMethodMap } from '@/api/getReleaseInfo';
-  import ListStats from '@/components/svelte/ListStats.svelte';
+  import { getReleaseInfo } from '@/api/getReleaseInfo';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
+  import ListStats from '@/components/svelte/ListStats.svelte';
 
   interface Props {
     config: ProfileOptions;
     releaseId: string;
     releaseTitle: string;
+    releaseType: RYMReleaseType;
     artistNames: RYMArtistNames;
   }
 
@@ -29,11 +30,6 @@
     releaseType,
     releaseTitle,
   }: Props = $props();
-
-  console.log('releaseId', releaseId);
-  console.log('artistNames', artistNames);
-  console.log('releaseType', releaseType);
-  console.log('releaseTitle', releaseTitle);
 
   const switchArtistLinkText = $derived(() => {
     let str = 'Switch artist';
@@ -56,10 +52,12 @@
   let isLoading = $state(false);
   let artistQuery = $state<string>('');
   let dialogVisible = $state(false);
+  let isArtistQueryCached = $state(false);
+  let allFailed = $state(false);
 
   const shouldShowDialog = $derived(() => artistNamesFlat().length > 1);
 
-  interface releaseStats {
+  interface ReleaseStats {
     playcount: number;
     listeners: number;
     userplaycount?: number | null;
@@ -69,46 +67,13 @@
     };
   }
 
-  let releaseStatsData = $state<releaseStats | null>();
-
-  const stats = $derived(() => {
-    if (!releaseStatsData) return [];
-
-    interface StatsItem {
-      title?: string;
-      value: number;
-      suffix?: string;
-      prefix?: string;
-      bold?: boolean;
-      prefixBold?: boolean;
-      suffixBold?: boolean;
-    }
-
-    const result: StatsItem[] = [
-      {
-        value: +releaseStatsData.listeners,
-        suffix: 'listener' + (+releaseStatsData.listeners === 1 ? '' : 's'),
-        bold: true,
-      },
-      {
-        value: +releaseStatsData.playcount,
-        suffix: 'play' + (+releaseStatsData.playcount === 1 ? '' : 's'),
-        bold: true,
-      },
-    ];
-
-    if (releaseStatsData.userplaycount) {
-      result.push({
-        value: +releaseStatsData.userplaycount,
-        prefix: 'My scrobbles:',
-        prefixBold: true,
-        bold: true,
-      });
-    }
-
-    return result;
+  let releaseStatsData = $state<ReleaseStats | null>();
+  const listeners = $derived(() => releaseStatsData?.listeners ?? 0);
+  const playcount = $derived(() => releaseStatsData?.playcount ?? 0);
+  const scrobbles = $derived(() => {
+    if (!userName) return null;
+    return releaseStatsData?.userplaycount ? +releaseStatsData.userplaycount : 0;
   });
-
   let timestamp = $state<number>(Date.now());
   let error = $state<string | null>(null);
   let userName = $state<string | null>(null);
@@ -117,7 +82,7 @@
   const artistQueryCacheKey = $derived(() => generateStorageKey('artistQueryCache', releaseId));
 
   async function loadCache() {
-    const releaseStatsCache: releaseStatsCache | null = await storageGet(
+    const releaseStatsCache: ReleaseStatsCache | null = await storageGet(
       releaseStatsCacheKey(),
       'local',
     );
@@ -130,12 +95,12 @@
     }
   }
 
-  async function loadreleaseStats(artistName: string = artistQuery) {
+  async function loadReleaseStats(artistName: string = artistQuery) {
     isLoading = true;
 
-    let data: releaseStats | null = null;
+    let data: ReleaseStats | null = null;
 
-    const releaseStatsCache: releaseStatsCache | null = await loadCache();
+    const releaseStatsCache: ReleaseStatsCache | null = await loadCache();
 
     if (releaseStatsCache) {
       data = releaseStatsCache.data;
@@ -148,7 +113,7 @@
           username: userName,
         },
         apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
-        releaseType: RYMReleaseType.Single,
+        releaseType: releaseType,
       });
 
       if (releaseInfoResponse) {
@@ -156,11 +121,11 @@
           data = releaseInfoResponse[releaseType];
           timestamp = Date.now();
         } else {
-          error = releaseInfoResponse.error.toString();
+          error = releaseInfoResponse.message ?? releaseInfoResponse.error.toString();
         }
       }
 
-      await updatereleaseStatsCache({
+      await updateReleaseStatsCache({
         data,
         timestamp: Date.now(),
         userName,
@@ -171,13 +136,13 @@
     isLoading = false;
   }
 
-  interface releaseStatsCache {
-    data: releaseStats | null;
+  interface ReleaseStatsCache {
+    data: ReleaseStats | null;
     timestamp: number;
     userName: string | null;
   }
 
-  function checkCacheValidity(cache: releaseStatsCache) {
+  function checkCacheValidity(cache: ReleaseStatsCache) {
     const cacheLifetime = userName
       ? constants.STATS_CACHE_LIFETIME_MS
       : constants.STATS_CACHE_LIFETIME_GUEST_MS;
@@ -191,7 +156,7 @@
     );
   }
 
-  async function updatereleaseStatsCache(value: releaseStatsCache) {
+  async function updateReleaseStatsCache(value: ReleaseStatsCache) {
     await storageSet({
       [releaseStatsCacheKey()]: value,
     }, 'local');
@@ -206,10 +171,8 @@
   async function handleVariantClick(artistName: string) {
     artistQuery = artistName;
     await updateArtistQueryCache(artistQuery);
-    await loadreleaseStats();
+    await loadReleaseStats();
   }
-
-  let isArtistQueryCached = $state(false);
 
   async function initArtistQuery() {
     const artistQueryCache: string | null = await storageGet(artistQueryCacheKey(), 'local');
@@ -226,11 +189,9 @@
     }
   }
 
-  let allFailed = $state(false);
-
-  async function initreleaseStats() {
+  async function initReleaseStats() {
     for (const artistName of artistNamesFlat()) {
-      await loadreleaseStats(artistName);
+      await loadReleaseStats(artistName);
       if (releaseStatsData) {
         await updateArtistQueryCache(artistName);
         break;
@@ -252,9 +213,9 @@
     userName = _userName;
 
     if (isArtistQueryCached) {
-      await loadreleaseStats();
+      await loadReleaseStats();
     } else {
-      await initreleaseStats();
+      await initReleaseStats();
     }
     isLoaded = true;
   }
@@ -277,7 +238,9 @@
   {#if isLoaded}
     {#if releaseStatsData}
       <ListStats
-        items={stats()}
+        listeners={listeners()}
+        playcount={playcount()}
+        scrobbles={scrobbles()}
         timestamp={timestamp}
       />
       <span class="separator" aria-hidden="true">|</span>

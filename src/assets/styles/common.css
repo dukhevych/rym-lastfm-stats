@@ -1,4 +1,15 @@
-:root { --clr-lastfm: #f71414; }
+:root {
+  --clr-lastfm: #f71414;
+  --clr-user: #383;
+}
+
+.clr-lastfm {
+  color: var(--clr-lastfm);
+}
+
+.clr-user {
+  color: var(--clr-user);
+}
 
 .btn-icon {
   display: inline-block;

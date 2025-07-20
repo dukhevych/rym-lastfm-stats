@@ -29,6 +29,8 @@
     artistNames,
   }: Props = $props();
 
+  const releaseType = ReleaseInfoMethodMap[RYMReleaseType.Single].split('.')[0];
+
   const switchArtistLinkText = $derived(() => {
     let str = 'Switch artist';
     if (artistNames.length === 1) str += ' name';
@@ -50,6 +52,8 @@
   let isLoading = $state(false);
   let artistQuery = $state<string>('');
   let dialogVisible = $state(false);
+  let isArtistQueryCached = $state(false);
+  let allFailed = $state(false);
 
   const shouldShowDialog = $derived(() => artistNamesFlat().length > 1);
 
@@ -64,52 +68,18 @@
   }
 
   let songStatsData = $state<SongStats | null>();
-
-  const stats = $derived(() => {
-    if (!songStatsData) return [];
-
-    interface StatsItem {
-      title?: string;
-      value: number;
-      suffix?: string;
-      prefix?: string;
-      bold?: boolean;
-      prefixBold?: boolean;
-      suffixBold?: boolean;
-    }
-
-    const result: StatsItem[] = [
-      {
-        value: +songStatsData.listeners,
-        suffix: 'listener' + (+songStatsData.listeners === 1 ? '' : 's'),
-        bold: true,
-      },
-      {
-        value: +songStatsData.playcount,
-        suffix: 'play' + (+songStatsData.playcount === 1 ? '' : 's'),
-        bold: true,
-      },
-    ];
-
-    if (songStatsData.userplaycount) {
-      result.push({
-        value: +songStatsData.userplaycount,
-        prefix: 'My scrobbles:',
-        prefixBold: true,
-        bold: true,
-      });
-    }
-
-    return result;
+  const listeners = $derived(() => songStatsData?.listeners ?? 0);
+  const playcount = $derived(() => songStatsData?.playcount ?? 0);
+  const scrobbles = $derived(() => {
+    if (!userName) return null;
+    return songStatsData?.userplaycount ? +songStatsData.userplaycount : 0;
   });
-
   let timestamp = $state<number>(Date.now());
   let error = $state<string | null>(null);
   let userName = $state<string | null>(null);
 
   const songStatsCacheKey = $derived(() => generateStorageKey('songStatsCache', songId, artistQuery));
   const artistQueryCacheKey = $derived(() => generateStorageKey('artistQueryCache', songId));
-  const releaseType = ReleaseInfoMethodMap[RYMReleaseType.Single].split('.')[0];
 
   async function loadCache() {
     const songStatsCache: SongStatsCache | null = await storageGet(
@@ -151,7 +121,7 @@
           data = songInfoResponse[releaseType];
           timestamp = Date.now();
         } else {
-          error = songInfoResponse.error.toString();
+          error = songInfoResponse.message ?? songInfoResponse.error.toString();
         }
       }
 
@@ -204,8 +174,6 @@
     await loadSongStats();
   }
 
-  let isArtistQueryCached = $state(false);
-
   async function initArtistQuery() {
     const artistQueryCache: string | null = await storageGet(artistQueryCacheKey(), 'local');
 
@@ -220,8 +188,6 @@
       }, 'local');
     }
   }
-
-  let allFailed = $state(false);
 
   async function initSongStats() {
     for (const artistName of artistNamesFlat()) {
@@ -272,7 +238,9 @@
   {#if isLoaded}
     {#if songStatsData}
       <ListStats
-        items={stats()}
+        listeners={listeners()}
+        playcount={playcount()}
+        scrobbles={scrobbles()}
         timestamp={timestamp}
       />
       <span class="separator" aria-hidden="true">|</span>
@@ -289,10 +257,7 @@
         Last.fm
       </a>
     {:else}
-      <span class="no-data-message">No Last.fm data found</span>
-      {#if error}
-        <span class="error-message">Error: {error}</span>
-      {/if}
+      <span class="no-data-message" title={error}>No Last.fm data found</span>
     {/if}
 
     {#if shouldShowDialog()}
