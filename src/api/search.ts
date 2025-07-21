@@ -1,6 +1,10 @@
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
-export type SearchType = 'album' | 'artist' | 'track';
+export enum SearchType {
+  Album = 'album',
+  Artist = 'artist',
+  Track = 'track',
+}
 
 interface SearchParams {
   query: string;
@@ -46,7 +50,7 @@ export async function search({
   searchType,
 }: SearchOptions): Promise<SearchResponse> {
   const searchParams = new URLSearchParams({
-    method: `${searchType}.search`,
+    method: `${searchType.toLowerCase()}.search`,
     limit: String(params.limit ?? 5),
     api_key: apiKey,
     format: 'json',
@@ -56,7 +60,7 @@ export async function search({
 
   searchParams.set(searchType, params.query);
 
-  if (searchType === 'track' && params.artist) {
+  if (searchType === SearchType.Track && params.artist) {
     searchParams.set('artist', params.artist);
   }
 

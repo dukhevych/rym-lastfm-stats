@@ -11,8 +11,8 @@
     generateStorageKey,
   } from '@/helpers/storageUtils';
   import * as constants from '@/helpers/constants';
-  import { getReleaseInfo } from '@/api/getReleaseInfo';
-  import { search as searchLastfm } from '@/api/search';
+  import { getReleaseInfo, RYMEntityLastfmMap } from '@/api/getReleaseInfo';
+  import { search as searchLastfm, SearchType } from '@/api/search';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
   import ListStats from '@/components/svelte/ListStats.svelte';
 
@@ -119,7 +119,7 @@
 
       if (releaseInfoResponse) {
         if (!releaseInfoResponse.error) {
-          data = releaseInfoResponse[releaseType];
+          data = releaseInfoResponse[RYMEntityLastfmMap[releaseType]];
           timestamp = Date.now();
         } else {
           error = releaseInfoResponse.message ?? releaseInfoResponse.error.toString();
@@ -201,8 +201,31 @@
     }
 
     if (!releaseStatsData) {
+      const foundRelease = await findRelease(artistNamesFlat()[0], releaseTitle);
+
+      if (foundRelease) {
+        const artistName = foundRelease.artist;
+        const releaseTitle = foundRelease.name;
+        alert(`Found release: ${artistName} - ${releaseTitle}`);
+      }
+    }
+
+    if (!releaseStatsData) {
       allFailed = true;
     }
+  }
+
+  async function findRelease(artistName: string, releaseTitle: string) {
+    const searchResults = await searchLastfm({
+      params: {
+        query: `${artistName} - ${releaseTitle}`,
+        limit: 5,
+      },
+      apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
+      searchType: SearchType.Album,
+    });
+
+    return searchResults.results.albummatches.album[0];
   }
 
   async function init() {
@@ -213,16 +236,7 @@
 
     userName = _userName;
 
-    // USE LASTFM SEARCH API TO FIND THE CORRECT RELEASE
-    const searchResults = await searchLastfm({
-      params: {
-        query: `${artistNamesFlat()[0]} ${releaseTitle}`,
-      },
-      apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
-      searchType: 'album',
-    });
-
-    console.log('searchResults', searchResults);
+    const foundRelease = await findRelease(artistNamesFlat()[0], releaseTitle);
 
     if (isArtistQueryCached) {
       await loadReleaseStats();
@@ -285,6 +299,8 @@
     {/if}
   {/if}
 </div>
+
+<pre>{JSON.stringify(releaseStatsData, null, 2)}</pre>
 
 {#if shouldShowDialog()}
   <DialogBase

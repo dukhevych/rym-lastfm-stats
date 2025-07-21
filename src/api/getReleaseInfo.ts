@@ -9,11 +9,12 @@ interface ReleaseGetInfoParams {
   username?: string | null;
 }
 
-export const ReleaseInfoMethodMap: Record<RYMReleaseType, string> = {
-  [RYMReleaseType.Album]: 'album.getInfo',
-  [RYMReleaseType.Single]: 'track.getInfo',
-  [RYMReleaseType.MusicVideo]: 'track.getInfo',
-  [RYMReleaseType.EP]: 'album.getInfo',
+export const RYMEntityLastfmMap: Record<RYMReleaseType, string> = {
+  [RYMReleaseType.Album]: 'album',
+  [RYMReleaseType.Compilation]: 'album',
+  [RYMReleaseType.Single]: 'track',
+  [RYMReleaseType.MusicVideo]: 'track',
+  [RYMReleaseType.EP]: 'album',
 }
 interface getReleaseInfoOptions {
   apiKey: string;
@@ -36,7 +37,8 @@ export async function getReleaseInfo({
   params,
   releaseType,
 }: getReleaseInfoOptions): Promise<any> {
-  const method = ReleaseInfoMethodMap[releaseType] ?? ReleaseInfoMethodMap[RYMReleaseType.Album];
+  const apiEntity = RYMEntityLastfmMap[releaseType] ?? RYMEntityLastfmMap[RYMReleaseType.Album];
+  const method = `${apiEntity}.getInfo`;
   const url = new URL(BASE_URL);
 
   url.searchParams.set('method', method);

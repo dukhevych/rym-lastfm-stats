@@ -51,5 +51,6 @@ export enum RYMReleaseType {
   Album = 'album',
   Single = 'single',
   MusicVideo = 'music video',
+  Compilation = 'compilation',
   EP = 'ep',
 }

@@ -12,7 +12,7 @@
     generateStorageKey,
   } from '@/helpers/storageUtils';
   import * as constants from '@/helpers/constants';
-  import { getReleaseInfo, ReleaseInfoMethodMap } from '@/api/getReleaseInfo';
+  import { getReleaseInfo, RYMEntityLastfmMap } from '@/api/getReleaseInfo';
   import { search as searchLastfm } from '@/api/search';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
   import ListStats from '@/components/svelte/ListStats.svelte';
@@ -31,7 +31,7 @@
     artistNames,
   }: Props = $props();
 
-  const releaseType = ReleaseInfoMethodMap[RYMReleaseType.Single].split('.')[0];
+  const releaseType = RYMReleaseType.Single;
 
   const switchArtistLinkText = $derived(() => {
     let str = 'Switch artist';
@@ -120,7 +120,7 @@
 
       if (songInfoResponse) {
         if (!songInfoResponse.error) {
-          data = songInfoResponse[releaseType];
+          data = songInfoResponse[RYMEntityLastfmMap[releaseType]];
           timestamp = Date.now();
         } else {
           error = songInfoResponse.message ?? songInfoResponse.error.toString();
