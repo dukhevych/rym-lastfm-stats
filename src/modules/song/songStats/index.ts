@@ -3,8 +3,6 @@ import { createElement as h } from '@/helpers/dom';
 import SongStats from './SongStats.svelte';
 import { insertElement } from '@/helpers/dom';
 
-import '@/modules/release/releaseStats/releaseStats.css';
-
 import {
   PARENT_SELECTOR,
   MOUNT_TARGET_SELECTOR,
@@ -13,24 +11,18 @@ import {
   getSongId,
 } from '@/modules/song/targets';
 
-let config: ProfileOptions;
-
-async function render(_config: ProfileOptions) {
-  // SET PARENT ELEMENT
+async function render(config: ProfileOptions) {
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
   if (!parent) {
     console.warn('No parent element found.');
     return;
   }
 
-  // SET CONFIG
-  if (!_config) {
+  if (!config) {
     console.warn('No config found.');
     return;
   }
-  config = _config;
 
-  // SET SONG ID
   const songId = getSongId(parent);
   if (!songId) {
     console.warn('No song ID found.');
@@ -40,7 +32,6 @@ async function render(_config: ProfileOptions) {
   const songTitle = getSongTitle(parent);
   const artistNames = getArtistNames(parent);
 
-  // CHECK IF ARTISTS EXIST AND SONG TITLE IS SET
   if (artistNames.length === 0 || !songTitle) {
     console.error('No artist or song title found.');
     return;

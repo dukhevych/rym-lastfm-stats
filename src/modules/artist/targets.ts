@@ -7,6 +7,14 @@ export const PARENT_SELECTOR = '.artist_left_col';
 export const ARTIST_ID_SELECTOR = 'input.rym_shortcut';
 export const ARTIST_INFO_SELECTOR = '.artist_info_main';
 
+const SUFFIXES_TO_REMOVE = [
+  '[birth name]',
+  '[transliterated birth name]',
+  '[Romanized name]',
+];
+
+const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export function getArtistId(parent: HTMLElement) {
   const artistIdInput: HTMLInputElement = parent.querySelector(ARTIST_ID_SELECTOR)!;
   return extractNumbers(artistIdInput.value);
@@ -28,16 +36,13 @@ export function getArtistNames(parent: HTMLElement) {
   if (artistAkaNamesElementHeader) {
     const artistAkaNamesElement = artistAkaNamesElementHeader.nextElementSibling;
     const artistAkaNamesText = artistAkaNamesElement?.querySelector('span')?.textContent;
+
     if (artistAkaNamesText) {
       artistAkaNamesText.split(', ').forEach(name => {
-        const SUFFIXES_TO_REMOVE = [
-          '[birth name]',
-          '[transliterated birth name]',
-          '[Romanized name]',
-        ];
         let nameCleaned = name;
         for (const suffix of SUFFIXES_TO_REMOVE) {
-          nameCleaned = nameCleaned.replace(new RegExp(`\\s*${suffix}$`, 'i'), '');
+          const escaped = escapeRegExp(suffix);
+          nameCleaned = nameCleaned.replace(new RegExp(`\\s*${escaped}$`, 'i'), '');
         }
         nameCleaned = nameCleaned.trim();
         artistAkaNames.push(nameCleaned);

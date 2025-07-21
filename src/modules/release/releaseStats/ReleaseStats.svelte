@@ -247,8 +247,8 @@
       <a
         class="lastfm-link"
         target="_blank"
-        title={`View ${artistQuery} on Last.fm`}
-        aria-label={`View ${artistQuery} on Last.fm`}
+        title={`View "${artistQuery}" on Last.fm`}
+        aria-label={`View "${artistQuery}" on Last.fm`}
         href={releaseStatsData?.url}
       >
         <svg viewBox="0 0 24 24">

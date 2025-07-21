@@ -4,11 +4,13 @@
 }
 
 .clr-lastfm {
-  color: var(--clr-lastfm);
+  --link-text-default: var(--clr-lastfm);
+  --link-text-hover: color-mix(in srgb, var(--clr-lastfm), white 30%);
 }
 
 .clr-user {
-  color: var(--clr-user);
+  --link-text-default: var(--clr-user);
+  --link-text-hover: color-mix(in srgb, var(--clr-user), white 30%);
 }
 
 .btn-icon {

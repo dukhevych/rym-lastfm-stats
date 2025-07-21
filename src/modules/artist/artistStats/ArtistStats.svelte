@@ -1,7 +1,6 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { RYMReleaseType } from '@/helpers/enums';
   import * as utils from '@/helpers/utils';
   import {
     storageGet,
@@ -11,38 +10,43 @@
     generateStorageKey,
   } from '@/helpers/storageUtils';
   import * as constants from '@/helpers/constants';
-  import { getReleaseInfo, ReleaseInfoMethodMap } from '@/api/getReleaseInfo';
+  import { getArtistInfo } from '@/api/getArtistInfo';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
   import ListStats from '@/components/svelte/ListStats.svelte';
 
   interface Props {
     config: ProfileOptions;
-    songId: string;
-    songTitle: string;
-    artistNames: RYMArtistNames;
+    artistId: string;
+    artistName: string;
+    artistNameLocalized: string;
+    artistAkaNames: string[];
+    artistAdditionalNames: string[];
   }
 
   const {
     config,
-    songId,
-    songTitle,
-    artistNames,
+    artistId,
+    artistName,
+    artistNameLocalized,
+    artistAkaNames,
+    artistAdditionalNames,
   }: Props = $props();
 
-  const releaseType = ReleaseInfoMethodMap[RYMReleaseType.Single].split('.')[0];
-
-  const switchArtistLinkText = $derived(() => {
-    let str = 'Switch artist';
-    if (artistNames.length === 1) str += ' name';
-    return str;
-  });
+  const moduleName = 'artistStats';
 
   const artistNamesFlat = $derived(() => {
     const variants = new Set<string>();
 
-    artistNames.forEach(({ artistNameLocalized, artistName }) => {
-      artistNameLocalized && variants.add(artistNameLocalized);
-      artistName && variants.add(artistName);
+    artistNameLocalized && variants.add(artistNameLocalized);
+
+    artistName && variants.add(artistName);
+
+    artistAkaNames.forEach((name) => {
+      variants.add(name);
+    });
+
+    artistAdditionalNames.forEach((name) => {
+      variants.add(name);
     });
 
     return Array.from(variants);
@@ -57,92 +61,34 @@
 
   const shouldShowDialog = $derived(() => artistNamesFlat().length > 1);
 
-  interface SongStats {
+  interface Stats {
     playcount: number;
     listeners: number;
     userplaycount?: number | null;
     url: string;
-    artist: {
-      name: string;
-    };
   }
 
-  let songStatsData = $state<SongStats | null>();
-  const listeners = $derived(() => songStatsData?.listeners ?? 0);
-  const playcount = $derived(() => songStatsData?.playcount ?? 0);
+  let statsData = $state<Stats | null>();
+  const listeners = $derived(() => statsData?.listeners ?? 0);
+  const playcount = $derived(() => statsData?.playcount ?? 0);
   const scrobbles = $derived(() => {
     if (!userName) return null;
-    return songStatsData?.userplaycount ? +songStatsData.userplaycount : 0;
+    return statsData?.userplaycount ? +statsData.userplaycount : 0;
   });
   let timestamp = $state<number>(Date.now());
   let error = $state<string | null>(null);
   let userName = $state<string | null>(null);
 
-  const songStatsCacheKey = $derived(() => generateStorageKey('songStatsCache', songId, artistQuery));
-  const artistQueryCacheKey = $derived(() => generateStorageKey('artistQueryCache', songId));
+  const statsCacheKey = $derived(() => generateStorageKey(moduleName, 'statsCache', artistId, artistQuery));
+  const artistQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'artistQueryCache', artistId));
 
-  async function loadCache() {
-    const songStatsCache: SongStatsCache | null = await storageGet(
-      songStatsCacheKey(),
-      'local',
-    );
-
-    if (songStatsCache && checkCacheValidity(songStatsCache)) {
-      return songStatsCache;
-    } else {
-      await storageRemove(songStatsCacheKey(), 'local');
-      return null;
-    }
-  }
-
-  async function loadSongStats(artistName: string = artistQuery) {
-    isLoading = true;
-
-    let data: SongStats | null = null;
-
-    const songStatsCache: SongStatsCache | null = await loadCache();
-
-    if (songStatsCache) {
-      data = songStatsCache.data;
-      timestamp = songStatsCache.timestamp;
-    } else {
-      const songInfoResponse = await getReleaseInfo({
-        params: {
-          artist: artistName,
-          title: songTitle,
-          username: userName,
-        },
-        apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
-        releaseType: RYMReleaseType.Single,
-      });
-
-      if (songInfoResponse) {
-        if (!songInfoResponse.error) {
-          data = songInfoResponse[releaseType];
-          timestamp = Date.now();
-        } else {
-          error = songInfoResponse.message ?? songInfoResponse.error.toString();
-        }
-      }
-
-      await updateSongStatsCache({
-        data,
-        timestamp: Date.now(),
-        userName,
-      });
-    }
-
-    songStatsData = data;
-    isLoading = false;
-  }
-
-  interface SongStatsCache {
-    data: SongStats | null;
+  interface StatsCache {
+    data: Stats | null;
     timestamp: number;
     userName: string | null;
   }
 
-  function checkCacheValidity(cache: SongStatsCache) {
+  function checkCacheValidity(cache: StatsCache) {
     const cacheLifetime = userName
       ? constants.STATS_CACHE_LIFETIME_MS
       : constants.STATS_CACHE_LIFETIME_GUEST_MS;
@@ -156,9 +102,62 @@
     );
   }
 
-  async function updateSongStatsCache(value: SongStatsCache) {
+  async function loadCache() {
+    const statsCache: StatsCache | null = await storageGet(
+      statsCacheKey(),
+      'local',
+    );
+
+    if (statsCache && checkCacheValidity(statsCache)) {
+      return statsCache;
+    } else {
+      await storageRemove(statsCacheKey(), 'local');
+      return null;
+    }
+  }
+
+  async function loadStats(artistName: string = artistQuery) {
+    isLoading = true;
+
+    let data: Stats | null = null;
+
+    const statsCache: StatsCache | null = await loadCache();
+
+    if (statsCache) {
+      data = statsCache.data;
+      timestamp = statsCache.timestamp;
+    } else {
+      const artistInfoResponse = await getArtistInfo({
+        params: {
+          artist: artistName,
+          username: userName,
+        },
+        apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
+      });
+
+      if (artistInfoResponse) {
+        if (!artistInfoResponse.error) {
+          data = artistInfoResponse.artist.stats;
+          timestamp = Date.now();
+        } else {
+          error = artistInfoResponse.message ?? artistInfoResponse.error.toString();
+        }
+      }
+
+      await updateStatsCache({
+        data,
+        timestamp: Date.now(),
+        userName,
+      });
+    }
+
+    statsData = data;
+    isLoading = false;
+  }
+
+  async function updateStatsCache(value: StatsCache) {
     await storageSet({
-      [songStatsCacheKey()]: value,
+      [statsCacheKey()]: value,
     }, 'local');
   }
 
@@ -171,7 +170,7 @@
   async function handleVariantClick(artistName: string) {
     artistQuery = artistName;
     await updateArtistQueryCache(artistQuery);
-    await loadSongStats();
+    await loadStats();
   }
 
   async function initArtistQuery() {
@@ -189,17 +188,17 @@
     }
   }
 
-  async function initSongStats() {
+  async function initStats() {
     for (const artistName of artistNamesFlat()) {
-      await loadSongStats(artistName);
-      if (songStatsData) {
+      await loadStats(artistName);
+      if (statsData) {
         await updateArtistQueryCache(artistName);
         break;
       }
       await utils.wait(300);
     }
 
-    if (!songStatsData) {
+    if (!statsData) {
       allFailed = true;
     }
   }
@@ -213,9 +212,9 @@
     userName = _userName;
 
     if (isArtistQueryCached) {
-      await loadSongStats();
+      await loadStats();
     } else {
-      await initSongStats();
+      await initStats();
     }
     isLoaded = true;
   }
@@ -236,7 +235,7 @@
   {/if}
 
   {#if isLoaded}
-    {#if songStatsData}
+    {#if statsData}
       <ListStats
         listeners={listeners()}
         playcount={playcount()}
@@ -245,11 +244,11 @@
       />
       <span class="separator" aria-hidden="true">|</span>
       <a
-        class="lastfm-link"
+        class="lastfm-link clr-lastfm"
         target="_blank"
         title={`View "${artistQuery}" on Last.fm`}
         aria-label={`View "${artistQuery}" on Last.fm`}
-        href={songStatsData?.url}
+        href={statsData?.url}
       >
         <svg viewBox="0 0 24 24">
           <use xlink:href="#svg-lastfm-square-symbol"></use>
@@ -257,7 +256,10 @@
         Last.fm
       </a>
     {:else}
-      <span class="no-data-message" title={error}>No Last.fm data found</span>
+      <span class="no-data-message">No Last.fm data found</span>
+      {#if error}
+        <span class="error-message">Error: {error}</span>
+      {/if}
     {/if}
 
     {#if shouldShowDialog()}
@@ -265,10 +267,10 @@
       <button
         type="button"
         class="link-alike"
-        aria-label={switchArtistLinkText()}
+        aria-label="Switch artist name"
         onclick={() => dialogVisible = true}
       >
-        <strong>{switchArtistLinkText()}</strong>
+        <strong>Switch artist name</strong>
       </button>
     {/if}
   {/if}

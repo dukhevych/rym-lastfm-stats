@@ -4,7 +4,7 @@ export interface ArtistGetInfoParams {
   artist: string;
   mbid?: string;
   autocorrect?: 0 | 1;
-  username?: string;
+  username?: string | null;
   lang?: string;
 }
 
