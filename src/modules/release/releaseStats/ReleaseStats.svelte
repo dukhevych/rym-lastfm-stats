@@ -12,9 +12,9 @@
   } from '@/helpers/storageUtils';
   import * as constants from '@/helpers/constants';
   import { getReleaseInfo } from '@/api/getReleaseInfo';
+  import { search as searchLastfm } from '@/api/search';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
   import ListStats from '@/components/svelte/ListStats.svelte';
-  import { normalizeForSearch } from '@/helpers/string';
 
   interface Props {
     config: ProfileOptions;
@@ -110,7 +110,7 @@
       const releaseInfoResponse = await getReleaseInfo({
         params: {
           artist: artistName,
-          title: normalizeForSearch(releaseTitle),
+          title: releaseTitle,
           username: userName,
         },
         apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
@@ -212,6 +212,17 @@
     ]);
 
     userName = _userName;
+
+    // USE LASTFM SEARCH API TO FIND THE CORRECT RELEASE
+    const searchResults = await searchLastfm({
+      params: {
+        query: `${artistNamesFlat()[0]} ${releaseTitle}`,
+      },
+      apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
+      searchType: 'album',
+    });
+
+    console.log('searchResults', searchResults);
 
     if (isArtistQueryCached) {
       await loadReleaseStats();

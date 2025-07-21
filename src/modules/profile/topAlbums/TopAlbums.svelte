@@ -32,7 +32,6 @@
   class:is-loaded={isLoaded}
   class:is-empty={isLoaded && albums.length === 0}
 >
-  {@render loader()}
   {#each albums as album, index (album.id)}
     <div class="album-wrapper">
       <div class="album-image">

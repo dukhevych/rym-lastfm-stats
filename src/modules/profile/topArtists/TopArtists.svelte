@@ -32,7 +32,6 @@
   class:is-loaded={isLoaded}
   class:is-empty={isLoaded && artists.length === 0}
 >
-  {@render loader()}
   {#each artists as artist, index}
     <a
       class="top-artist top-artists-fade-in"
@@ -46,6 +45,9 @@
       <span class="artist-scrobbles">{artist.playcount} play{artist.playcount > 1 ? 's' : ''}</span>
     </a>
   {/each}
+  {#if !isLoaded}
+    {@render loader()}
+  {/if}
 </div>
 
 <script lang="ts">

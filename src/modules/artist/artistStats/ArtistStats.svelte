@@ -11,6 +11,7 @@
   } from '@/helpers/storageUtils';
   import * as constants from '@/helpers/constants';
   import { getArtistInfo } from '@/api/getArtistInfo';
+  import { search as searchLastfm } from '@/api/search';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
   import ListStats from '@/components/svelte/ListStats.svelte';
 
@@ -213,6 +214,17 @@
     ]);
 
     userName = _userName;
+
+    // USE LASTFM SEARCH API TO FIND THE CORRECT RELEASE
+    const searchResults = await searchLastfm({
+      params: {
+        query: artistNamesFlat()[0],
+      },
+      apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
+      searchType: 'artist',
+    });
+
+    console.log('searchResults', searchResults);
 
     if (isArtistQueryCached) {
       await loadStats();
