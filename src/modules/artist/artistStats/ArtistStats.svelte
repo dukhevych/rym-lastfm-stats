@@ -256,10 +256,7 @@
         Last.fm
       </a>
     {:else}
-      <span class="no-data-message">No Last.fm data found</span>
-      {#if error}
-        <span class="error-message">Error: {error}</span>
-      {/if}
+      <span class="no-data-message" title={error}>No Last.fm data found</span>
     {/if}
 
     {#if shouldShowDialog()}

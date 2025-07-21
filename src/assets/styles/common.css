@@ -3,12 +3,20 @@
   --clr-user: #383;
 }
 
-.clr-lastfm {
+:not(a).clr-lastfm {
+  color: var(--clr-lastfm);
+}
+
+a.clr-lastfm {
   --link-text-default: var(--clr-lastfm);
   --link-text-hover: color-mix(in srgb, var(--clr-lastfm), white 30%);
 }
 
-.clr-user {
+:not(a).clr-user {
+  color: var(--clr-user);
+}
+
+a.clr-user {
   --link-text-default: var(--clr-user);
   --link-text-hover: color-mix(in srgb, var(--clr-user), white 30%);
 }

@@ -44,20 +44,16 @@ export const createSVGSprite = function() {
   return svgSprite;
 }
 
-export interface InsertSVGSprite {
-  (svgSprite: SVGSVGElement): Promise<void>;
-}
-
-export const insertSVGSprite: InsertSVGSprite = function(svgSprite) {
-  return new Promise<void>((resolve) => {
+export function insertSVGSprite(svgSprite: SVGSVGElement) {
+  return new Promise<SVGSVGElement>((resolve) => {
     if (document.body) {
       document.body.appendChild(svgSprite);
-      resolve();
+      resolve(svgSprite);
     } else {
       function _() {
         if (document.body) {
           document.body.appendChild(svgSprite);
-          resolve();
+          resolve(svgSprite);
         } else {
           requestAnimationFrame(_);
         }
@@ -119,4 +115,8 @@ export const createSvgUse = function(
   useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#${iconName}`);
   wrapper.appendChild(useElement);
   return wrapper;
+}
+
+export async function initSprite() {
+  await insertSVGSprite(createSVGSprite());
 }

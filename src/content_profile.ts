@@ -2,20 +2,20 @@ import profile, { targetSelectors } from '@/modules/profile';
 import { renderContent } from '@/helpers/renderContent';
 import { initColorSchemeDetection, isMyProfile, detectLastfmUserName } from '@/helpers/rym-dom';
 import { checkDOMCondition, waitForDOMReady } from '@/helpers/dom';
-import { createSVGSprite, insertSVGSprite } from '@/helpers/sprite';
+import { initSprite } from '@/helpers/sprite';
 import { getFullConfig } from '@/helpers/storageUtils';
 import '@/assets/styles/common.css';
 
 (async function () {
   initColorSchemeDetection();
-  await insertSVGSprite(createSVGSprite());
+  await initSprite();
 
   const config = await getFullConfig();
 
   await checkDOMCondition(targetSelectors);
-  const _isMyProfile = isMyProfile();
+  const isMyProfileValue = isMyProfile();
 
-  if (_isMyProfile) {
+  if (isMyProfileValue) {
     await renderContent(profile, {
       ...config,
       isMyProfile: true,
@@ -34,7 +34,7 @@ import '@/assets/styles/common.css';
     await renderContent(profile, {
       ...config,
       userName,
-      isMyProfile: _isMyProfile,
+      isMyProfile: isMyProfileValue,
     }, 'profile');
   }
 })();
