@@ -63,6 +63,8 @@ export async function getReleaseInfo({
   }
 
   const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`Failed to fetch ${method}`);
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`Failed to fetch ${method}`);
+  }
   return await res.json();
 }

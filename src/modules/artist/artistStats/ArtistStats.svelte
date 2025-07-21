@@ -137,7 +137,10 @@
 
       if (artistInfoResponse) {
         if (!artistInfoResponse.error) {
-          data = artistInfoResponse.artist.stats;
+          data = {
+            ...artistInfoResponse.artist.stats,
+            url: artistInfoResponse.artist.url,
+          };
           timestamp = Date.now();
         } else {
           error = artistInfoResponse.message ?? artistInfoResponse.error.toString();
