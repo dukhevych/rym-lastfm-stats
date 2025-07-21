@@ -1,6 +1,5 @@
 import browser from 'webextension-polyfill';
-
-import FlexSearch from 'flexsearch';
+import { Index } from 'flexsearch';
 import * as db from '@/helpers/db';
 import { normalizeForSearch } from '@/helpers/string';
 import * as constants from '@/helpers/constants';
@@ -30,7 +29,7 @@ const dbMessageTypes = [
 
 type DBMessageType = typeof dbMessageTypes[number];
 
-const flexIndex = new FlexSearch.Index({
+const flexIndex = new Index({
   tokenize: 'forward',
   cache: true,
   resolution: 9,

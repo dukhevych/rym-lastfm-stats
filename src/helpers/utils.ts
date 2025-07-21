@@ -1,5 +1,5 @@
 import browser from 'webextension-polyfill';
-import { MD5 } from 'crypto-js';
+import MD5 from 'crypto-js/md5';
 import * as constants from './constants';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import type { RecentTrack } from '@/api/getRecentTracks';

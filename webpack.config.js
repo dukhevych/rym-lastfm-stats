@@ -204,6 +204,8 @@ module.exports = (env) => {
           },
         },
       })],
+      usedExports: true,
+      sideEffects: false,
     },
   };
 };
