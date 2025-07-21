@@ -14,6 +14,7 @@
   import { getReleaseInfo } from '@/api/getReleaseInfo';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
   import ListStats from '@/components/svelte/ListStats.svelte';
+  import { normalizeForSearch } from '@/helpers/string';
 
   interface Props {
     config: ProfileOptions;
@@ -109,7 +110,7 @@
       const releaseInfoResponse = await getReleaseInfo({
         params: {
           artist: artistName,
-          title: releaseTitle,
+          title: normalizeForSearch(releaseTitle),
           username: userName,
         },
         apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),

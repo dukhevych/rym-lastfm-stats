@@ -3,6 +3,7 @@
 <script lang="ts">
   import { RYMReleaseType } from '@/helpers/enums';
   import * as utils from '@/helpers/utils';
+  import { normalizeForSearch } from '@/helpers/string';
   import {
     storageGet,
     storageSet,
@@ -109,7 +110,7 @@
       const songInfoResponse = await getReleaseInfo({
         params: {
           artist: artistName,
-          title: songTitle,
+          title: normalizeForSearch(songTitle),
           username: userName,
         },
         apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),

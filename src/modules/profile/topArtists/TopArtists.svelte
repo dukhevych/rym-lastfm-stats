@@ -49,7 +49,6 @@
 </div>
 
 <script lang="ts">
-import * as utils from '@/helpers/utils';
 import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
 import { generateSearchUrl } from '@/helpers/string';
 import * as constants from '@/helpers/constants';
