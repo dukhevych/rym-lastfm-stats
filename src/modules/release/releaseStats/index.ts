@@ -1,5 +1,5 @@
 import { mount } from 'svelte';
-import ReleaseStats from './ReleaseStats.svelte';
+import EntityStats from '@/components/svelte/EntityStats.svelte';
 import { createElement as h } from '@/helpers/dom';
 import { RYMReleaseType } from '@/helpers/enums';
 import errorMessages from './errorMessages.json';
@@ -25,31 +25,32 @@ async function render(config: ProfileOptions) {
     return;
   }
 
-  const releaseId = getReleaseId(parent);
-  if (!releaseId) {
+  const entityId = getReleaseId(parent);
+  if (!entityId) {
     console.warn(errorMessages.noReleaseId);
     return;
   }
 
   const artistNames = getArtistNames(parent);
-  const releaseType = getReleaseType(parent) ?? RYMReleaseType.Album;
-  const releaseTitle = getReleaseTitle(parent);
+  const entityType = getReleaseType(parent) ?? RYMReleaseType.Album;
+  const entityTitle = getReleaseTitle(parent);
 
-  if (artistNames.length === 0 || !releaseTitle) {
+  if (artistNames.length === 0 || !entityTitle) {
     console.error(errorMessages.noArtistOrReleaseTitle);
     return;
   }
 
   const mountPoint = prepareMountPoint(parent);
 
-  mount(ReleaseStats, {
+  mount(EntityStats, {
     target: mountPoint,
     props: {
       config,
-      releaseId,
+      entityId,
       artistNames,
-      releaseType,
-      releaseTitle,
+      entityType,
+      entityTitle,
+      moduleName: 'releaseStats',
     },
   });
 }

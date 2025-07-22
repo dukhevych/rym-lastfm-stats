@@ -18,21 +18,21 @@
 
   interface Props {
     config: ProfileOptions;
-    releaseId: string;
-    releaseTitle: string;
-    releaseType: RYMReleaseType;
+    entityId: string;
+    entityTitle: string;
+    entityType: RYMReleaseType;
     artistNames: RYMArtistNames;
+    moduleName: string;
   }
 
   const {
     config,
-    releaseId,
+    entityId,
+    entityTitle,
+    entityType,
     artistNames,
-    releaseType,
-    releaseTitle,
+    moduleName,
   }: Props = $props();
-
-  const releaseTitleDeburred = $derived(() => deburrLight(releaseTitle));
 
   const artistNamesFlat = $derived(() => {
     const variants = new Set<string>();
@@ -45,40 +45,44 @@
     return Array.from(variants);
   });
 
-  const releaseTitleOptions = $derived(() => {
+  const entityTitleDeburred = $derived(() => deburrLight(entityTitle));
+
+  const entityTitleOptions = $derived(() => {
     const options = new Set<string>();
     const result = [];
 
     result.push({
-      value: releaseTitle,
-      label: releaseTitle,
+      value: entityTitle,
+      label: entityTitle,
     });
-    options.add(releaseTitle);
+    options.add(entityTitle);
 
-    if (!options.has(releaseTitleDeburred())) {
+    if (!options.has(entityTitleDeburred())) {
       result.push({
-        value: releaseTitleDeburred(),
-        label: releaseTitleDeburred() + ' (Deburred)',
+        value: entityTitleDeburred(),
+        label: entityTitleDeburred() + ' (Simplified)',
       });
-      options.add(releaseTitleDeburred());
+      options.add(entityTitleDeburred());
     }
 
-    const cleanupReleaseEditionValue = cleanupReleaseEdition(releaseTitle);
-    if (!options.has(cleanupReleaseEditionValue)) {
-      result.push({
-        value: cleanupReleaseEditionValue,
-        label: cleanupReleaseEditionValue + ' (No edition suffix)',
-      });
-      options.add(cleanupReleaseEditionValue);
-    }
+    if (entityType === RYMReleaseType.Album) {
+      const cleanupReleaseEditionValue = cleanupReleaseEdition(entityTitle);
+      if (!options.has(cleanupReleaseEditionValue)) {
+        result.push({
+          value: cleanupReleaseEditionValue,
+          label: cleanupReleaseEditionValue + ' (No edition suffix)',
+        });
+        options.add(cleanupReleaseEditionValue);
+      }
 
-    const cleanupSuffixValue = cleanupSuffix(releaseTitle);
-    if (!options.has(cleanupSuffixValue)) {
-      result.push({
-        value: cleanupSuffixValue,
-        label: cleanupSuffixValue + ' (No suffix at all)',
-      });
-      options.add(cleanupSuffixValue);
+      const cleanupSuffixValue = cleanupSuffix(entityTitle);
+      if (!options.has(cleanupSuffixValue)) {
+        result.push({
+          value: cleanupSuffixValue,
+          label: cleanupSuffixValue + ' (No suffix at all)',
+        });
+        options.add(cleanupSuffixValue);
+      }
     }
 
     return result;
@@ -87,10 +91,10 @@
   let isLoaded = $state(false);
   let isLoading = $state(false);
   let artistQuery = $state<string>('');
-  let releaseTitleQuery = $state<string>('');
+  let entityTitleQuery = $state<string>('');
   let dialogVisible = $state(false);
   let isArtistQueryCached = $state(false);
-  let isReleaseTitleQueryCached = $state(false);
+  let isEntityTitleQueryCached = $state(false);
   let allFailed = $state(false);
 
   const shouldShowDialog = $derived(() => {
@@ -98,14 +102,14 @@
       return true;
     }
 
-    if (releaseTitleOptions().length > 1) {
+    if (entityTitleOptions().length > 1) {
       return true;
     }
 
     return false;
   });
 
-  interface ReleaseStats {
+  interface EntityStats {
     playcount: number;
     listeners: number;
     userplaycount?: number | null;
@@ -115,86 +119,83 @@
     };
   }
 
-  let releaseStatsData = $state<ReleaseStats | null>();
-  const listeners = $derived(() => releaseStatsData?.listeners ?? 0);
-  const playcount = $derived(() => releaseStatsData?.playcount ?? 0);
+  let entityStatsData = $state<EntityStats | null>();
+  const listeners = $derived(() => entityStatsData?.listeners ?? 0);
+  const playcount = $derived(() => entityStatsData?.playcount ?? 0);
   const scrobbles = $derived(() => {
     if (!userName) return null;
-    return releaseStatsData?.userplaycount ? +releaseStatsData.userplaycount : 0;
+    return entityStatsData?.userplaycount ? +entityStatsData.userplaycount : 0;
   });
   let timestamp = $state<number>(Date.now());
   let error = $state<string | null>(null);
   let userName = $state<string | null>(null);
 
-  const moduleName = 'releaseStats';
-
-  const releaseStatsCacheKey = $derived(() => generateStorageKey(moduleName, 'releaseStatsCache', releaseId, artistQuery, releaseTitleQuery));
-  const artistQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'artistQueryCache', releaseId));
-  const releaseTitleQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'releaseTitleQueryCache', releaseId));
+  const entityStatsCacheKey = $derived(() => generateStorageKey(moduleName, 'entityStatsCache', entityId, artistQuery, entityTitleQuery));
+  const artistQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'artistQueryCache', entityId));
+  const entityTitleQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'entityTitleQueryCache', entityId));
 
   async function loadCache() {
-    // await storageRemove(releaseStatsCacheKey(), 'local');
-    const releaseStatsCache: ReleaseStatsCache | null = await storageGet(
-      releaseStatsCacheKey(),
+    const entityStatsCache: EntityStatsCache | null = await storageGet(
+      entityStatsCacheKey(),
       'local',
     );
 
-    if (releaseStatsCache && checkCacheValidity(releaseStatsCache)) {
-      return releaseStatsCache;
+    if (entityStatsCache && checkCacheValidity(entityStatsCache)) {
+      return entityStatsCache;
     } else {
-      await storageRemove(releaseStatsCacheKey(), 'local');
+      await storageRemove(entityStatsCacheKey(), 'local');
       return null;
     }
   }
 
-  async function loadReleaseStats(artist: string = artistQuery, title: string = releaseTitleQuery) {
+  async function loadEntityStats(artist: string = artistQuery, title: string = entityTitleQuery) {
     isLoading = true;
 
-    let data: ReleaseStats | null = null;
+    let data: EntityStats | null = null;
 
-    const releaseStatsCache: ReleaseStatsCache | null = await loadCache();
+    const entityStatsCache: EntityStatsCache | null = await loadCache();
 
-    if (releaseStatsCache) {
-      data = releaseStatsCache.data;
-      timestamp = releaseStatsCache.timestamp;
+    if (entityStatsCache) {
+      data = entityStatsCache.data;
+      timestamp = entityStatsCache.timestamp;
     } else {
-      const releaseInfoResponse = await getReleaseInfo({
+      const entityInfoResponse = await getReleaseInfo({
         params: {
           artist,
           title,
           username: userName,
         },
         apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
-        releaseType,
+        entityType,
       });
 
-      if (releaseInfoResponse) {
-        if (!releaseInfoResponse.error) {
-          data = releaseInfoResponse[RYMEntityLastfmMap[releaseType]];
+      if (entityInfoResponse) {
+        if (!entityInfoResponse.error) {
+          data = entityInfoResponse[RYMEntityLastfmMap[entityType]];
           timestamp = Date.now();
         } else {
-          error = releaseInfoResponse.message ?? releaseInfoResponse.error.toString();
+          error = entityInfoResponse.message ?? entityInfoResponse.error.toString();
         }
       }
 
-      await updateReleaseStatsCache({
+      await updateEntityStatsCache({
         data,
         timestamp: Date.now(),
         userName,
       });
     }
 
-    releaseStatsData = data;
+    entityStatsData = data;
     isLoading = false;
   }
 
-  interface ReleaseStatsCache {
-    data: ReleaseStats | null;
+  interface EntityStatsCache {
+    data: EntityStats | null;
     timestamp: number;
     userName: string | null;
   }
 
-  function checkCacheValidity(cache: ReleaseStatsCache) {
+  function checkCacheValidity(cache: EntityStatsCache) {
     const cacheLifetime = userName
       ? constants.STATS_CACHE_LIFETIME_MS
       : constants.STATS_CACHE_LIFETIME_GUEST_MS;
@@ -208,9 +209,9 @@
     );
   }
 
-  async function updateReleaseStatsCache(value: ReleaseStatsCache) {
+  async function updateEntityStatsCache(value: EntityStatsCache) {
     await storageSet({
-      [releaseStatsCacheKey()]: value,
+      [entityStatsCacheKey()]: value,
     }, 'local');
   }
 
@@ -220,9 +221,9 @@
     }, 'local');
   }
 
-  async function updateReleaseTitleQueryCache(value: string) {
+  async function updateEntityTitleQueryCache(value: string) {
     await storageSet({
-      [releaseTitleQueryCacheKey()]: value,
+      [entityTitleQueryCacheKey()]: value,
     }, 'local');
   }
 
@@ -238,29 +239,32 @@
     }
   }
 
-  async function initReleaseTitleQuery() {
-    const releaseTitleQueryCache: string | null = await storageGet(releaseTitleQueryCacheKey(), 'local');
+  async function initEntityTitleQuery() {
+    const entityTitleQueryCache: string | null = await storageGet(entityTitleQueryCacheKey(), 'local');
 
-    if (releaseTitleQueryCache) {
-      releaseTitleQuery = releaseTitleQueryCache;
-      isReleaseTitleQueryCached = true;
+    if (entityTitleQueryCache) {
+      entityTitleQuery = entityTitleQueryCache;
+      isEntityTitleQueryCached = true;
     } else {
-      releaseTitleQuery = releaseTitleOptions()[0].value;
-      await updateReleaseTitleQueryCache(releaseTitleQuery);
+      entityTitleQuery = entityTitleOptions()[0].value;
+      await updateEntityTitleQueryCache(entityTitleQuery);
     }
   }
 
-  async function initReleaseStats() {
-    for (const artistName of artistNamesFlat()) {
-      await loadReleaseStats(artistName);
-      if (releaseStatsData) {
-        await updateArtistQueryCache(artistName);
-        break;
+  async function initEntityStats() {
+    for (const title of entityTitleOptions()) {
+      for (const artistName of artistNamesFlat()) {
+        await loadEntityStats(artistName, title.value);
+        if (entityStatsData) {
+          await updateArtistQueryCache(artistName);
+          await updateEntityTitleQueryCache(title.value);
+          break;
+        }
+        await utils.wait(300);
       }
-      await utils.wait(300);
     }
 
-    if (!releaseStatsData) {
+    if (!entityStatsData) {
       allFailed = true;
     }
   }
@@ -269,26 +273,26 @@
     const [_userName] = await Promise.all([
       getLastfmUserName(),
       initArtistQuery(),
-      initReleaseTitleQuery(),
+      initEntityTitleQuery(),
     ]);
 
     userName = _userName;
 
-    if (isArtistQueryCached && isReleaseTitleQueryCached) {
-      await loadReleaseStats();
+    if (isArtistQueryCached && isEntityTitleQueryCached) {
+      await loadEntityStats();
     } else {
-      await initReleaseStats();
+      await initEntityStats();
     }
     isLoaded = true;
   }
 
   let artistQueryField = $state<string>('');
-  let releaseTitleQueryField = $state<string>('');
+  let entityTitleQueryField = $state<string>('');
 
   $effect(() => {
     if (dialogVisible) {
       artistQueryField = artistQuery;
-      releaseTitleQueryField = releaseTitleQuery;
+      entityTitleQueryField = entityTitleQuery;
     }
   });
 
@@ -303,16 +307,16 @@
       needUpdate = true;
     }
 
-    if (releaseTitleQueryField !== releaseTitleQuery) {
-      releaseTitleQuery = releaseTitleQueryField;
-      await updateReleaseTitleQueryCache(releaseTitleQuery);
+    if (entityTitleQueryField !== entityTitleQuery) {
+      entityTitleQuery = entityTitleQueryField;
+      await updateEntityTitleQueryCache(entityTitleQuery);
       needUpdate = true;
     }
 
     dialogVisible = false;
 
     if (needUpdate) {
-      await loadReleaseStats(artistQuery, releaseTitleQuery);
+      await loadEntityStats(artistQuery, entityTitleQuery);
     }
   }
 
@@ -332,7 +336,7 @@
   {/if}
 
   {#if isLoaded}
-    {#if releaseStatsData}
+    {#if entityStatsData}
       <ListStats
         listeners={listeners()}
         playcount={playcount()}
@@ -343,9 +347,9 @@
       <a
         class="lastfm-link"
         target="_blank"
-        title={`View "${artistQuery}" on Last.fm`}
-        aria-label={`View "${artistQuery}" on Last.fm`}
-        href={releaseStatsData?.url}
+        title={`View "${artistQuery} - ${entityTitleQuery}" on Last.fm`}
+        aria-label={`View "${artistQuery} - ${entityTitleQuery}" on Last.fm`}
+        href={entityStatsData?.url}
       >
         <svg viewBox="0 0 24 24">
           <use xlink:href="#svg-lastfm-square-symbol"></use>
@@ -390,7 +394,6 @@
         </strong>
 
         <select
-          name="artist"
           class="rounded-md border border-gray-300 p-2"
           disabled={artistNamesFlat().length === 1}
           bind:value={artistQueryField}
@@ -403,8 +406,8 @@
 
       <label class="flex flex-col gap-2">
         <strong>
-          Release title
-          {#if releaseTitleOptions().length === 1}
+          Title
+          {#if entityTitleOptions().length === 1}
             <span class="text-gray-500">
               (Only one option is available)
             </span>
@@ -412,12 +415,11 @@
         </strong>
 
         <select
-          name="release-title"
           class="rounded-md border border-gray-300 p-2"
-          disabled={releaseTitleOptions().length === 1}
-          bind:value={releaseTitleQueryField}
+          disabled={entityTitleOptions().length === 1}
+          bind:value={entityTitleQueryField}
         >
-          {#each releaseTitleOptions() as title}
+          {#each entityTitleOptions() as title}
             <option value={title.value}>{title.label}</option>
           {/each}
         </select>

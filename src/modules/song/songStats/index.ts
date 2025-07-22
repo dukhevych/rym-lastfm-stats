@@ -1,7 +1,8 @@
 import { mount } from 'svelte';
 import { createElement as h } from '@/helpers/dom';
-import SongStats from './SongStats.svelte';
+import EntityStats from '@/components/svelte/EntityStats.svelte';
 import { insertElement } from '@/helpers/dom';
+import { RYMReleaseType } from '@/helpers/enums';
 
 import {
   PARENT_SELECTOR,
@@ -23,16 +24,16 @@ async function render(config: ProfileOptions) {
     return;
   }
 
-  const songId = getSongId(parent);
-  if (!songId) {
+  const entityId = getSongId(parent);
+  if (!entityId) {
     console.warn('No song ID found.');
     return;
   }
 
-  const songTitle = getSongTitle(parent);
+  const entityTitle = getSongTitle(parent);
   const artistNames = getArtistNames(parent);
 
-  if (artistNames.length === 0 || !songTitle) {
+  if (artistNames.length === 0 || !entityTitle) {
     console.error('No artist or song title found.');
     return;
   }
@@ -48,13 +49,15 @@ async function render(config: ProfileOptions) {
     position: 'beforebegin',
   });
 
-  mount(SongStats, {
+  mount(EntityStats, {
     target: mountPoint,
     props: {
       config,
-      songId,
-      songTitle,
+      entityId,
+      entityTitle,
       artistNames,
+      entityType: RYMReleaseType.Single,
+      moduleName: 'songStats',
     },
   });
 }

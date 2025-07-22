@@ -1,4 +1,4 @@
-import { writable, type Writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { createAccuratePolling, type PollingController } from '@/helpers/polling';
 
 export function usePolling(
@@ -7,8 +7,8 @@ export function usePolling(
   enableAbort = true,
   continueInBackground = false
 ) {
-  const progress: Writable<number> = writable(0);
-  const isRunning: Writable<boolean> = writable(false);
+  const progress = writable(0);
+  const isRunning = writable(false);
 
   const controller: PollingController = createAccuratePolling(callback, {
     interval,
@@ -44,7 +44,6 @@ export function usePolling(
   }
 
   return {
-    // Core controls
     start() {
       controller.start();
       startProgressWatcher();

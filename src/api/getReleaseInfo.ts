@@ -19,7 +19,7 @@ export const RYMEntityLastfmMap: Record<RYMReleaseType, string> = {
 interface getReleaseInfoOptions {
   apiKey: string;
   params: ReleaseGetInfoParams;
-  releaseType: RYMReleaseType;
+  entityType: RYMReleaseType;
 }
 
 interface ReleaseInfoResponse {
@@ -35,9 +35,9 @@ const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 export async function getReleaseInfo({
   apiKey,
   params,
-  releaseType,
+  entityType,
 }: getReleaseInfoOptions): Promise<any> {
-  const apiEntity = RYMEntityLastfmMap[releaseType] ?? RYMEntityLastfmMap[RYMReleaseType.Album];
+  const apiEntity = RYMEntityLastfmMap[entityType] ?? RYMEntityLastfmMap[RYMReleaseType.Album];
   const method = `${apiEntity}.getInfo`;
   const url = new URL(BASE_URL);
 

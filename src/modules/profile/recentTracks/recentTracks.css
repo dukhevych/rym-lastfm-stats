@@ -197,7 +197,7 @@
 
     .stars-empty {
       svg {
-        color: color-mix(in lab, currentColor, transparent 75%);
+        color: color-mix(in lab, currentColor, transparent 90%);
         fill: transparent;
       }
     }
