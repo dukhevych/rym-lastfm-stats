@@ -21,17 +21,17 @@ export function storageGet<T = StorageGetResult>(
   }
 
   return new Promise<T>((resolve, reject) => {
-    browser.storage[storageType].get(keys, (result: StorageGetResult) => {
-      if (typeof chrome !== 'undefined' && chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
+    browser.storage[storageType].get(keys)
+      .then((result: StorageGetResult) => {
         if (typeof keys === 'string') {
           resolve(result[keys] as T);
         } else {
           resolve(result as T);
         }
-      }
-    });
+      })
+      .catch((err: any) => {
+        reject(err);
+      });
   });
 }
 
@@ -47,15 +47,7 @@ export function storageSet(
     throw new Error(`Invalid storage type: ${storageType}`);
   }
 
-  return new Promise<void>((resolve, reject) => {
-    browser.storage[storageType].set(payload, () => {
-      if (typeof chrome !== 'undefined' && chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve();
-      }
-    });
-  });
+  return browser.storage[storageType].set(payload);
 }
 
 export interface StorageRemoveOptions {
@@ -71,15 +63,7 @@ export function storageRemove(
     throw new Error(`Invalid storage type: ${storageType}`);
   }
 
-  return new Promise<void>((resolve, reject) => {
-    browser.storage[storageType].remove(keys, () => {
-      if (typeof chrome !== 'undefined' && chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve();
-      }
-    });
-  });
+  return browser.storage[storageType].remove(keys);
 }
 
 export function getSyncedOptions() {

@@ -8,16 +8,17 @@ interface SendMessageResponse<T = any> {
 
 function sendMessage<T = any>(type: string, payload: { [key: string]: any } = {}): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    browser.runtime.sendMessage({ type, payload }, (response: SendMessageResponse<T>) => {
-      if (browser.runtime.lastError) {
-        return reject(browser.runtime.lastError);
-      }
-      if (response?.success) {
-        resolve(response.result as T);
-      } else {
-        reject(new Error(response?.error || 'Unknown error'));
-      }
-    });
+    browser.runtime.sendMessage({ type, payload })
+      .then((response: SendMessageResponse<T>) => {
+        if (response?.success) {
+          resolve(response.result as T);
+        } else {
+          reject(new Error(response?.error || 'Unknown error'));
+        }
+      })
+      .catch((err: any) => {
+        reject(err);
+      });
   });
 }
 

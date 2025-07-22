@@ -715,6 +715,7 @@ import * as api from '@/helpers/api';
 import {
   storageGet,
   storageSet,
+  storageRemove,
   getSyncedUserData,
   getSyncedOptions,
 } from '@/helpers/storageUtils';
@@ -907,7 +908,7 @@ const openRymSync = () => {
 const logout = async () => {
   const doConfirm = confirm('Are you sure you want to logout?');
   if (!doConfirm) return;
-  await browser.storage.sync.remove('userData');
+  await storageRemove('userData');
   userData.value = null;
 };
 

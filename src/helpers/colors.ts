@@ -9,12 +9,16 @@ interface FetchImageResponse {
 
 export async function getImageColors(imageUrl: string): Promise<ReturnType<typeof getVibrantUiColors>> {
   const dataUrl: string = await new Promise<string>((resolve, reject) => {
-    browser.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl }, (response: FetchImageResponse) => {
-      if (!response?.success) {
-        return reject(new Error(response?.error || 'Failed to fetch image'));
-      }
-      resolve(response.dataUrl as string);
-    });
+    browser.runtime.sendMessage({ type: 'FETCH_IMAGE', url: imageUrl })
+      .then((response: FetchImageResponse) => {
+        if (!response?.success) {
+          return reject(new Error(response?.error || 'Failed to fetch image'));
+        }
+        resolve(response.dataUrl as string);
+      })
+      .catch((err: any) => {
+        reject(err);
+      });
   });
 
   const v = new Vibrant(dataUrl);
