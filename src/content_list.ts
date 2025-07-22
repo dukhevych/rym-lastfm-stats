@@ -4,5 +4,5 @@ import { getFullConfig } from '@/helpers/storageUtils';
 
 (async function () {
   const config = await getFullConfig();
-  await renderContent(list, config);
+  await renderContent(list, config, 'list');
 })();

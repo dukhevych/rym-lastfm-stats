@@ -17,6 +17,8 @@ declare global {
     rymPlayHistoryHide: boolean;
     recentTracksPollingEnabled: boolean;
     recentTracksHistory: boolean;
+    list_userRating: boolean;
+    charts_userRating: boolean;
   }
 
   interface ProfileOptions extends ProfileOptionsBase {

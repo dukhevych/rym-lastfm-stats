@@ -83,39 +83,73 @@
             </div>
           </div>
 
-          <button
-            v-if="!isLoggedIn"
-            class="
-              bg-clr-lastfm inline-flex min-w-[120px] items-center justify-center gap-3 rounded px-4
-              py-2 font-bold text-white transition-colors
-              hover:bg-clr-lastfm-light
-              disabled:pointer-events-none disabled:bg-gray-400
-            "
-            :disabled="signinInProgress"
-            @click="openAuthPage"
-          >
-            <template v-if="signinInProgress">
-              In progress...
-            </template>
-            <template v-else>
-              <!-- eslint-disable max-len -->
-              <svg
-                fill="currentColor"
-                viewBox="0 0 32 32"
-                class="h-6 w-6"
+          <div v-if="!isLoggedIn">
+            <div v-if="identityApiSupported">
+              <button
+                class="
+                  bg-clr-lastfm inline-flex min-w-[120px] items-center justify-center gap-3 rounded
+                  px-4 py-2 font-bold text-white transition-colors
+                  hover:bg-clr-lastfm-light
+                  disabled:pointer-events-none disabled:bg-gray-400
+                "
+                :disabled="signinInProgress"
+                @click="openAuthPage"
               >
-                <path d="M14.131 22.948l-1.172-3.193c0 0-1.912 2.131-4.771 2.131-2.537 0-4.333-2.203-4.333-5.729 0-4.511 2.276-6.125 4.515-6.125 3.224 0 4.245 2.089 5.125 4.772l1.161 3.667c1.161 3.561 3.365 6.421 9.713 6.421 4.548 0 7.631-1.391 7.631-5.068 0-2.968-1.697-4.511-4.844-5.244l-2.344-0.511c-1.624-0.371-2.104-1.032-2.104-2.131 0-1.249 0.985-1.984 2.604-1.984 1.767 0 2.704 0.661 2.865 2.24l3.661-0.444c-0.297-3.301-2.584-4.656-6.323-4.656-3.308 0-6.532 1.251-6.532 5.245 0 2.5 1.204 4.077 4.245 4.807l2.484 0.589c1.865 0.443 2.484 1.224 2.484 2.287 0 1.359-1.323 1.921-3.828 1.921-3.703 0-5.244-1.943-6.124-4.625l-1.204-3.667c-1.541-4.765-4.005-6.531-8.891-6.531-5.287-0.016-8.151 3.385-8.151 9.192 0 5.573 2.864 8.595 8.005 8.595 4.14 0 6.125-1.943 6.125-1.943z" />
-              </svg>
-              <!-- eslint-enable max-len -->
-              <span>Sign in</span>
-            </template>
-          </button>
+                <template v-if="signinInProgress">
+                  In progress...
+                </template>
+                <template v-else>
+                  <!-- eslint-disable max-len -->
+                  <svg
+                    fill="currentColor"
+                    viewBox="0 0 32 32"
+                    class="h-6 w-6"
+                  >
+                    <path d="M14.131 22.948l-1.172-3.193c0 0-1.912 2.131-4.771 2.131-2.537 0-4.333-2.203-4.333-5.729 0-4.511 2.276-6.125 4.515-6.125 3.224 0 4.245 2.089 5.125 4.772l1.161 3.667c1.161 3.561 3.365 6.421 9.713 6.421 4.548 0 7.631-1.391 7.631-5.068 0-2.968-1.697-4.511-4.844-5.244l-2.344-0.511c-1.624-0.371-2.104-1.032-2.104-2.131 0-1.249 0.985-1.984 2.604-1.984 1.767 0 2.704 0.661 2.865 2.24l3.661-0.444c-0.297-3.301-2.584-4.656-6.323-4.656-3.308 0-6.532 1.251-6.532 5.245 0 2.5 1.204 4.077 4.245 4.807l2.484 0.589c1.865 0.443 2.484 1.224 2.484 2.287 0 1.359-1.323 1.921-3.828 1.921-3.703 0-5.244-1.943-6.124-4.625l-1.204-3.667c-1.541-4.765-4.005-6.531-8.891-6.531-5.287-0.016-8.151 3.385-8.151 9.192 0 5.573 2.864 8.595 8.005 8.595 4.14 0 6.125-1.943 6.125-1.943z" />
+                  </svg>
+                  <!-- eslint-enable max-len -->
+                  <span>Sign in</span>
+                </template>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </header>
 
     <main class="flex flex-col px-2">
       <div class="mx-auto w-full max-w-[1024px]">
+        <div
+          v-if="!isLoggedIn && !identityApiSupported"
+          class="
+            mt-4 flex flex-col items-center justify-between gap-3 rounded bg-gray-200 p-4
+            dark:bg-gray-800
+          "
+        >
+          <p
+            class="
+              text-sm italic text-gray-500
+              dark:text-gray-300
+            "
+          >
+            Identity API is not supported in this environment. Please enter your Last.fm username manually:
+          </p>
+          <input
+            v-model="fallbackUsername"
+            placeholder="Your Last.fm username"
+            class="rounded border px-3 py-2 text-sm"
+          >
+          <button
+            class="
+              rounded bg-blue-600 px-4 py-2 font-bold text-white
+              hover:bg-blue-800
+            "
+            @click="fallbackLogin"
+          >
+            Load Profile
+          </button>
+        </div>
+
         <!-- RYM SYNC -->
         <div
           class="
@@ -170,11 +204,11 @@
           "
         >
           <p>
-            It's recommended to run RYM Sync periodically to keep your data up to date in case of any de-sync.
-          </p>
-          <p>
             Extension <strong>automatically</strong> tracks your RYM ratings when you rate releases on RYM release page,
             visit your own Profile page or Collection page.
+          </p>
+          <p>
+            It's recommended to run RYM Sync periodically to keep your data up to date in case of any de-sync.
           </p>
         </blockquote>
 
@@ -505,6 +539,23 @@
             />
           </FormFieldset>
 
+          <!-- RATINGS -->
+          <FormFieldset
+            title="RYM Ratings"
+          >
+            <FormCheckbox
+              v-model="options.charts_userRating"
+              name="chartRatings"
+              label="Show my ratings on Charts"
+            />
+
+            <FormCheckbox
+              v-model="options.list_userRating"
+              name="listRatings"
+              label="Show my ratings on Lists"
+            />
+          </FormFieldset>
+
           <div class="form-actions flex items-center justify-between gap-5">
             <div class="mr-auto flex items-center gap-5">
               <a
@@ -686,6 +737,8 @@ const saved = ref(false);
 const dirty = ref(false);
 const signinInProgress = ref(false);
 const showModal = ref(false);
+const identityApiSupported = !!(browser.identity && browser.identity.launchWebAuthFlow);
+const fallbackUsername = ref('');
 
 // STATE
 const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
@@ -781,7 +834,6 @@ const openAuthPage = async () => {
 
     await storageSet({
       userData: normalizedData,
-      lastfmSession: sessionKey,
     });
 
     signinInProgress.value = false;
@@ -870,6 +922,23 @@ const reportIssueUrl = computed(() => {
 
   return `${baseUrl}?${params.toString()}`;
 });
+
+const fallbackLogin = async () => {
+  const userDataRaw = await api.fetchUserDataByName(fallbackUsername.value, SYSTEM_API_KEY);
+  if (userDataRaw) {
+    const normalizedData = {
+      name: userDataRaw.name,
+      url: userDataRaw.url,
+      image: userDataRaw.image[0]?.['#text'],
+    };
+
+    userData.value = normalizedData;
+
+    await storageSet({
+      userData: normalizedData,
+    });
+  }
+};
 
 init();
 </script>

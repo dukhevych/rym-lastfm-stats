@@ -34,6 +34,7 @@ export function renderContent(
 
   for (const key of Object.keys(module)) {
     if ([null, 0, false].includes(config[key])) continue;
+    if (moduleName && [null, 0, false].includes(config[`${moduleName}_${key}`])) continue;
 
     const mod = module[key];
     if (mod.render) {

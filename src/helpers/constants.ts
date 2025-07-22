@@ -109,6 +109,8 @@ export const PROFILE_OPTIONS_DEFAULT: ProfileOptionsBase = {
   topArtistsPeriod: TOP_ARTISTS_PERIOD_DEFAULT,
   topAlbums: true,
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
+  charts_userRating: true,
+  list_userRating: true,
 }
 
 export const OPTIONS_DEFAULT: ProfileOptions = {

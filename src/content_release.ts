@@ -7,5 +7,5 @@ import '@/assets/styles/common.css';
 (async function () {
   const config = await getFullConfig();
   await initSprite();
-  await renderContent(release, config);
+  await renderContent(release, config, 'release');
 })();
