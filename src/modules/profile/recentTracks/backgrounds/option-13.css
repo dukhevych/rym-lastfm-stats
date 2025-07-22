@@ -1,20 +1,34 @@
+@keyframes bg-option-13-animation {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      100px 100px,
+      -100px -100px;
+  }
+}
+
 [data-element="rymstats-track-panel"] {
   &.bg-option-13:after {
-    --track-panel-gradient-stripe-width: 5px;
-    --track-panel-gradient-angle: 15deg;
-
-    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
-      var(--clr-palette-vibrant) 0px,
-      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
-      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
-      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
-      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
-      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
-      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        var(--clr-palette-muted) 0px,
+        var(--clr-palette-muted) 5px,
+        var(--clr-palette-darkmuted) 5px,
+        var(--clr-palette-darkmuted) 10px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        var(--clr-palette-lightvibrant) 0px,
+        var(--clr-palette-lightvibrant) 5px,
+        var(--clr-palette-darkvibrant) 5px,
+        var(--clr-palette-darkvibrant) 10px
+      );
+    background-size: 100% 100%, 100% 100%;
+    animation: bg-option-13-animation 0.2s infinite steps(1);
   }
 }

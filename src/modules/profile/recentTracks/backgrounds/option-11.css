@@ -1,27 +1,20 @@
 [data-element="rymstats-track-panel"] {
   &.bg-option-11:after {
-    background-image:
-      repeating-linear-gradient(
-        45deg,
-        var(--clr-palette-darkvibrant) 0,
-        var(--clr-palette-darkvibrant) 5px,
-        transparent 5px,
-        transparent 10px
-      ),
-      repeating-linear-gradient(
-        -45deg,
-        var(--clr-palette-lightmuted) 0,
-        var(--clr-palette-lightmuted) 5px,
-        transparent 5px,
-        transparent 10px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        var(--clr-palette-muted) 0,
-        var(--clr-palette-muted) 2px,
-        transparent 2px,
-        transparent 6px
-      );
-    background-blend-mode: hard-light;
+    --track-panel-gradient-stripe-width: 120px;
+    --track-panel-gradient-angle: -45deg;
+
+    background-image: repeating-linear-gradient(var(--track-panel-gradient-angle),
+      var(--clr-palette-vibrant) 0px,
+      var(--clr-palette-vibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 1),
+      var(--clr-palette-darkvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 2),
+      var(--clr-palette-lightvibrant) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 3),
+      var(--clr-palette-muted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 4),
+      var(--clr-palette-darkmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 5),
+      var(--clr-palette-lightmuted) calc(var(--track-panel-gradient-stripe-width) * 6));
   }
 }

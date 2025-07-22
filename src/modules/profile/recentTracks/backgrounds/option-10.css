@@ -1,44 +1,64 @@
+@property --bg-option-10-angle-1 {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --bg-option-10-angle-2 {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --bg-option-10-angle-3 {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
 @keyframes bg-option-10-animation {
   0% {
-    --shift-x: 0px;
-    --shift-y: 0px;
+    --bg-option-10-angle-1: 45deg;
+    --bg-option-10-angle-2: -45deg;
   }
-  25% {
-    --shift-x: -10px;
-    --shift-y: 0px;
-  }
+
   50% {
-    --shift-x: -10px;
-    --shift-y: -10px;
-  }
-  75% {
-    --shift-x: 0px;
-    --shift-y: -10px;
-  }
-  100% {
-    --shift-x: 0px;
-    --shift-y: 0px;
+    --bg-option-10-angle-1: 50deg;
+    --bg-option-10-angle-2: -50deg;
   }
 }
 
 [data-element="rymstats-track-panel"] {
   &.bg-option-10:after {
+    --bg-option-10-angle-1: 45deg;
+    --bg-option-10-angle-2: -45deg;
+    --bg-option-10-angle-3: 90deg;
     background-image:
       repeating-linear-gradient(
-        to right,
-        var(--clr-palette-muted) var(--shift-x),
-        var(--clr-palette-muted) calc(var(--shift-x) + 10px),
-        var(--clr-palette-darkmuted) calc(var(--shift-x) + 10px),
-        var(--clr-palette-darkmuted) calc(var(--shift-x) + 20px)
+        var(--bg-option-10-angle-1),
+        var(--clr-palette-darkvibrant) 0,
+        var(--clr-palette-darkvibrant) 5px,
+        transparent 5px,
+        transparent 10px
       ),
       repeating-linear-gradient(
-        to bottom,
-        var(--clr-palette-vibrant) var(--shift-y),
-        var(--clr-palette-vibrant) calc(var(--shift-y) + 10px),
-        var(--clr-palette-lightvibrant) calc(var(--shift-y) + 10px),
-        var(--clr-palette-lightvibrant) calc(var(--shift-y) + 20px)
+        var(--bg-option-10-angle-2),
+        var(--clr-palette-lightmuted) 0,
+        var(--clr-palette-lightmuted) 5px,
+        transparent 5px,
+        transparent 10px
+      ),
+      repeating-linear-gradient(
+        var(--bg-option-10-angle-3),
+        var(--clr-palette-muted) 0,
+        var(--clr-palette-muted) 2px,
+        transparent 2px,
+        transparent 6px
       );
-    background-blend-mode: multiply;
-    animation: bg-option-10-animation 5s ease-in-out infinite;
+    background-blend-mode: hard-light;
+  }
+
+  &.is-now-playing.bg-option-10:after {
+    animation: bg-option-10-animation 15s ease-in-out infinite;
   }
 }

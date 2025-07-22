@@ -57,6 +57,14 @@ module.exports = (env) => {
   console.log('System api key:', combinedEnv.LASTFM_API_KEY ? '✅' : '❌');
   console.log('System secret key:', combinedEnv.LASTFM_API_SECRET ? '✅' : '❌');
 
+  if (!combinedEnv.LASTFM_API_KEY) {
+    throw new Error('Missing required LASTFM_API_KEY environment variable');
+  }
+
+  if (!combinedEnv.LASTFM_API_SECRET) {
+    throw new Error('Missing required LASTFM_API_SECRET environment variable');
+  }
+
   const publicEnvVars = [
     'LASTFM_API_KEY',
     'LASTFM_API_SECRET',

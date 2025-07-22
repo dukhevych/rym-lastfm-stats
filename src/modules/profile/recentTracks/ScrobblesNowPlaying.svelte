@@ -363,7 +363,7 @@ const itemDateTitle = $derived(() => {
 const coverSearchUrl = $derived(() => searchLinks().searchAlbumUrl || searchLinks().searchTrackUrl);
 const coverSearchHint = $derived(() => searchLinks().searchAlbumHint || searchLinks().searchTrackHint);
 
-const bgOptionsQty = 23;
+const bgOptionsQty = 17;
 
 const backgroundName = $derived(() => {
   return constants.RECENT_TRACK_BACKGROUND_NAMES[bgOption] ||
@@ -373,12 +373,10 @@ const backgroundName = $derived(() => {
 
 // METHODS
 const onToggleBackground = async () => {
-  console.log('pre', bgOption);
   bgOption = bgOption === bgOptionsQty - 1 ? 0 : bgOption + 1;
   await storageSet({
     recentTracksBackground: bgOption,
   });
-  console.log('post', bgOption);
 };
 
 const getReleaseRYMData = async () => {

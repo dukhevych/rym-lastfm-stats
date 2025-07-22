@@ -1,3 +1,5 @@
+@import './styles/customProperties.css';
+
 @import './backgrounds/option-0.css';
 @import './backgrounds/option-1.css';
 @import './backgrounds/option-2.css';
@@ -15,30 +17,6 @@
 @import './backgrounds/option-14.css';
 @import './backgrounds/option-15.css';
 @import './backgrounds/option-16.css';
-@import './backgrounds/option-17.css';
-@import './backgrounds/option-18.css';
-@import './backgrounds/option-19.css';
-@import './backgrounds/option-20.css';
-@import './backgrounds/option-21.css';
-@import './backgrounds/option-22.css';
-
-@property --shift-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
-@property --shift-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
-
-@property --bg-option-bar-1  { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-2  { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-3  { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-4  { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-5  { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-6  { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-7  { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-8  { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-9  { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-10 { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-11 { syntax: '<number>'; inherits: false; initial-value: 50; }
-@property --bg-option-bar-12 { syntax: '<number>'; inherits: false; initial-value: 50; }
-
-@property --angle-360 { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 
 @keyframes rotate {
   from { transform: rotate(0deg); }
@@ -329,18 +307,6 @@ html[data-scheme="light"] {
 
 #profile_play_history_container {
   position: relative;
-}
-
-@property --track-panel-gradient-stripe-width {
-  syntax: '<length>';
-  inherits: false;
-  initial-value: 40px;
-}
-
-@property --track-panel-gradient-angle {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 90deg;
 }
 
 @keyframes track-panel-rotate-gradient {
