@@ -13,6 +13,7 @@ import pollingStopSvg from '@/assets/icons/polling-stop.svg?raw';
 import swapSvg from '@/assets/icons/swap.svg?raw';
 import playSvg from '@/assets/icons/play.svg?raw';
 import peopleSvg from '@/assets/icons/people.svg?raw';
+import settingsSvg from '@/assets/icons/settings.svg?raw';
 
 const svgSpriteId = 'svg-sprite';
 
@@ -40,6 +41,7 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(swapSvg, 'svg-swap-symbol');
   addIconToSVGSprite(playSvg, 'svg-play-symbol');
   addIconToSVGSprite(peopleSvg, 'svg-people-symbol');
+  addIconToSVGSprite(settingsSvg, 'svg-settings-symbol');
 
   return svgSprite;
 }

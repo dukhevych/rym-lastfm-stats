@@ -147,10 +147,11 @@ export interface Deburr {
 }
 
 export const deburr: Deburr = function(string: string): string {
-  if (typeof string !== 'string') {
-    throw new TypeError('Expected a string');
-  }
   return removeDiacritics(string);
+}
+
+export function deburrLight(str: string): string {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
 export interface NormalizeForSearch {
@@ -179,7 +180,8 @@ export function normalizeForSearch(str: string): string {
     .replace(/\s+/g, ' ')
     .replace(/ pt /g, ' part ')
     .replace(/ vol /g, ' volume ')
-    .trim());
+    .trim()
+  );
 }
 
 export function cleanupReleaseEdition(releaseTitle: string): string {

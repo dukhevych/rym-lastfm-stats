@@ -1,6 +1,8 @@
 module.exports = {
   content: [
     './src/components/options/**/*.vue',
+    './src/components/svelte/**/*.svelte',
+    './src/modules/**/*.svelte',
     './public/options.html',
   ],
   theme: {

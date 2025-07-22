@@ -12,7 +12,7 @@
   } from '@/helpers/storageUtils';
   import * as constants from '@/helpers/constants';
   import { getReleaseInfo, RYMEntityLastfmMap } from '@/api/getReleaseInfo';
-  import { search as searchLastfm, SearchType } from '@/api/search';
+  import { deburrLight, cleanupReleaseEdition, cleanupSuffix } from '@/helpers/string';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
   import ListStats from '@/components/svelte/ListStats.svelte';
 
@@ -32,11 +32,7 @@
     releaseTitle,
   }: Props = $props();
 
-  const switchArtistLinkText = $derived(() => {
-    let str = 'Switch artist';
-    if (artistNames.length === 1) str += ' name';
-    return str;
-  });
+  const releaseTitleDeburred = $derived(() => deburrLight(releaseTitle));
 
   const artistNamesFlat = $derived(() => {
     const variants = new Set<string>();
@@ -49,14 +45,65 @@
     return Array.from(variants);
   });
 
+  const releaseTitleOptions = $derived(() => {
+    const options = new Set<string>();
+    const result = [];
+
+    result.push({
+      value: releaseTitle,
+      label: releaseTitle,
+    });
+    options.add(releaseTitle);
+
+    if (!options.has(releaseTitleDeburred())) {
+      result.push({
+        value: releaseTitleDeburred(),
+        label: releaseTitleDeburred() + ' (Deburred)',
+      });
+      options.add(releaseTitleDeburred());
+    }
+
+    const cleanupReleaseEditionValue = cleanupReleaseEdition(releaseTitle);
+    if (!options.has(cleanupReleaseEditionValue)) {
+      result.push({
+        value: cleanupReleaseEditionValue,
+        label: cleanupReleaseEditionValue + ' (No edition suffix)',
+      });
+      options.add(cleanupReleaseEditionValue);
+    }
+
+    const cleanupSuffixValue = cleanupSuffix(releaseTitle);
+    if (!options.has(cleanupSuffixValue)) {
+      result.push({
+        value: cleanupSuffixValue,
+        label: cleanupSuffixValue + ' (No suffix at all)',
+      });
+      options.add(cleanupSuffixValue);
+    }
+
+    return result;
+  });
+
   let isLoaded = $state(false);
   let isLoading = $state(false);
   let artistQuery = $state<string>('');
+  let releaseTitleQuery = $state<string>('');
   let dialogVisible = $state(false);
   let isArtistQueryCached = $state(false);
+  let isReleaseTitleQueryCached = $state(false);
   let allFailed = $state(false);
 
-  const shouldShowDialog = $derived(() => artistNamesFlat().length > 1);
+  const shouldShowDialog = $derived(() => {
+    if (artistNamesFlat().length > 1) {
+      return true;
+    }
+
+    if (releaseTitleOptions().length > 1) {
+      return true;
+    }
+
+    return false;
+  });
 
   interface ReleaseStats {
     playcount: number;
@@ -79,10 +126,14 @@
   let error = $state<string | null>(null);
   let userName = $state<string | null>(null);
 
-  const releaseStatsCacheKey = $derived(() => generateStorageKey('releaseStatsCache', releaseId, artistQuery));
-  const artistQueryCacheKey = $derived(() => generateStorageKey('artistQueryCache', releaseId));
+  const moduleName = 'releaseStats';
+
+  const releaseStatsCacheKey = $derived(() => generateStorageKey(moduleName, 'releaseStatsCache', releaseId, artistQuery, releaseTitleQuery));
+  const artistQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'artistQueryCache', releaseId));
+  const releaseTitleQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'releaseTitleQueryCache', releaseId));
 
   async function loadCache() {
+    // await storageRemove(releaseStatsCacheKey(), 'local');
     const releaseStatsCache: ReleaseStatsCache | null = await storageGet(
       releaseStatsCacheKey(),
       'local',
@@ -96,7 +147,7 @@
     }
   }
 
-  async function loadReleaseStats(artistName: string = artistQuery) {
+  async function loadReleaseStats(artist: string = artistQuery, title: string = releaseTitleQuery) {
     isLoading = true;
 
     let data: ReleaseStats | null = null;
@@ -109,12 +160,12 @@
     } else {
       const releaseInfoResponse = await getReleaseInfo({
         params: {
-          artist: artistName,
-          title: releaseTitle,
+          artist,
+          title,
           username: userName,
         },
         apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
-        releaseType: releaseType,
+        releaseType,
       });
 
       if (releaseInfoResponse) {
@@ -169,10 +220,10 @@
     }, 'local');
   }
 
-  async function handleVariantClick(artistName: string) {
-    artistQuery = artistName;
-    await updateArtistQueryCache(artistQuery);
-    await loadReleaseStats();
+  async function updateReleaseTitleQueryCache(value: string) {
+    await storageSet({
+      [releaseTitleQueryCacheKey()]: value,
+    }, 'local');
   }
 
   async function initArtistQuery() {
@@ -183,10 +234,19 @@
       isArtistQueryCached = true;
     } else {
       artistQuery = artistNamesFlat()[0];
+      await updateArtistQueryCache(artistQuery);
+    }
+  }
 
-      await storageSet({
-        [artistQueryCacheKey()]: artistQuery,
-      }, 'local');
+  async function initReleaseTitleQuery() {
+    const releaseTitleQueryCache: string | null = await storageGet(releaseTitleQueryCacheKey(), 'local');
+
+    if (releaseTitleQueryCache) {
+      releaseTitleQuery = releaseTitleQueryCache;
+      isReleaseTitleQueryCached = true;
+    } else {
+      releaseTitleQuery = releaseTitleOptions()[0].value;
+      await updateReleaseTitleQueryCache(releaseTitleQuery);
     }
   }
 
@@ -201,49 +261,59 @@
     }
 
     if (!releaseStatsData) {
-      const foundRelease = await findRelease(artistNamesFlat()[0], releaseTitle);
-
-      if (foundRelease) {
-        const artistName = foundRelease.artist;
-        const releaseTitle = foundRelease.name;
-        alert(`Found release: ${artistName} - ${releaseTitle}`);
-      }
-    }
-
-    if (!releaseStatsData) {
       allFailed = true;
     }
-  }
-
-  async function findRelease(artistName: string, releaseTitle: string) {
-    const searchResults = await searchLastfm({
-      params: {
-        query: `${artistName} - ${releaseTitle}`,
-        limit: 5,
-      },
-      apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
-      searchType: SearchType.Album,
-    });
-
-    return searchResults.results.albummatches.album[0];
   }
 
   async function init() {
     const [_userName] = await Promise.all([
       getLastfmUserName(),
       initArtistQuery(),
+      initReleaseTitleQuery(),
     ]);
 
     userName = _userName;
 
-    const foundRelease = await findRelease(artistNamesFlat()[0], releaseTitle);
-
-    if (isArtistQueryCached) {
+    if (isArtistQueryCached && isReleaseTitleQueryCached) {
       await loadReleaseStats();
     } else {
       await initReleaseStats();
     }
     isLoaded = true;
+  }
+
+  let artistQueryField = $state<string>('');
+  let releaseTitleQueryField = $state<string>('');
+
+  $effect(() => {
+    if (dialogVisible) {
+      artistQueryField = artistQuery;
+      releaseTitleQueryField = releaseTitleQuery;
+    }
+  });
+
+  async function handleSubmit(event: Event) {
+    event.preventDefault();
+
+    let needUpdate = false;
+
+    if (artistQueryField !== artistQuery) {
+      artistQuery = artistQueryField;
+      await updateArtistQueryCache(artistQuery);
+      needUpdate = true;
+    }
+
+    if (releaseTitleQueryField !== releaseTitleQuery) {
+      releaseTitleQuery = releaseTitleQueryField;
+      await updateReleaseTitleQueryCache(releaseTitleQuery);
+      needUpdate = true;
+    }
+
+    dialogVisible = false;
+
+    if (needUpdate) {
+      await loadReleaseStats(artistQuery, releaseTitleQuery);
+    }
   }
 
   init();
@@ -290,26 +360,75 @@
       <span class="separator" aria-hidden="true">|</span>
       <button
         type="button"
-        class="link-alike"
-        aria-label={switchArtistLinkText()}
+        class="btn-icon"
+        aria-label="Metadata settings"
+        title="Metadata settings"
         onclick={() => dialogVisible = true}
       >
-        <strong>{switchArtistLinkText()}</strong>
+        <svg viewBox="0 0 24 24">
+          <use xlink:href="#svg-settings-symbol"></use>
+        </svg>
       </button>
     {/if}
   {/if}
 </div>
 
-<pre>{JSON.stringify(releaseStatsData, null, 2)}</pre>
-
 {#if shouldShowDialog()}
   <DialogBase
     bind:visible={dialogVisible}
-    title="Choose artist name"
-    items={artistNamesFlat()}
-    selected={artistQuery}
-    handleVariantClick={handleVariantClick}
-  />
+    title="Metadata settings"
+  >
+    <form onsubmit={handleSubmit} class="flex flex-col gap-4 p-6">
+      <label class="flex flex-col gap-2">
+        <strong>
+          Artist
+          {#if artistNamesFlat().length === 1}
+            <span class="text-gray-500">
+              (Only one option is available)
+            </span>
+          {/if}
+        </strong>
+
+        <select
+          name="artist"
+          class="rounded-md border border-gray-300 p-2"
+          disabled={artistNamesFlat().length === 1}
+          bind:value={artistQueryField}
+        >
+          {#each artistNamesFlat() as artist}
+            <option value={artist}>{artist}</option>
+          {/each}
+        </select>
+      </label>
+
+      <label class="flex flex-col gap-2">
+        <strong>
+          Release title
+          {#if releaseTitleOptions().length === 1}
+            <span class="text-gray-500">
+              (Only one option is available)
+            </span>
+          {/if}
+        </strong>
+
+        <select
+          name="release-title"
+          class="rounded-md border border-gray-300 p-2"
+          disabled={releaseTitleOptions().length === 1}
+          bind:value={releaseTitleQueryField}
+        >
+          {#each releaseTitleOptions() as title}
+            <option value={title.value}>{title.label}</option>
+          {/each}
+        </select>
+      </label>
+
+      <div class="flex justify-end pt-4 gap-2">
+        <button type="button" class="btn blue_btn btn_small is-transparent" onclick={() => dialogVisible = false}>Cancel</button>
+        <button type="submit" class="btn blue_btn btn_small">Save</button>
+      </div>
+    </form>
+  </DialogBase>
 {/if}
 
 <style>

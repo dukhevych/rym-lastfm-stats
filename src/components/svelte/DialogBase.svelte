@@ -5,19 +5,14 @@
 
   interface Props {
     title: string;
-    items: string[];
-    selected: string;
-    handleVariantClick: (artistName: string) => void;
     visible: boolean;
   }
 
   let {
     title,
-    items,
-    selected,
-    handleVariantClick,
     visible = $bindable(),
-  }: Props = $props();
+    children,
+  }: Props & { children?: () => any } = $props();
 
   let dialog = $state<HTMLDialogElement>();
 
@@ -54,22 +49,10 @@
       <svg viewBox="0 0 24 24"><use xlink:href="#svg-close-symbol"></use></svg>
     </button>
   </h2>
-  <ul class="list-dialog">
-    {#each items as item}
-      <li class:is-selected={item === selected} class="list-dialog-item">
-        <button
-          type="button"
-          onclick={() => {
-            handleVariantClick(item);
-            visible = false;
-          }}
-          class="link-alike list-dialog-item-link"
-        >
-          <span class="list-dialog-item-title">{item}</span>
-        </button>
-      </li>
-    {/each}
-  </ul>
+
+  <div class="dialog-content">
+    {@render children?.()}
+  </div>
 </dialog>
 
 <style>
@@ -164,56 +147,13 @@ dialog.dialog-base[open]::backdrop {
   position: relative;
 }
 
-.list-dialog {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 16px;
-}
-
-.list-dialog-item {
-  .list-dialog-item-link {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    color: currentColor;
-    gap: 1rem;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-    appearance: none;
-    border: none;
-    background: none;
-    margin: 0;
-    cursor: pointer;
-    width: 100%;
-
-    &:hover {
-      background-color: color-mix(in srgb, var(--text-primary), transparent 90%);
-    }
+:global {
+  html {
+   scrollbar-gutter: stable;
   }
 
-  &.is-selected .list-dialog-item-link {
-    background-color: color-mix(in srgb, var(--text-primary), transparent 95%);
-    cursor: default;
-    pointer-events: none;
+  body:has(dialog[open]) {
+   overflow: hidden;
   }
-
-  .list-dialog-item-title {
-    text-wrap: balance;
-  }
-
-  /* .list-dialog-item-image {
-    width: 30px;
-    height: 30px;
-    background-color: var(--mono-3);
-  } */
-}
-
-:global(html) {
-  scrollbar-gutter: stable;
-}
-
-:global(body:has(dialog[open])) {
-  overflow: hidden;
 }
 </style>
