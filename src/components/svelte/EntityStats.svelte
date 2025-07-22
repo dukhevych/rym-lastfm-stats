@@ -425,8 +425,8 @@
         </select>
       </label>
 
-      <div class="flex justify-end pt-4 gap-2">
-        <button type="button" class="btn blue_btn btn_small is-transparent" onclick={() => dialogVisible = false}>Cancel</button>
+      <div class="flex justify-end pt-4 gap-4">
+        <button type="button" class="link-alike" onclick={() => dialogVisible = false}>Cancel</button>
         <button type="submit" class="btn blue_btn btn_small">Save</button>
       </div>
     </form>

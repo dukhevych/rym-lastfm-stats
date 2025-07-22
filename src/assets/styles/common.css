@@ -112,6 +112,7 @@ button.link-alike {
   padding: 0;
   margin: 0;
   font: inherit;
+  font-weight: bold;
   color: var(--link-text-default);
   cursor: pointer;
 }
@@ -124,15 +125,4 @@ button.link-alike:disabled {
   color: gray;
   text-decoration: none;
   cursor: default;
-}
-
-.btn.btn_small.blue_btn.is-transparent {
-  background-color: transparent;
-  border: 1px solid currentColor;
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background-color: color-mix(in srgb, currentColor, transparent 80%);
-    }
-  }
 }

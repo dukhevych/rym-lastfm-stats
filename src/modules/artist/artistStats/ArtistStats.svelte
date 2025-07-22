@@ -11,7 +11,6 @@
   } from '@/helpers/storageUtils';
   import * as constants from '@/helpers/constants';
   import { getArtistInfo } from '@/api/getArtistInfo';
-  import { search as searchLastfm } from '@/api/search';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
   import ListStats from '@/components/svelte/ListStats.svelte';
 
@@ -172,6 +171,7 @@
   }
 
   async function handleVariantClick(artistName: string) {
+    dialogVisible = false;
     artistQuery = artistName;
     await updateArtistQueryCache(artistQuery);
     await loadStats();
@@ -214,17 +214,6 @@
     ]);
 
     userName = _userName;
-
-    // USE LASTFM SEARCH API TO FIND THE CORRECT RELEASE
-    const searchResults = await searchLastfm({
-      params: {
-        query: artistNamesFlat()[0],
-      },
-      apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
-      searchType: 'artist',
-    });
-
-    console.log('searchResults', searchResults);
 
     if (isArtistQueryCached) {
       await loadStats();
@@ -278,11 +267,14 @@
       <span class="separator" aria-hidden="true">|</span>
       <button
         type="button"
-        class="link-alike"
-        aria-label="Switch artist name"
+        class="btn-icon clr-lastfm"
+        aria-label="Metadata settings"
+        title="Metadata settings"
         onclick={() => dialogVisible = true}
       >
-        <strong>Switch artist name</strong>
+        <svg viewBox="0 0 24 24">
+          <use xlink:href="#svg-settings-symbol"></use>
+        </svg>
       </button>
     {/if}
   {/if}
@@ -292,10 +284,33 @@
   <DialogBase
     bind:visible={dialogVisible}
     title="Choose artist name"
-    items={artistNamesFlat()}
-    selected={artistQuery}
-    handleVariantClick={handleVariantClick}
-  />
+  >
+    <ul class="flex flex-col">
+      {#each artistNamesFlat() as name}
+        <li>
+          <button
+            type="button"
+            class="block w-full border-none p-4 text-left"
+            class:cursor-pointer={artistQuery !== name}
+            class:text-current={artistQuery !== name}
+            class:hover:bg-gray-500={artistQuery !== name}
+            class:bg-transparent={artistQuery !== name}
+            class:bg-gray-300={artistQuery === name}
+            class:text-gray-700={artistQuery === name}
+            class:pointer-events-none={artistQuery === name}
+            aria-label={`Switch to ${name}`}
+            title={`Switch to ${name}`}
+            onclick={() => handleVariantClick(name)}
+          >
+            {#if artistQuery === name}
+              <span class="mr-2">✓</span>
+            {/if}
+            <strong>{name}</strong>
+          </button>
+        </li>
+      {/each}
+    </ul>
+  </DialogBase>
 {/if}
 
 <style>
