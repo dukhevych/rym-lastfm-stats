@@ -15,10 +15,10 @@
           title="{coverSearchHint()}"
           aria-label="{coverSearchHint()}"
         >
-          <img
+          <ImgLazy
             class="play_history_item_art"
             data-element="rymstats-track-item-art"
-            src="{_track().coverLargeUrl}"
+            src={_track().coverLargeUrl}
             alt=""
           />
         </a>
@@ -59,7 +59,7 @@
             >
               {formatsLabel()}
             </div>
-            {#if !isRymSynced}
+            {#if !rymSyncTimestamp || isRymSyncOutdated()}
               <span
                 class="rymstats-rym-sync-hint-icon"
                 title="Some ratings may not be available until RYM sync is run"
@@ -205,15 +205,14 @@ import { ERYMOwnershipStatus } from '@/helpers/enums';
 import { generateSearchUrl, generateSearchHint, cleanupReleaseEdition } from '@/helpers/string';
 import { storageSet } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
-import type {
-  TrackDataNormalized,
-} from '@/modules/profile/recentTracks/types';
+import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
+import ImgLazy from '@/components/svelte/ImgLazy.svelte';
 
 const {
   track,
   config,
   userName,
-  isRymSynced,
+  rymSyncTimestamp,
   isScrobblesHistoryPinned,
   onToggleScrobblesHistory,
   onToggleScrobblesHistoryPinned,
@@ -224,7 +223,7 @@ const {
   track: TrackDataNormalized;
   config: ProfileOptions;
   userName: string;
-  isRymSynced: boolean;
+  rymSyncTimestamp: boolean;
   isScrobblesHistoryPinned: boolean;
   onToggleScrobblesHistory: () => void;
   onToggleScrobblesHistoryPinned: () => void;
@@ -239,6 +238,14 @@ let bgOption = $state(config.recentTracksBackground);
 
 // COMPUTED
 const _track = $derived(() => track ? track : {});
+
+const isRymSyncOutdated = $derived(() => {
+  if (!rymSyncTimestamp) return false;
+  const date = new Date(rymSyncTimestamp);
+  const now = new Date();
+  // return now.getTime() - date.getTime() > 1000 * 60 * 60 * 24 * 3; // 3 days
+  return now.getTime() - date.getTime() > 1000 * 60 * 60 * 24 * 14; // 14 days
+});
 
 const pollingProgressAngle = $derived(() => {
   return Math.trunc(pollingProgress * 360);

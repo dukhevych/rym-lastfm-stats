@@ -181,7 +181,7 @@ init();
     track={nowPlayingTrack()}
     config={config}
     userName={userName}
-    isRymSynced={rymSyncTimestamp !== null}
+    rymSyncTimestamp={rymSyncTimestamp}
     isScrobblesHistoryPinned={isScrobblesHistoryPinned}
     onToggleScrobblesHistory={onToggleScrobblesHistory}
     onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
