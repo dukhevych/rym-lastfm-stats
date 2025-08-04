@@ -261,6 +261,9 @@ async function render(config: ProfileOptions) {
     const releaseIdEl: HTMLElement | null = item.querySelector(validationRules[RYMEntityCode.Release].selectors.releaseTitleSelector);
     const releaseId = extractNumbers(releaseIdEl?.title || '');
 
+    // side effect to make primary releases show up first
+    item.style.order = releaseId;
+
     if (!releaseId) return;
 
     const record = await RecordsAPI.getById(releaseId);
@@ -365,9 +368,6 @@ function validateRelease(value: string, target: ReleaseTitleExtras) {
 
   if (item.suffix || target.suffix) {
     if (item.suffix && target.suffix) {
-      console.log(item);
-      console.log(target);
-
       let baseValidity: ValidationResult = false;
       if (
         item.noSuffix === target.noSuffix
@@ -385,14 +385,12 @@ function validateRelease(value: string, target: ReleaseTitleExtras) {
 
       if (item.numericSuffix && target.numericSuffix) {
         if (item.numericSuffixType.intersection(target.numericSuffixType).size > 0) {
-          console.log(item.numericSuffixValue, target.numericSuffixValue);
           if (item.numericSuffixValue === target.numericSuffixValue) {
             suffixValidity = true;
           }
         }
       }
 
-      console.log(baseValidity, suffixValidity);
       return suffixValidity ? baseValidity : 'partial';
     } else {
       if (item.noSuffix === target.noSuffix) return 'partial';
