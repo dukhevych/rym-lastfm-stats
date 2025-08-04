@@ -4,24 +4,20 @@ declare global {
     // add other properties if needed
   }
 
-  interface ProfileOptionsBase {
-    recentTracks: boolean;
+  interface AddonOptionsBase extends ModuleToggleConfig {
     recentTracksShowOnLoad: boolean;
     recentTracksBackground: number;
     recentTracksLimit: number;
-    topArtists: boolean;
+    recentTracksAnimation: 'auto' | 'on' | 'off';
     topArtistsLimit: number;
     topArtistsPeriod: string;
-    topAlbums: boolean;
     topAlbumsPeriod: string;
     rymPlayHistoryHide: boolean;
     recentTracksPollingEnabled: boolean;
     recentTracksHistory: boolean;
-    list_userRating: boolean;
-    charts_userRating: boolean;
   }
 
-  interface ProfileOptions extends ProfileOptionsBase {
+  interface AddonOptions extends AddonOptionsBase {
     lastfmApiKey: string;
     userName?: string;
   }

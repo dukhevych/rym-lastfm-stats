@@ -1,6 +1,6 @@
 import { normalizeForSearch } from '@/helpers/string';
 import { RecordsAPI } from '@/helpers/records-api';
-import { RYMEntityCode } from '@/helpers/enums';
+import { ERYMEntityCode } from '@/helpers/enums';
 import './userRating.css';
 
 const LIST_ITEMS_SELECTOR = '#user_list > tbody > tr';
@@ -38,14 +38,14 @@ function getItems() {
     let itemType = null;
 
     if (artistEl) itemType = albumEl
-      ? RYMEntityCode.Release
-      : RYMEntityCode.Artist;
+      ? ERYMEntityCode.Release
+      : ERYMEntityCode.Artist;
 
-    if (itemType === RYMEntityCode.Release) {
+    if (itemType === ERYMEntityCode.Release) {
       let releaseId = '';
 
       if (artImgEl) {
-        releaseId = artImgEl.id.replace(`img_${RYMEntityCode.Release}_`, '');
+        releaseId = artImgEl.id.replace(`img_${ERYMEntityCode.Release}_`, '');
       }
 
       const itemRelease = {
@@ -59,11 +59,11 @@ function getItems() {
       releases.push(itemRelease);
     }
 
-    if (itemType === RYMEntityCode.Artist) {
+    if (itemType === ERYMEntityCode.Artist) {
       let artistId = '';
 
       if (artImgEl) {
-        artistId = artImgEl.id.replace(`img_${RYMEntityCode.Artist}_`, '');
+        artistId = artImgEl.id.replace(`img_${ERYMEntityCode.Artist}_`, '');
       }
 
       const itemArtist = {

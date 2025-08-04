@@ -11,6 +11,7 @@ export const TOP_ALBUMS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const TOP_ARTISTS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const STATS_CACHE_LIFETIME_GUEST_MS = 3 * 60 * 60 * 1000; // 3 hours
 export const STATS_CACHE_LIFETIME_MS = isDev ? 30 * 1000 : 10 * 60 * 1000; // 30 seconds /10 minutes
+export const RYM_SYNC_OUTDATED_THRESHOLD_MS = 1000 * 60 * 60 * 24 * 14; // 14 days
 
 export const APP_VERSION = manifest.version;
 export const APP_NAME = manifest.name;
@@ -96,89 +97,55 @@ export const RECENT_TRACKS_LIMIT_MIN = 1;
 export const RECENT_TRACKS_LIMIT_MAX = 20;
 export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
-export const PROFILE_OPTIONS_DEFAULT: ProfileOptionsBase = {
-  recentTracks: true,
+const MODULE_TOGGLE_CONFIG = {} as ModuleToggleConfig;
+
+for (const key of process.env.MODULES_ARRAY || []) {
+  MODULE_TOGGLE_CONFIG[key as keyof ModuleToggleConfig] = true;
+}
+
+export const PROFILE_OPTIONS_DEFAULT: AddonOptionsBase = {
+  ...MODULE_TOGGLE_CONFIG,
+
+  // RECENT TRACKS options
   recentTracksHistory: true,
   recentTracksShowOnLoad: false,
   recentTracksBackground: 1,
   recentTracksPollingEnabled: true,
-  rymPlayHistoryHide: false,
   recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
-  topArtists: true,
+  recentTracksAnimation: 'auto',
+
+  // TOP ARTISTS options
   topArtistsLimit: TOP_ARTISTS_LIMIT_DEFAULT,
   topArtistsPeriod: TOP_ARTISTS_PERIOD_DEFAULT,
-  topAlbums: true,
+
+  // TOP ALBUMS options
   topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
-  charts_userRating: true,
-  list_userRating: true,
+
+  // RYM Customization options
+  rymPlayHistoryHide: false,
 }
 
-export const OPTIONS_DEFAULT: ProfileOptions = {
+export const OPTIONS_DEFAULT: AddonOptions = {
   ...PROFILE_OPTIONS_DEFAULT,
   lastfmApiKey: '',
 };
 
 // [Addon entity type]: [RYM entity code]
 export const RYM_ENTITY_CODES = {
-  artist: 'a',
-  release: 'l',
-  song: 'z',
-
-  // Uncomment these if needed in the future
-  // y: 'v/a release',
-  // b: 'label',
-  // h: 'genre',
-  // u: 'user',
-  // s: 'list',
+  [enums.ERYMEntityType.Artist]: enums.ERYMEntityCode.Artist,
+  [enums.ERYMEntityType.Release]: enums.ERYMEntityCode.Release,
+  [enums.ERYMEntityType.Song]: enums.ERYMEntityCode.Song,
 }
 
-// [RYM entity code]: [Addon entity type]
-export const RYM_ENTITY_CODES_INVERTED = Object.entries(RYM_ENTITY_CODES).reduce((acc: { [key: string]: string }, [key, value]) => {
-  acc[value] = key;
-  return acc;
-}, {} as { [key: string]: string });
+export const RYM_ENTITY_CODES_INVERTED = Object.fromEntries(
+  Object.entries(RYM_ENTITY_CODES).map(([key, value]) => [value, key])
+);
 
-// Keywords to clean up album titles from additional information in parentheses or brackets
-// (Deluxe Edition), (Remastered), [Digipack], (Live in London) etc.
-export const EDITION_KEYWORDS = [
-  'deluxe',
-  'digipack',
-  'edition',
-  'bonus',
-  'expanded',
-  'remaster',
-  'vinyl',
-  'remix',
-  'reissue',
-  're-issue',
-  'tour',
-  'extended',
-  'directors cut',
-  'live',
-  'redux',
-  'limited',
-  'exclusive',
-  'single',
-  'ep',
-  'special',
-  'legacy',
-  'collector',
-  'anniversary',
-  'instrumental',
-  'ost',
-  'soundtrack',
-  'version',
-  'original',
-];
+import suffixEditionKeywords from '@/config/suffixEditionKeywords.json';
+export const EDITION_KEYWORDS = suffixEditionKeywords as string[];
 
-export const NUMBERED_KEYWORDS = [
-  'part',
-  'volume',
-  'episode',
-  'chapter',
-  'disc',
-  'book',
-];
+import suffixNumberedKeywords from '@/config/suffixNumberedKeywords.json';
+export const NUMBERED_KEYWORDS = suffixNumberedKeywords as string[];
 
 export const SUFFIX_KEYWORDS = [
   ...EDITION_KEYWORDS,
@@ -234,22 +201,5 @@ export const RYMOwnershipAltToCode: Partial<Record<ERYMOwnershipAltText, ERYMOwn
   [enums.ERYMOwnershipAltText.UsedToOwn]: enums.ERYMOwnershipStatus.UsedToOwn,
 };
 
-export const RECENT_TRACK_BACKGROUND_NAMES = [
-  'Clean',
-  'Diagonal',
-  'Mutiny',
-  'Breathing',
-  'Hypnosis',
-  'Rotating Star',
-  'Grille',
-  'Shifting',
-  'Glitch',
-  'Plaid',
-  'Romboids',
-  'Diagonal #2',
-  'Plaid #2',
-  'Horizontal',
-  'Flow',
-  'EQ LG',
-  'EQ SM inverted',
-];
+import backgroundNames from '@/config/background.json';
+export const RECENT_TRACK_BACKGROUND_NAMES = backgroundNames as string[];

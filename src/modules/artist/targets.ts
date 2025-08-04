@@ -1,18 +1,14 @@
 import * as utils from '@/helpers/utils';
-import { RYMDiscographyType } from '@/helpers/enums';
+import { ERYMDiscographyType } from '@/helpers/enums';
 import { getDirectInnerText } from '@/helpers/dom';
 import { removeBrackets, extractNumbers } from '@/helpers/string';
+import artistSuffixes from '@/config/artistSuffixes.json';
 
 export const PARENT_SELECTOR = '.artist_left_col';
 export const ARTIST_ID_SELECTOR = 'input.rym_shortcut';
 export const ARTIST_INFO_SELECTOR = '.artist_info_main';
 
-const SUFFIXES_TO_REMOVE = [
-  '[birth name]',
-  '[transliterated birth name]',
-  '[Romanized name]',
-];
-
+const SUFFIXES_TO_REMOVE = artistSuffixes as string[];
 const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function getArtistId(parent: HTMLElement) {
@@ -55,9 +51,9 @@ export function getArtistNames(parent: HTMLElement) {
 
   if (discographyParent) {
     const possibleIds = [
-      RYMDiscographyType.Album,
-      RYMDiscographyType.EP,
-      RYMDiscographyType.Single,
+      ERYMDiscographyType.Album,
+      ERYMDiscographyType.EP,
+      ERYMDiscographyType.Single,
     ].map(type => `disco_type_${type}`);
 
     Array.from(discographyParent.children)

@@ -27,7 +27,7 @@
 
 <div
   class="bubble_content top-artists"
-  style:--config-top-artists-limit={config.topArtistsLimit}
+  style:--config-top-artists-limit={$configStore.topArtistsLimit}
   class:is-loading={isLoading}
   class:is-loaded={isLoaded}
   class:is-empty={isLoaded && artists.length === 0}
@@ -51,11 +51,12 @@
 </div>
 
 <script lang="ts">
-import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
+import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
 import { generateSearchUrl } from '@/helpers/string';
 import * as constants from '@/helpers/constants';
 import { getTopArtists } from '@/api/getTopArtists';
 import type { TopArtistsPeriod, TopArtist } from '@/api/getTopArtists';
+import type { Writable } from 'svelte/store';
 
 interface TopArtistWithPercentage extends TopArtist {
   playcountPercentage: number;
@@ -63,13 +64,15 @@ interface TopArtistWithPercentage extends TopArtist {
   hue: number;
 }
 
+interface Props {
+  configStore: Writable<AddonOptions>;
+  context: Record<string, any>;
+}
+
 const {
-  config,
-  userName,
-} = $props<{
-  config: ProfileOptions;
-  userName: string;
-}>();
+  configStore,
+  context,
+}: Props = $props();
 
 let isLoaded = $state(false);
 let isLoading = $state(false);
@@ -91,8 +94,8 @@ const artists = $derived<TopArtistWithPercentage[]>(artistsData.map(artist => ({
   )},
 })));
 
-let savedPeriodValue = $state(config.topArtistsPeriod);
-let periodValue = $state<TopArtistsPeriod>(config.topArtistsPeriod);
+let savedPeriodValue = $state($configStore.topArtistsPeriod);
+let periodValue = $state<TopArtistsPeriod>($configStore.topArtistsPeriod as TopArtistsPeriod);
 const cacheKey = $derived(() => `topArtistsCache_${periodValue}`);
 
 async function loadCache(periodValue: TopArtistsPeriod) {
@@ -117,11 +120,11 @@ async function loadTopArtists(periodValue: TopArtistsPeriod) {
   } else {
     const topArtistsResponse = await getTopArtists({
       params: {
-        username: userName,
+        username: context.userName,
         period: periodValue,
-        limit: config.topArtistsLimit,
+        limit: $configStore.topArtistsLimit,
       },
-      apiKey: config.lastfmApiKey,
+      apiKey: $configStore.lastfmApiKey,
     });
     data = topArtistsResponse.topartists.artist;
 
@@ -129,7 +132,7 @@ async function loadTopArtists(periodValue: TopArtistsPeriod) {
       [`topArtistsCache_${periodValue}`]: {
         data,
         timestamp: Date.now(),
-        userName,
+        userName: context.userName,
       },
     }, 'local');
   }
@@ -151,7 +154,7 @@ function checkCacheValidity(cache: TopArtistsCache) {
     cache
     && cache.data
     && cache.timestamp
-    && cache.userName === userName
+    && cache.userName === context.userName
     && Date.now() - cache.timestamp <= constants.TOP_ARTISTS_INTERVAL_MS
   );
 }
@@ -167,7 +170,7 @@ async function handlePeriodChange(event: Event) {
 }
 
 async function handlePeriodSave() {
-  await storageSet({
+  await updateSyncedOptions({
     topArtistsPeriod: periodValue,
   });
   savedPeriodValue = periodValue;

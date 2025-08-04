@@ -10,7 +10,7 @@ import type { ReleaseTitleExtras } from '@/helpers/string';
 import { getDirectInnerText, createElement as h } from '@/helpers/dom';
 import * as constants from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
-import { RYMEntityCode } from '@/helpers/enums';
+import { ERYMEntityCode } from '@/helpers/enums';
 
 import './searchStrict.css';
 
@@ -70,8 +70,8 @@ interface ValidationRule {
 
 type ValidationResult = 'full' | 'partial' | false;
 
-const validationRules: Record<RYMEntityCode, ValidationRule> = {
-  [RYMEntityCode.Artist]: {
+const validationRules: Record<ERYMEntityCode, ValidationRule> = {
+  [ERYMEntityCode.Artist]: {
     selectors: {
       artistNameSelector: 'a.searchpage.artist',
       artistNameLocalizedSelector: 'a.searchpage.artist + span.smallgray',
@@ -105,7 +105,7 @@ const validationRules: Record<RYMEntityCode, ValidationRule> = {
       return false;
     },
   },
-  [RYMEntityCode.Release]: {
+  [ERYMEntityCode.Release]: {
     selectors: {
       artistNameSelector: 'a.artist',
       releaseTitleSelector: 'a.searchpage',
@@ -141,7 +141,7 @@ const validationRules: Record<RYMEntityCode, ValidationRule> = {
       return false;
     },
   },
-  [RYMEntityCode.Song]: {
+  [ERYMEntityCode.Song]: {
     selectors: {
       artistNameSelector: '.infobox td:nth-child(2) table + span .ui_name_locale_original',
       artistNameSelectorFallback: '.infobox td:nth-child(2) table + span .ui_name_locale:not(.has_locale_name)',
@@ -179,14 +179,14 @@ const validationRules: Record<RYMEntityCode, ValidationRule> = {
   },
 }
 
-async function render(config: ProfileOptions) {
+async function render(config: AddonOptions) {
   if (!config) return;
 
   const urlParams = new URLSearchParams(window.location.search);
   const strict = urlParams.get('strict');
-  const searchType = urlParams.get('searchtype') as RYMEntityCode;
+  const searchType = urlParams.get('searchtype') as ERYMEntityCode;
 
-  if (strict !== 'true' || !Object.values(RYMEntityCode).includes(searchType)) return;
+  if (strict !== 'true' || !Object.values(ERYMEntityCode).includes(searchType)) return;
 
   const enhArtist = urlParams.get('enh_artist') || '';
   const enhRelease = urlParams.get('enh_release') || '';
@@ -209,11 +209,11 @@ async function render(config: ProfileOptions) {
     valuesNormalized: new Set([...targetArtistValues].map(normalizeForSearch)),
   }
 
-  if (searchType === RYMEntityCode.Release) {
+  if (searchType === ERYMEntityCode.Release) {
     targets.release = getReleaseTitleExtras(enhRelease);
   }
 
-  if (searchType === RYMEntityCode.Song) {
+  if (searchType === ERYMEntityCode.Song) {
     targets.track = {
       value: enhTrack,
       valueNormalized: normalizeForSearch(enhTrack),
@@ -224,7 +224,7 @@ async function render(config: ProfileOptions) {
     item.classList.add('rym-search-strict--item');
     item.dataset.itemType = constants.RYM_ENTITY_CODES_INVERTED[searchType];
 
-    const isReleaseSearch = searchType === RYMEntityCode.Release;
+    const isReleaseSearch = searchType === ERYMEntityCode.Release;
 
     if (isReleaseSearch) {
       addReleaseUserRating(item);
@@ -258,7 +258,7 @@ async function render(config: ProfileOptions) {
   }
 
   async function addReleaseUserRating(item: HTMLElement) {
-    const releaseIdEl: HTMLElement | null = item.querySelector(validationRules[RYMEntityCode.Release].selectors.releaseTitleSelector);
+    const releaseIdEl: HTMLElement | null = item.querySelector(validationRules[ERYMEntityCode.Release].selectors.releaseTitleSelector);
     const releaseId = extractNumbers(releaseIdEl?.title || '');
 
     // side effect to make primary releases show up first
@@ -293,7 +293,7 @@ async function render(config: ProfileOptions) {
 
       const navigation = h('div');
 
-      if (searchType === RYMEntityCode.Artist) {
+      if (searchType === ERYMEntityCode.Artist) {
         const p = h('p', {}, [
           'This artist may not be added yet into RYM database or too obscure.',
           h('a', {
@@ -301,10 +301,10 @@ async function render(config: ProfileOptions) {
           }, 'Add artist'),
         ]);
         warning.appendChild(p);
-      } else if (searchType === RYMEntityCode.Release) {
+      } else if (searchType === ERYMEntityCode.Release) {
         const p = h('p', {}, 'This release may not be added yet into RYM database or too obscure.');
         warning.appendChild(p);
-      } else if (searchType === RYMEntityCode.Song) {
+      } else if (searchType === ERYMEntityCode.Song) {
         const p = h('p', {}, 'This song may not be added yet into RYM database or too obscure.');
         warning.appendChild(p);
       }
@@ -324,7 +324,7 @@ async function render(config: ProfileOptions) {
         const url = new URL(window.location.href);
         const searchParams = new URLSearchParams(url.search);
         searchParams.delete('page');
-        searchParams.set('searchtype', RYMEntityCode.Artist);
+        searchParams.set('searchtype', ERYMEntityCode.Artist);
         searchParams.set('searchterm', normalizeForSearch(searchParams.get('enh_artist') || ''));
         const newRelativeUrl = url.pathname + '?' + searchParams.toString();
 
@@ -338,7 +338,7 @@ async function render(config: ProfileOptions) {
         const url = new URL(window.location.href);
         const searchParams = new URLSearchParams(url.search);
         searchParams.delete('page');
-        searchParams.set('searchtype', RYMEntityCode.Release);
+        searchParams.set('searchtype', ERYMEntityCode.Release);
         searchParams.set('searchterm', normalizeForSearch(searchParams.get('enh_release') || ''));
         const newRelativeUrl = url.pathname + '?' + searchParams.toString();
 
@@ -348,11 +348,11 @@ async function render(config: ProfileOptions) {
         }, 'Search release instead');
       }
 
-      if (searchType === RYMEntityCode.Release) {
+      if (searchType === ERYMEntityCode.Release) {
         navigation.appendChild(createSearchArtistInsteadLink());
       }
 
-      if (searchType === RYMEntityCode.Song) {
+      if (searchType === ERYMEntityCode.Song) {
         navigation.appendChild(createSearchArtistInsteadLink());
         navigation.appendChild(createSearchReleaseInsteadLink());
       }

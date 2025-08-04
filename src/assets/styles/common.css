@@ -9,6 +9,10 @@
   color: var(--clr-lastfm);
 }
 
+.clr-current {
+  color: currentColor !important;
+}
+
 a.clr-lastfm {
   --link-text-default: var(--clr-lastfm);
   --link-text-hover: color-mix(in srgb, var(--clr-lastfm), white 30%);
@@ -125,4 +129,8 @@ button.link-alike:disabled {
   color: gray;
   text-decoration: none;
   cursor: default;
+}
+
+.is-hidden {
+  display: none !important;
 }

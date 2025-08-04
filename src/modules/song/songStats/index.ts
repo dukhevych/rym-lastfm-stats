@@ -2,7 +2,7 @@ import { mount } from 'svelte';
 import { createElement as h } from '@/helpers/dom';
 import EntityStats from '@/components/svelte/EntityStats.svelte';
 import { insertElement } from '@/helpers/dom';
-import { RYMReleaseType } from '@/helpers/enums';
+import { ERYMReleaseType } from '@/helpers/enums';
 
 import {
   PARENT_SELECTOR,
@@ -12,7 +12,7 @@ import {
   getSongId,
 } from '@/modules/song/targets';
 
-async function render(config: ProfileOptions) {
+async function render(config: AddonOptions) {
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
   if (!parent) {
     console.warn('No parent element found.');
@@ -56,7 +56,7 @@ async function render(config: ProfileOptions) {
       entityId,
       entityTitle,
       artistNames,
-      entityType: RYMReleaseType.Single,
+      entityType: ERYMReleaseType.Single,
       moduleName: 'songStats',
     },
   });

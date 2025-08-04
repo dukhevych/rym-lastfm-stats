@@ -112,6 +112,32 @@
                 </template>
               </button>
             </div>
+            <button
+              class="
+                bg-clr-lastfm inline-flex min-w-[120px] items-center justify-center gap-3 rounded
+                px-4 py-2 font-bold text-white transition-colors
+                hover:bg-clr-lastfm-light
+                disabled:pointer-events-none disabled:bg-gray-400
+              "
+              :disabled="signinInProgress"
+              @click="openAuthPage"
+            >
+              <template v-if="signinInProgress">
+                In progress...
+              </template>
+              <template v-else>
+                <!-- eslint-disable max-len -->
+                <svg
+                  fill="currentColor"
+                  viewBox="0 0 32 32"
+                  class="h-6 w-6"
+                >
+                  <path d="M14.131 22.948l-1.172-3.193c0 0-1.912 2.131-4.771 2.131-2.537 0-4.333-2.203-4.333-5.729 0-4.511 2.276-6.125 4.515-6.125 3.224 0 4.245 2.089 5.125 4.772l1.161 3.667c1.161 3.561 3.365 6.421 9.713 6.421 4.548 0 7.631-1.391 7.631-5.068 0-2.968-1.697-4.511-4.844-5.244l-2.344-0.511c-1.624-0.371-2.104-1.032-2.104-2.131 0-1.249 0.985-1.984 2.604-1.984 1.767 0 2.704 0.661 2.865 2.24l3.661-0.444c-0.297-3.301-2.584-4.656-6.323-4.656-3.308 0-6.532 1.251-6.532 5.245 0 2.5 1.204 4.077 4.245 4.807l2.484 0.589c1.865 0.443 2.484 1.224 2.484 2.287 0 1.359-1.323 1.921-3.828 1.921-3.703 0-5.244-1.943-6.124-4.625l-1.204-3.667c-1.541-4.765-4.005-6.531-8.891-6.531-5.287-0.016-8.151 3.385-8.151 9.192 0 5.573 2.864 8.595 8.005 8.595 4.14 0 6.125-1.943 6.125-1.943z" />
+                </svg>
+                <!-- eslint-enable max-len -->
+                <span>Sign in</span>
+              </template>
+            </button>
           </div>
         </div>
       </div>
@@ -119,6 +145,76 @@
 
     <main class="flex flex-col px-2">
       <div class="mx-auto w-full max-w-[1024px]">
+        <!-- <nav>
+          <ul>
+            <li>
+              <a href="#" @click.prevent="switchTab('status')">Status</a>
+            </li>
+            <li>
+              <a href="#" @click.prevent="switchTab('profile')">Profile</a>
+            </li>
+            <li>
+              <a href="#" @click.prevent="switchTab('other')">Other</a>
+            </li>
+          </ul>
+        </nav> -->
+
+        <div data-tabs>
+          <div data-tab="status">
+            <!-- RYM SYNC -->
+            <div
+              class="
+                mt-4 flex items-center justify-between gap-2 rounded bg-gray-200 p-4
+                dark:bg-gray-800
+              "
+            >
+              <div>
+                <p>
+                  <strong v-if="!rymSyncTimestamp">⚠️ RYM Sync not performed yet</strong>
+                  <template v-else>
+                    <strong>The latest RYM Sync was:</strong>
+                    {{ formatDistanceToNow(new Date(rymSyncTimestamp), { addSuffix: true }) }}
+                  </template>
+                </p>
+              </div>
+              <div class="flex items-center gap-4">
+                <span
+                  class="
+                    text-sm text-gray-500
+                    dark:text-gray-400
+                  "
+                >
+                  {{ dbRecordsQty }} records
+                  <em v-if="!rymSyncTimestamp"><u>so far</u></em>
+                </span>
+                <button
+                  type="button"
+                  class="
+                    rounded bg-orange-500 px-4 py-2 font-bold text-white
+                    hover:bg-orange-700
+                  "
+                  :class="{
+                    'bg-red-500 hover:bg-red-700': !rymSyncTimestamp,
+                  }"
+                  @click.prevent="openRymSync"
+                >
+                  <template v-if="rymSyncTimestamp">
+                    Re-sync
+                  </template>
+                  <template v-else>
+                    Run RYM Sync
+                  </template>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- <div data-tab="profile">
+
+          </div> -->
+        </div>
+
+
+        <!-- MANUAL LOGIN -->
         <div
           v-if="!isLoggedIn && !identityApiSupported"
           class="
@@ -150,53 +246,6 @@
           </button>
         </div>
 
-        <!-- RYM SYNC -->
-        <div
-          class="
-            mt-4 flex items-center justify-between gap-2 rounded bg-gray-200 p-4
-            dark:bg-gray-800
-          "
-        >
-          <div>
-            <p>
-              <strong v-if="!rymSyncTimestamp">⚠️ RYM Sync not performed yet</strong>
-              <template v-else>
-                <strong>The latest RYM Sync was:</strong>
-                {{ formatDistanceToNow(new Date(rymSyncTimestamp), { addSuffix: true }) }}
-              </template>
-            </p>
-          </div>
-          <div class="flex items-center gap-4">
-            <span
-              class="
-                text-sm text-gray-500
-                dark:text-gray-400
-              "
-            >
-              {{ dbRecordsQty }} records
-              <em v-if="!rymSyncTimestamp"><u>so far</u></em>
-            </span>
-            <button
-              type="button"
-              class="
-                rounded bg-orange-500 px-4 py-2 font-bold text-white
-                hover:bg-orange-700
-              "
-              :class="{
-                'bg-red-500 hover:bg-red-700': !rymSyncTimestamp,
-              }"
-              @click.prevent="openRymSync"
-            >
-              <template v-if="rymSyncTimestamp">
-                Re-sync
-              </template>
-              <template v-else>
-                Run RYM Sync
-              </template>
-            </button>
-          </div>
-        </div>
-
         <blockquote
           class="
             mt-4 text-center text-sm text-gray-500
@@ -211,122 +260,6 @@
             It's recommended to run RYM Sync periodically to keep your data up to date in case of any de-sync.
           </p>
         </blockquote>
-
-        <!-- Modal -->
-        <div
-          v-show="showModal"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
-          @click.self="showModal = false"
-        >
-          <div
-            class="
-              mx-2 my-[2vh] flex max-h-[96vh] w-full max-w-[1024px] flex-col self-start rounded
-              rounded-lg bg-gray-200 shadow-lg
-              dark:bg-gray-800
-            "
-          >
-            <div
-              class="
-                bg-rym-gradient flex shrink-0 items-center justify-between px-6 py-3 font-bold
-                text-white
-                [text-shadow:2px_2px_4px_rgba(0,0,0,0.5)]
-              "
-            >
-              <h2 class="text-xl font-bold">
-                How it works?
-              </h2>
-              <button
-                class="
-                  flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 p-2
-                  text-gray-500
-                  hover:text-gray-700
-                "
-                @click="showModal = false"
-              >
-                <!-- eslint-disable max-len -->
-                <svg
-                  class="h-4 w-4"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M12 10.586l6.293-6.293 1.414 1.414L13.414 12l6.293 6.293-1.414 1.414L12 13.414l-6.293 6.293-1.414-1.414L10.586 12 4.293 5.707l1.414-1.414z"
-                  />
-                </svg>
-                <!-- eslint-enable max-len -->
-              </button>
-            </div>
-            <div class="flex flex-col gap-2 overflow-y-auto px-6 py-6">
-              <p>
-                <strong>RYM Last.fm Stats displays Last.fm data directly on RateYourMusic pages.</strong>
-              </p>
-              <p>
-                By default extension only adds <strong>global listening stats</strong> on artist and release pages.
-              </p>
-              <p>This data is <strong>updated once per day</strong> and <strong>not personalized</strong>.</p>
-              <div class="my-4 flex flex-col gap-1">
-                <div class="flex w-full gap-1">
-                  <img
-                    src="/images/artist-static.jpg"
-                    alt=""
-                    class="block w-1/2 max-w-full"
-                  >
-                  <img
-                    src="/images/release-static.jpg"
-                    alt=""
-                    class="block w-1/2 max-w-full"
-                  >
-                </div>
-                <div class="text-center text-sm opacity-50">
-                  The red boxes here show the global Last.fm stats that appear without a personal API key.
-                </div>
-              </div>
-
-              <h2 class="my-2 text-xl font-bold">
-                🔓 Unlock full stats with your own Last.fm API key
-              </h2>
-              <p>
-                With your own Last.fm API key, <strong>you’ll remove all limits</strong> from artist and release stats.
-              </p>
-              <p>You’ll also get:</p>
-              <ul class="my-2 list-disc pl-5">
-                <li>
-                  ✅ <strong>Personal</strong> scrobbling stats on artist and release pages
-                </li>
-                <li>
-                  🧩 New profile sections:
-                  <strong>Recently scrobbled tracks</strong>,
-                  <strong>Top albums</strong>,
-                  <strong>Top artists</strong>
-                </li>
-                <li>
-                  👥 View this data on other users’ profiles (if their Last.fm username is found on page)
-                </li>
-              </ul>
-              <img
-                src="/images/recent.jpg"
-                alt=""
-                class="block h-auto w-full"
-              >
-              <img
-                src="/images/top.jpg"
-                alt=""
-                class="block h-auto w-full"
-              >
-            </div>
-            <div class="flex shrink-0 justify-end p-6">
-              <button
-                class="
-                  rounded bg-blue-500 px-4 py-2 text-white
-                  hover:bg-blue-700
-                "
-                @click="showModal = false"
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        </div>
 
         <form
           v-if="!loading"
@@ -467,7 +400,7 @@
 
             <!-- RECENT TRACKS -->
             <FormCheckbox
-              v-model="options.recentTracks"
+              v-model="options.profileRecentTracks"
               name="recentTracks"
               label="Recent tracks"
             />
@@ -479,14 +412,14 @@
               :label="`Recent tracks limit (${constants.RECENT_TRACKS_LIMIT_MIN}-${constants.RECENT_TRACKS_LIMIT_MAX})`"
               :min="constants.RECENT_TRACKS_LIMIT_MIN"
               :max="constants.RECENT_TRACKS_LIMIT_MAX"
-              :disabled="options.recentTracks === false"
+              :disabled="options.profileRecentTracks === false"
             />
 
             <FormSeparator />
 
             <!-- TOP ALBUMS -->
             <FormCheckbox
-              v-model="options.topAlbums"
+              v-model="options.profileTopAlbums"
               name="topAlbums"
               label="Top albums"
             />
@@ -495,7 +428,7 @@
 
             <!-- TOP ARTISTS -->
             <FormCheckbox
-              v-model="options.topArtists"
+              v-model="options.profileTopArtists"
               name="topArtists"
               label="Top artists"
             />
@@ -507,7 +440,7 @@
               :label="`Top artists limit (${constants.TOP_ARTISTS_LIMIT_MIN}-${constants.TOP_ARTISTS_LIMIT_MAX})`"
               :min="constants.TOP_ARTISTS_LIMIT_MIN"
               :max="constants.TOP_ARTISTS_LIMIT_MAX"
-              :disabled="options.topArtists === false"
+              :disabled="options.profileTopArtists === false"
             />
             <!--
             <div style="--hue-start: 35; --hue-end: 70">
@@ -541,16 +474,16 @@
 
           <!-- RATINGS -->
           <FormFieldset
-            title="RYM Ratings"
+            title="Display my RYM Ratings"
           >
             <FormCheckbox
-              v-model="options.charts_userRating"
+              v-model="options.chartsUserRating"
               name="chartRatings"
               label="Show my ratings on Charts"
             />
 
             <FormCheckbox
-              v-model="options.list_userRating"
+              v-model="options.listUserRating"
               name="listRatings"
               label="Show my ratings on Lists"
             />
@@ -718,6 +651,7 @@ import {
   storageRemove,
   getSyncedUserData,
   getSyncedOptions,
+  updateSyncedOptions,
 } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 
@@ -773,7 +707,7 @@ const submit = async () => {
     }
   });
 
-  await storageSet(newConfig);
+  await updateSyncedOptions(newConfig);
 
   config.value = newConfig;
   saved.value = true;

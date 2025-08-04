@@ -9,7 +9,7 @@ import {
   ARTIST_INFO_SELECTOR,
 } from '@/modules/artist/targets';
 
-async function render(config: ProfileOptions) {
+async function render(config: AddonOptions) {
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
   if (!parent) {
     console.warn(errorMessages.noParentElement);

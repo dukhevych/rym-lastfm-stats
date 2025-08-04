@@ -5,7 +5,7 @@ import { onDestroy } from 'svelte';
 import { usePolling } from '@/composables/usePolling';
 import * as utils from '@/helpers/utils';
 import { getImageColors, getColorsMap } from '@/helpers/colors';
-import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
+import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import * as api from '@/api';
 
@@ -13,21 +13,27 @@ import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 import ScrobblesHistory from './ScrobblesHistory.svelte';
 import errorMessages from './errorMessages.json';
 import type { TrackDataNormalized } from './types';
+import type { Writable } from 'svelte/store';
 
 const polling = usePolling(loadRecentTracks, constants.RECENT_TRACKS_INTERVAL_MS, true, true);
 const { progress } = polling;
 
 interface Props {
-  config: ProfileOptions;
-  rymSyncTimestamp: number | null;
-  userName: string;
+  configStore: Writable<AddonOptions>;
+  context: Record<string, any>;
+  parent: HTMLElement;
 }
 
-const { config, rymSyncTimestamp = null, userName }: Props = $props();
+const {
+  configStore,
+  context,
+  parent,
+}: Props = $props();
 
-let isScrobblesHistoryOpen: boolean = $state(config.recentTracksShowOnLoad);
-let isScrobblesHistoryPinned: boolean = $state(config.recentTracksShowOnLoad);
-let isScrobblesPollingEnabled: boolean = $state(config.recentTracksPollingEnabled);
+let isScrobblesHistoryOpen = $state($configStore.recentTracksShowOnLoad);
+
+const isScrobblesPollingEnabled = $derived(() => $configStore.recentTracksPollingEnabled);
+const isScrobblesHistoryPinned = $derived(() => $configStore.recentTracksShowOnLoad);
 
 let abortController: AbortController = new AbortController();
 let failedToFetch: boolean = $state(false);
@@ -37,7 +43,7 @@ let recentTracks = $state<TrackDataNormalized[]>([]);
 let recentTracksTimestamp = $state<number>(0);
 
 const nowPlayingTrack = $derived(() => recentTracks[0]);
-const tracksHistory = $derived(() => recentTracks[0]?.nowPlaying ? recentTracks.slice(1) : recentTracks);
+const scrobbles = $derived(() => recentTracks[0]?.nowPlaying ? recentTracks.slice(1) : recentTracks);
 
 interface RecentTracksCache {
   data: TrackDataNormalized[];
@@ -52,7 +58,7 @@ const checkCacheValidity = (cache: RecentTracksCache | null): boolean => {
     && cache.data
     && cache.timestamp
     && cache.colors
-    && cache.userName === userName
+    && cache.userName === context.userName
     && Date.now() - cache.timestamp <= constants.RECENT_TRACKS_INTERVAL_MS
   );
 }
@@ -71,19 +77,23 @@ async function init() {
 
   isLoaded = true;
 
-  if (isScrobblesPollingEnabled) {
+  if (isScrobblesPollingEnabled()) {
     polling.start();
   }
 }
 
 async function onPollingToggle() {
-  isScrobblesPollingEnabled = !isScrobblesPollingEnabled;
+  await Promise.all([
+    updateSyncedOptions({
+      recentTracksPollingEnabled: !isScrobblesPollingEnabled(),
+    }),
+    configStore.update((config) => ({
+      ...config,
+      recentTracksPollingEnabled: !isScrobblesPollingEnabled(),
+    })),
+  ])
 
-  await storageSet({
-    recentTracksPollingEnabled: isScrobblesPollingEnabled,
-  });
-
-  if (isScrobblesPollingEnabled) {
+  if (isScrobblesPollingEnabled()) {
     polling.start();
   } else {
     polling.stop();
@@ -111,13 +121,15 @@ async function loadRecentTracks() {
 
   try {
     const recentTracksResponse = await api.getRecentTracks({
-      apiKey: config.lastfmApiKey,
+      apiKey: $configStore.lastfmApiKey,
       params: {
-        username: userName,
-        limit: config.recentTracksLimit,
+        username: context.userName,
+        limit: $configStore.recentTracksLimit,
       },
       signal: abortController.signal,
     });
+
+    // await utils.wait(500000);
 
     const { recenttracks: { track: data } } = recentTracksResponse;
     const timestamp = Date.now();
@@ -132,7 +144,7 @@ async function loadRecentTracks() {
         data: normalizedData,
         colors: $state.snapshot(colors),
         timestamp,
-        userName,
+        userName: context.userName,
       }
     }, 'local');
   } catch (error: unknown) {
@@ -151,6 +163,22 @@ const setRootElement = (node: HTMLSpanElement) => {
 };
 
 $effect(() => {
+  if ($configStore.recentTracksPollingEnabled) {
+    polling.start();
+  } else {
+    polling.stop();
+  }
+});
+
+$effect(() => {
+  if ($configStore.rymPlayHistoryHide) {
+    parent.classList.add('is-hidden');
+  } else {
+    parent.classList.remove('is-hidden');
+  }
+});
+
+$effect(() => {
   if (!rootTarget) return;
   for (const [key, value] of Object.entries(colorsMap())) {
     rootTarget.style.setProperty(key, String(value));
@@ -158,11 +186,15 @@ $effect(() => {
 });
 
 const onToggleScrobblesHistoryPinned = async () => {
-  isScrobblesHistoryPinned = !isScrobblesHistoryPinned;
-  await storageSet({
-    recentTracksShowOnLoad: isScrobblesHistoryPinned,
-  });
-  if (isScrobblesHistoryPinned) {
+  await Promise.all([
+    updateSyncedOptions({ recentTracksShowOnLoad: !isScrobblesHistoryPinned() }),
+    configStore.update((config) => ({
+      ...config,
+      recentTracksShowOnLoad: !isScrobblesHistoryPinned(),
+    })),
+  ]);
+
+  if (isScrobblesHistoryPinned()) {
     isScrobblesHistoryOpen = true;
   }
 }
@@ -179,18 +211,18 @@ init();
 {#if !failedToFetch}
   <ScrobblesNowPlaying
     track={nowPlayingTrack()}
-    config={config}
-    userName={userName}
-    isRymSynced={rymSyncTimestamp !== null}
-    isScrobblesHistoryPinned={isScrobblesHistoryPinned}
+    configStore={configStore}
+    context={context}
+    rymSyncTimestamp={context.rymSyncTimestamp}
+    isScrobblesHistoryPinned={isScrobblesHistoryPinned()}
     onToggleScrobblesHistory={onToggleScrobblesHistory}
     onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
     onPollingToggle={onPollingToggle}
-    isScrobblesPollingEnabled={isScrobblesPollingEnabled}
+    isScrobblesPollingEnabled={isScrobblesPollingEnabled()}
     pollingProgress={$progress}
   />
   <ScrobblesHistory
-    scrobbles={tracksHistory()}
+    scrobbles={scrobbles()}
     timestamp={recentTracksTimestamp}
     open={isScrobblesHistoryOpen}
   />

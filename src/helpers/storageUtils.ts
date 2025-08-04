@@ -35,12 +35,8 @@ export function storageGet<T = StorageGetResult>(
   });
 }
 
-export interface StorageSetPayload {
-  [key: string]: any;
-}
-
 export function storageSet(
-  payload: StorageSetPayload,
+  payload: { [key: string]: any; },
   storageType: StorageType = 'sync'
 ): Promise<void> {
   if (!STORAGE_TYPES.includes(storageType)) {
@@ -48,6 +44,13 @@ export function storageSet(
   }
 
   return browser.storage[storageType].set(payload);
+  // const promises = [browser.storage[storageType].set(payload)];
+
+  // if (storageType === 'sync') {
+  //   promises.push(browser.storage.local.set(payload));
+  // }
+
+  // return Promise.all(promises);
 }
 
 export interface StorageRemoveOptions {
@@ -66,9 +69,24 @@ export function storageRemove(
   return browser.storage[storageType].remove(keys);
 }
 
-export function getSyncedOptions() {
-  return storageGet(Object.keys(constants.OPTIONS_DEFAULT));
+export async function getSyncedOptions() {
+  let result;
+
+  result = await storageGet(Object.keys(constants.OPTIONS_DEFAULT), 'local');
+
+  if (!result) {
+    result = await storageGet(Object.keys(constants.OPTIONS_DEFAULT), 'sync');
+  }
+
+  return result;
 };
+
+export async function updateSyncedOptions(options: Partial<AddonOptions>) {
+  return Promise.all([
+    storageSet(options, 'sync'),
+    storageSet(options, 'local'),
+  ]);
+}
 
 export function getSyncedUserData() {
   return storageGet('userData');
