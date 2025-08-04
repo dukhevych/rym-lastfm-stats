@@ -227,7 +227,7 @@ async function render(config: AddonOptions) {
     const isReleaseSearch = searchType === ERYMEntityCode.Release;
 
     if (isReleaseSearch) {
-      addReleaseUserRating(item);
+      processReleaseItem(item);
     }
 
     const validity = validationRules[searchType].validate(item, targets);
@@ -257,14 +257,13 @@ async function render(config: AddonOptions) {
     searchMoreLink.href = currentUrl.toString();
   }
 
-  async function addReleaseUserRating(item: HTMLElement) {
+  async function processReleaseItem(item: HTMLElement) {
     const releaseIdEl: HTMLElement | null = item.querySelector(validationRules[ERYMEntityCode.Release].selectors.releaseTitleSelector);
     const releaseId = extractNumbers(releaseIdEl?.title || '');
 
-    // side effect to make primary releases show up first
-    item.style.order = releaseId;
-
     if (!releaseId) return;
+
+    item.style.order = releaseId;
 
     const record = await RecordsAPI.getById(releaseId);
 
