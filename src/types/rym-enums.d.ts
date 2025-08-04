@@ -4,9 +4,9 @@ declare global {
   type ERYMOwnershipStatus = enums.ERYMOwnershipStatus;
   type ERYMOwnershipAltText = enums.ERYMOwnershipAltText;
   type ERYMFormat = enums.ERYMFormat;
-  type RYMEntityCode = enums.RYMEntityCode;
-  type RYMDiscographyType = enums.RYMDiscographyType;
-  type RYMReleaseType = enums.RYMReleaseType;
+  type ERYMEntityCode = enums.ERYMEntityCode;
+  type ERYMDiscographyType = enums.ERYMDiscographyType;
+  type ERYMReleaseType = enums.ERYMReleaseType;
 }
 
 export {};

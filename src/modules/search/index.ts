@@ -1,5 +1,5 @@
-import searchStrict from './searchStrict';
+import strictResults from './strictResults';
 
 export default {
-  searchStrict,
+  strictResults,
 };

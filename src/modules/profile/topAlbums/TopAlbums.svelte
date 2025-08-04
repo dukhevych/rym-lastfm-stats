@@ -86,25 +86,28 @@
 
 <script lang="ts">
 import { generateSearchUrl } from '@/helpers/string';
-import { storageGet, storageSet, storageRemove } from '@/helpers/storageUtils';
+import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import { getTopAlbums } from '@/api/getTopAlbums';
 import type { TopAlbumsPeriod, TopAlbum } from '@/api/getTopAlbums';
+import type { Writable } from 'svelte/store';
+
+interface Props {
+  configStore: Writable<AddonOptions>;
+  context: Record<string, any>;
+}
 
 const {
-  config,
-  userName,
-} = $props<{
-  config: ProfileOptions;
-  userName: string;
-}>();
+  configStore,
+  context,
+}: Props = $props();
 
 let isLoaded = $state(false);
 let isLoading = $state(false);
 let loadedImages = $state<Record<string, boolean>>({});
 
 let albumsData = $state<TopAlbum[]>([]);
-let currentPeriod = $state<TopAlbumsPeriod>(config.topAlbumsPeriod);
+let currentPeriod = $state<TopAlbumsPeriod>($configStore.topAlbumsPeriod as TopAlbumsPeriod);
 
 const albums = $derived(albumsData.map((album, index) => ({
   id: `${album.name}-${album.artist.name}-${currentPeriod}-${index}`,
@@ -130,11 +133,11 @@ $effect(() => {
   }
 });
 
-let savedPeriodValue = $state(config.topAlbumsPeriod);
-let periodValue = $state<TopAlbumsPeriod>(config.topAlbumsPeriod);
+let savedPeriodValue = $state($configStore.topAlbumsPeriod);
+let periodValue = $state<TopAlbumsPeriod>($configStore.topAlbumsPeriod as TopAlbumsPeriod);
 const cacheKey = $derived(() => `topAlbumsCache_${periodValue}`);
 
-async function loadCache(periodValue: TopAlbumsPeriod) {
+async function loadCache() {
   const topAlbumsCache: TopAlbumsCache | null = await storageGet(cacheKey(), 'local');
 
   if (topAlbumsCache && checkCacheValidity(topAlbumsCache)) {
@@ -149,17 +152,17 @@ async function loadTopAlbums(periodValue: TopAlbumsPeriod) {
   isLoading = true;
 
   let data: TopAlbum[] = [];
-  const topAlbumsCache: TopAlbumsCache | null = await loadCache(periodValue);
+  const topAlbumsCache: TopAlbumsCache | null = await loadCache();
 
   if (topAlbumsCache) {
     data = topAlbumsCache.data;
   } else {
     const topAlbumsResponse = await getTopAlbums({
       params: {
-        username: userName,
+        username: context.userName,
         period: periodValue,
       },
-      apiKey: config.lastfmApiKey,
+      apiKey: $configStore.lastfmApiKey,
     });
     data = topAlbumsResponse.topalbums.album;
 
@@ -167,7 +170,7 @@ async function loadTopAlbums(periodValue: TopAlbumsPeriod) {
       [`topAlbumsCache_${periodValue}`]: {
         data,
         timestamp: Date.now(),
-        userName,
+        userName: context.userName,
       },
     }, 'local');
   }
@@ -193,7 +196,7 @@ function checkCacheValidity(cache: TopAlbumsCache) {
     cache
     && cache.data
     && cache.timestamp
-    && cache.userName === userName
+    && cache.userName === context.userName
     && Date.now() - cache.timestamp <= constants.TOP_ALBUMS_INTERVAL_MS
   );
 }
@@ -209,7 +212,7 @@ async function handlePeriodChange(event: Event) {
 }
 
 async function handlePeriodSave() {
-  await storageSet({
+  await updateSyncedOptions({
     topAlbumsPeriod: periodValue,
   });
   savedPeriodValue = periodValue;

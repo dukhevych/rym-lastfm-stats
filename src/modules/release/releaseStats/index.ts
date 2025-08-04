@@ -1,7 +1,7 @@
 import { mount } from 'svelte';
 import EntityStats from '@/components/svelte/EntityStats.svelte';
 import { createElement as h } from '@/helpers/dom';
-import { RYMReleaseType } from '@/helpers/enums';
+import { ERYMReleaseType } from '@/helpers/enums';
 import errorMessages from './errorMessages.json';
 
 import {
@@ -13,7 +13,7 @@ import {
   getReleaseId,
 } from '@/modules/release/targets';
 
-async function render(config: ProfileOptions) {
+async function render(config: AddonOptions) {
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
   if (!parent) {
     console.warn(errorMessages.noParentElement);
@@ -32,7 +32,7 @@ async function render(config: ProfileOptions) {
   }
 
   const artistNames = getArtistNames(parent);
-  const entityType = getReleaseType(parent) ?? RYMReleaseType.Album;
+  const entityType = getReleaseType(parent) ?? ERYMReleaseType.Album;
   const entityTitle = getReleaseTitle(parent);
 
   if (artistNames.length === 0 || !entityTitle) {

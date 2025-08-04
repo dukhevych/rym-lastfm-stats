@@ -1,4 +1,4 @@
-import { RYMReleaseType } from '@/helpers/enums';
+import { ERYMReleaseType } from '@/helpers/enums';
 
 interface ReleaseGetInfoParams {
   artist: string;
@@ -9,17 +9,17 @@ interface ReleaseGetInfoParams {
   username?: string | null;
 }
 
-export const RYMEntityLastfmMap: Record<RYMReleaseType, string> = {
-  [RYMReleaseType.Album]: 'album',
-  [RYMReleaseType.Compilation]: 'album',
-  [RYMReleaseType.Single]: 'track',
-  [RYMReleaseType.MusicVideo]: 'track',
-  [RYMReleaseType.EP]: 'album',
+export const RYMEntityLastfmMap: Record<ERYMReleaseType, string> = {
+  [ERYMReleaseType.Album]: 'album',
+  [ERYMReleaseType.Compilation]: 'album',
+  [ERYMReleaseType.Single]: 'track',
+  [ERYMReleaseType.MusicVideo]: 'track',
+  [ERYMReleaseType.EP]: 'album',
 }
 interface getReleaseInfoOptions {
   apiKey: string;
   params: ReleaseGetInfoParams;
-  entityType: RYMReleaseType;
+  entityType: ERYMReleaseType;
 }
 
 interface ReleaseInfoResponse {
@@ -37,7 +37,7 @@ export async function getReleaseInfo({
   params,
   entityType,
 }: getReleaseInfoOptions): Promise<any> {
-  const apiEntity = RYMEntityLastfmMap[entityType] ?? RYMEntityLastfmMap[RYMReleaseType.Album];
+  const apiEntity = RYMEntityLastfmMap[entityType] ?? RYMEntityLastfmMap[ERYMReleaseType.Album];
   const method = `${apiEntity}.getInfo`;
   const url = new URL(BASE_URL);
 

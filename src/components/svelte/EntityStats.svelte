@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { RYMReleaseType } from '@/helpers/enums';
+  import { ERYMReleaseType } from '@/helpers/enums';
   import * as utils from '@/helpers/utils';
   import {
     storageGet,
@@ -17,10 +17,10 @@
   import ListStats from '@/components/svelte/ListStats.svelte';
 
   interface Props {
-    config: ProfileOptions;
+    config: AddonOptions;
     entityId: string;
     entityTitle: string;
-    entityType: RYMReleaseType;
+    entityType: ERYMReleaseType;
     artistNames: RYMArtistNames;
     moduleName: string;
   }
@@ -65,7 +65,7 @@
       options.add(entityTitleDeburred());
     }
 
-    if (entityType === RYMReleaseType.Album) {
+    if (entityType === ERYMReleaseType.Album) {
       const cleanupReleaseEditionValue = cleanupReleaseEdition(entityTitle);
       if (!options.has(cleanupReleaseEditionValue)) {
         result.push({

@@ -1,26 +1,18 @@
 import { mount } from 'svelte';
-import { getLastfmUserName } from '@/helpers/storageUtils';
-
+import { get } from 'svelte/store';
 import TopArtists from './TopArtists.svelte';
 import errorMessages from './errorMessages.json';
 import './topArtists.css';
+import type { RenderSettings } from '@/helpers/renderContent';
 
 const PROFILE_CONTAINER_SELECTOR = '.bubble_header.profile_header + .bubble_content';
 
-let config: ProfileOptions;
-
-export async function render(_config: ProfileOptions) {
-  config = _config;
-  if (!config) return;
+export async function render(settings: RenderSettings) {
+  const { configStore, context } = settings;
+  const config = get(configStore);
 
   if (!config.lastfmApiKey) {
     console.warn(errorMessages.noApiKey);
-    return;
-  }
-
-  const userName = config.userName || await getLastfmUserName();
-  if (!userName) {
-    console.warn(errorMessages.noUserName);
     return;
   }
 
@@ -30,11 +22,15 @@ export async function render(_config: ProfileOptions) {
 
   mount(TopArtists, {
     target: mountPoint,
-    props: { config, userName },
+    props: {
+      configStore,
+      context: context!,
+    },
   });
 }
 
 export default {
   render,
   targetSelectors: [PROFILE_CONTAINER_SELECTOR],
+  order: 1,
 };

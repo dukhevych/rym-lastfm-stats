@@ -1,6 +1,6 @@
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
-import { isMyProfile } from '@/helpers/rym-dom';
+import { getIsMyProfile } from '@/helpers/rym-dom';
 import { getDirectInnerText } from '@/helpers/dom';
 import { ERYMOwnershipStatus, ERYMOwnershipAltText, ERYMFormat } from '@/helpers/enums';
 import { RecordsAPI } from '@/helpers/records-api';
@@ -8,7 +8,7 @@ import { normalizeForSearch } from '@/helpers/string';
 
 (async function () {
   window.addEventListener('load', async () => {
-    if (!isMyProfile()) return;
+    if (!getIsMyProfile()) return;
 
     const recentItems = Array.from(document.querySelectorAll('#musicrecent tr[id^="page_catalog_item_"]'));
 

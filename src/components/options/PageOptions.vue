@@ -145,7 +145,7 @@
 
     <main class="flex flex-col px-2">
       <div class="mx-auto w-full max-w-[1024px]">
-        <nav>
+        <!-- <nav>
           <ul>
             <li>
               <a href="#" @click.prevent="switchTab('status')">Status</a>
@@ -157,7 +157,7 @@
               <a href="#" @click.prevent="switchTab('other')">Other</a>
             </li>
           </ul>
-        </nav>
+        </nav> -->
 
         <div data-tabs>
           <div data-tab="status">
@@ -208,9 +208,9 @@
               </div>
             </div>
           </div>
-          <div data-tab="profile">
+          <!-- <div data-tab="profile">
 
-          </div>
+          </div> -->
         </div>
 
 
@@ -400,7 +400,7 @@
 
             <!-- RECENT TRACKS -->
             <FormCheckbox
-              v-model="options.recentTracks"
+              v-model="options.profileRecentTracks"
               name="recentTracks"
               label="Recent tracks"
             />
@@ -412,14 +412,14 @@
               :label="`Recent tracks limit (${constants.RECENT_TRACKS_LIMIT_MIN}-${constants.RECENT_TRACKS_LIMIT_MAX})`"
               :min="constants.RECENT_TRACKS_LIMIT_MIN"
               :max="constants.RECENT_TRACKS_LIMIT_MAX"
-              :disabled="options.recentTracks === false"
+              :disabled="options.profileRecentTracks === false"
             />
 
             <FormSeparator />
 
             <!-- TOP ALBUMS -->
             <FormCheckbox
-              v-model="options.topAlbums"
+              v-model="options.profileTopAlbums"
               name="topAlbums"
               label="Top albums"
             />
@@ -428,7 +428,7 @@
 
             <!-- TOP ARTISTS -->
             <FormCheckbox
-              v-model="options.topArtists"
+              v-model="options.profileTopArtists"
               name="topArtists"
               label="Top artists"
             />
@@ -440,7 +440,7 @@
               :label="`Top artists limit (${constants.TOP_ARTISTS_LIMIT_MIN}-${constants.TOP_ARTISTS_LIMIT_MAX})`"
               :min="constants.TOP_ARTISTS_LIMIT_MIN"
               :max="constants.TOP_ARTISTS_LIMIT_MAX"
-              :disabled="options.topArtists === false"
+              :disabled="options.profileTopArtists === false"
             />
             <!--
             <div style="--hue-start: 35; --hue-end: 70">
@@ -474,16 +474,16 @@
 
           <!-- RATINGS -->
           <FormFieldset
-            title="RYM Ratings"
+            title="Display my RYM Ratings"
           >
             <FormCheckbox
-              v-model="options.charts_userRating"
+              v-model="options.chartsUserRating"
               name="chartRatings"
               label="Show my ratings on Charts"
             />
 
             <FormCheckbox
-              v-model="options.list_userRating"
+              v-model="options.listUserRating"
               name="listRatings"
               label="Show my ratings on Lists"
             />
@@ -651,6 +651,7 @@ import {
   storageRemove,
   getSyncedUserData,
   getSyncedOptions,
+  updateSyncedOptions,
 } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 
@@ -706,7 +707,7 @@ const submit = async () => {
     }
   });
 
-  await storageSet(newConfig);
+  await updateSyncedOptions(newConfig);
 
   config.value = newConfig;
   saved.value = true;

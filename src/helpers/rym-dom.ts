@@ -46,7 +46,7 @@ export function isMyCollection() {
   return getRYMUsername() === urlUsername;
 };
 
-export function isMyProfile() {
+export function getIsMyProfile() {
   const currentUrl = window.location.href;
   const [, urlUsername] = currentUrl.match(/\/~([^/?#]+)/) || [];
   if (!urlUsername) return false;

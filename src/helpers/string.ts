@@ -2,7 +2,7 @@ import { toArabic } from 'roman-numerals';
 import { remove as removeDiacritics } from 'diacritics';
 
 import * as constants from '@/helpers/constants';
-import { RYMEntityCode } from '@/helpers/enums';
+import { ERYMEntityCode } from '@/helpers/enums';
 
 const WORD_NUMBERS: Record<string, number> = {
   zero: 0, one: 1, two: 2, three: 3, four: 4,
@@ -124,9 +124,9 @@ export function generateSearchUrl({
     url += `searchterm=${searchterm}`;
   }
 
-  if (trackTitle) url += `&searchtype=${RYMEntityCode.Song}`;
-  else if (releaseTitle) url += `&searchtype=${RYMEntityCode.Release}`;
-  else if (artist) url += `&searchtype=${RYMEntityCode.Artist}`;
+  if (trackTitle) url += `&searchtype=${ERYMEntityCode.Song}`;
+  else if (releaseTitle) url += `&searchtype=${ERYMEntityCode.Release}`;
+  else if (artist) url += `&searchtype=${ERYMEntityCode.Artist}`;
 
   // Strict search results are provided by this addon and are not a part of RYM functionality
   if (strictSearch) url += '&strict=true';
@@ -304,4 +304,8 @@ export function getReleaseTitleExtras(value: string): ReleaseTitleExtras {
       return memoize('noSuffixNormalized', () => normalizeForSearch(this.noSuffix));
     },
   };
+}
+
+export function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }

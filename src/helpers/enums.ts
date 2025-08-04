@@ -22,21 +22,31 @@ export enum ERYMFormat {
   Multiple = 'Multiple',
   EightTrack = '8-Track',
   Other = 'Other',
-};
+}
 
-export enum RYMEntityCode {
+export enum ERYMEntityCode {
   Artist = 'a',
   Release = 'l',
   Song = 'z',
+  // VARelease = 'y',
+  // Label = 'b',
+  // Genre = 'h',
+  // User = 'u',
+  // List = 's',
 }
 
-export enum RYMEntityType {
+export enum ERYMEntityType {
   Artist = 'artist',
   Release = 'release',
   Song = 'song',
+  // VARelease = 'v/a release',
+  // Label = 'label',
+  // Genre = 'genre',
+  // User = 'user',
+  // List = 'list',
 }
 
-export enum RYMDiscographyType {
+export enum ERYMDiscographyType {
   Album = 's',
   LiveAlbum = 'l',
   EP = 'e',
@@ -47,7 +57,7 @@ export enum RYMDiscographyType {
   AdditionalRelease = 'x',
 }
 
-export enum RYMReleaseType {
+export enum ERYMReleaseType {
   Album = 'album',
   Single = 'single',
   MusicVideo = 'music video',

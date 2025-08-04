@@ -43,10 +43,10 @@ export function getReleaseTitle(parentEl: HTMLElement): string {
     .join('');
 }
 
-export function getReleaseType(parentEl: HTMLElement): RYMReleaseType | null {
+export function getReleaseType(parentEl: HTMLElement): ERYMReleaseType | null {
   const typeCell = parentEl.querySelector('tr:nth-child(2) td');
   if (!typeCell || !typeCell.textContent) return null;
-  return typeCell.textContent.toLowerCase().split(', ')[0] as RYMReleaseType;
+  return typeCell.textContent.toLowerCase().split(', ')[0] as ERYMReleaseType;
 }
 
 export function getReleaseId(parentEl: HTMLElement): string {

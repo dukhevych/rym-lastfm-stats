@@ -85,12 +85,7 @@
   [data-element="rymstats-track-item-date"] {
     color: var(--clr-accent);
 
-    &:before {
-      content: attr(data-label);
-    }
-
     svg {
-      display: none;
       width: 12px;
       height: 12px;
       opacity: 1;
@@ -211,9 +206,9 @@
   }
 
   &.is-now-playing {
-    [data-element="rymstats-track-item-date"] svg {
+    /* [data-element="rymstats-track-item-date"] svg {
       display: inline;
-    }
+    } */
 
     [data-element="rymstats-track-artbox"] {
       border-radius: 50%;
@@ -338,12 +333,11 @@ html[data-scheme="light"] {
   position: relative;
   margin-top: .4em;
   margin-bottom: .4em;
+  min-height: 162px;
 
   & > *:not(.loader, .btn-bg-switcher) {
-    left: -9999px;
-    right: -9999px;
-    opacity: 0;
-    transform: translateX(-20px);
+    /* opacity: 0;
+    transform: translateX(-20px); */
     transition: all .15s ease-in-out;
     transition-property: opacity, transform;
   }
@@ -365,10 +359,8 @@ html[data-scheme="light"] {
 
   &.is-loaded {
     & > *:not(.loader, .btn-bg-switcher) {
-      left: auto;
-      right: auto;
-      opacity: 1;
-      transform: translateX(0);
+      /* opacity: 1;
+      transform: translateX(0); */
     }
   }
 
@@ -450,9 +442,9 @@ html[data-scheme="dark"] {
   --color: #fff;
   background-color: var(--bg-color) !important;
   color: var(--color) !important;
-  margin-right: 0;
   transition: background-color 0.3s ease-out, color 0.3s ease-out;
   border: 2px solid color-mix(in lab, var(--bg-color) 80%, white);
+  margin-right: 0;
 
   &:hover {
     background-color: var(--bg-color-hover) !important;
@@ -479,11 +471,20 @@ html[data-scheme="dark"] {
   }
 }
 
+.btn-settings {
+  color: var(--color) !important;
+  transition: color 0.3s ease-out;
+}
+
 html[data-scheme="light"] {
   .btn.btn-lastfm,
   .btn.btn-profile {
     --bg-color: var(--clr-light-accent);
     --color: var(--clr-light-accent-contrast);
+  }
+
+  .btn-settings {
+    --color: var(--clr-light-accent);
   }
 }
 
@@ -492,6 +493,10 @@ html[data-scheme="dark"] {
   .btn.btn-profile {
     --bg-color: var(--clr-dark-accent);
     --color: var(--clr-dark-accent-contrast);
+  }
+
+  .btn-settings {
+    --color: var(--clr-dark-accent);
   }
 }
 
@@ -640,7 +645,7 @@ html[data-scheme="dark"] {
 
 .btn-bg-switcher {
   position: absolute;
-  top: 0;
+  bottom: 0;
   right: 0;
   padding: 3px;
   width: 30px;
@@ -738,25 +743,28 @@ html[data-scheme="dark"] {
   @media (pointer: fine) and (hover: hover) {
     .btn-toggle-history-pinned,
     .btn-toggle-polling {
-      position: relative;
+      position: absolute;
+      left: 50%;
       opacity: 0;
       transition-duration: 0.15s;
       transition-property: opacity, transform;
     }
 
     .btn-toggle-history-pinned {
-      transform: translateY(10px);
+      transform: translateX(-50%) translateY(10px);
+      bottom: calc(100% + 5px);
     }
 
     .btn-toggle-polling {
-      transform: translateY(-10px);
+      transform: translateX(-50%) translateY(-10px);
+      top: calc(100% + 5px);
     }
 
     &:hover {
       .btn-toggle-history-pinned,
       .btn-toggle-polling {
         opacity: 0.5;
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
 
         &:hover {
           opacity: 1;

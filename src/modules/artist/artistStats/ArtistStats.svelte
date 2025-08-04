@@ -15,7 +15,7 @@
   import ListStats from '@/components/svelte/ListStats.svelte';
 
   interface Props {
-    config: ProfileOptions;
+    config: AddonOptions;
     artistId: string;
     artistName: string;
     artistNameLocalized: string;

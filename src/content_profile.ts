@@ -1,40 +1,47 @@
 import profile, { targetSelectors } from '@/modules/profile';
+import { writable, get } from 'svelte/store';
 import { renderContent } from '@/helpers/renderContent';
-import { initColorSchemeDetection, isMyProfile, detectLastfmUserName } from '@/helpers/rym-dom';
+import { initColorSchemeDetection, getIsMyProfile, detectLastfmUserName } from '@/helpers/rym-dom';
 import { checkDOMCondition, waitForDOMReady } from '@/helpers/dom';
 import { initSprite } from '@/helpers/sprite';
-import { getFullConfig } from '@/helpers/storageUtils';
+import errorMessages from '@/modules/profile/errorMessages.json';
+import { getFullConfig, getLastfmUserName, storageGet } from '@/helpers/storageUtils';
 import '@/assets/styles/common.css';
 
 (async function () {
   initColorSchemeDetection();
-  await initSprite();
 
-  const config = await getFullConfig();
+  const [configStore, rymSyncTimestamp] = await Promise.all([
+    writable(await getFullConfig()),
+    storageGet('rymSyncTimestamp', 'local'),
+    initSprite(),
+    checkDOMCondition(targetSelectors),
+  ]);
 
-  await checkDOMCondition(targetSelectors);
-  const isMyProfileValue = isMyProfile();
+  const context: Record<string, any> = {
+    isMyProfile: getIsMyProfile(),
+    rymSyncTimestamp,
+  };
 
-  if (isMyProfileValue) {
-    await renderContent(profile, {
-      ...config,
-      isMyProfile: true,
-    }, 'profile');
+  let userName: string | null = null;
+
+  if (context.isMyProfile) {
+    userName = await getLastfmUserName();
+  } else {
+    await waitForDOMReady();
+    userName = detectLastfmUserName();
+  }
+
+  if (!userName) {
+    console.warn(errorMessages.noUserName);
     return;
   }
 
-  // Wait for the full profile page to load
-  // This is necessary because last.fm link can be added anywhere on the page
-  await waitForDOMReady();
+  context.userName = userName;
 
-  // Parse links on the page to find the last.fm username
-  const userName = detectLastfmUserName();
-
-  if (userName) {
-    await renderContent(profile, {
-      ...config,
-      userName,
-      isMyProfile: isMyProfileValue,
-    }, 'profile');
-  }
+  await renderContent(profile, {
+    configStore,
+    moduleName: 'profile',
+    context,
+  });
 })();

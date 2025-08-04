@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .env.local
 src/helpers/*.csv
+
+src/generated/moduleTypes.d.ts
