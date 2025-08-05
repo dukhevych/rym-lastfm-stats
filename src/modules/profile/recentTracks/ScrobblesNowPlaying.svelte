@@ -264,6 +264,66 @@ $effect(() => {
 });
 </script>
 
+{#if isLoaded}
+<DialogBase
+  bind:visible={settingsDialogVisible}
+  title="Widget settings"
+  >
+  <form onsubmit={handleSettingsSubmit} class="flex flex-col gap-4 p-6">
+    <label class="flex gap-2">
+      <input
+        type="checkbox"
+        id="rym-play-history-hide"
+        name="rym-play-history-hide"
+        bind:checked={innerConfig.rymPlayHistoryHide}
+      />
+      <strong>Hide original RYM's "Play History"</strong>
+    </label>
+
+    <label class="flex gap-2">
+      <input
+        type="checkbox"
+        id="recent-tracks-polling-enabled"
+        name="recent-tracks-polling-enabled"
+        bind:checked={innerConfig.recentTracksPollingEnabled}
+      />
+      <strong>Auto update (every {constants.RECENT_TRACKS_INTERVAL_MS / 1000} seconds)</strong>
+    </label>
+
+    <label class="flex flex-col gap-2">
+      <strong>"Disc rotation" animation</strong>
+
+      <select
+        class="rounded-md border border-gray-300 p-2"
+        bind:value={innerConfig.recentTracksAnimation}
+      >
+        {#each settingsAnimationOptions() as option}
+          <option value={option.value}>{option.label}</option>
+        {/each}
+      </select>
+    </label>
+
+    <label class="flex flex-col gap-2">
+      <strong>Background style</strong>
+
+      <select
+        class="rounded-md border border-gray-300 p-2"
+        bind:value={innerConfig.recentTracksBackground}
+      >
+        {#each settingsBackgroundOptions() as title}
+          <option value={title.value}>{title.label}</option>
+        {/each}
+      </select>
+    </label>
+
+    <div class="flex justify-end pt-4 gap-4">
+      <button type="button" class="link-alike" onclick={() => settingsDialogVisible = false}>Cancel</button>
+      <button type="submit" class="btn blue_btn btn_small">Save</button>
+    </div>
+  </form>
+</DialogBase>
+{/if}
+
 <div
   class={containerClasses()}
   style={track.coverExtraLargeUrl && `--bg-image: url(${track.coverExtraLargeUrl})`}
@@ -471,65 +531,6 @@ $effect(() => {
       <use xlink:href="#svg-settings-symbol"></use>
     </svg>
   </button>
-
-  <DialogBase
-    bind:visible={settingsDialogVisible}
-    title="Widget settings"
-  >
-    <form onsubmit={handleSettingsSubmit} class="flex flex-col gap-4 p-6">
-      <label class="flex gap-2">
-        <input
-          type="checkbox"
-          id="rym-play-history-hide"
-          name="rym-play-history-hide"
-          bind:checked={innerConfig.rymPlayHistoryHide}
-        />
-        <strong>Hide original RYM's "Play History"</strong>
-      </label>
-
-      <label class="flex gap-2">
-        <input
-          type="checkbox"
-          id="recent-tracks-polling-enabled"
-          name="recent-tracks-polling-enabled"
-          bind:checked={innerConfig.recentTracksPollingEnabled}
-        />
-        <strong>Auto update (every {constants.RECENT_TRACKS_INTERVAL_MS / 1000} seconds)</strong>
-      </label>
-
-      <label class="flex flex-col gap-2">
-        <strong>"Disc rotation" animation</strong>
-
-        <select
-          class="rounded-md border border-gray-300 p-2"
-          bind:value={innerConfig.recentTracksAnimation}
-        >
-          {#each settingsAnimationOptions() as option}
-            <option value={option.value}>{option.label}</option>
-          {/each}
-        </select>
-      </label>
-
-      <label class="flex flex-col gap-2">
-        <strong>Background style</strong>
-
-        <select
-          class="rounded-md border border-gray-300 p-2"
-          bind:value={innerConfig.recentTracksBackground}
-        >
-          {#each settingsBackgroundOptions() as title}
-            <option value={title.value}>{title.label}</option>
-          {/each}
-        </select>
-      </label>
-
-      <div class="flex justify-end pt-4 gap-4">
-        <button type="button" class="link-alike" onclick={() => settingsDialogVisible = false}>Cancel</button>
-        <button type="submit" class="btn blue_btn btn_small">Save</button>
-      </div>
-    </form>
-  </DialogBase>
-
   {/if}
   <button
     class="btn-bg-switcher"

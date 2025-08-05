@@ -147,9 +147,13 @@ async function loadRecentTracks() {
         userName: context.userName,
       }
     }, 'local');
+
+    failedToFetch = false;
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name !== 'AbortError') {
-      failedToFetch = true;
+      if (recentTracks.length === 0) {
+        failedToFetch = true;
+      }
     }
   }
 };

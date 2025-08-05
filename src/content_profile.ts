@@ -28,8 +28,12 @@ import { getFullConfig, getLastfmUserName, storageGet } from '@/helpers/storageU
   if (context.isMyProfile) {
     userName = await getLastfmUserName();
   } else {
-    await waitForDOMReady();
     userName = detectLastfmUserName();
+
+    if (!userName) {
+      await waitForDOMReady();
+      userName = detectLastfmUserName();
+    }
   }
 
   if (!userName) {

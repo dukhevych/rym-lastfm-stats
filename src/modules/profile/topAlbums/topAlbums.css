@@ -191,7 +191,7 @@ html[data-scheme="light"] {
       background: rgba(255,255,255,.5);
     }
     .album-image::after {
-      background-image: linear-gradient(182deg,transparent 0,rgba(255,255,255,.55) 70%,rgba(255,255,255,.9));
+      background-image: linear-gradient(182deg,transparent 0,rgba(255,255,255,.75) 70%,rgba(255,255,255,.95));
     }
      .album-details {
       text-shadow: 1px 1px 1px rgba(255,255,255,.4), 0px 0px 5px rgba(0,0,0,.5);
