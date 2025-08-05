@@ -71,6 +71,21 @@ export default [
     },
     rules: {
       ...vuePlugin.configs['flat/recommended'].rules,
+      'max-len': 'off',
+      'vue/max-len': ['warn', {
+        code: 200,
+        template: 300,
+        comments: 120,
+        ignorePattern: '',
+        ignoreComments: false,
+        ignoreTrailingComments: false,
+        ignoreUrls: true,
+        ignoreStrings: true,
+        ignoreTemplateLiterals: true,
+        ignoreRegExpLiterals: true,
+        ignoreHTMLAttributeValues: true,
+        ignoreHTMLTextContents: true,
+      }],
     },
   },
 
