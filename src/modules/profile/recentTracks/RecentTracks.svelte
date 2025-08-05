@@ -2,16 +2,18 @@
 
 <script lang="ts">
 import { onDestroy } from 'svelte';
-import { usePolling } from '@/composables/usePolling';
-import * as utils from '@/helpers/utils';
-import { getImageColors, getColorsMap } from '@/helpers/colors';
-import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
-import * as constants from '@/helpers/constants';
-import * as api from '@/api';
 
-import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
-import ScrobblesHistory from './ScrobblesHistory.svelte';
+import * as api from '@/api';
+import { usePolling } from '@/composables/usePolling';
+import { getImageColors, getColorsMap } from '@/helpers/colors';
+import * as constants from '@/helpers/constants';
+import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
+import * as utils from '@/helpers/utils';
+
 import errorMessages from './errorMessages.json';
+import ScrobblesHistory from './ScrobblesHistory.svelte';
+import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
+
 import type { TrackDataNormalized } from './types';
 import type { Writable } from 'svelte/store';
 
@@ -38,7 +40,6 @@ const isScrobblesHistoryPinned = $derived(() => $configStore.recentTracksShowOnL
 let abortController: AbortController = new AbortController();
 let failedToFetch: boolean = $state(false);
 let colors: VibrantUiColors | null = $state(null);
-let isLoaded: boolean = $state(false);
 let recentTracks = $state<TrackDataNormalized[]>([]);
 let recentTracksTimestamp = $state<number>(0);
 
@@ -75,30 +76,28 @@ async function init() {
     await loadRecentTracks();
   }
 
-  isLoaded = true;
-
   if (isScrobblesPollingEnabled()) {
     polling.start();
   }
 }
 
-async function onPollingToggle() {
-  await Promise.all([
-    updateSyncedOptions({
-      recentTracksPollingEnabled: !isScrobblesPollingEnabled(),
-    }),
-    configStore.update((config) => ({
-      ...config,
-      recentTracksPollingEnabled: !isScrobblesPollingEnabled(),
-    })),
-  ])
+// async function onPollingToggle() {
+//   await Promise.all([
+//     updateSyncedOptions({
+//       recentTracksPollingEnabled: !isScrobblesPollingEnabled(),
+//     }),
+//     configStore.update((config) => ({
+//       ...config,
+//       recentTracksPollingEnabled: !isScrobblesPollingEnabled(),
+//     })),
+//   ])
 
-  if (isScrobblesPollingEnabled()) {
-    polling.start();
-  } else {
-    polling.stop();
-  }
-}
+//   if (isScrobblesPollingEnabled()) {
+//     polling.start();
+//   } else {
+//     polling.stop();
+//   }
+// }
 
 onDestroy(() => {
   polling.cleanup();
@@ -221,8 +220,6 @@ init();
     isScrobblesHistoryPinned={isScrobblesHistoryPinned()}
     onToggleScrobblesHistory={onToggleScrobblesHistory}
     onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
-    onPollingToggle={onPollingToggle}
-    isScrobblesPollingEnabled={isScrobblesPollingEnabled()}
     pollingProgress={$progress}
   />
   <ScrobblesHistory

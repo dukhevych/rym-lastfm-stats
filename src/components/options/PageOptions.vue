@@ -54,7 +54,7 @@
           >Report issue</a>
 
           <div
-            v-if="isLoggedIn"
+            v-if="isLoggedIn && userData"
             class="flex items-center gap-2"
           >
             <a
@@ -99,7 +99,6 @@
                   In progress...
                 </template>
                 <template v-else>
-                  <!-- eslint-disable max-len -->
                   <svg
                     fill="currentColor"
                     viewBox="0 0 32 32"
@@ -107,7 +106,6 @@
                   >
                     <path d="M14.131 22.948l-1.172-3.193c0 0-1.912 2.131-4.771 2.131-2.537 0-4.333-2.203-4.333-5.729 0-4.511 2.276-6.125 4.515-6.125 3.224 0 4.245 2.089 5.125 4.772l1.161 3.667c1.161 3.561 3.365 6.421 9.713 6.421 4.548 0 7.631-1.391 7.631-5.068 0-2.968-1.697-4.511-4.844-5.244l-2.344-0.511c-1.624-0.371-2.104-1.032-2.104-2.131 0-1.249 0.985-1.984 2.604-1.984 1.767 0 2.704 0.661 2.865 2.24l3.661-0.444c-0.297-3.301-2.584-4.656-6.323-4.656-3.308 0-6.532 1.251-6.532 5.245 0 2.5 1.204 4.077 4.245 4.807l2.484 0.589c1.865 0.443 2.484 1.224 2.484 2.287 0 1.359-1.323 1.921-3.828 1.921-3.703 0-5.244-1.943-6.124-4.625l-1.204-3.667c-1.541-4.765-4.005-6.531-8.891-6.531-5.287-0.016-8.151 3.385-8.151 9.192 0 5.573 2.864 8.595 8.005 8.595 4.14 0 6.125-1.943 6.125-1.943z" />
                   </svg>
-                  <!-- eslint-enable max-len -->
                   <span>Sign in</span>
                 </template>
               </button>
@@ -296,7 +294,6 @@
             v-if="!userData || !hasApiKey"
             class="flex items-center gap-3"
           >
-            <!-- eslint-disable max-len -->
             <svg
               class="h-6 w-6 shrink-0"
               fill="#cc3300"
@@ -309,24 +306,15 @@
               xml:space="preserve"
             >
               <g>
-                <g>
-                  <g>
-                    <circle
-                      cx="239.904"
-                      cy="314.721"
-                      r="35.878"
-                    />
-                    <path
-                      d="M256.657,127.525h-31.9c-10.557,0-19.125,8.645-19.125,19.125v101.975c0,10.48,8.645,19.125,19.125,19.125h31.9 c10.48,0,19.125-8.645,19.125-19.125V146.65C275.782,136.17,267.138,127.525,256.657,127.525z"
-                    />
-                    <path
-                      d="M239.062,0C106.947,0,0,106.947,0,239.062s106.947,239.062,239.062,239.062c132.115,0,239.062-106.947,239.062-239.062 S371.178,0,239.062,0z M239.292,409.734c-94.171,0-170.595-76.348-170.595-170.596c0-94.248,76.347-170.595,170.595-170.595 s170.595,76.347,170.595,170.595C409.887,333.387,333.464,409.734,239.292,409.734z"
-                    />
-                  </g>
-                </g>
+                <circle
+                  cx="239.904"
+                  cy="314.721"
+                  r="35.878"
+                />
+                <path d="M256.657,127.525h-31.9c-10.557,0-19.125,8.645-19.125,19.125v101.975c0,10.48,8.645,19.125,19.125,19.125h31.9 c10.48,0,19.125-8.645,19.125-19.125V146.65C275.782,136.17,267.138,127.525,256.657,127.525z" />
+                <path d="M239.062,0C106.947,0,0,106.947,0,239.062s106.947,239.062,239.062,239.062c132.115,0,239.062-106.947,239.062-239.062 S371.178,0,239.062,0z M239.292,409.734c-94.171,0-170.595-76.348-170.595-170.596c0-94.248,76.347-170.595,170.595-170.595 s170.595,76.347,170.595,170.595C409.887,333.387,333.464,409.734,239.292,409.734z" />
               </g>
             </svg>
-            <!-- eslint-enable max-len -->
             <p>
               To enable advanced features for your <strong>RYM Profile</strong> please
               <a
@@ -610,15 +598,18 @@
   </div>
 </template>
 
-<script setup>
-import browser from 'webextension-polyfill';
-import { ref, reactive, watch, computed } from 'vue';
+<script setup lang="ts">
 import { formatDistanceToNow } from 'date-fns';
+import { ref, reactive, watch, computed } from 'vue';
+import browser from 'webextension-polyfill';
 
 // HELPERS
-import { RecordsAPI } from '@/helpers/records-api';
-import * as utils from '@/helpers/utils';
+import FormCheckbox from '@/components/options/FormCheckbox.vue';
+import FormFieldset from '@/components/options/FormFieldset.vue';
+import FormInput from '@/components/options/FormInput.vue';
 import * as api from '@/helpers/api';
+import * as constants from '@/helpers/constants';
+import { RecordsAPI } from '@/helpers/records-api';
 import {
   storageGet,
   storageSet,
@@ -627,12 +618,10 @@ import {
   getSyncedOptions,
   updateSyncedOptions,
 } from '@/helpers/storageUtils';
-import * as constants from '@/helpers/constants';
+import * as utils from '@/helpers/utils';
 
 // COMPONENTS
-import FormInput from '@/components/options/FormInput.vue';
-import FormCheckbox from '@/components/options/FormCheckbox.vue';
-import FormFieldset from '@/components/options/FormFieldset.vue';
+
 import FormRange from './FormRange.vue';
 import FormSeparator from './FormSeparator.vue';
 
@@ -651,32 +640,34 @@ const fallbackUsername = ref('');
 
 // STATE
 const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
-const config = ref(null);
-const userData = ref(null);
+const config = ref<AddonOptions>();
+const userData = ref<UserData>();
 const isLoggedIn = computed(() => {
   return userData.value && userData.value.name;
 });
-const rymSyncTimestamp = ref(null);
+const rymSyncTimestamp = ref<number>();
 
 const lastfmApiInputType = ref('password');
 
-function handleApiKeyFocus(e) {
-  e.target.select();
+function handleApiKeyFocus(e: Event) {
+  (e.target as HTMLInputElement).select();
   lastfmApiInputType.value = 'text';
 }
 
-function handleApiKeyBlur(e) {
-  e.target.value = e.target.value.trim();
+function handleApiKeyBlur(e: Event) {
+  (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.trim();
   lastfmApiInputType.value = 'password';
 }
 
-const dbRecordsQty = ref(null);
+const dbRecordsQty = ref<number>();
+
+let submitTimer: NodeJS.Timeout | null = null;
 
 const submit = async () => {
   const newConfig = JSON.parse(JSON.stringify(options));
 
   Object.keys(newConfig).forEach((key) => {
-    if (newConfig[key] === config.value[key]) {
+    if (config.value && newConfig[key] === config.value[key as keyof AddonOptions]) {
       delete newConfig[key];
     }
   });
@@ -685,10 +676,12 @@ const submit = async () => {
 
   config.value = newConfig;
   saved.value = true;
-  if (submit.timer) {
-    clearTimeout(submit.timer);
+
+  if (submitTimer) {
+    clearTimeout(submitTimer);
   }
-  submit.timer = setTimeout(() => {
+
+  submitTimer = setTimeout(() => {
     if (!dirty.value) {
       saved.value = false;
     }
@@ -733,10 +726,12 @@ const openAuthPage = async () => {
 
     const data = await api.fetchUserData(sessionKey, SYSTEM_API_KEY);
 
+    if (!data) throw new Error('No data returned');
+
     const normalizedData = {
       name: data.name,
       url: data.url,
-      image: data.image[0]?.['#text'],
+      image: data.image?.[0]?.['#text'],
     };
 
     userData.value = normalizedData;
@@ -752,7 +747,7 @@ const openAuthPage = async () => {
   }
 };
 
-const closeModalHandler = (e) => {
+const closeModalHandler = (e: KeyboardEvent) => {
   if (e.key === 'Escape') {
     showModal.value = false;
   }
@@ -817,7 +812,7 @@ const logout = async () => {
   const doConfirm = confirm('Are you sure you want to logout?');
   if (!doConfirm) return;
   await storageRemove('userData');
-  userData.value = null;
+  userData.value = undefined;
 };
 
 const reportIssueUrl = computed(() => {
@@ -833,12 +828,13 @@ const reportIssueUrl = computed(() => {
 });
 
 const fallbackLogin = async () => {
-  const userDataRaw = await api.fetchUserDataByName(fallbackUsername.value, SYSTEM_API_KEY);
+  const userDataRaw = await api.fetchUserDataByName(fallbackUsername.value, SYSTEM_API_KEY!);
+
   if (userDataRaw) {
     const normalizedData = {
       name: userDataRaw.name,
       url: userDataRaw.url,
-      image: userDataRaw.image[0]?.['#text'],
+      image: userDataRaw.image?.[0]?.['#text'],
     };
 
     userData.value = normalizedData;

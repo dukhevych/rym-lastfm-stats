@@ -1,8 +1,11 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+  import { getReleaseInfo, RYMEntityLastfmMap } from '@/api/getReleaseInfo';
+  import DialogBase from '@/components/svelte/DialogBase.svelte';
+  import ListStats from '@/components/svelte/ListStats.svelte';
+  import * as constants from '@/helpers/constants';
   import { ERYMReleaseType } from '@/helpers/enums';
-  import * as utils from '@/helpers/utils';
   import {
     storageGet,
     storageSet,
@@ -10,11 +13,8 @@
     getLastfmUserName,
     generateStorageKey,
   } from '@/helpers/storageUtils';
-  import * as constants from '@/helpers/constants';
-  import { getReleaseInfo, RYMEntityLastfmMap } from '@/api/getReleaseInfo';
   import { deburrLight, cleanupReleaseEdition, cleanupSuffix } from '@/helpers/string';
-  import DialogBase from '@/components/svelte/DialogBase.svelte';
-  import ListStats from '@/components/svelte/ListStats.svelte';
+  import * as utils from '@/helpers/utils';
 
   interface Props {
     config: AddonOptions;
@@ -95,7 +95,7 @@
   let dialogVisible = $state(false);
   let isArtistQueryCached = $state(false);
   let isEntityTitleQueryCached = $state(false);
-  let allFailed = $state(false);
+  // let allFailed = $state(false);
 
   const shouldShowDialog = $derived(() => {
     if (artistNamesFlat().length > 1) {
@@ -130,7 +130,15 @@
   let error = $state<string | null>(null);
   let userName = $state<string | null>(null);
 
-  const entityStatsCacheKey = $derived(() => generateStorageKey(moduleName, 'entityStatsCache', entityId, artistQuery, entityTitleQuery));
+  const entityStatsCacheKey = $derived(() => {
+    return generateStorageKey(
+      moduleName,
+      'entityStatsCache',
+      entityId,
+      artistQuery,
+      entityTitleQuery,
+    );
+  });
   const artistQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'artistQueryCache', entityId));
   const entityTitleQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'entityTitleQueryCache', entityId));
 
@@ -264,9 +272,9 @@
       }
     }
 
-    if (!entityStatsData) {
-      allFailed = true;
-    }
+    // if (!entityStatsData) {
+    //   allFailed = true;
+    // }
   }
 
   async function init() {

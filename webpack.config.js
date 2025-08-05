@@ -1,14 +1,15 @@
+const fs = require('fs');
 const path = require('path');
-const CopyPlugin = require('copy-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
-const glob = require('glob');
-const { VueLoaderPlugin } = require('vue-loader');
+
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const ESLintPlugin = require('eslint-webpack-plugin');
-const { DefinePlugin } = require('webpack');
+const CopyPlugin = require('copy-webpack-plugin');
 const dotenv = require('dotenv');
 const dotenvExpand = require('dotenv-expand');
-const fs = require('fs');
+const ESLintPlugin = require('eslint-webpack-plugin');
+const glob = require('glob');
+const TerserPlugin = require('terser-webpack-plugin');
+const { VueLoaderPlugin } = require('vue-loader');
+const { DefinePlugin } = require('webpack');
 
 const generateManifest = require('./manifest.config.js');
 const packageJson = require('./package.json');
@@ -71,10 +72,6 @@ ${interfaceLines}
   }
 }
 `;
-
-fs.mkdirSync(path.dirname(moduleTypesOutputPath), { recursive: true });
-fs.writeFileSync(moduleTypesOutputPath, moduleToggleInterface);
-console.log('✅ Interface generated at', moduleTypesOutputPath);
 
 fs.mkdirSync(path.dirname(moduleTypesOutputPath), { recursive: true });
 fs.writeFileSync(moduleTypesOutputPath, moduleToggleInterface);
@@ -253,7 +250,7 @@ module.exports = (env) => {
         ],
       }),
       new ESLintPlugin({
-        extensions: ['js', 'ts', 'vue'],
+        extensions: ['js', 'ts', 'vue', 'svelte'],
         configType: 'flat',
         fix: process.env.NODE_ENV === 'production',
         failOnError: true,

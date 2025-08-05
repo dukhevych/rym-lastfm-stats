@@ -53,13 +53,15 @@
 </div>
 
 <script lang="ts">
-import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
-import { generateSearchUrl } from '@/helpers/string';
-import * as constants from '@/helpers/constants';
 import { getTopArtists } from '@/api/getTopArtists';
 import type { TopArtistsPeriod, TopArtist } from '@/api/getTopArtists';
-import type { Writable } from 'svelte/store';
 import TextEffect from '@/components/svelte/TextEffect.svelte';
+import * as constants from '@/helpers/constants';
+import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
+import { generateSearchUrl } from '@/helpers/string';
+
+import type { Writable } from 'svelte/store';
+
 
 interface TopArtistWithPercentage extends TopArtist {
   playcountPercentage: number;
@@ -91,7 +93,9 @@ const playcountRange = $derived(() => maxPlaycount() - minPlaycount());
 const artists = $derived<TopArtistWithPercentage[]>(artistsData.map(artist => ({
   ...artist,
   get playcountPercentage() { return (this.playcount / maxPlaycount()) * 100 },
-  get playcountPercentageAbsolute() { return playcountRange() ? ((this.playcount - minPlaycount()) / playcountRange()) * 100 : 0 },
+  get playcountPercentageAbsolute() {
+    return playcountRange() ? ((this.playcount - minPlaycount()) / playcountRange()) * 100 : 0;
+  },
   get hue() { return Math.trunc(
     hueStart + (1 - this.playcountPercentageAbsolute / 100) * (hueEnd - hueStart)
   )},
@@ -101,7 +105,7 @@ let savedPeriodValue = $state($configStore.topArtistsPeriod);
 let periodValue = $state<TopArtistsPeriod>($configStore.topArtistsPeriod as TopArtistsPeriod);
 const cacheKey = $derived(() => `topArtistsCache_${periodValue}`);
 
-async function loadCache(periodValue: TopArtistsPeriod) {
+async function loadCache() {
   const topArtistsCache: TopArtistsCache | null = await storageGet(cacheKey(), 'local');
 
   if (topArtistsCache && checkCacheValidity(topArtistsCache)) {
@@ -112,11 +116,11 @@ async function loadCache(periodValue: TopArtistsPeriod) {
   }
 }
 
-async function loadTopArtists(periodValue: TopArtistsPeriod) {
+async function loadTopArtists(periodValueValue: TopArtistsPeriod) {
   isLoading = true;
 
   let data: TopArtist[] = [];
-  const topArtistsCache: TopArtistsCache | null = await loadCache(periodValue);
+  const topArtistsCache: TopArtistsCache | null = await loadCache();
 
   if (topArtistsCache) {
     data = topArtistsCache.data;
@@ -124,7 +128,7 @@ async function loadTopArtists(periodValue: TopArtistsPeriod) {
     const topArtistsResponse = await getTopArtists({
       params: {
         username: context.userName,
-        period: periodValue,
+        period: periodValueValue,
         limit: $configStore.topArtistsLimit,
       },
       apiKey: $configStore.lastfmApiKey,
@@ -132,7 +136,7 @@ async function loadTopArtists(periodValue: TopArtistsPeriod) {
     data = topArtistsResponse.topartists.artist;
 
     await storageSet({
-      [`topArtistsCache_${periodValue}`]: {
+      [`topArtistsCache_${periodValueValue}`]: {
         data,
         timestamp: Date.now(),
         userName: context.userName,
@@ -168,8 +172,8 @@ async function init() {
 }
 
 async function handlePeriodChange(event: Event) {
-  const periodValue = (event.target as HTMLSelectElement).value;
-  await loadTopArtists(periodValue as TopArtistsPeriod);
+  const periodValueValue = (event.target as HTMLSelectElement).value;
+  await loadTopArtists(periodValueValue as TopArtistsPeriod);
 }
 
 async function handlePeriodSave() {

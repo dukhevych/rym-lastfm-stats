@@ -51,7 +51,6 @@
 
   async function fadeAnimation() {
     const newText = text;
-    const maxLength = Math.max(displayLetters.length, newText.length);
 
     // First, fade out existing letters
     for (let i = 0; i < displayLetters.length; i++) {
@@ -106,7 +105,7 @@
     displayLetters = newLetters;
   }
 
-  function getLetterStyle(letter: Letter, index: number): string {
+  function getLetterStyle(letter: Letter): string {
     let style = `
       display: inline-block;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -129,7 +128,7 @@
 <span bind:this={containerEl} class="animated-text-container">
   {#each displayLetters as letter, i (i)}
     <span
-      style={getLetterStyle(letter, i)}
+      style={getLetterStyle(letter)}
       class="letter"
     >
       {letter.char === ' ' ? '\u00A0' : letter.char}

@@ -1,6 +1,8 @@
 declare global {
   interface UserData {
     name?: string;
+    image?: string;
+    url?: string;
     // add other properties if needed
   }
 

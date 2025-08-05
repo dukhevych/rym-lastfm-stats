@@ -1,3 +1,4 @@
+import './recentTracks.css';
 import { mount } from 'svelte';
 import RecentTracks from './RecentTracks.svelte';
 import type { RenderSettings } from '@/helpers/renderContent';
@@ -5,7 +6,6 @@ import { get } from 'svelte/store';
 
 import errorMessages from './errorMessages.json';
 
-import './recentTracks.css';
 
 const PARENT_SELECTOR = '.profile_listening_container';
 

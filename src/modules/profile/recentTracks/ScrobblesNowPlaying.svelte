@@ -2,14 +2,16 @@
 
 <script lang="ts">
 import { formatDistanceToNow } from 'date-fns';
-import { RecordsAPI } from '@/helpers/records-api';
-import { ERYMOwnershipStatus } from '@/helpers/enums';
-import { generateSearchUrl, generateSearchHint, cleanupReleaseEdition } from '@/helpers/string';
-import { updateSyncedOptions } from '@/helpers/storageUtils';
-import * as constants from '@/helpers/constants';
-import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
+
 import DialogBase from '@/components/svelte/DialogBase.svelte';
 import TextEffect from '@/components/svelte/TextEffect.svelte';
+import * as constants from '@/helpers/constants';
+import { ERYMOwnershipStatus } from '@/helpers/enums';
+import { RecordsAPI } from '@/helpers/records-api';
+import { updateSyncedOptions } from '@/helpers/storageUtils';
+import { generateSearchUrl, generateSearchHint, cleanupReleaseEdition } from '@/helpers/string';
+import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
+
 import type { Writable } from 'svelte/store';
 
 interface Props {
@@ -20,9 +22,7 @@ interface Props {
   isScrobblesHistoryPinned: boolean;
   onToggleScrobblesHistory: () => void;
   onToggleScrobblesHistoryPinned: () => void;
-  onPollingToggle: () => void;
   pollingProgress: number;
-  isScrobblesPollingEnabled: boolean;
 }
 
 const {
@@ -33,9 +33,7 @@ const {
   isScrobblesHistoryPinned,
   onToggleScrobblesHistory,
   onToggleScrobblesHistoryPinned,
-  onPollingToggle,
   pollingProgress,
-  isScrobblesPollingEnabled,
 }: Props = $props();
 
 let innerConfig = $state({ ...$configStore });
@@ -139,7 +137,9 @@ const formats = $derived(() => {
   return set;
 });
 
-const formatsLabel = $derived(() => Array.from(formats()).map(key => constants.RYMFormatsLabels[key] || key).join(', '));
+const formatsLabel = $derived(() => {
+  return Array.from(formats()).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
+});
 
 const albumNameFallback = $derived(() => track?.albumName ? cleanupReleaseEdition(track.albumName) : '');
 
@@ -371,7 +371,7 @@ $effect(() => {
                 data-element="rymstats-track-rating-stars-filled"
                 style={rating() > 0 ? `width: ${rating() * 10}%` : ''}
               >
-                {#each Array(5) as _, i (i)}
+                {#each Array(5)}
                   <svg viewBox="0 0 24 24"><use xlink:href="#svg-star-symbol"></use></svg>
                 {/each}
               </div>
@@ -379,7 +379,7 @@ $effect(() => {
                 class="stars-empty"
                 data-element="rymstats-track-rating-stars-empty"
               >
-                {#each Array(5) as _, i (i)}
+                {#each Array(5)}
                   <svg viewBox="0 0 24 24"><use xlink:href="#svg-star-symbol"></use></svg>
                 {/each}
               </div>
@@ -493,17 +493,6 @@ $effect(() => {
             <use xlink:href="#svg-playlist-symbol"></use>
           </svg>
         </button>
-
-        <!-- <button
-          class="btn-toggle-icon size-lg btn-toggle-polling"
-          class:is-active={isScrobblesPollingEnabled}
-          aria-label="Toggle scrobbles periodic update"
-          title="Toggle scrobbles periodic update"
-          onclick={onPollingToggle}
-        >
-          <svg><use href="#svg-polling-start-symbol"></use></svg>
-          <svg><use href="#svg-polling-stop-symbol"></use></svg>
-        </button> -->
       </div>
     {/if}
     <a

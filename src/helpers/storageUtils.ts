@@ -72,10 +72,10 @@ export function storageRemove(
 export async function getSyncedOptions() {
   let result;
 
-  result = await storageGet(Object.keys(constants.OPTIONS_DEFAULT), 'local');
+  result = await storageGet(Object.keys(constants.OPTIONS_DEFAULT), 'local') as AddonOptions;
 
   if (!result) {
-    result = await storageGet(Object.keys(constants.OPTIONS_DEFAULT), 'sync');
+    result = await storageGet(Object.keys(constants.OPTIONS_DEFAULT), 'sync') as AddonOptions;
   }
 
   return result;

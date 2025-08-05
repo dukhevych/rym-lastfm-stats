@@ -32,7 +32,7 @@
   class:is-loaded={isLoaded}
   class:is-empty={isLoaded && albums.length === 0}
 >
-  {#each albums as album, index (album.id)}
+  {#each albums as album (album.id)}
     <div class="album-wrapper">
       <div class="album-image">
         <img
@@ -85,11 +85,12 @@
 </div>
 
 <script lang="ts">
-import { generateSearchUrl } from '@/helpers/string';
-import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
-import * as constants from '@/helpers/constants';
 import { getTopAlbums } from '@/api/getTopAlbums';
 import type { TopAlbumsPeriod, TopAlbum } from '@/api/getTopAlbums';
+import * as constants from '@/helpers/constants';
+import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
+import { generateSearchUrl } from '@/helpers/string';
+
 import type { Writable } from 'svelte/store';
 
 interface Props {
@@ -148,7 +149,7 @@ async function loadCache() {
   }
 }
 
-async function loadTopAlbums(periodValue: TopAlbumsPeriod) {
+async function loadTopAlbums(periodValueValue: TopAlbumsPeriod) {
   isLoading = true;
 
   let data: TopAlbum[] = [];
@@ -160,14 +161,14 @@ async function loadTopAlbums(periodValue: TopAlbumsPeriod) {
     const topAlbumsResponse = await getTopAlbums({
       params: {
         username: context.userName,
-        period: periodValue,
+        period: periodValueValue,
       },
       apiKey: $configStore.lastfmApiKey,
     });
     data = topAlbumsResponse.topalbums.album;
 
     await storageSet({
-      [`topAlbumsCache_${periodValue}`]: {
+      [`topAlbumsCache_${periodValueValue}`]: {
         data,
         timestamp: Date.now(),
         userName: context.userName,

@@ -1,7 +1,10 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import * as utils from '@/helpers/utils';
+  import { getArtistInfo } from '@/api/getArtistInfo';
+  import DialogBase from '@/components/svelte/DialogBase.svelte';
+  import ListStats from '@/components/svelte/ListStats.svelte';
+  import * as constants from '@/helpers/constants';
   import {
     storageGet,
     storageSet,
@@ -9,10 +12,7 @@
     getLastfmUserName,
     generateStorageKey,
   } from '@/helpers/storageUtils';
-  import * as constants from '@/helpers/constants';
-  import { getArtistInfo } from '@/api/getArtistInfo';
-  import DialogBase from '@/components/svelte/DialogBase.svelte';
-  import ListStats from '@/components/svelte/ListStats.svelte';
+  import * as utils from '@/helpers/utils';
 
   interface Props {
     config: AddonOptions;
@@ -57,7 +57,7 @@
   let artistQuery = $state<string>('');
   let dialogVisible = $state(false);
   let isArtistQueryCached = $state(false);
-  let allFailed = $state(false);
+  // let allFailed = $state(false);
 
   const shouldShowDialog = $derived(() => artistNamesFlat().length > 1);
 
@@ -116,7 +116,7 @@
     }
   }
 
-  async function loadStats(artistName: string = artistQuery) {
+  async function loadStats(artistNameValue: string = artistQuery) {
     isLoading = true;
 
     let data: Stats | null = null;
@@ -129,7 +129,7 @@
     } else {
       const artistInfoResponse = await getArtistInfo({
         params: {
-          artist: artistName,
+          artist: artistNameValue,
           username: userName,
         },
         apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
@@ -170,9 +170,9 @@
     }, 'local');
   }
 
-  async function handleVariantClick(artistName: string) {
+  async function handleVariantClick(artistNameValue: string) {
     dialogVisible = false;
-    artistQuery = artistName;
+    artistQuery = artistNameValue;
     await updateArtistQueryCache(artistQuery);
     await loadStats();
   }
@@ -193,18 +193,18 @@
   }
 
   async function initStats() {
-    for (const artistName of artistNamesFlat()) {
-      await loadStats(artistName);
+    for (const artistNameValue of artistNamesFlat()) {
+      await loadStats(artistNameValue);
       if (statsData) {
-        await updateArtistQueryCache(artistName);
+        await updateArtistQueryCache(artistNameValue);
         break;
       }
       await utils.wait(300);
     }
 
-    if (!statsData) {
-      allFailed = true;
-    }
+    // if (!statsData) {
+    //   allFailed = true;
+    // }
   }
 
   async function init() {

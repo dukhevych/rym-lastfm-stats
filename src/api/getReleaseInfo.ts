@@ -22,14 +22,6 @@ interface getReleaseInfoOptions {
   entityType: ERYMReleaseType;
 }
 
-interface ReleaseInfoResponse {
-  error?: number;
-  artist: string;
-  album: string;
-  track: string;
-  mbid: string;
-}
-
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
 export async function getReleaseInfo({

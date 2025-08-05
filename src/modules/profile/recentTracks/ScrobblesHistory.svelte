@@ -2,8 +2,9 @@
 
 <script lang="ts">
 import { formatDistanceToNow } from 'date-fns';
-import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
+
 import { generateSearchUrl, generateSearchHint } from '@/helpers/string';
+import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 
 const { scrobbles = [], timestamp, open = true } = $props<{
   scrobbles: TrackDataNormalized[];
@@ -14,14 +15,36 @@ const { scrobbles = [], timestamp, open = true } = $props<{
 const timestampFormatted = $derived(new Date(timestamp).toLocaleString());
 const scrobblesEnriched = $derived(scrobbles.map((scrobble: TrackDataNormalized) => ({
   ...scrobble,
-  timestampFormatted: scrobble.timestamp ? new Date((scrobble.timestamp) * 1000).toLocaleString() : null,
-  timestampRelative: scrobble.timestamp ? formatDistanceToNow(new Date((scrobble.timestamp) * 1000), { addSuffix: true }) : null,
-  searchArtistUrl: generateSearchUrl({ artist: scrobble.artistName }),
-  searchArtistHint: generateSearchHint([scrobble.artistName]),
-  searchAlbumUrl: generateSearchUrl({ artist: scrobble.artistName, releaseTitle: scrobble.albumName }),
-  searchAlbumHint: generateSearchHint([scrobble.artistName, scrobble.albumName]),
-  searchTrackUrl: generateSearchUrl({ artist: scrobble.artistName, releaseTitle: scrobble.albumName, trackTitle: scrobble.trackName }),
-  searchTrackHint: generateSearchHint([scrobble.artistName, scrobble.albumName, scrobble.trackName]),
+  timestampFormatted: scrobble.timestamp
+    ? new Date((scrobble.timestamp) * 1000).toLocaleString()
+    : null,
+  timestampRelative: scrobble.timestamp
+    ? formatDistanceToNow(new Date((scrobble.timestamp) * 1000), { addSuffix: true })
+    : null,
+  searchArtistUrl: generateSearchUrl({
+    artist: scrobble.artistName,
+  }),
+  searchArtistHint: generateSearchHint([
+    scrobble.artistName,
+  ]),
+  searchAlbumUrl: generateSearchUrl({
+    artist: scrobble.artistName,
+    releaseTitle: scrobble.albumName,
+  }),
+  searchAlbumHint: generateSearchHint([
+    scrobble.artistName,
+    scrobble.albumName,
+  ]),
+  searchTrackUrl: generateSearchUrl({
+    artist: scrobble.artistName,
+    releaseTitle: scrobble.albumName,
+    trackTitle: scrobble.trackName,
+  }),
+  searchTrackHint: generateSearchHint([
+    scrobble.artistName,
+    scrobble.albumName,
+    scrobble.trackName,
+  ]),
 })));
 </script>
 

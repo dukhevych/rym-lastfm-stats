@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   content: [
     './src/components/options/**/*.vue',
     './src/components/svelte/**/*.svelte',

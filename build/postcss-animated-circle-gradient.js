@@ -37,7 +37,7 @@ function generateKeyframes(name, colors, thickness, inverted) {
     const isLastStep = index === percentageSteps.length - 1;
 
     const properties = colors.reduce((acc, color, i) => {
-      const name = `--stripe-width-${i + 1}`;
+      const propName = `--stripe-width-${i + 1}`;
       const isFirstColor = i === 0;
 
       let value;
@@ -50,7 +50,7 @@ function generateKeyframes(name, colors, thickness, inverted) {
 
       return {
         ...acc,
-        [name]: value
+        [propName]: value
       };
     }, {});
 
@@ -74,10 +74,10 @@ function generateKeyframes(name, colors, thickness, inverted) {
 
     finalSteps.push({
       key: `${+(step.percentage + 0.01).toFixed(2)}%, ${nextStep.percentage}%`,
-      value: colors.reduce((acc, color, i) => {
+      value: colors.reduce((acc, color, j) => {
         return {
           ...acc,
-          [`--clr-${i + 1}-opacity`]: step.properties[`--stripe-width-${i + 1}`] === startValue ? '1' : '0',
+          [`--clr-${j + 1}-opacity`]: step.properties[`--stripe-width-${j + 1}`] === startValue ? '1' : '0',
         };
       }, {}),
     })
@@ -181,10 +181,16 @@ module.exports = () => {
           currentColors.forEach((c, j) => {
             const stopIndex = j + 1;
             currentColorStops.push(
-              `color-mix(in srgb, ${c} var(--opacity-${gradientIndex}), transparent) calc(var(--stripe-width-${gradientIndex}) + var(--thickness) * ${stopIndex - 1})`
+              `
+                color-mix(in srgb, ${c} var(--opacity-${gradientIndex}), transparent)
+                calc(var(--stripe-width-${gradientIndex}) + var(--thickness) * ${stopIndex - 1})
+              `
             );
             currentColorStops.push(
-              `color-mix(in srgb, ${c} var(--opacity-${gradientIndex}), transparent) calc(var(--stripe-width-${gradientIndex}) + var(--thickness) * ${stopIndex})`
+              `
+                color-mix(in srgb, ${c} var(--opacity-${gradientIndex}), transparent)
+                calc(var(--stripe-width-${gradientIndex}) + var(--thickness) * ${stopIndex})
+              `
             );
           });
 
