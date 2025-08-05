@@ -1,5 +1,5 @@
 import profile, { targetSelectors } from '@/modules/profile';
-import { writable, get } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { renderContent } from '@/helpers/renderContent';
 import { initColorSchemeDetection, getIsMyProfile, detectLastfmUserName } from '@/helpers/rym-dom';
 import { checkDOMCondition, waitForDOMReady } from '@/helpers/dom';

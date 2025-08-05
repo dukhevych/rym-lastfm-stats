@@ -11,6 +11,8 @@ import { getDirectInnerText, createElement as h } from '@/helpers/dom';
 import * as constants from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
 import { ERYMEntityCode } from '@/helpers/enums';
+import type { RenderSettings } from '@/helpers/renderContent';
+import { get } from 'svelte/store';
 
 import './searchStrict.css';
 
@@ -179,9 +181,7 @@ const validationRules: Record<ERYMEntityCode, ValidationRule> = {
   },
 }
 
-async function render(config: AddonOptions) {
-  if (!config) return;
-
+async function render() {
   const urlParams = new URLSearchParams(window.location.search);
   const strict = urlParams.get('strict');
   const searchType = urlParams.get('searchtype') as ERYMEntityCode;

@@ -9,6 +9,7 @@ import { updateSyncedOptions } from '@/helpers/storageUtils';
 import * as constants from '@/helpers/constants';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import DialogBase from '@/components/svelte/DialogBase.svelte';
+import TextEffect from '@/components/svelte/TextEffect.svelte';
 import type { Writable } from 'svelte/store';
 
 interface Props {
@@ -358,7 +359,7 @@ const isNowPlaying = $derived(() => {
                 href="{searchLinks().searchArtistUrl}"
                 title="{searchLinks().searchArtistHint}"
               >
-                {track.artistName}
+                <TextEffect bind:text={track.artistName} animationType="rotate" />
               </a>
             </span>
             <span class="play_history_separator"> - </span>
@@ -367,7 +368,7 @@ const isNowPlaying = $derived(() => {
               data-element="rymstats-track-link"
               href="{searchLinks().searchTrackUrl}"
               title="{searchLinks().searchTrackHint}"
-            >{track.trackName}</a>
+            ><TextEffect bind:text={track.trackName} animationType="rotate" /></a>
           </div>
         </div>
         <div class="custom-from-album" data-element="rymstats-from-album">
@@ -375,7 +376,7 @@ const isNowPlaying = $derived(() => {
           <a
             href="{searchLinks().searchAlbumUrl}"
             title="{searchLinks().searchAlbumHint}"
-          >{track.albumName}</a>
+          ><TextEffect bind:text={track.albumName} animationType="rotate" /></a>
           {/if}
         </div>
       </div>

@@ -12,8 +12,13 @@ import {
   getReleaseType,
   getReleaseId,
 } from '@/modules/release/targets';
+import type { RenderSettings } from '@/helpers/renderContent';
+import { get } from 'svelte/store';
 
-async function render(config: AddonOptions) {
+async function render(settings: RenderSettings) {
+  const { configStore } = settings;
+  const config = get(configStore);
+
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
   if (!parent) {
     console.warn(errorMessages.noParentElement);

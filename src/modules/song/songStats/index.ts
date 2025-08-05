@@ -3,6 +3,8 @@ import { createElement as h } from '@/helpers/dom';
 import EntityStats from '@/components/svelte/EntityStats.svelte';
 import { insertElement } from '@/helpers/dom';
 import { ERYMReleaseType } from '@/helpers/enums';
+import type { RenderSettings } from '@/helpers/renderContent';
+import { get } from 'svelte/store';
 
 import {
   PARENT_SELECTOR,
@@ -12,7 +14,10 @@ import {
   getSongId,
 } from '@/modules/song/targets';
 
-async function render(config: AddonOptions) {
+async function render(settings: RenderSettings) {
+  const { configStore } = settings;
+  const config = get(configStore);
+
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
   if (!parent) {
     console.warn('No parent element found.');

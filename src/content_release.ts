@@ -3,9 +3,16 @@ import { renderContent } from '@/helpers/renderContent';
 import { getFullConfig } from '@/helpers/storageUtils';
 import { initSprite } from '@/helpers/sprite';
 import '@/assets/styles/common.css';
+import { writable } from 'svelte/store';
 
 (async function () {
-  const config = await getFullConfig();
-  await initSprite();
-  await renderContent(release, config, 'release');
+  const [configStore] = await Promise.all([
+    writable(await getFullConfig()),
+    initSprite(),
+  ]);
+
+  await renderContent(release, {
+    configStore,
+    moduleName: 'release',
+  });
 })();
