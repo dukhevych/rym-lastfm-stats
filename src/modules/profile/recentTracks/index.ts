@@ -25,7 +25,7 @@ async function render(settings: RenderSettings) {
   }
 
   if (config.rymPlayHistoryHide) {
-    parent.style.display = 'none';
+    parent.classList.add('is-hidden');
   }
 
   const mountPoint = document.createElement('div');
