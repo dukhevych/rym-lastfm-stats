@@ -40,7 +40,7 @@ export default [
       '@typescript-eslint/no-shadow': 'warn',
       'no-shadow': 'off',
 
-      'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+      'no-console': 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
       'max-len': ['warn', { code: 120 }],
       'no-unreachable': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
