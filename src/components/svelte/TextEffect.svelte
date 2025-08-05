@@ -138,11 +138,6 @@
 </span>
 
 <style>
-  .animated-text-container {
-    font: inherit;
-    color: currentColor;
-  }
-
   .letter {
     transform-origin: center;
   }

@@ -41,7 +41,9 @@
       href={generateSearchUrl({ artist: artist.name })}
       title={artist.name}
     >
-      <span class="artist-name">{artist.name}</span>
+      <span class="artist-name">
+        <TextEffect bind:text={artist.name} animationType="rotate" />
+      </span>
       <span class="artist-scrobbles">{artist.playcount} play{artist.playcount > 1 ? 's' : ''}</span>
     </a>
   {/each}
@@ -57,6 +59,7 @@ import * as constants from '@/helpers/constants';
 import { getTopArtists } from '@/api/getTopArtists';
 import type { TopArtistsPeriod, TopArtist } from '@/api/getTopArtists';
 import type { Writable } from 'svelte/store';
+import TextEffect from '@/components/svelte/TextEffect.svelte';
 
 interface TopArtistWithPercentage extends TopArtist {
   playcountPercentage: number;

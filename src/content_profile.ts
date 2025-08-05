@@ -1,3 +1,4 @@
+import '@/assets/styles/common.css';
 import profile, { targetSelectors } from '@/modules/profile';
 import { writable } from 'svelte/store';
 import { renderContent } from '@/helpers/renderContent';
@@ -6,7 +7,6 @@ import { checkDOMCondition, waitForDOMReady } from '@/helpers/dom';
 import { initSprite } from '@/helpers/sprite';
 import errorMessages from '@/modules/profile/errorMessages.json';
 import { getFullConfig, getLastfmUserName, storageGet } from '@/helpers/storageUtils';
-import '@/assets/styles/common.css';
 
 (async function () {
   initColorSchemeDetection();

@@ -32,10 +32,23 @@
 }
 
 [data-element="rymstats-track-artist-link"],
-[data-element="rymstats-track-link"] {
+[data-element="rymstats-track-link"],
+[data-element="rymstats-track-album-link"] {
   font-weight: bold;
+  position: relative;
 
-  &:hover { text-decoration: underline; }
+  &:after {
+    content: '';
+    border-bottom: 1px solid transparent;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  &:hover:after {
+    border-bottom-color: currentColor;
+  }
 }
 
 [data-element="rymstats-track-item"] {
@@ -44,6 +57,15 @@
   align-items: center;
 
   [data-element="rymstats-track-artbox"] {
+    transition: all .3s ease-out;
+    transform: translateX(0);
+    opacity: 1;
+
+    &.is-transitioning {
+      transform: translateX(-50%);
+      opacity: 0;
+    }
+
     max-width: none;
 
     a {
@@ -195,14 +217,6 @@
     &:has(a):before {
       display: inline;
     }
-
-    a {
-      font-weight: bold;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
   }
 
   &.is-now-playing {
@@ -335,13 +349,6 @@ html[data-scheme="light"] {
   margin-bottom: .4em;
   min-height: 162px;
 
-  & > *:not(.loader, .btn-bg-switcher) {
-    /* opacity: 0;
-    transform: translateX(-20px); */
-    transition: all .15s ease-in-out;
-    transition-property: opacity, transform;
-  }
-
   & > .loader {
     position: absolute;
     top: 50%;
@@ -354,13 +361,6 @@ html[data-scheme="light"] {
     svg {
       width: 100%;
       height: 100%;
-    }
-  }
-
-  &.is-loaded {
-    & > *:not(.loader, .btn-bg-switcher) {
-      /* opacity: 1;
-      transform: translateX(0); */
     }
   }
 
@@ -473,7 +473,26 @@ html[data-scheme="dark"] {
 
 .btn-settings {
   color: var(--color) !important;
-  transition: color 0.3s ease-out;
+  opacity: 0;
+  transition-property: opacity, color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease-out;
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+  top: 0;
+  right: 0;
+  position: absolute;
+
+  &:hover {
+    opacity: 1 !important;
+  }
+}
+
+[data-element="rymstats-track-panel"]:hover {
+  .btn-settings {
+    opacity: .3;
+  }
 }
 
 html[data-scheme="light"] {
@@ -666,10 +685,16 @@ html[data-scheme="dark"] {
     right: 100%;
     transform: translateY(-50%);
     padding-right: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
   }
 
   &:hover {
     opacity: 1 !important;
+
+    &:before {
+      opacity: 1;
+    }
   }
 
   svg {

@@ -246,6 +246,22 @@ const isNowPlaying = $derived(() => {
   if ($configStore.recentTracksAnimation === 'off') return false;
   return track.nowPlaying;
 });
+
+let currentCoverSrc = $state('');
+let isCoverTransitioning = $state(false);
+
+$effect(() => {
+  if (!currentCoverSrc) {
+    currentCoverSrc = track.coverLargeUrl;
+  } else if (track.coverLargeUrl !== currentCoverSrc) {
+    isCoverTransitioning = true;
+    currentCoverSrc = track.coverLargeUrl;
+
+    setTimeout(() => {
+      isCoverTransitioning = false;
+    }, 300);
+  }
+});
 </script>
 
 <div
@@ -260,7 +276,11 @@ const isNowPlaying = $derived(() => {
       class:is-now-playing={isNowPlaying()}
       data-element="rymstats-track-item"
     >
-      <div class="play_history_artbox" data-element="rymstats-track-artbox">
+      <div
+        class="play_history_artbox"
+        data-element="rymstats-track-artbox"
+        class:is-transitioning={isCoverTransitioning}
+      >
         <a
           href="{coverSearchUrl()}"
           title="{coverSearchHint()}"
@@ -269,7 +289,7 @@ const isNowPlaying = $derived(() => {
           <img
             class="play_history_item_art"
             data-element="rymstats-track-item-art"
-            src={track.coverLargeUrl}
+            src={currentCoverSrc}
             alt={`${track.artistName} - ${track.albumName || track.trackName}`}
           />
         </a>
@@ -376,6 +396,7 @@ const isNowPlaying = $derived(() => {
           <a
             href="{searchLinks().searchAlbumUrl}"
             title="{searchLinks().searchAlbumHint}"
+            data-element="rymstats-track-album-link"
           ><TextEffect bind:text={track.albumName} animationType="rotate" /></a>
           {/if}
         </div>
@@ -441,7 +462,7 @@ const isNowPlaying = $derived(() => {
 
   <button
     type="button"
-    class="btn-icon btn-settings absolute top-[0.4em] right-[0.4em]"
+    class="btn-icon btn-settings"
     aria-label="Now Playing settings"
     title="Now Playing settings"
     onclick={() => settingsDialogVisible = true}
@@ -453,7 +474,7 @@ const isNowPlaying = $derived(() => {
 
   <DialogBase
     bind:visible={settingsDialogVisible}
-    title="Now Playing settings"
+    title="Widget settings"
   >
     <form onsubmit={handleSettingsSubmit} class="flex flex-col gap-4 p-6">
       <label class="flex gap-2">

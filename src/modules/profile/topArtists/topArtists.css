@@ -138,15 +138,30 @@
 
 html[data-scheme="light"] {
   .top-artist {
-    background-color: hsl(var(--hue), 50%, 50%);
+    background-color: hsl(var(--hue), 50%, 80%);
+    color: black;
+    border-color: rgba(255, 255, 255, 0.1);
 
     &:hover {
-      background-color: hsl(var(--hue), 55%, 60%);
+      color: black;
+      background-color: hsl(var(--hue), 55%, 90%);
     }
 
     &::after {
       background: rgba(255,255,255,.5);
     }
+
+    .artist-name {
+      text-shadow: 0 1px 1px rgba(255, 255, 255, .5);
+    }
+
+    .artist-scrobbles {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  .top-artists::after {
+    background: rgba(255, 255, 255, .5);
   }
 }
 
