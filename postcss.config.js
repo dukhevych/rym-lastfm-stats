@@ -4,7 +4,7 @@ module.exports = {
   plugins: [
     require('postcss-import'),
     animatedCircleGradient(),
-    require('tailwindcss'),
+    require('@tailwindcss/postcss'),
     require('autoprefixer'),
   ]
 }
