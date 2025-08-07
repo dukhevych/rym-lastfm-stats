@@ -439,7 +439,7 @@ $effect(() => {
                 href="{searchLinks().searchArtistUrl}"
                 title="{searchLinks().searchArtistHint}"
               >
-                <TextEffect bind:text={track.artistName} animationType="rotate" />
+                <TextEffect text={track.artistName} animationType="rotate" />
               </a>
             </span>
             <span class="play_history_separator"> - </span>
@@ -448,7 +448,7 @@ $effect(() => {
               data-element="rymstats-track-link"
               href="{searchLinks().searchTrackUrl}"
               title="{searchLinks().searchTrackHint}"
-            ><TextEffect bind:text={track.trackName} animationType="rotate" /></a>
+            ><TextEffect text={track.trackName} animationType="rotate" /></a>
           </div>
         </div>
         <div class="custom-from-album" data-element="rymstats-from-album">
@@ -457,7 +457,7 @@ $effect(() => {
             href="{searchLinks().searchAlbumUrl}"
             title="{searchLinks().searchAlbumHint}"
             data-element="rymstats-track-album-link"
-          ><TextEffect bind:text={track.albumName} animationType="rotate" /></a>
+          ><TextEffect text={track.albumName} animationType="rotate" /></a>
           {/if}
         </div>
       </div>
