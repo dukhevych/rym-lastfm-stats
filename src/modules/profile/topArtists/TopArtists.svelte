@@ -42,7 +42,7 @@
       title={artist.name}
     >
       <span class="artist-name">
-        <TextEffect bind:text={artist.name} animationType="rotate" />
+        <TextEffect text={artist.name} animationType="rotate" />
       </span>
       <span class="artist-scrobbles">{artist.playcount} play{artist.playcount > 1 ? 's' : ''}</span>
     </a>
@@ -61,7 +61,6 @@ import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/he
 import { generateSearchUrl } from '@/helpers/string';
 
 import type { Writable } from 'svelte/store';
-
 
 interface TopArtistWithPercentage extends TopArtist {
   playcountPercentage: number;

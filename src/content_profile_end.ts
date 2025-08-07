@@ -102,6 +102,8 @@ import { normalizeForSearch } from '@/helpers/string';
       })
     );
 
-    console.log(`[content_profile_end] Added ${addedQty} records, updated ${updatedQty} records`);
+    if (addedQty > 0 || updatedQty > 0) {
+      console.log(`[content_profile_end] Added ${addedQty} records, updated ${updatedQty} records`);
+    }
   });
 })();

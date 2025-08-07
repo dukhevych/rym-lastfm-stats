@@ -3,10 +3,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  let {
-    text = $bindable('Hello World'),
-    animationType = 'fade' // 'fade' or 'rotate'
-  } = $props();
+  interface Props {
+    text: string;
+    animationType: 'fade' | 'rotate';
+  }
+
+  const {
+    text,
+    animationType = 'fade'
+  }: Props = $props();
 
   interface Letter {
     char: string;
@@ -19,7 +24,6 @@
   let displayLetters = $state<Letter[]>([]);
   let previousText = $state('');
 
-  // Watch for text changes
   $effect(() => {
     if (text !== previousText && previousText !== '') {
       animateTextChange();
@@ -27,7 +31,6 @@
     previousText = text;
   });
 
-  // Initialize display letters on mount
   onMount(() => {
     displayLetters = text.split('').map(letter => ({
       char: letter,
@@ -52,23 +55,19 @@
   async function fadeAnimation() {
     const newText = text;
 
-    // First, fade out existing letters
     for (let i = 0; i < displayLetters.length; i++) {
       displayLetters[i].visible = false;
       await new Promise(resolve => setTimeout(resolve, 50));
     }
 
-    // Prepare new letters array
     displayLetters = newText.split('').map(char => ({
       char,
       visible: false,
       rotation: 0
     }));
 
-    // Small delay before fading in
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    // Fade in new letters one by one
     for (let i = 0; i < displayLetters.length; i++) {
       displayLetters[i].visible = true;
       await new Promise(resolve => setTimeout(resolve, 80));
@@ -81,15 +80,12 @@
     const newLength = newText.length;
     const maxLength = Math.max(oldLength, newLength);
 
-    // Step 1: Rotate existing letters randomly
     for (let i = 0; i < oldLength; i++) {
       displayLetters[i].rotation = (Math.random() - 0.5) * 60; // -30 to 30 degrees
     }
 
-    // Wait for rotation animation
     await new Promise(resolve => setTimeout(resolve, 400));
 
-    // Step 2: Replace letters with new text
     const newLetters = [];
 
     for (let i = 0; i < maxLength; i++) {
