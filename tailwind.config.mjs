@@ -1,9 +1,8 @@
 export default {
+  important: true,
   content: [
-    './src/components/options/**/*.vue',
-    './src/components/svelte/**/*.svelte',
-    './src/modules/**/*.svelte',
-    './public/options.html',
+    './src/**/*.{vue,svelte,html,js,ts}',
+    './public/**/*.html',
   ],
   theme: {
     extend: {

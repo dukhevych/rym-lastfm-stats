@@ -1,4 +1,5 @@
-@import 'tailwindcss/utilities';
+@import 'tailwindcss';
+@config "../../../tailwind.config.mjs";
 
 :root {
   --clr-lastfm: #f71414;
@@ -50,7 +51,6 @@ a.clr-user {
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       color: var(--link-text-hover);
-      transform: rotate(calc(360deg / 6));
     }
   }
 }
