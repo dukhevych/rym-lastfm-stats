@@ -229,7 +229,7 @@
             visit your own Profile page or Collection page.
           </p>
           <p>
-            It's recommended to run RYM Sync periodically to keep your data up to date in case of any de-sync.
+            It's recommended to run RYM Sync periodically to keep your data up to date in case of any de-sync or metadata changes on Rateyourmusic.
           </p>
         </blockquote>
 

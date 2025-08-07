@@ -268,7 +268,7 @@ $effect(() => {
 <DialogBase
   bind:visible={settingsDialogVisible}
   title="Widget settings"
-  >
+>
   <form onsubmit={handleSettingsSubmit} class="flex flex-col gap-4 p-6">
     <label class="flex gap-2">
       <input

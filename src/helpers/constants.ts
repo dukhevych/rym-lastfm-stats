@@ -203,5 +203,3 @@ export const RYMOwnershipAltToCode: Partial<Record<ERYMOwnershipAltText, ERYMOwn
 
 import backgroundNames from '@/config/background.json';
 export const RECENT_TRACK_BACKGROUND_NAMES = backgroundNames as string[];
-
-console.log(process.env.BACKGROUND_OPTIONS_QTY);
