@@ -1,4 +1,4 @@
-import './recentTracks.css';
+import './styles/recentTracks.css';
 import { mount } from 'svelte';
 import RecentTracks from './RecentTracks.svelte';
 import type { RenderSettings } from '@/helpers/renderContent';

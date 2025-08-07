@@ -77,6 +77,14 @@ fs.mkdirSync(path.dirname(moduleTypesOutputPath), { recursive: true });
 fs.writeFileSync(moduleTypesOutputPath, moduleToggleInterface);
 console.log('✅ Interface generated at', moduleTypesOutputPath);
 
+const backgroundOptionsFolderPath = path.resolve(__dirname, 'src/modules/profile/recentTracks/styles/backgrounds');
+const backgroundOptionsFiles = fs.readdirSync(backgroundOptionsFolderPath);
+const backgroundOptionsImport = backgroundOptionsFiles.map(file => `@import './backgrounds/${file}';`).join('\n');
+
+const backgroundOptionsCssPath = path.resolve(__dirname, 'src/modules/profile/recentTracks/styles/backgrounds.css');
+fs.writeFileSync(backgroundOptionsCssPath, backgroundOptionsImport);
+console.log('✅ Background options css generated at', backgroundOptionsCssPath);
+
 module.exports = (env) => {
   const browserTarget = env.browser;
 
@@ -225,6 +233,7 @@ module.exports = (env) => {
         'process.env.APP_VERSION': JSON.stringify(appVersion),
         'process.env.BROWSER_TARGET': JSON.stringify(browserTarget),
         'process.env.MODULES_ARRAY': JSON.stringify(moduleConfigKeys),
+        'process.env.BACKGROUND_OPTIONS_QTY': JSON.stringify(backgroundOptionsFiles.length),
       }),
       new VueLoaderPlugin(),
       new CopyPlugin({

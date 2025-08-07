@@ -185,7 +185,7 @@ const itemDateTitle = $derived(() => {
 const coverSearchUrl = $derived(() => searchLinks().searchAlbumUrl || searchLinks().searchTrackUrl);
 const coverSearchHint = $derived(() => searchLinks().searchAlbumHint || searchLinks().searchTrackHint);
 
-const bgOptionsQty = 17;
+const bgOptionsQty = +process.env.BACKGROUND_OPTIONS_QTY!;
 
 const backgroundName = $derived(() => {
   return constants.RECENT_TRACK_BACKGROUND_NAMES[bgOption()] ||

@@ -1,22 +1,6 @@
-@import './styles/customProperties.css';
+@import './customProperties.css';
 
-@import './backgrounds/option-0.css';
-@import './backgrounds/option-1.css';
-@import './backgrounds/option-2.css';
-@import './backgrounds/option-3.css';
-@import './backgrounds/option-4.css';
-@import './backgrounds/option-5.css';
-@import './backgrounds/option-6.css';
-@import './backgrounds/option-7.css';
-@import './backgrounds/option-8.css';
-@import './backgrounds/option-9.css';
-@import './backgrounds/option-10.css';
-@import './backgrounds/option-11.css';
-@import './backgrounds/option-12.css';
-@import './backgrounds/option-13.css';
-@import './backgrounds/option-14.css';
-@import './backgrounds/option-15.css';
-@import './backgrounds/option-16.css';
+@import './backgrounds.css';
 
 @keyframes rotate {
   from { transform: rotate(0deg); }

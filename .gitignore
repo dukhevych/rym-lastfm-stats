@@ -26,3 +26,4 @@ dist-ssr
 src/helpers/*.csv
 
 src/generated/moduleTypes.d.ts
+src/modules/profile/recentTracks/styles/backgrounds.css
