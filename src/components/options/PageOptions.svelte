@@ -88,7 +88,9 @@
   <main>
     <form>
       <fieldset>
-
+        {#each constants.MODULES_ARRAY as module}
+          <FormToggle bind:checked={options[module as keyof ModuleToggleConfig]} label={module} />
+        {/each}
       </fieldset>
     </form>
   </main>
@@ -105,6 +107,7 @@
 </div>
 
 <script lang="ts">
+import FormToggle from './FormToggle.svelte';
 import { formatDistanceToNow } from 'date-fns';
 import browser from 'webextension-polyfill';
 import * as api from '@/helpers/api';

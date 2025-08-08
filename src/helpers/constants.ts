@@ -97,9 +97,11 @@ export const RECENT_TRACKS_LIMIT_MIN = 1;
 export const RECENT_TRACKS_LIMIT_MAX = 20;
 export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
+export const MODULES_ARRAY = process.env.MODULES_ARRAY || [];
+
 const MODULE_TOGGLE_CONFIG = {} as ModuleToggleConfig;
 
-for (const key of process.env.MODULES_ARRAY || []) {
+for (const key of MODULES_ARRAY) {
   MODULE_TOGGLE_CONFIG[key as keyof ModuleToggleConfig] = true;
 }
 
