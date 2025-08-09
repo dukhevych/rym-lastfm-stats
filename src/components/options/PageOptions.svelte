@@ -87,9 +87,12 @@
   </header>
   <main>
     <form>
+      <h2>Modules Turn On/Off</h2>
       <fieldset>
         {#each constants.MODULES_ARRAY as module}
-          <FormToggle bind:checked={options[module as keyof ModuleToggleConfig]} label={module} />
+          <div>
+            <FormToggle bind:checked={options[module as keyof ModuleToggleConfig]} label={module} />
+          </div>
         {/each}
       </fieldset>
     </form>

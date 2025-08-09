@@ -126,7 +126,7 @@ async function processData(data: RecentTrack[]) {
 
   latestTrack = normalizedData[0];
 
-  scrobbles = normalizedData.slice(1);
+  scrobbles = latestTrack.nowPlaying ? normalizedData.slice(1) : normalizedData.slice(0);
 
   const colors = await trySetColorsFromTrack(latestTrack);
   latestTrackColors = colors ? getColorsMap(colors) : null;

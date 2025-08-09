@@ -6,7 +6,6 @@
     bind:checked
     {...props}
   />
-  {props.label}
   <svg
     aria-label="disabled"
     xmlns="http://www.w3.org/2000/svg"
@@ -32,6 +31,8 @@
     </g>
   </svg>
 </label>
+
+{props.label}
 
 <script lang="ts">
   interface Props {
