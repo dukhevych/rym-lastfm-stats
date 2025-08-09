@@ -6,9 +6,11 @@ import { onDestroy } from 'svelte';
 import * as api from '@/api';
 import { usePolling } from '@/composables/usePolling';
 import { getImageColors, getColorsMap } from '@/helpers/colors';
+import { RecordsAPI } from '@/helpers/records-api';
 import * as constants from '@/helpers/constants';
 import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
 import * as utils from '@/helpers/utils';
+import { cleanupReleaseEdition } from '@/helpers/string';
 
 import errorMessages from './errorMessages.json';
 import ScrobblesHistory from './ScrobblesHistory.svelte';
@@ -16,6 +18,9 @@ import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 
 import type { TrackDataNormalized } from './types';
 import type { Writable } from 'svelte/store';
+import { ERYMOwnershipStatus } from '@/helpers/enums';
+import type { RecentTrack } from '@/api/getRecentTracks';
+import type { ColorsMap } from '@/helpers/colors';
 
 const polling = usePolling(loadRecentTracks, constants.RECENT_TRACKS_INTERVAL_MS, true, true);
 const { progress } = polling;
@@ -39,38 +44,52 @@ const isScrobblesHistoryPinned = $derived(() => $configStore.recentTracksShowOnL
 
 let abortController: AbortController = new AbortController();
 let failedToFetch: boolean = $state(false);
-let colors: VibrantUiColors | null = $state(null);
-let recentTracks = $state<TrackDataNormalized[]>([]);
-let recentTracksTimestamp = $state<number>(0);
 
-const nowPlayingTrack = $derived(() => recentTracks[0]);
-const scrobbles = $derived(() => recentTracks[0]?.nowPlaying ? recentTracks.slice(1) : recentTracks);
+let latestTrack = $state<TrackDataNormalized | null>(null);
+let latestTrackMetadata = $state<{
+  rating: number;
+  formats: Set<ERYMFormat>;
+  formatsLabel: string;
+}>({
+  rating: 0,
+  formats: new Set(),
+  formatsLabel: '',
+});
+let latestTrackColors = $state<ColorsMap | null>(null);
+let scrobbles = $state<TrackDataNormalized[]>([]);
+let timestamp = $state<number>(0);
 
 interface RecentTracksCache {
-  data: TrackDataNormalized[];
+  latestTrack: TrackDataNormalized;
+  latestTrackMetadata: {
+    rating: number;
+    formats: Set<ERYMFormat>;
+    formatsLabel: string;
+  };
+  latestTrackColors: ColorsMap;
+  scrobbles: TrackDataNormalized[];
   timestamp: number;
-  colors: VibrantUiColors;
   userName: string;
 }
 
 const checkCacheValidity = (cache: RecentTracksCache | null): boolean => {
   return !!(
     cache
-    && cache.data
-    && cache.timestamp
-    && cache.colors
     && cache.userName === context.userName
+    && cache.timestamp
     && Date.now() - cache.timestamp <= constants.RECENT_TRACKS_INTERVAL_MS
   );
 }
 
 async function init() {
-  const recentTracksCache: RecentTracksCache | null = await storageGet('recentTracksCache', 'local');
+  const dataCache: RecentTracksCache | null = await storageGet('recentTracksCache', 'local');
 
-  if (recentTracksCache && checkCacheValidity(recentTracksCache)) {
-    recentTracks = recentTracksCache.data;
-    recentTracksTimestamp = recentTracksCache.timestamp;
-    colors = recentTracksCache.colors;
+  if (dataCache && checkCacheValidity(dataCache)) {
+    latestTrack = dataCache.latestTrack;
+    latestTrackMetadata = dataCache.latestTrackMetadata;
+    latestTrackColors = dataCache.latestTrackColors;
+    scrobbles = dataCache.scrobbles;
+    timestamp = dataCache.timestamp;
   } else {
     await storageRemove('recentTracksCache', 'local');
     await loadRecentTracks();
@@ -81,23 +100,83 @@ async function init() {
   }
 }
 
-// async function onPollingToggle() {
-//   await Promise.all([
-//     updateSyncedOptions({
-//       recentTracksPollingEnabled: !isScrobblesPollingEnabled(),
-//     }),
-//     configStore.update((config) => ({
-//       ...config,
-//       recentTracksPollingEnabled: !isScrobblesPollingEnabled(),
-//     })),
-//   ])
+async function processData(data: RecentTrack[]) {
+  const normalizedData = data.length > 0 ? data.map(utils.normalizeLastFmTrack) : [];
+  let latestTrack: TrackDataNormalized | null = null;
+  let latestTrackMetadata: {
+    rating: number;
+    formats: Set<ERYMFormat>;
+    formatsLabel: string;
+  } = {
+    rating: 0,
+    formats: new Set(),
+    formatsLabel: '',
+  };
+  let latestTrackColors: ColorsMap | null = null;
+  let scrobbles: TrackDataNormalized[] = [];
 
-//   if (isScrobblesPollingEnabled()) {
-//     polling.start();
-//   } else {
-//     polling.stop();
-//   }
-// }
+  if (normalizedData.length === 0) {
+    return {
+      latestTrack,
+      latestTrackMetadata,
+      latestTrackColors,
+      scrobbles,
+    };
+  }
+
+  latestTrack = normalizedData[0];
+
+  scrobbles = normalizedData.slice(1);
+
+  const colors = await trySetColorsFromTrack(latestTrack);
+  latestTrackColors = colors ? getColorsMap(colors) : null;
+
+  if (context.isMyProfile) {
+    const albumNameFallback = latestTrack?.albumName ? cleanupReleaseEdition(latestTrack.albumName) : '';
+    const albumsFromDB = await RecordsAPI.getByArtistAndTitle(
+      latestTrack.artistName,
+      latestTrack.albumName,
+      albumNameFallback,
+    );
+    let rating = 0;
+    let formats = new Set<ERYMFormat>();
+    let formatsLabel = '';
+
+    const albumsFromDBFullMatch: IRYMRecordDBMatch[] = [];
+    const albumsFromDBPartialMatch: IRYMRecordDBMatch[] = [];
+
+    const albumsMatchMap = {
+      full: albumsFromDBFullMatch,
+      partial: albumsFromDBPartialMatch,
+    };
+
+    albumsFromDB.forEach((album) => {
+      albumsMatchMap[album._match as keyof typeof albumsMatchMap]?.push(album);
+      if (album.ownership === ERYMOwnershipStatus.InCollection && album.format) {
+        formats.add(album.format);
+      }
+    });
+
+    const earliestFullMatchRating = utils.getEarliestRating(albumsFromDBFullMatch);
+    const earliestPartialMatchRating = utils.getEarliestRating(albumsFromDBPartialMatch);
+
+    rating = earliestFullMatchRating || earliestPartialMatchRating;
+    formatsLabel = Array.from(formats).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
+
+    latestTrackMetadata = {
+      rating,
+      formats,
+      formatsLabel,
+    };
+  }
+
+  return {
+    latestTrack,
+    latestTrackMetadata,
+    latestTrackColors,
+    scrobbles,
+  };
+}
 
 onDestroy(() => {
   polling.cleanup();
@@ -131,33 +210,43 @@ async function loadRecentTracks() {
     // await utils.wait(500000);
 
     const { recenttracks: { track: data } } = recentTracksResponse;
-    const timestamp = Date.now();
-    const normalizedData = data.map(utils.normalizeLastFmTrack);
 
-    colors = await trySetColorsFromTrack(normalizedData[0]);
-    recentTracks = normalizedData;
-    recentTracksTimestamp = timestamp;
+    const {
+      latestTrack: latestTrackData,
+      latestTrackMetadata: latestTrackMetadataData,
+      latestTrackColors: latestTrackColorsData,
+      scrobbles: scrobblesData,
+    } = await processData(data);
+
+    latestTrack = latestTrackData;
+    latestTrackMetadata = latestTrackMetadataData;
+    latestTrackColors = latestTrackColorsData;
+    scrobbles = scrobblesData;
+    const newTimestamp = Date.now();
+    timestamp = newTimestamp;
 
     await storageSet({
       recentTracksCache: {
-        data: normalizedData,
-        colors: $state.snapshot(colors),
-        timestamp,
+        latestTrack: latestTrackData,
+        latestTrackMetadata: latestTrackMetadataData,
+        latestTrackColors: latestTrackColorsData,
+        scrobbles: scrobblesData,
+        timestamp: newTimestamp,
         userName: context.userName,
       }
     }, 'local');
 
+    console.log('written to cache');
+
     failedToFetch = false;
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name !== 'AbortError') {
-      if (recentTracks.length === 0) {
+      if (!latestTrack) {
         failedToFetch = true;
       }
     }
   }
 };
-
-const colorsMap = $derived(() => colors ? getColorsMap(colors) : {});
 
 let rootTarget: HTMLElement | null = null;
 
@@ -183,7 +272,7 @@ $effect(() => {
 
 $effect(() => {
   if (!rootTarget) return;
-  for (const [key, value] of Object.entries(colorsMap())) {
+  for (const [key, value] of Object.entries(latestTrackColors || {})) {
     rootTarget.style.setProperty(key, String(value));
   }
 });
@@ -213,7 +302,10 @@ init();
 
 {#if !failedToFetch}
   <ScrobblesNowPlaying
-    track={nowPlayingTrack()}
+    track={latestTrack}
+    rating={latestTrackMetadata.rating}
+    formats={latestTrackMetadata.formats}
+    formatsLabel={latestTrackMetadata.formatsLabel}
     configStore={configStore}
     context={context}
     rymSyncTimestamp={context.rymSyncTimestamp}
@@ -223,8 +315,8 @@ init();
     pollingProgress={$progress}
   />
   <ScrobblesHistory
-    scrobbles={scrobbles()}
-    timestamp={recentTracksTimestamp}
+    scrobbles={scrobbles}
+    timestamp={timestamp}
     open={isScrobblesHistoryOpen}
   />
 {/if}

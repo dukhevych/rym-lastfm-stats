@@ -394,3 +394,18 @@ export function filterEmptyKeys<T extends object>(obj: T): Partial<T> {
 
   return result;
 }
+
+export function getEarliestRating(albums: IRYMRecordDBMatch[]) {
+  let earliestRating = 0;
+  let minId = Infinity;
+  albums.forEach((album) => {
+    if (!album.rating) return;
+
+    const id = +album.id;
+    if (id && id < minId) {
+      minId = id;
+      earliestRating = album.rating;
+    }
+  });
+  return earliestRating;
+}

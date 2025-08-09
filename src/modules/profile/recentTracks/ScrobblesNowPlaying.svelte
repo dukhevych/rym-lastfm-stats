@@ -15,7 +15,10 @@ import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import type { Writable } from 'svelte/store';
 
 interface Props {
-  track?: TrackDataNormalized;
+  track: TrackDataNormalized | null;
+  rating: number;
+  formats: Set<ERYMFormat>;
+  formatsLabel: string;
   configStore: Writable<AddonOptions>;
   context: Record<string, any>;
   rymSyncTimestamp: number | null;
@@ -27,6 +30,9 @@ interface Props {
 
 const {
   track = {} as TrackDataNormalized,
+  rating,
+  formats,
+  formatsLabel,
   configStore,
   context,
   rymSyncTimestamp,
@@ -37,9 +43,6 @@ const {
 }: Props = $props();
 
 let innerConfig = $state({ ...$configStore });
-
-let albumsFromDB: IRYMRecordDBMatch[] = $state([]);
-let isLoaded = $state(false);
 let bgOption = $derived(() => $configStore.recentTracksBackground);
 let settingsDialogVisible = $state(false);
 
@@ -78,72 +81,21 @@ const pollingProgressAngle = $derived(() => {
 const containerClasses = $derived(() => {
   const classes = ['profile_listening_container'];
   if (isNowPlaying()) classes.push('is-now-playing');
-  if (isLoaded) classes.push('is-loaded');
+  if (track) classes.push('is-loaded');
   classes.push(`bg-option-${bgOption()}`);
   return classes.join(' ');
 });
 
-let rating = $derived(() => {
-  let value = 0;
-
-  if (!context.isMyProfile) {
-    console.warn('Rating is not available for non-my profile');
-    return value;
-  }
-
-  if (!isLoaded) {
-    return value;
-  }
-
-  if (albumsFromDB.length === 0) {
-    console.warn('No albums found in user\'s RYM database');
-    return value;
-  }
-
-  const albumsFromDBFullMatch: IRYMRecordDBMatch[] = [];
-  const albumsFromDBPartialMatch: IRYMRecordDBMatch[] = [];
-
-  const albumsMatchMap = {
-    full: albumsFromDBFullMatch,
-    partial: albumsFromDBPartialMatch,
+const searchLinks = $derived(() => {
+  if (!track) return {
+    searchArtistUrl: '',
+    searchArtistHint: '',
+    searchAlbumUrl: '',
+    searchAlbumHint: '',
+    searchTrackUrl: '',
+    searchTrackHint: '',
   };
 
-  albumsFromDB.forEach((album) => {
-    albumsMatchMap[album._match as keyof typeof albumsMatchMap]?.push(album);
-  });
-
-  const earliestFullMatchRating = getEarliestRating(albumsFromDBFullMatch);
-  const earliestPartialMatchRating = getEarliestRating(albumsFromDBPartialMatch);
-
-  value = earliestFullMatchRating || earliestPartialMatchRating;
-
-  return value;
-});
-
-const formats = $derived(() => {
-  if (!context.isMyProfile) {
-    console.warn('Formats are not available for non-my profile');
-    return new Set<ERYMFormat>();
-  }
-
-  const set = new Set<ERYMFormat>();
-
-  albumsFromDB.forEach((album) => {
-    if (album.ownership === ERYMOwnershipStatus.InCollection && album.format) {
-      set.add(album.format);
-    }
-  });
-
-  return set;
-});
-
-const formatsLabel = $derived(() => {
-  return Array.from(formats()).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
-});
-
-const albumNameFallback = $derived(() => track?.albumName ? cleanupReleaseEdition(track.albumName) : '');
-
-const searchLinks = $derived(() => {
   const {
     artistName = '',
     albumName = '',
@@ -168,7 +120,7 @@ const searchLinks = $derived(() => {
 });
 
 const timestampDate = $derived(() => {
-  if (!track.timestamp) return null;
+  if (!track?.timestamp) return null;
   return new Date((track.timestamp as number) * 1000);
 });
 
@@ -203,34 +155,19 @@ const onToggleBackground = async () => {
   ]);
 };
 
-const getReleaseRYMData = async () => {
-  albumsFromDB = await RecordsAPI.getByArtistAndTitle(
-    track.artistName,
-    track.albumName,
-    albumNameFallback(),
-  );
+// const getReleaseRYMData = async () => {
+//   albumsFromDB = await RecordsAPI.getByArtistAndTitle(
+//     track.artistName,
+//     track.albumName,
+//     albumNameFallback(),
+//   );
 
-  isLoaded = true;
-};
+//   isLoaded = true;
+// };
 
-function getEarliestRating(albums: IRYMRecordDBMatch[]) {
-  let earliestRating = 0;
-  let minId = Infinity;
-  albums.forEach((album) => {
-    if (!album.rating) return;
-
-    const id = +album.id;
-    if (id && id < minId) {
-      minId = id;
-      earliestRating = album.rating;
-    }
-  });
-  return earliestRating;
-}
-
-$effect(() => {
-  if (track && track.artistName && track.albumName) getReleaseRYMData();
-});
+// $effect(() => {
+//   if (track && track.artistName && track.albumName) getReleaseRYMData();
+// });
 
 const handleSettingsSubmit = async (e: Event) => {
   e.preventDefault();
@@ -244,7 +181,7 @@ const handleSettingsSubmit = async (e: Event) => {
 const isNowPlaying = $derived(() => {
   if ($configStore.recentTracksAnimation === 'on') return true;
   if ($configStore.recentTracksAnimation === 'off') return false;
-  return track.nowPlaying;
+  return track?.nowPlaying;
 });
 
 let currentCoverSrc = $state('');
@@ -252,10 +189,10 @@ let isCoverTransitioning = $state(false);
 
 $effect(() => {
   if (!currentCoverSrc) {
-    currentCoverSrc = track.coverLargeUrl;
-  } else if (track.coverLargeUrl !== currentCoverSrc) {
+    currentCoverSrc = track?.coverLargeUrl || '';
+  } else if (track?.coverLargeUrl !== currentCoverSrc) {
     isCoverTransitioning = true;
-    currentCoverSrc = track.coverLargeUrl;
+    currentCoverSrc = track?.coverLargeUrl || '';
 
     setTimeout(() => {
       isCoverTransitioning = false;
@@ -264,7 +201,7 @@ $effect(() => {
 });
 </script>
 
-{#if isLoaded}
+{#if track}
 <DialogBase
   bind:visible={settingsDialogVisible}
   title="Widget settings"
@@ -326,10 +263,10 @@ $effect(() => {
 
 <div
   class={containerClasses()}
-  style={track.coverExtraLargeUrl && `--bg-image: url(${track.coverExtraLargeUrl})`}
+  style={track?.coverExtraLargeUrl && `--bg-image: url(${track.coverExtraLargeUrl})`}
   data-element="rymstats-track-panel"
 >
-  {#if isLoaded}
+  {#if track}
   <div id="profile_play_history_container" class="recent-tracks-current">
     <div
       class="play_history_item"
@@ -358,18 +295,18 @@ $effect(() => {
         <div
           class="custom-my-rating"
           data-element="rymstats-track-rating"
-          class:no-rating={context.isMyProfile && rating() === 0}
-          class:has-ownership={context.isMyProfile && formats().size > 0}
+          class:no-rating={context.isMyProfile && rating === 0}
+          class:has-ownership={context.isMyProfile && formats.size > 0}
         >
           {#if context.isMyProfile}
             <div
               data-element="rymstats-track-rating-stars"
-              title={rating() > 0 ? `${rating() / 2} / 5` : ''}
+              title={rating > 0 ? `${rating / 2} / 5` : ''}
             >
               <div
                 class="stars-filled"
                 data-element="rymstats-track-rating-stars-filled"
-                style={rating() > 0 ? `width: ${rating() * 10}%` : ''}
+                style={rating > 0 ? `width: ${rating * 10}%` : ''}
               >
                 {#each Array(5)}
                   <svg viewBox="0 0 24 24"><use xlink:href="#svg-star-symbol"></use></svg>
@@ -388,7 +325,7 @@ $effect(() => {
               class="rymstats-track-format"
               data-element="rymstats-track-format"
             >
-              {formatsLabel()}
+              {formatsLabel}
             </div>
             {#if !rymSyncTimestamp || isRymSyncOutdated()}
               <span
@@ -520,7 +457,7 @@ $effect(() => {
       <use xlink:href="#svg-settings-symbol"></use>
     </svg>
   </button>
-  {/if}
+
   <button
     class="btn-bg-switcher"
     aria-label="Change background"
@@ -532,8 +469,9 @@ $effect(() => {
       <use xlink:href="#svg-brush-symbol"></use>
     </svg>
   </button>
+  {/if}
 
-  {#if !isLoaded}
+  {#if !track}
     <div class="loader">
       <svg viewBox="0 0 300 150"><use xlink:href="#svg-loader-symbol"></use></svg>
     </div>

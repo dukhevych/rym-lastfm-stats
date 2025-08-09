@@ -105,8 +105,10 @@ function rgbToHex([r, g, b]: [number, number, number]): string {
 
 type CSSVarName = `--${string}`;
 
+export type ColorsMap = Record<CSSVarName, string>;
+
 export function getColorsMap(colors: VibrantUiColors) {
-  const result: Record<CSSVarName, string> = {
+  const result: ColorsMap = {
     '--clr-light-bg': colors.light.bgColor,
     '--clr-light-bg-contrast': colors.light.bgColorContrast,
     '--clr-light-accent': colors.light.accentColor,
