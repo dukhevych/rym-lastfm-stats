@@ -16,7 +16,6 @@ declare global {
     topAlbumsPeriod: string;
     rymPlayHistoryHide: boolean;
     recentTracksPollingEnabled: boolean;
-    recentTracksHistory: boolean;
   }
 
   interface AddonOptions extends AddonOptionsBase {

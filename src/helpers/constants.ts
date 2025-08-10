@@ -5,12 +5,12 @@ const manifest = browser.runtime.getManifest();
 export const isDev = process.env.NODE_ENV === 'development';
 
 // Interval constants for fetching data
-export const RECENT_TRACKS_INTERVAL_MS = isDev ? (15 * 1000) : (2 * 60 * 1000); // 15 seconds / 2 minutes
+export const RECENT_TRACKS_INTERVAL_MS = isDev ? (10 * 1000) : (1 * 60 * 1000); // 10 seconds / 1 minute
 export const RECENT_TRACKS_INTERVAL_MS_THROTTLED = RECENT_TRACKS_INTERVAL_MS / 2;
 export const TOP_ALBUMS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const TOP_ARTISTS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const STATS_CACHE_LIFETIME_GUEST_MS = 3 * 60 * 60 * 1000; // 3 hours
-export const STATS_CACHE_LIFETIME_MS = isDev ? 30 * 1000 : 10 * 60 * 1000; // 30 seconds /10 minutes
+export const STATS_CACHE_LIFETIME_MS = isDev ? 30 * 1000 : 5 * 60 * 1000; // 30 seconds /5 minutes
 export const RYM_SYNC_OUTDATED_THRESHOLD_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 export const APP_VERSION = manifest.version;
@@ -109,7 +109,6 @@ export const PROFILE_OPTIONS_DEFAULT: AddonOptionsBase = {
   ...MODULE_TOGGLE_CONFIG,
 
   // RECENT TRACKS options
-  recentTracksHistory: true,
   recentTracksShowOnLoad: false,
   recentTracksBackground: 1,
   recentTracksPollingEnabled: true,

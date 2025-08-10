@@ -401,7 +401,7 @@ $effect(() => {
     </div>
   </div>
   <div class="profile_view_play_history_btn">
-    {#if $configStore.recentTracksHistory}
+    {#if $configStore.recentTracksLimit > 1}
       <div class="profile_view_play_history_btn_group">
         <button
           class="btn-toggle-icon btn-toggle-history-pinned"

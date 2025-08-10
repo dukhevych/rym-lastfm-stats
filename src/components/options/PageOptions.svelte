@@ -1,8 +1,6 @@
 <svelte:options runes={true} />
 
-<div
-  class="min-h-viewport flex flex-col"
->
+<div class="min-h-viewport flex flex-col">
   <header>
     <nav class="navbar bg-base-200 shadow-sm">
       <div class="max-w-screen-xl grow mx-auto flex items-center justify-between">
@@ -89,11 +87,11 @@
     <form>
       <h2>Modules Turn On/Off</h2>
       <fieldset>
-        {#each constants.MODULES_ARRAY as module}
+        <!-- {#each constants.MODULES_ARRAY as module}
           <div>
             <FormToggle bind:checked={options[module as keyof ModuleToggleConfig]} label={module} />
           </div>
-        {/each}
+        {/each} -->
       </fieldset>
     </form>
   </main>
@@ -110,6 +108,7 @@
 </div>
 
 <script lang="ts">
+import { watch } from 'runed';
 import FormToggle from './FormToggle.svelte';
 import { formatDistanceToNow } from 'date-fns';
 import browser from 'webextension-polyfill';
@@ -136,7 +135,7 @@ let signinInProgress = $state(false);
 let showModal = $state(false);
 const identityApiSupported = $state(!!(browser.identity && browser.identity.launchWebAuthFlow));
 let fallbackUsername = $state('');
-const options = $state(Object.assign({}, constants.OPTIONS_DEFAULT));
+const options: Partial<AddonOptions> = $state({});
 let config = $state<AddonOptions>();
 let userData = $state<UserData>();
 let dbRecordsQty = $state<number>();
@@ -334,6 +333,12 @@ const fallbackLogin = async () => {
     });
   }
 };
+
+watch(() => $state.snapshot(options), (v, v2) => {
+  console.log('options changed');
+  console.log(JSON.stringify(v, null, 2));
+  console.log(JSON.stringify(v2, null, 2));
+}, { lazy: true });
 
 init();
 </script>

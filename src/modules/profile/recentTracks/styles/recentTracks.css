@@ -167,6 +167,7 @@
       overflow: hidden;
       white-space: nowrap;
       inset: 0;
+      transition: width .3s ease-in-out;
 
       svg {
         color: color-mix(in lab, currentColor, transparent 50%);

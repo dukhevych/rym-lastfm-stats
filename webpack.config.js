@@ -156,17 +156,20 @@ module.exports = (env) => {
         '@': path.resolve(__dirname, 'src'),
         vue$: 'vue/dist/vue.runtime.esm-browser.prod.js',
       },
-      extensions: ['.ts', '.js', '.vue', '.svelte'],
+      extensions: ['mjs', '.ts', '.js', '.vue', '.svelte'],
+      mainFields: ['svelte', 'browser', 'module', 'main'],
+      conditionNames: ['svelte', 'browser', 'import', 'module', 'default'],
     },
     module: {
       rules: [
         {
-          test: /\.svelte$/,
+          test: /\.svelte(\.[jt]s)?$/,
           use: {
             loader: 'svelte-loader',
             options: {
               compilerOptions: {
                 dev: process.env.NODE_ENV !== 'production',
+                runes: true,
               },
               preprocess: require('svelte-preprocess')(),
             },
@@ -211,7 +214,7 @@ module.exports = (env) => {
         },
         {
           test: /\.ts$/,
-          exclude: [/node_modules/, /\.d\.ts$/],
+          exclude: [/node_modules/, /\.d\.ts$/, /\.svelte$/],
           use: {
             loader: 'ts-loader',
             options: {

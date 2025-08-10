@@ -314,9 +314,11 @@ init();
     onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
     pollingProgress={$progress}
   />
-  <ScrobblesHistory
-    scrobbles={scrobbles}
-    timestamp={timestamp}
-    open={isScrobblesHistoryOpen}
-  />
+  {#if $configStore.recentTracksLimit > 1}
+    <ScrobblesHistory
+      scrobbles={scrobbles}
+      timestamp={timestamp}
+      open={isScrobblesHistoryOpen}
+    />
+  {/if}
 {/if}
