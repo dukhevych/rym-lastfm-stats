@@ -1,3 +1,18 @@
+@keyframes bg-option-6-animation {
+  0% {
+    --bg-option-6-shift-x: 0px;
+  }
+  100% {
+    --bg-option-6-shift-x: -8px;
+  }
+}
+
+@property --bg-option-6-shift-x {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 [data-element="rymstats-track-panel"] {
   &.bg-option-6:after {
     background-image:
@@ -17,5 +32,10 @@
       );
     background-blend-mode: overlay;
     filter: contrast(200%) brightness(80%);
+    background-position: 0 0, var(--bg-option-6-shift-x) 0;
+  }
+
+  &.is-now-playing.bg-option-6:after {
+    animation: bg-option-6-animation 1s linear infinite;
   }
 }
