@@ -4,13 +4,16 @@
 import { onDestroy } from 'svelte';
 
 import * as api from '@/api';
+import type { RecentTrack } from '@/api/getRecentTracks';
 import { usePolling } from '@/composables/usePolling';
 import { getImageColors, getColorsMap } from '@/helpers/colors';
-import { RecordsAPI } from '@/helpers/records-api';
+import type { ColorsMap } from '@/helpers/colors';
 import * as constants from '@/helpers/constants';
+import { ERYMOwnershipStatus } from '@/helpers/enums';
+import { RecordsAPI } from '@/helpers/records-api';
 import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
-import * as utils from '@/helpers/utils';
 import { cleanupReleaseEdition } from '@/helpers/string';
+import * as utils from '@/helpers/utils';
 
 import errorMessages from './errorMessages.json';
 import ScrobblesHistory from './ScrobblesHistory.svelte';
@@ -18,9 +21,7 @@ import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 
 import type { TrackDataNormalized } from './types';
 import type { Writable } from 'svelte/store';
-import { ERYMOwnershipStatus } from '@/helpers/enums';
-import type { RecentTrack } from '@/api/getRecentTracks';
-import type { ColorsMap } from '@/helpers/colors';
+
 
 const polling = usePolling(loadRecentTracks, constants.RECENT_TRACKS_INTERVAL_MS, true, true);
 const { progress } = polling;
