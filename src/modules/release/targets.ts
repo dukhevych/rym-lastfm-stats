@@ -32,15 +32,15 @@ export function getArtistNames(parentEl: HTMLElement): RYMArtistNames {
     });
 }
 
-export function getReleaseTitle(parentEl: HTMLElement): string {
-  const title = parentEl.querySelector(INFO_ALBUM_TITLE_SELECTOR);
+export function getReleaseTitle(parentEl: HTMLElement): { title: string, titleLocalized: string } {
+  const titleElement = parentEl.querySelector(INFO_ALBUM_TITLE_SELECTOR);
 
-  if (!title) return '';
+  if (!titleElement) return { title: '', titleLocalized: '' };
 
-  return Array.from(title.childNodes)
-    .filter(node => node.nodeType === Node.TEXT_NODE)
-    .map(node => (node.textContent ?? '').trim())
-    .join('');
+  let title = getDirectInnerText(titleElement);
+  let titleLocalized = (titleElement.querySelector('span:has(+ input)')?.textContent || '').trim();
+
+  return { title, titleLocalized };
 }
 
 export function getReleaseType(parentEl: HTMLElement): ERYMReleaseType | null {

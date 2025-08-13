@@ -151,7 +151,7 @@ export const deburr: Deburr = function(string: string): string {
 }
 
 export function deburrLight(str: string): string {
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
 }
 
 export interface NormalizeForSearch {

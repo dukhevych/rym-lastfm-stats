@@ -19,7 +19,7 @@
   interface Props {
     config: AddonOptions;
     entityId: string;
-    entityTitle: string;
+    entityTitles: Set<string>;
     entityType: ERYMReleaseType;
     artistNames: RYMArtistNames;
     moduleName: string;
@@ -28,7 +28,7 @@
   const {
     config,
     entityId,
-    entityTitle,
+    entityTitles,
     entityType,
     artistNames,
     moduleName,
@@ -45,44 +45,50 @@
     return Array.from(variants);
   });
 
-  const entityTitleDeburred = $derived(() => deburrLight(entityTitle));
+  const entityTitlesDeburred = $derived(() => new Set(Array.from(entityTitles).map(deburrLight)));
 
-  const entityTitleOptions = $derived(() => {
+  const entityTitlesOptions = $derived(() => {
     const options = new Set<string>();
-    const result = [];
+    const result: { value: string, label: string }[] = [];
 
-    result.push({
-      value: entityTitle,
-      label: entityTitle,
-    });
-    options.add(entityTitle);
-
-    if (!options.has(entityTitleDeburred())) {
+    Array.from(entityTitles).forEach((entityTitle) => {
       result.push({
-        value: entityTitleDeburred(),
-        label: entityTitleDeburred() + ' (Simplified)',
+        value: entityTitle,
+        label: entityTitle,
       });
-      options.add(entityTitleDeburred());
-    }
+      options.add(entityTitle);
+    });
+
+    Array.from(entityTitlesDeburred()).forEach((entityTitle) => {
+      if (!options.has(entityTitle)) {
+        result.push({
+          value: entityTitle,
+          label: entityTitle + ' (Simplified)',
+        });
+        options.add(entityTitle);
+      }
+    });
 
     if (entityType === ERYMReleaseType.Album) {
-      const cleanupReleaseEditionValue = cleanupReleaseEdition(entityTitle);
-      if (!options.has(cleanupReleaseEditionValue)) {
-        result.push({
-          value: cleanupReleaseEditionValue,
-          label: cleanupReleaseEditionValue + ' (No edition suffix)',
-        });
-        options.add(cleanupReleaseEditionValue);
-      }
+      Array.from(entityTitles).forEach((entityTitle) => {
+        const cleanupReleaseEditionValue = cleanupReleaseEdition(entityTitle);
+        if (!options.has(cleanupReleaseEditionValue)) {
+          result.push({
+            value: cleanupReleaseEditionValue,
+            label: cleanupReleaseEditionValue + ' (No edition suffix)',
+          });
+          options.add(cleanupReleaseEditionValue);
+        }
 
-      const cleanupSuffixValue = cleanupSuffix(entityTitle);
-      if (!options.has(cleanupSuffixValue)) {
-        result.push({
-          value: cleanupSuffixValue,
-          label: cleanupSuffixValue + ' (No suffix at all)',
-        });
-        options.add(cleanupSuffixValue);
-      }
+        const cleanupSuffixValue = cleanupSuffix(entityTitle);
+        if (!options.has(cleanupSuffixValue)) {
+          result.push({
+            value: cleanupSuffixValue,
+            label: cleanupSuffixValue + ' (No suffix at all)',
+          });
+          options.add(cleanupSuffixValue);
+        }
+      });
     }
 
     return result;
@@ -102,7 +108,7 @@
       return true;
     }
 
-    if (entityTitleOptions().length > 1) {
+    if (entityTitlesOptions().length > 1) {
       return true;
     }
 
@@ -254,13 +260,13 @@
       entityTitleQuery = entityTitleQueryCache;
       isEntityTitleQueryCached = true;
     } else {
-      entityTitleQuery = entityTitleOptions()[0].value;
+      entityTitleQuery = entityTitlesOptions()[0].value;
       await updateEntityTitleQueryCache(entityTitleQuery);
     }
   }
 
   async function initEntityStats() {
-    for (const title of entityTitleOptions()) {
+    for (const title of entityTitlesOptions()) {
       for (const artistName of artistNamesFlat()) {
         await loadEntityStats(artistName, title.value);
         if (entityStatsData) {
@@ -415,7 +421,7 @@
       <label class="flex flex-col gap-2">
         <strong>
           Title
-          {#if entityTitleOptions().length === 1}
+          {#if entityTitlesOptions().length === 1}
             <span class="text-gray-500">
               (Only one option is available)
             </span>
@@ -424,10 +430,10 @@
 
         <select
           class="rounded-md border border-gray-300 p-2"
-          disabled={entityTitleOptions().length === 1}
+          disabled={entityTitlesOptions().length === 1}
           bind:value={entityTitleQueryField}
         >
-          {#each entityTitleOptions() as title}
+          {#each entityTitlesOptions() as title}
             <option value={title.value}>{title.label}</option>
           {/each}
         </select>

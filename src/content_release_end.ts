@@ -75,7 +75,7 @@ function prepareFullData(syncedData: SyncedData): IRYMRecordDB {
   const artistNames = getArtistNames(uiElements.parent);
   const { artistName, artistNameLocalized } = utils.combineArtistNames(artistNames);
 
-  const title = getReleaseTitle(uiElements.parent);
+  const { title } = getReleaseTitle(uiElements.parent);
 
   return {
     id: state.releaseId,

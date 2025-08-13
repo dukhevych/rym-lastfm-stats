@@ -38,12 +38,14 @@ async function render(settings: RenderSettings) {
 
   const artistNames = getArtistNames(parent);
   const entityType = getReleaseType(parent) ?? ERYMReleaseType.Album;
-  const entityTitle = getReleaseTitle(parent);
+  const { title, titleLocalized } = getReleaseTitle(parent);
 
-  if (artistNames.length === 0 || !entityTitle) {
+  if (artistNames.length === 0 || !title) {
     console.error(errorMessages.noArtistOrReleaseTitle);
     return;
   }
+
+  const entityTitles = new Set([titleLocalized, title].filter(Boolean));
 
   const mountPoint = prepareMountPoint(parent);
 
@@ -54,7 +56,7 @@ async function render(settings: RenderSettings) {
       entityId,
       artistNames,
       entityType,
-      entityTitle,
+      entityTitles,
       moduleName: 'releaseStats',
     },
   });
