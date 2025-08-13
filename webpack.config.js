@@ -113,7 +113,7 @@ module.exports = (env) => {
     ...envBrowser,
   };
 
-  console.log(process.env.NODE_ENV);
+  console.log('Mode:', process.env.NODE_ENV);
   console.log('Build version:', appVersion);
   console.log('Browser target:', browserTarget);
   console.log('System api key:', combinedEnv.LASTFM_API_KEY ? '✅' : '❌');
@@ -204,7 +204,6 @@ module.exports = (env) => {
         },
         {
           test: /\.svg$/i,
-          resourceQuery: /raw/,
           use: 'raw-loader',
         },
         {

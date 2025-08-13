@@ -3,6 +3,7 @@ import MD5 from 'crypto-js/md5';
 import * as constants from './constants';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import type { RecentTrack } from '@/api/getRecentTracks';
+import { formatDuration, intervalToDuration } from 'date-fns';
 
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 const SYSTEM_API_SECRET = process.env.LASTFM_API_SECRET;
@@ -408,4 +409,9 @@ export function getEarliestRating(albums: IRYMRecordDBMatch[]) {
     }
   });
   return earliestRating;
+}
+
+export function msToHuman(ms: number, options = {}) {
+  const duration = intervalToDuration({ start: 0, end: ms });
+  return formatDuration(duration, options);
 }

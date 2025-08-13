@@ -22,7 +22,6 @@ import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 import type { TrackDataNormalized } from './types';
 import type { Writable } from 'svelte/store';
 
-
 const polling = usePolling(loadRecentTracks, constants.RECENT_TRACKS_INTERVAL_MS, true, true);
 const { progress } = polling;
 
@@ -103,40 +102,42 @@ async function init() {
 
 async function processData(data: RecentTrack[]) {
   const normalizedData = data.length > 0 ? data.map(utils.normalizeLastFmTrack) : [];
-  let latestTrack: TrackDataNormalized | null = null;
-  let latestTrackMetadata: {
-    rating: number;
-    formats: Set<ERYMFormat>;
-    formatsLabel: string;
-  } = {
-    rating: 0,
-    formats: new Set(),
-    formatsLabel: '',
-  };
-  let latestTrackColors: ColorsMap | null = null;
-  let scrobbles: TrackDataNormalized[] = [];
 
-  if (normalizedData.length === 0) {
-    return {
-      latestTrack,
-      latestTrackMetadata,
-      latestTrackColors,
-      scrobbles,
+  interface Result {
+    latestTrack: TrackDataNormalized | null;
+    latestTrackMetadata: {
+      rating: number;
+      formats: Set<ERYMFormat>;
+      formatsLabel: string;
     };
+    latestTrackColors: ColorsMap | null;
+    scrobbles: TrackDataNormalized[];
   }
 
-  latestTrack = normalizedData[0];
+  const result: Result = {
+    latestTrack: null,
+    latestTrackMetadata: {
+      rating: 0,
+      formats: new Set(),
+      formatsLabel: '',
+    },
+    latestTrackColors: null,
+    scrobbles: [],
+  };
 
-  scrobbles = latestTrack.nowPlaying ? normalizedData.slice(1) : normalizedData.slice(0);
+  if (normalizedData.length === 0) return result;
 
-  const colors = await trySetColorsFromTrack(latestTrack);
-  latestTrackColors = colors ? getColorsMap(colors) : null;
+  result.latestTrack = normalizedData[0];
+  result.scrobbles = result.latestTrack.nowPlaying ? normalizedData.slice(1) : normalizedData.slice(0);
+
+  const colors = await trySetColorsFromTrack(result.latestTrack);
+  result.latestTrackColors = colors ? getColorsMap(colors) : null;
 
   if (context.isMyProfile) {
-    const albumNameFallback = latestTrack?.albumName ? cleanupReleaseEdition(latestTrack.albumName) : '';
+    const albumNameFallback = result.latestTrack?.albumName ? cleanupReleaseEdition(result.latestTrack.albumName) : '';
     const albumsFromDB = await RecordsAPI.getByArtistAndTitle(
-      latestTrack.artistName,
-      latestTrack.albumName,
+      result.latestTrack.artistName,
+      result.latestTrack.albumName,
       albumNameFallback,
     );
     let rating = 0;
@@ -164,19 +165,14 @@ async function processData(data: RecentTrack[]) {
     rating = earliestFullMatchRating || earliestPartialMatchRating;
     formatsLabel = Array.from(formats).map(key => constants.RYMFormatsLabels[key] || key).join(', ');
 
-    latestTrackMetadata = {
+    result.latestTrackMetadata = {
       rating,
       formats,
       formatsLabel,
     };
   }
 
-  return {
-    latestTrack,
-    latestTrackMetadata,
-    latestTrackColors,
-    scrobbles,
-  };
+  return result;
 }
 
 onDestroy(() => {

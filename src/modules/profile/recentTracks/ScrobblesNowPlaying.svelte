@@ -6,10 +6,8 @@ import { formatDistanceToNow } from 'date-fns';
 import DialogBase from '@/components/svelte/DialogBase.svelte';
 import TextEffect from '@/components/svelte/TextEffect.svelte';
 import * as constants from '@/helpers/constants';
-import { ERYMOwnershipStatus } from '@/helpers/enums';
-import { RecordsAPI } from '@/helpers/records-api';
 import { updateSyncedOptions } from '@/helpers/storageUtils';
-import { generateSearchUrl, generateSearchHint, cleanupReleaseEdition } from '@/helpers/string';
+import { generateSearchUrl, generateSearchHint } from '@/helpers/string';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 
 import type { Writable } from 'svelte/store';

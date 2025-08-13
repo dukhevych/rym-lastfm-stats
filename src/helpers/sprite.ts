@@ -1,19 +1,17 @@
-import svgLoader from '@/assets/icons/loader.svg?raw';
-import starSvg from '@/assets/icons/star.svg?raw';
-import lastfmSvg from '@/assets/icons/lastfm.svg?raw';
-import lastfmSquareSvg from '@/assets/icons/lastfm-square.svg?raw';
-import playlistSvg from '@/assets/icons/playlist.svg?raw';
-import volumeSvg from '@/assets/icons/volume.svg?raw';
-import brushSvg from '@/assets/icons/brush.svg?raw';
-import closeSvg from '@/assets/icons/close.svg?raw';
-import lockSvg from '@/assets/icons/lock.svg?raw';
-import unlockSvg from '@/assets/icons/unlock.svg?raw';
-import pollingStartSvg from '@/assets/icons/polling-start.svg?raw';
-import pollingStopSvg from '@/assets/icons/polling-stop.svg?raw';
-import swapSvg from '@/assets/icons/swap.svg?raw';
-import playSvg from '@/assets/icons/play.svg?raw';
-import peopleSvg from '@/assets/icons/people.svg?raw';
-import settingsSvg from '@/assets/icons/settings.svg?raw';
+import svgLoader from '@/assets/icons/loader.svg';
+import starSvg from '@/assets/icons/star.svg';
+import lastfmSvg from '@/assets/icons/lastfm.svg';
+import lastfmSquareSvg from '@/assets/icons/lastfm-square.svg';
+import playlistSvg from '@/assets/icons/playlist.svg';
+import volumeSvg from '@/assets/icons/volume.svg';
+import brushSvg from '@/assets/icons/brush.svg';
+import closeSvg from '@/assets/icons/close.svg';
+import lockSvg from '@/assets/icons/lock.svg';
+import unlockSvg from '@/assets/icons/unlock.svg';
+import swapSvg from '@/assets/icons/swap.svg';
+import playSvg from '@/assets/icons/play.svg';
+import peopleSvg from '@/assets/icons/people.svg';
+import settingsSvg from '@/assets/icons/settings.svg';
 
 const svgSpriteId = 'svg-sprite';
 
@@ -36,8 +34,6 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(closeSvg, 'svg-close-symbol');
   addIconToSVGSprite(lockSvg, 'svg-lock-symbol');
   addIconToSVGSprite(unlockSvg, 'svg-unlock-symbol');
-  addIconToSVGSprite(pollingStartSvg, 'svg-polling-start-symbol');
-  addIconToSVGSprite(pollingStopSvg, 'svg-polling-stop-symbol');
   addIconToSVGSprite(swapSvg, 'svg-swap-symbol');
   addIconToSVGSprite(playSvg, 'svg-play-symbol');
   addIconToSVGSprite(peopleSvg, 'svg-people-symbol');

@@ -2,7 +2,7 @@
 
 <script lang="ts">
 import { formatDistanceToNow } from 'date-fns';
-import { watch } from 'runed';
+// import { watch } from 'runed';
 import browser from 'webextension-polyfill';
 
 import * as api from '@/helpers/api';
@@ -23,14 +23,14 @@ import FormToggle from './FormToggle.svelte';
 const appVersion = process.env.APP_VERSION;
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 
-let loading = $state(true);
+let isLoading = $state(true);
 let saved = $state(false);
 let dirty = $state(false);
+
+const urlParams = new URLSearchParams(window.location.search);
+let activeTab = $state(urlParams.get('tab') || 'modules');
+
 let signinInProgress = $state(false);
-let showModal = $state(false);
-const identityApiSupported = $state(
-  !!(browser.identity && browser.identity.launchWebAuthFlow),
-);
 let fallbackUsername = $state('');
 const options: Partial<AddonOptions> = $state({});
 let config = $state<AddonOptions>();
@@ -39,8 +39,49 @@ let dbRecordsQty = $state<number>();
 const isLoggedIn = $derived(() => !!userData?.name);
 let rymSyncTimestamp = $state<number>();
 let lastfmApiInputType = $state('password');
+const hasApiKey = $derived(
+  () => !!(options.lastfmApiKey && options.lastfmApiKey.length === 32),
+);
 
 let submitTimer: NodeJS.Timeout | null = null;
+
+const moduleSettingsPreviews = {
+  'artist-stats': [
+    {
+      type: 'animation',
+      on: '/images/options/artist-stats-on.jpg',
+      off: '/images/options/artist-stats-off.jpg',
+    },
+  ],
+  'release-stats': [
+    {
+      type: 'animation',
+      on: '/images/options/release-stats-on.jpg',
+      off: '/images/options/release-stats-off.jpg',
+    },
+  ],
+  'song-stats': [
+    {
+      type: 'animation',
+      on: '/images/options/song-stats-on.jpg',
+      off: '/images/options/song-stats-off.jpg',
+    },
+  ],
+  'recent-tracks': [
+    '/images/options/recent-tracks-1-playing.jpg',
+    '/images/options/recent-tracks-2-playing.jpg',
+    '/images/options/recent-tracks-3-playing.jpg',
+    '/images/options/recent-tracks-1-stopped.jpg',
+  ],
+  'top-albums': [
+    '/images/options/top-albums.jpg',
+  ],
+  'top-artists': [
+    '/images/options/top-artists.jpg',
+  ],
+};
+
+let activePreviewKey = $state('artist-stats');
 
 function handleApiKeyFocus(e: Event) {
   (e.target as HTMLInputElement).select();
@@ -54,7 +95,7 @@ function handleApiKeyBlur(e: Event) {
   lastfmApiInputType = 'password';
 }
 
-const submit = async () => {
+async function submit() {
   const newConfig = JSON.parse(JSON.stringify(options));
 
   Object.keys(newConfig).forEach((key) => {
@@ -78,16 +119,16 @@ const submit = async () => {
     }
   }, 3000);
   dirty = false;
-};
+}
 
-const reset = async () => {
+async function reset() {
   const doConfirm = confirm('Are you sure you want to reset all settings?');
   if (!doConfirm) return;
   Object.assign(options, constants.PROFILE_OPTIONS_DEFAULT);
   await submit();
-};
+}
 
-const openAuthPage = async () => {
+async function openAuthPage() {
   if (!SYSTEM_API_KEY) {
     alert('API Key is not set');
     return;
@@ -136,15 +177,9 @@ const openAuthPage = async () => {
     console.error('Auth failed:', err);
     signinInProgress = false;
   }
-};
+}
 
-const closeModalHandler = (e: KeyboardEvent) => {
-  if (e.key === 'Escape') {
-    showModal = false;
-  }
-};
-
-const init = async () => {
+async function init() {
   try {
     const syncedOptions = await getSyncedOptions();
     dbRecordsQty = await RecordsAPI.getQty();
@@ -172,38 +207,22 @@ const init = async () => {
     //   },
     //   { deep: true },
     // );
-    loading = false;
+    isLoading = false;
   } catch (error) {
     console.error(error);
   }
-};
+}
 
-// $effect(
-//   () => {
-//     if (showModal) {
-//       document.body.style.overflow = 'hidden';
-//       document.addEventListener('keydown', closeModalHandler);
-//     } else {
-//       document.body.style.overflow = '';
-//       document.removeEventListener('keydown', closeModalHandler);
-//     }
-//   },
-// );
-
-const hasApiKey = $derived(
-  () => !!(options.lastfmApiKey && options.lastfmApiKey.length === 32),
-);
-
-const openRymSync = () => {
+function openRymSync() {
   window.open('https://rateyourmusic.com/music_export?sync', '_blank');
-};
+}
 
-const logout = async () => {
+async function logout() {
   const doConfirm = confirm('Are you sure you want to logout?');
   if (!doConfirm) return;
   await storageRemove('userData');
   userData = undefined;
-};
+}
 
 const reportIssueUrl = $derived(() => {
   const baseUrl = 'https://github.com/dukhevych/rym-lastfm-stats/issues/new';
@@ -217,7 +236,7 @@ const reportIssueUrl = $derived(() => {
   return `${baseUrl}?${params.toString()}`;
 });
 
-const fallbackLogin = async () => {
+async function fallbackLogin() {
   const userDataRaw = await api.fetchUserDataByName(
     fallbackUsername,
     SYSTEM_API_KEY!,
@@ -236,17 +255,17 @@ const fallbackLogin = async () => {
       userData: normalizedData,
     });
   }
-};
+}
 
-watch(
-  () => $state.snapshot(options),
-  (v, v2) => {
-    console.log('options changed');
-    console.log(JSON.stringify(v, null, 2));
-    console.log(JSON.stringify(v2, null, 2));
-  },
-  { lazy: true },
-);
+// watch(
+//   () => $state.snapshot(options),
+//   (v, v2) => {
+//     console.log('options changed');
+//     console.log(JSON.stringify(v, null, 2));
+//     console.log(JSON.stringify(v2, null, 2));
+//   },
+//   { lazy: true },
+// );
 
 init();
 
@@ -257,15 +276,69 @@ interface CardProps {
   invalidStatus: string;
   action?: () => void;
   hasWarning?: boolean;
+  note?: string | string[];
   isLoading?: boolean;
 }
 </script>
+
+{#snippet iconKey(size = 4)}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class="h-{size} w-{size}"
+    ><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"
+    ></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"
+    ></circle>
+  </svg>
+{/snippet}
+
+{#snippet iconBarChart(size = 4)}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class="h-{size} w-{size}"
+    ><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"
+    ></path><path d="M8 17v-3"></path>
+  </svg>
+{/snippet}
+
+{#snippet iconClock(size = 4)}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class="h-{size} w-{size}"
+    ><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"
+    ></polyline>
+  </svg>
+{/snippet}
 
 {#snippet card({
   isValid,
   hasWarning = false,
   isLoading = false,
   title,
+  note,
   validStatus,
   invalidStatus,
   action,
@@ -273,17 +346,14 @@ interface CardProps {
   <svelte:element
     this={!isValid && action ? 'button' : 'div'}
     data-slot="card"
-    class="text-card-foreground flex flex-col gap-6 rounded-xl py-6 border-2"
-    class:shadow-sm={isValid}
-    class:border-green-200={isValid}
-    class:bg-green-50={isValid}
-    class:dark:bg-green-900={isValid}
-    class:dark:border-green-800={isValid}
-    class:border-zinc-200={!isValid}
-    class:bg-zinc-50={!isValid}
-    class:dark:bg-zinc-900={!isValid}
-    class:dark:border-zinc-800={!isValid}
-    class:cursor-pointer={!isValid && action}
+    class={[
+      'text-card-foreground flex flex-col gap-6 rounded-xl py-6 border-2 text-left',
+      isValid ? 'shadow-sm border-green-200 bg-green-50 dark:bg-green-900 dark:border-green-800' : '',
+      !isValid ? 'border-zinc-200 bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800' : '',
+      hasWarning ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-800' : '',
+      isLoading ? 'pointer-events-none opacity-50' : '',
+      (!isValid && action) ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800' : '',
+    ].join(' ')}
     onclick={!isValid && action ? action : undefined}
     role={!isValid && action ? 'button' : undefined}
   >
@@ -295,18 +365,31 @@ interface CardProps {
           {@render iconError()}
         {/if}
 
-        <div class="text-left">
-          <h3 class="font-bold">{title}</h3>
-          <div class="text-sm text-gray-600 dark:text-gray-400">
-            {isValid ? validStatus : invalidStatus}
+        <div class="flex grow items-center gap-1">
+          <div>
+            <h3 class="font-bold">{title}</h3>
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+              {isValid ? validStatus : invalidStatus}
+            </div>
           </div>
+          {#if note}
+            <div class="text-xs text-gray-600 dark:text-gray-300 text-right grow flex flex-col gap-1">
+              {#if typeof note === 'string'}
+                {note}
+              {:else}
+                {#each note as n}
+                  <p>{n}</p>
+                {/each}
+              {/if}
+            </div>
+          {/if}
         </div>
       </div>
     </div>
   </svelte:element>
 {/snippet}
 
-{#snippet iconSuccess()}
+{#snippet iconSettings(size = 4)}
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -317,14 +400,32 @@ interface CardProps {
     stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
-    class="lucide lucide-circle-check-big h-5 w-5 text-green-600"
+    class="h-{size} w-{size}"
+    ><path
+      d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+    ></path><circle cx="12" cy="12" r="3"></circle>
+  </svg>
+{/snippet}
+
+{#snippet iconSuccess(size = 5)}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class="h-{size} w-{size} text-green-600"
   >
     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
     <path d="m9 11 3 3L22 4"></path>
   </svg>
 {/snippet}
 
-{#snippet iconError()}
+{#snippet iconError(size = 5)}
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -335,17 +436,22 @@ interface CardProps {
     stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
-    class="lucide lucide-circle-x-big h-5 w-5 text-red-600"
+    class="h-{size} w-{size} text-red-600"
   >
     <path d="M18 6L6 18"></path>
     <path d="M6 6l12 12"></path>
   </svg>
 {/snippet}
 
-<div class="min-h-viewport flex flex-col">
+<div
+  class="min-h-viewport flex flex-col"
+  style:display={isLoading ? 'none' : 'block'}
+>
   <header>
     <nav class="navbar bg-base-200 shadow-sm">
-      <div class="max-w-screen-xl mx-auto flex grow items-center justify-center py-3">
+      <div
+        class="max-w-screen-xl mx-auto flex grow items-center justify-center py-3"
+      >
         <a
           href="https://rateyourmusic.com"
           target="_blank"
@@ -365,41 +471,320 @@ interface CardProps {
       </div>
     </nav>
   </header>
-  <main class="max-w-screen-xl mx-auto w-full">
+  <main class="max-w-screen-xl mx-auto w-full flex flex-col gap-3">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       {@render card({
         isValid: isLoggedIn(),
         title: 'Last.fm OAuth',
         validStatus: 'Connected',
         invalidStatus: 'Not connected',
+        note: userData?.name ? [
+          'Username:',
+          userData.name,
+        ] : undefined,
         action: openAuthPage,
+        isLoading: signinInProgress,
       })}
       {@render card({
         isValid: hasApiKey(),
         title: 'API Key',
         validStatus: 'Configured',
         invalidStatus: 'Not configured',
+        action: () => activeTab = 'api-auth',
       })}
       {@render card({
         isValid: !!rymSyncTimestamp,
         title: 'RYM Sync',
         validStatus: 'Completed',
         invalidStatus: 'Not completed',
+        note: rymSyncTimestamp ? [
+          'Last sync ' + formatDistanceToNow(rymSyncTimestamp, { addSuffix: true }),
+          'Records: ' + dbRecordsQty,
+        ] : [
+          'No sync performed yet',
+          'Records: ' + dbRecordsQty,
+        ],
+        action: openRymSync,
       })}
     </div>
 
-    <form>
+    <div>
+      <div class="tabs mx-6 tabs-lift *:flex *:items-center *:gap-2 *:grow relative">
+        <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'modules' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=modules" onclick={(e) => { e.preventDefault(); activeTab = 'modules' }}>
+          {@render iconSettings()}
+          Modules
+        </a>
+        <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'recent-tracks' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=recent-tracks" onclick={(e) => { e.preventDefault(); activeTab = 'recent-tracks' }}>
+          {@render iconClock()}
+          Recent Tracks
+        </a>
+        <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'top-content' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=top-content" onclick={(e) => { e.preventDefault(); activeTab = 'top-content' }}>
+          {@render iconBarChart()}
+          Top Content
+        </a>
+        <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'api-auth' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=api-auth" onclick={(e) => { e.preventDefault(); activeTab = 'api-auth' }}>
+          {@render iconKey()}
+          API & Auth
+        </a>
+      </div>
+
+      <div class="mt-[-1px] flex flex-col gap-3 border border-gray-200 dark:border-gray-800 rounded-xl p-4 bg-gray-50 dark:bg-gray-900" class:hidden={activeTab !== 'modules'}>
+        <div class="flex items-center gap-2">
+          {@render iconSettings(5)}
+          <h3 class="text-lg font-semibold">Module Settings</h3>
+        </div>
+        <p class="text-gray-600 dark:text-gray-400">
+          Enable or disable specific enhancement modules
+        </p>
+        <div class="flex">
+          <div class="flex flex-col gap-3 w-1/3 border-r border-gray-200 dark:border-gray-800">
+            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4">
+              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-4 flex items-baseline justify-between">
+                Last.fm Stats
+                <span class="text-xs dark:text-blue-200 text-blue-600">
+                  Updates every {utils.msToHuman(constants.STATS_CACHE_LIFETIME_GUEST_MS)}
+                </span>
+              </h4>
+              {#if !hasApiKey() || !isLoggedIn()}
+                <div class="text-xs dark:text-orange-200 text-red-600 px-4 flex flex-col gap-1">
+                  {#if !hasApiKey()}
+                    <p>Add a Last.fm API key to increase rate limit</p>
+                  {/if}
+                  {#if !isLoggedIn()}
+                    <p>Connect to Last.fm to <strong>enable personal scrobbling</strong> stats</p>
+                  {/if}
+                </div>
+              {/if}
+              <div>
+                <label
+                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-4 select-none"
+                  onmouseenter={() => activePreviewKey = 'artist-stats'}
+                  onmouseleave={() => activePreviewKey = ''}
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-medium">Artist Statistics</span>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Show Last.fm stats on artist pages
+                    </p>
+                  </div>
+                  <input type="checkbox" class="toggle toggle-primary" checked />
+                </label>
+                <label
+                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-4 select-none"
+                  onmouseenter={() => activePreviewKey = 'release-stats'}
+                  onmouseleave={() => activePreviewKey = ''}
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-medium">Release Statistics</span>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Show Last.fm stats on release pages
+                    </p>
+                  </div>
+                  <input type="checkbox" class="toggle toggle-primary" checked />
+                </label>
+                <label
+                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-4 select-none"
+                  onmouseenter={() => activePreviewKey = 'song-stats'}
+                  onmouseleave={() => activePreviewKey = ''}
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-medium">Song Statistics</span>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Show Last.fm stats on song pages
+                    </p>
+                  </div>
+                  <input type="checkbox" class="toggle toggle-primary" checked />
+                </label>
+              </div>
+            </div>
+            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4 bg-gray-50 dark:bg-gray-900">
+              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-3 flex items-baseline justify-between">
+                Profile Features
+                {#if !hasApiKey()}
+                  <span class="text-xs dark:text-orange-200 text-red-600">
+                    ⚠️ Last.fm API key is required
+                  </span>
+                {/if}
+              </h4>
+              <div>
+                <label
+                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
+                  onmouseenter={() => activePreviewKey = 'recent-tracks'}
+                  onmouseleave={() => activePreviewKey = ''}
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-medium">Recent Tracks Widget</span>
+                    <p class="text-xs text-gray-500">
+                      Show recent tracks on profile
+                    </p>
+                  </div>
+                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!hasApiKey()} />
+                </label>
+                <label
+                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
+                  onmouseenter={() => activePreviewKey = 'top-albums'}
+                  onmouseleave={() => activePreviewKey = ''}
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-medium">Top Albums Widget</span>
+                    <p class="text-xs text-gray-500">Show top albums on profile</p>
+                  </div>
+                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!hasApiKey()} />
+                </label>
+                <label
+                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
+                  onmouseenter={() => activePreviewKey = 'top-artists'}
+                  onmouseleave={() => activePreviewKey = ''}
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-medium">Top Artists Widget</span>
+                    <p class="text-xs text-gray-500">Show top artists on profile</p>
+                  </div>
+                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!hasApiKey()} />
+                </label>
+                <label
+                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
+                  onmouseenter={() => activePreviewKey = 'strict-search'}
+                  onmouseleave={() => activePreviewKey = ''}
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-medium">Strict Search Results</span>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Enhanced search filtering
+                    </p>
+                  </div>
+                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!hasApiKey()} />
+                </label>
+              </div>
+            </div>
+            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4 bg-gray-50 dark:bg-gray-900">
+              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-3">
+                Other Features
+              </h4>
+              <div>
+                <label
+                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md rounded-r-none py-2 px-3 select-none"
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-medium">List User Ratings</span>
+                    <p class="text-xs text-gray-500">Show ratings in lists</p>
+                  </div>
+                  <input type="checkbox" class="toggle toggle-primary" checked />
+                </label>
+                <label
+                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md rounded-r-none py-2 px-3 select-none"
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-sm font-medium">Chart User Ratings</span>
+                    <p class="text-xs text-gray-500">Show ratings in charts</p>
+                  </div>
+                  <input type="checkbox" class="toggle toggle-primary" checked />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual preview -->
+          <div class="w-2/3 *:w-full *:max-w-[800px] flex items-center flex-col gap-3">
+            {#each Object.entries(moduleSettingsPreviews) as [key, previews]}
+              <div data-preview-key={key} class:hidden={activePreviewKey !== key}>
+                {#each previews as preview}
+                  {#if typeof preview === 'string'}
+                    <img src={preview} alt={`Visual preview for ${key}`} />
+                  {/if}
+                  {#if typeof preview === 'object' && preview.type === 'animation'}
+                    <div class="grid relative">
+                      <img src={preview.on} alt="" class="[grid-area:1/1] animate-fadeA will-change-opacity" />
+                      <img src={preview.off} alt="" class="[grid-area:1/1] animate-fadeB pointer-events-none will-change-opacity" />
+                    </div>
+                  {/if}
+                {/each}
+              </div>
+            {/each}
+            <!-- <img src="/images/options/top-artists.png" alt="Visual preview" />
+            <img src="/images/options/top-albums.png" alt="Visual preview" />
+            <img src="/images/options/recent-tracks-1-playing.png" alt="Visual preview" />
+            <img src="/images/options/recent-tracks-2-playing.png" alt="Visual preview" />
+            <img src="/images/options/recent-tracks-3-playing.png" alt="Visual preview" />
+            <img src="/images/options/recent-tracks-1-stopped.png" alt="Visual preview" />
+            <img src="/images/options/artist-stats-on.png" alt="Visual preview" />
+            <img src="/images/options/artist-stats-off.png" alt="Visual preview" />
+            <img src="/images/options/release-stats-on.png" alt="Visual preview" />
+            <img src="/images/options/release-stats-off.png" alt="Visual preview" />
+            <img src="/images/options/song-stats-on.png" alt="Visual preview" />
+            <img src="/images/options/song-stats-off.png" alt="Visual preview" /> -->
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6" class:hidden={activeTab !== 'recent-tracks'}>
+        <div class="flex items-center gap-2 mb-4">
+          {@render iconClock(5)}
+          <h3 class="text-lg font-semibold">Recent Tracks</h3>
+        </div>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          Configure the recent tracks widget
+        </p>
+
+        <!-- <div class="flex"> -->
+          <div class="flex flex-col gap-3 border border-gray-200 dark:border-gray-800">
+            SETTINGS GO HERE
+          </div>
+        <!-- </div> -->
+      </div>
+
+      <div class="space-y-6" class:hidden={activeTab !== 'top-content'}>
+        <div class="flex items-center gap-2 mb-4">
+          {@render iconBarChart(5)}
+          <h3 class="text-lg font-semibold">Top Content</h3>
+        </div>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          Configure the top content widgets
+        </p>
+
+        <div class="flex">
+          <div class="flex flex-col gap-3 border-r border-gray-200 dark:border-gray-800">
+            SETTINGS GO HERE
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6" class:hidden={activeTab !== 'api-auth'}>
+        <div class="flex items-center gap-2 mb-4">
+          {@render iconKey(5)}
+          <h3 class="text-lg font-semibold">API & Auth</h3>
+        </div>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          Configure the API and authentication settings
+        </p>
+
+        <div class="flex">
+          <div class="flex flex-col gap-3 border-r border-gray-200 dark:border-gray-800">
+            SETTINGS GO HERE
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end">
+      <button class="btn btn-primary">
+        {@render iconSettings(5)}
+        Save Configuration
+      </button>
+    </div>
+
+    <!-- <form>
       <h2>Modules Turn On/Off</h2>
       <fieldset>
-        <!-- {#each constants.MODULES_ARRAY as module}
+        {#each constants.MODULES_ARRAY as module}
           <div>
             <FormToggle bind:checked={options[module as keyof ModuleToggleConfig]} label={module} />
           </div>
-        {/each} -->
+        {/each}
       </fieldset>
-    </form>
+    </form> -->
   </main>
-  <div>
+  <!-- <div>
     <button class="btn btn-neutral">Neutral</button>
     <button class="btn btn-primary">Primary</button>
     <button class="btn btn-secondary">Secondary</button>
@@ -408,20 +793,29 @@ interface CardProps {
     <button class="btn btn-success">Success</button>
     <button class="btn btn-warning">Warning</button>
     <button class="btn btn-error">Error</button>
-  </div>
+  </div> -->
 </div>
-
-<ul class="steps steps-vertical lg:steps-horizontal">
-  <li class="step step-primary">Register</li>
-  <li class="step step-primary">Choose plan</li>
-  <li class="step">Purchase</li>
-  <li class="step">Receive Product</li>
-</ul>
 
 <style>
 /* fix for Chrome default extension font style */
 :global(body) {
   font-size: inherit;
   font-family: inherit;
+}
+
+@keyframes fadeA {
+  0%, 89.99% { opacity: 1; }
+  90%, 100% { opacity: 0; }
+}
+@keyframes fadeB {
+  0%, 89.99% { opacity: 0; }
+  90%, 100% { opacity: 1; }
+}
+
+.animate-fadeA {
+  animation: fadeA 5s infinite ease-in-out;
+}
+.animate-fadeB {
+  animation: fadeB 5s infinite ease-in-out;
 }
 </style>
