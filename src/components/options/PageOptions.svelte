@@ -27,6 +27,18 @@ let isLoading = $state(true);
 let saved = $state(false);
 let dirty = $state(false);
 
+const rymSyncTimestampLabel = $derived(() => {
+  if (!rymSyncTimestamp) return 'No sync performed yet';
+  return `Last sync ${formatDistanceToNow(rymSyncTimestamp, { addSuffix: true })}`;
+});
+
+const dbRecordsQtyLabel = $derived(() => {
+  if (!dbRecordsQty) return 'No records yet';
+  let str = `Records: ${dbRecordsQty}`;
+  if (!rymSyncTimestamp) str += ' (so far)';
+  return str;
+});
+
 const urlParams = new URLSearchParams(window.location.search);
 let activeTab = $state(urlParams.get('tab') || 'modules');
 
@@ -279,7 +291,32 @@ interface CardProps {
   note?: string | string[];
   isLoading?: boolean;
 }
+
+interface TabLinkProps {
+  href: string;
+  label: string;
+  icon: (size?: number) => any;
+  isActive: boolean;
+  onClick: (e: MouseEvent) => void;
+}
 </script>
+
+{#snippet tabLink({
+  href,
+  label,
+  icon,
+  isActive,
+  onClick
+}: TabLinkProps)}
+  <a
+    href={href}
+    onclick={onClick}
+    class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {isActive ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}"
+  >
+    {@render icon()}
+    {label}
+  </a>
+{/snippet}
 
 {#snippet iconKey(size = 4)}
   <svg
@@ -497,24 +534,59 @@ interface CardProps {
         title: 'RYM Sync',
         validStatus: 'Completed',
         invalidStatus: 'Not completed',
-        note: rymSyncTimestamp ? [
-          'Last sync ' + formatDistanceToNow(rymSyncTimestamp, { addSuffix: true }),
-          'Records: ' + dbRecordsQty,
-        ] : [
-          'No sync performed yet',
-          'Records: ' + dbRecordsQty,
+        note: [
+          rymSyncTimestampLabel(),
+          dbRecordsQtyLabel(),
         ],
         action: openRymSync,
       })}
     </div>
 
     <div>
-      <div class="tabs mx-6 tabs-lift *:flex *:items-center *:gap-2 *:grow relative">
-        <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'modules' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=modules" onclick={(e) => { e.preventDefault(); activeTab = 'modules' }}>
+      <nav>
+        <ul class="tabs mx-6 tabs-lift *:grow relative">
+          <li class="*:flex *:items-center *:gap-2">
+            {@render tabLink({
+              href: '#',
+              label: 'Modules',
+              icon: iconSettings,
+              isActive: activeTab === 'modules',
+              onClick: () => activeTab = 'modules',
+            })}
+          </li>
+          <li class="*:flex *:items-center *:gap-2">
+            {@render tabLink({
+              href: '#',
+              label: 'Recent Tracks',
+              icon: iconClock,
+              isActive: activeTab === 'recent-tracks',
+              onClick: () => activeTab = 'recent-tracks',
+            })}
+          </li>
+          <li class="*:flex *:items-center *:gap-2">
+            {@render tabLink({
+              href: '#',
+              label: 'Top Content',
+              icon: iconBarChart,
+              isActive: activeTab === 'top-content',
+              onClick: () => activeTab = 'top-content',
+            })}
+          </li>
+          <li class="*:flex *:items-center *:gap-2">
+            {@render tabLink({
+              href: '#',
+              label: 'API & Auth',
+              icon: iconKey,
+              isActive: activeTab === 'api-auth',
+              onClick: () => activeTab = 'api-auth',
+            })}
+          </li>
+        </ul>
+        <!-- <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'modules' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=modules" onclick={(e) => { e.preventDefault(); activeTab = 'modules' }}>
           {@render iconSettings()}
           Modules
-        </a>
-        <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'recent-tracks' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=recent-tracks" onclick={(e) => { e.preventDefault(); activeTab = 'recent-tracks' }}>
+        </a> -->
+        <!-- <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'recent-tracks' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=recent-tracks" onclick={(e) => { e.preventDefault(); activeTab = 'recent-tracks' }}>
           {@render iconClock()}
           Recent Tracks
         </a>
@@ -525,17 +597,19 @@ interface CardProps {
         <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'api-auth' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=api-auth" onclick={(e) => { e.preventDefault(); activeTab = 'api-auth' }}>
           {@render iconKey()}
           API & Auth
-        </a>
-      </div>
+        </a> -->
+      </nav>
 
-      <div class="mt-[-1px] flex flex-col gap-3 border border-gray-200 dark:border-gray-800 rounded-xl p-4 bg-gray-50 dark:bg-gray-900" class:hidden={activeTab !== 'modules'}>
-        <div class="flex items-center gap-2">
-          {@render iconSettings(5)}
-          <h3 class="text-lg font-semibold">Module Settings</h3>
-        </div>
-        <p class="text-gray-600 dark:text-gray-400">
-          Enable or disable specific enhancement modules
-        </p>
+      <div class="mt-[-1px] flex flex-col gap-6 border border-gray-200 dark:border-gray-800 rounded-xl p-4 bg-gray-50 dark:bg-gray-900" class:hidden={activeTab !== 'modules'}>
+        <header class="flex flex-col gap-2">
+          <div class="flex items-center justify-center gap-2">
+            {@render iconSettings(5)}
+            <h3 class="text-lg font-semibold">Module Settings</h3>
+          </div>
+          <div class="text-gray-600 dark:text-gray-400 text-center">
+            Enable or disable specific enhancement modules
+          </div>
+        </header>
         <div class="flex">
           <div class="flex flex-col gap-3 w-1/3 border-r border-gray-200 dark:border-gray-800">
             <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4">
@@ -686,33 +760,30 @@ interface CardProps {
 
           <!-- Visual preview -->
           <div class="w-2/3 *:w-full *:max-w-[800px] flex items-center flex-col gap-3">
-            {#each Object.entries(moduleSettingsPreviews) as [key, previews]}
-              <div data-preview-key={key} class:hidden={activePreviewKey !== key}>
-                {#each previews as preview}
-                  {#if typeof preview === 'string'}
-                    <img src={preview} alt={`Visual preview for ${key}`} />
-                  {/if}
-                  {#if typeof preview === 'object' && preview.type === 'animation'}
-                    <div class="grid relative">
-                      <img src={preview.on} alt="" class="[grid-area:1/1] animate-fadeA will-change-opacity" />
-                      <img src={preview.off} alt="" class="[grid-area:1/1] animate-fadeB pointer-events-none will-change-opacity" />
-                    </div>
-                  {/if}
+            {#if !activePreviewKey}
+              <div class="h-full flex items-center justify-center text-gray-600 dark:text-gray-400 text-center text-xl font-medium p-4 rounded-lg bg-gray-100 dark:bg-gray-800 cursor-default">
+                Hover over a module in sidebar to see it's visual preview
+              </div>
+            {:else}
+              <div class="flex flex-col gap-3">
+                <h3 class="text-lg font-semibold">Visual Preview</h3>
+                {#each Object.entries(moduleSettingsPreviews) as [key, previews]}
+                  <div data-preview-key={key} class:hidden={activePreviewKey !== key}>
+                    {#each previews as preview}
+                      {#if typeof preview === 'string'}
+                        <img src={preview} alt={`Visual preview for ${key}`} />
+                      {/if}
+                      {#if typeof preview === 'object' && preview.type === 'animation'}
+                        <div class="grid relative">
+                          <img src={preview.on} alt="" class="[grid-area:1/1] animate-fadeA will-change-opacity" />
+                          <img src={preview.off} alt="" class="[grid-area:1/1] animate-fadeB pointer-events-none will-change-opacity" />
+                        </div>
+                      {/if}
+                    {/each}
+                  </div>
                 {/each}
               </div>
-            {/each}
-            <!-- <img src="/images/options/top-artists.png" alt="Visual preview" />
-            <img src="/images/options/top-albums.png" alt="Visual preview" />
-            <img src="/images/options/recent-tracks-1-playing.png" alt="Visual preview" />
-            <img src="/images/options/recent-tracks-2-playing.png" alt="Visual preview" />
-            <img src="/images/options/recent-tracks-3-playing.png" alt="Visual preview" />
-            <img src="/images/options/recent-tracks-1-stopped.png" alt="Visual preview" />
-            <img src="/images/options/artist-stats-on.png" alt="Visual preview" />
-            <img src="/images/options/artist-stats-off.png" alt="Visual preview" />
-            <img src="/images/options/release-stats-on.png" alt="Visual preview" />
-            <img src="/images/options/release-stats-off.png" alt="Visual preview" />
-            <img src="/images/options/song-stats-on.png" alt="Visual preview" />
-            <img src="/images/options/song-stats-off.png" alt="Visual preview" /> -->
+            {/if}
           </div>
         </div>
       </div>

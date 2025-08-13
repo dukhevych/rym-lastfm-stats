@@ -5,7 +5,7 @@
       focus-within:shadow-lg
     "
     :class="{
-      'pointer-events-none select-none opacity-30 grayscale filter': disabled,
+      'pointer-events-none select-none opacity-30 grayscale': disabled,
     }"
   >
     <div
