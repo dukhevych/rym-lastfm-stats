@@ -11,7 +11,7 @@ import type { ColorsMap } from '@/helpers/colors';
 import * as constants from '@/helpers/constants';
 import { ERYMOwnershipStatus } from '@/helpers/enums';
 import { RecordsAPI } from '@/helpers/records-api';
-import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
+import { storageGet, storageSet, storageRemove, updateProfileOptions } from '@/helpers/storageUtils';
 import { cleanupReleaseEdition } from '@/helpers/string';
 import * as utils from '@/helpers/utils';
 
@@ -37,10 +37,10 @@ const {
   parent,
 }: Props = $props();
 
-let isScrobblesHistoryOpen = $state($configStore.recentTracksShowOnLoad);
+let isScrobblesHistoryOpen = $state($configStore.profileRecentTracksShowOnLoad);
 
-const isScrobblesPollingEnabled = $derived(() => $configStore.recentTracksPollingEnabled);
-const isScrobblesHistoryPinned = $derived(() => $configStore.recentTracksShowOnLoad);
+const isScrobblesPollingEnabled = $derived(() => $configStore.profileRecentTracksPolling);
+const isScrobblesHistoryPinned = $derived(() => $configStore.profileRecentTracksShowOnLoad);
 
 let abortController: AbortController = new AbortController();
 let failedToFetch: boolean = $state(false);
@@ -196,10 +196,10 @@ async function loadRecentTracks() {
 
   try {
     const recentTracksResponse = await api.getRecentTracks({
-      apiKey: $configStore.lastfmApiKey,
+      apiKey: context.lastfmApiKey,
       params: {
         username: context.userName,
-        limit: $configStore.recentTracksLimit,
+        limit: $configStore.profileRecentTracksLimit,
       },
       signal: abortController.signal,
     });
@@ -252,7 +252,7 @@ const setRootElement = (node: HTMLSpanElement) => {
 };
 
 $effect(() => {
-  if ($configStore.recentTracksPollingEnabled) {
+  if ($configStore.profileRecentTracksPolling) {
     polling.start();
   } else {
     polling.stop();
@@ -260,7 +260,7 @@ $effect(() => {
 });
 
 $effect(() => {
-  if ($configStore.rymPlayHistoryHide) {
+  if ($configStore.profileRecentTracksRymHistoryHide) {
     parent.classList.add('is-hidden');
   } else {
     parent.classList.remove('is-hidden');
@@ -276,10 +276,10 @@ $effect(() => {
 
 const onToggleScrobblesHistoryPinned = async () => {
   await Promise.all([
-    updateSyncedOptions({ recentTracksShowOnLoad: !isScrobblesHistoryPinned() }),
+    updateProfileOptions({ profileRecentTracksShowOnLoad: !isScrobblesHistoryPinned() }),
     configStore.update((config) => ({
       ...config,
-      recentTracksShowOnLoad: !isScrobblesHistoryPinned(),
+      profileRecentTracksShowOnLoad: !isScrobblesHistoryPinned(),
     })),
   ]);
 
@@ -311,7 +311,7 @@ init();
     onToggleScrobblesHistoryPinned={onToggleScrobblesHistoryPinned}
     pollingProgress={$progress}
   />
-  {#if $configStore.recentTracksLimit > 1}
+  {#if $configStore.profileRecentTracksLimit > 1}
     <ScrobblesHistory
       scrobbles={scrobbles}
       timestamp={timestamp}

@@ -88,7 +88,7 @@
 import { getTopAlbums } from '@/api/getTopAlbums';
 import type { TopAlbumsPeriod, TopAlbum } from '@/api/getTopAlbums';
 import * as constants from '@/helpers/constants';
-import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
+import { storageGet, storageSet, storageRemove, updateProfileOptions } from '@/helpers/storageUtils';
 import { generateSearchUrl } from '@/helpers/string';
 
 import type { Writable } from 'svelte/store';
@@ -108,7 +108,7 @@ let isLoading = $state(false);
 let loadedImages = $state<Record<string, boolean>>({});
 
 let albumsData = $state<TopAlbum[]>([]);
-let currentPeriod = $state<TopAlbumsPeriod>($configStore.topAlbumsPeriod as TopAlbumsPeriod);
+let currentPeriod = $state<TopAlbumsPeriod>($configStore.profileTopAlbumsPeriod as TopAlbumsPeriod);
 
 const albums = $derived(albumsData.map((album, index) => ({
   id: `${album.name}-${album.artist.name}-${currentPeriod}-${index}`,
@@ -134,8 +134,8 @@ $effect(() => {
   }
 });
 
-let savedPeriodValue = $state($configStore.topAlbumsPeriod);
-let periodValue = $state<TopAlbumsPeriod>($configStore.topAlbumsPeriod as TopAlbumsPeriod);
+let savedPeriodValue = $state($configStore.profileTopAlbumsPeriod);
+let periodValue = $state<TopAlbumsPeriod>($configStore.profileTopAlbumsPeriod as TopAlbumsPeriod);
 const cacheKey = $derived(() => `topAlbumsCache_${periodValue}`);
 
 async function loadCache() {
@@ -163,7 +163,7 @@ async function loadTopAlbums(periodValueValue: TopAlbumsPeriod) {
         username: context.userName,
         period: periodValueValue,
       },
-      apiKey: $configStore.lastfmApiKey,
+      apiKey: context.lastfmApiKey,
     });
     data = topAlbumsResponse.topalbums.album;
 
@@ -213,8 +213,8 @@ async function handlePeriodChange(event: Event) {
 }
 
 async function handlePeriodSave() {
-  await updateSyncedOptions({
-    topAlbumsPeriod: periodValue,
+  await updateProfileOptions({
+    profileTopAlbumsPeriod: periodValue,
   });
   savedPeriodValue = periodValue;
 }

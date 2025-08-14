@@ -15,7 +15,7 @@
   import * as utils from '@/helpers/utils';
 
   interface Props {
-    config: AddonOptions;
+    context: Record<string, any>;
     artistId: string;
     artistName: string;
     artistNameLocalized: string;
@@ -24,7 +24,7 @@
   }
 
   const {
-    config,
+    context,
     artistId,
     artistName,
     artistNameLocalized,
@@ -132,7 +132,7 @@
           artist: artistNameValue,
           username: userName,
         },
-        apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
+        apiKey: context.lastfmApiKey ?? (process.env.LASTFM_API_KEY as string),
       });
 
       if (artistInfoResponse) {

@@ -26,7 +26,7 @@ export interface TopAlbumsResponse {
   };
 }
 
-export type TopAlbumsPeriod = 'overall' | '7day' | '1month' | '3month' | '6month' | '12month';
+export type TopAlbumsPeriod = LastFmPeriod;
 
 interface GetTopAlbumsParams {
   username: string;

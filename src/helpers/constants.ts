@@ -51,7 +51,7 @@ DARK_THEME_CLASSES.reduce((acc, theme) => {
 }, THEMES);
 
 // Last.fm api values
-export const PERIOD_OPTIONS = [
+export const PERIOD_OPTIONS: { value: LastFmPeriod, label: string }[] = [
   {
     value: 'overall',
     label: 'Overall',
@@ -99,38 +99,11 @@ export const RECENT_TRACKS_LIMIT_MIN = 1;
 export const RECENT_TRACKS_LIMIT_MAX = 20;
 export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
-export const MODULES_ARRAY = process.env.MODULES_ARRAY || [];
-
-const MODULE_TOGGLE_CONFIG = {} as ModuleToggleConfig;
-
-for (const key of MODULES_ARRAY) {
-  MODULE_TOGGLE_CONFIG[key as keyof ModuleToggleConfig] = true;
-}
-
-export const PROFILE_OPTIONS_DEFAULT: AddonOptionsBase = {
+export const MODULE_TOGGLE_CONFIG = process.env.MODULES_ARRAY as unknown as ModuleToggleConfig;
+export const CONFIG_DEFAULTS = process.env.CONFIG_DEFAULTS as unknown as AddonOptions;
+export const PROFILE_OPTIONS_DEFAULT: AddonOptions = {
   ...MODULE_TOGGLE_CONFIG,
-
-  // RECENT TRACKS options
-  recentTracksShowOnLoad: false,
-  recentTracksBackground: 1,
-  recentTracksPollingEnabled: true,
-  recentTracksLimit: RECENT_TRACKS_LIMIT_DEFAULT,
-  recentTracksAnimation: 'auto',
-
-  // TOP ARTISTS options
-  topArtistsLimit: TOP_ARTISTS_LIMIT_DEFAULT,
-  topArtistsPeriod: TOP_ARTISTS_PERIOD_DEFAULT,
-
-  // TOP ALBUMS options
-  topAlbumsPeriod: TOP_ALBUMS_PERIOD_DEFAULT,
-
-  // RYM Customization options
-  rymPlayHistoryHide: false,
-}
-
-export const OPTIONS_DEFAULT: AddonOptions = {
-  ...PROFILE_OPTIONS_DEFAULT,
-  lastfmApiKey: '',
+  ...CONFIG_DEFAULTS,
 };
 
 // [Addon entity type]: [RYM entity code]

@@ -1,10 +1,9 @@
 import browser from 'webextension-polyfill';
 import { Index } from 'flexsearch';
 import * as db from '@/helpers/db';
-import { normalizeForSearch } from '@/helpers/string';
 import * as constants from '@/helpers/constants';
 import getWindowDataInjected from '@/background/getWindowDataInjected';
-import { checkPartialStringsMatch } from '@/helpers/string';
+import { checkPartialStringsMatch, normalizeForSearch } from '@/helpers/string';
 
 import './background/runtime/onInstalled';
 

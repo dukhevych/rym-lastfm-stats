@@ -16,7 +16,7 @@ import type { RenderSettings } from '@/helpers/renderContent';
 import { get } from 'svelte/store';
 
 async function render(settings: RenderSettings) {
-  const { configStore } = settings;
+  const { configStore, context } = settings;
   const config = get(configStore);
 
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
@@ -52,7 +52,7 @@ async function render(settings: RenderSettings) {
   mount(EntityStats, {
     target: mountPoint,
     props: {
-      config,
+      context: context!,
       entityId,
       artistNames,
       entityType,

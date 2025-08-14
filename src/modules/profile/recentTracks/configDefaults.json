@@ -1,0 +1,8 @@
+{
+  "showOnLoad": false,
+  "background": 1,
+  "pollingEnabled": true,
+  "limit": 10,
+  "animation": "auto",
+  "rymHistoryHide": false
+}

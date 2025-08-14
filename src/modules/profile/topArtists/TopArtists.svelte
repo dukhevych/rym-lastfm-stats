@@ -27,7 +27,7 @@
 
 <div
   class="bubble_content top-artists"
-  style:--config-top-artists-limit={$configStore.topArtistsLimit}
+  style:--config-top-artists-limit={$configStore.profileTopArtistsLimit}
   class:is-loading={isLoading}
   class:is-loaded={isLoaded}
   class:is-empty={isLoaded && artists.length === 0}
@@ -54,10 +54,10 @@
 
 <script lang="ts">
 import { getTopArtists } from '@/api/getTopArtists';
-import type { TopArtistsPeriod, TopArtist } from '@/api/getTopArtists';
+import type { TopArtist } from '@/api/getTopArtists';
 import TextEffect from '@/components/svelte/TextEffect.svelte';
 import * as constants from '@/helpers/constants';
-import { storageGet, storageSet, storageRemove, updateSyncedOptions } from '@/helpers/storageUtils';
+import { storageGet, storageSet, storageRemove, updateProfileOptions } from '@/helpers/storageUtils';
 import { generateSearchUrl } from '@/helpers/string';
 
 import type { Writable } from 'svelte/store';
@@ -100,8 +100,8 @@ const artists = $derived<TopArtistWithPercentage[]>(artistsData.map(artist => ({
   )},
 })));
 
-let savedPeriodValue = $state($configStore.topArtistsPeriod);
-let periodValue = $state<TopArtistsPeriod>($configStore.topArtistsPeriod as TopArtistsPeriod);
+let savedPeriodValue = $state($configStore.profileTopArtistsPeriod);
+let periodValue = $state($configStore.profileTopArtistsPeriod);
 const cacheKey = $derived(() => `topArtistsCache_${periodValue}`);
 
 async function loadCache() {
@@ -115,7 +115,7 @@ async function loadCache() {
   }
 }
 
-async function loadTopArtists(periodValueValue: TopArtistsPeriod) {
+async function loadTopArtists(periodValueValue: LastFmPeriod) {
   isLoading = true;
 
   let data: TopArtist[] = [];
@@ -128,9 +128,9 @@ async function loadTopArtists(periodValueValue: TopArtistsPeriod) {
       params: {
         username: context.userName,
         period: periodValueValue,
-        limit: $configStore.topArtistsLimit,
+        limit: $configStore.profileTopArtistsLimit,
       },
-      apiKey: $configStore.lastfmApiKey,
+      apiKey: context.lastfmApiKey,
     });
     data = topArtistsResponse.topartists.artist;
 
@@ -152,7 +152,7 @@ interface TopArtistsCache {
   data: TopArtist[];
   timestamp: number;
   userName: string;
-  topArtistsPeriod: TopArtistsPeriod;
+  topArtistsPeriod: LastFmPeriod;
 }
 
 function checkCacheValidity(cache: TopArtistsCache) {
@@ -171,13 +171,13 @@ async function init() {
 }
 
 async function handlePeriodChange(event: Event) {
-  const periodValueValue = (event.target as HTMLSelectElement).value;
-  await loadTopArtists(periodValueValue as TopArtistsPeriod);
+  const periodValueValue = (event.target as HTMLSelectElement).value as LastFmPeriod;
+  await loadTopArtists(periodValueValue);
 }
 
 async function handlePeriodSave() {
-  await updateSyncedOptions({
-    topArtistsPeriod: periodValue,
+  await updateProfileOptions({
+    profileTopArtistsPeriod: periodValue,
   });
   savedPeriodValue = periodValue;
 }

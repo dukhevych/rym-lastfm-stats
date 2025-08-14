@@ -23,11 +23,9 @@ export interface TopArtistsResponse {
   };
 }
 
-export type TopArtistsPeriod = 'overall' | '7day' | '1month' | '3month' | '6month' | '12month';
-
 interface GetTopArtistsParams {
   username: string;
-  period: TopArtistsPeriod;
+  period: LastFmPeriod;
   limit?: number;
   page?: number;
 }

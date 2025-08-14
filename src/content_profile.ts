@@ -6,21 +6,23 @@ import { initColorSchemeDetection, getIsMyProfile, detectLastfmUserName } from '
 import { checkDOMCondition, waitForDOMReady } from '@/helpers/dom';
 import { initSprite } from '@/helpers/sprite';
 import errorMessages from '@/modules/profile/errorMessages.json';
-import { getFullConfig, getLastfmUserName, storageGet } from '@/helpers/storageUtils';
+import { getProfileOptions, getLastfmUserName, getRymSyncTimestamp, getLastFmApiKey } from '@/helpers/storageUtils';
 
 (async function () {
   initColorSchemeDetection();
 
-  const [configStore, rymSyncTimestamp] = await Promise.all([
-    writable(await getFullConfig()),
-    storageGet('rymSyncTimestamp', 'local'),
+  const [configStore, rymSyncTimestamp, lastfmApiKey] = await Promise.all([
+    writable(await getProfileOptions()),
+    getRymSyncTimestamp(),
+    getLastFmApiKey(),
     initSprite(),
     checkDOMCondition(targetSelectors),
   ]);
 
-  const context: Record<string, any> = {
+  const context: Record<string, string | number | boolean | null> = {
     isMyProfile: getIsMyProfile(),
     rymSyncTimestamp,
+    lastfmApiKey,
   };
 
   let userName: string | null = null;

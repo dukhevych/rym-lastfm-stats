@@ -17,7 +17,7 @@
   import * as utils from '@/helpers/utils';
 
   interface Props {
-    config: AddonOptions;
+    context: Record<string, any>;
     entityId: string;
     entityTitles: Set<string>;
     entityType: ERYMReleaseType;
@@ -26,7 +26,7 @@
   }
 
   const {
-    config,
+    context,
     entityId,
     entityTitles,
     entityType,
@@ -179,7 +179,7 @@
           title,
           username: userName,
         },
-        apiKey: config.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
+        apiKey: context.lastfmApiKey || (process.env.LASTFM_API_KEY as string),
         entityType,
       });
 

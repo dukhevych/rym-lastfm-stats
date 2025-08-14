@@ -6,14 +6,15 @@ import { get } from 'svelte/store';
 
 import errorMessages from './errorMessages.json';
 
-
 const PARENT_SELECTOR = '.profile_listening_container';
 
 async function render(settings: RenderSettings) {
   const { configStore, context } = settings;
   const config = get(configStore);
 
-  if (!config.lastfmApiKey) {
+  if (!context) return;
+
+  if (!context.lastfmApiKey) {
     console.warn(errorMessages.noApiKey);
     return;
   }
@@ -24,7 +25,7 @@ async function render(settings: RenderSettings) {
     return;
   }
 
-  if (config.rymPlayHistoryHide) {
+  if (config.profileRecentTracksRymHistoryHide) {
     parent.classList.add('is-hidden');
   }
 
@@ -44,5 +45,4 @@ async function render(settings: RenderSettings) {
 export default {
   render,
   targetSelectors: [ PARENT_SELECTOR ],
-  order: 1,
 };

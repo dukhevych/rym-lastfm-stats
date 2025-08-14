@@ -14,6 +14,7 @@ interface RenderableModule {
   render?: (settings: RenderSettings) => Promise<void> | void;
   targetSelectors?: string[];
   order?: number;
+  configDefaults?: Record<string, boolean | number | string>;
 }
 
 interface RenderContentResult {
@@ -59,7 +60,6 @@ export function renderContent(
 
   for (const key of Object.keys(modules)) {
     const isModuleDisabled = config[getFullKey(moduleName, key) as keyof AddonOptions] === false;
-
     if (isModuleDisabled) continue;
 
     const module = modules[key];

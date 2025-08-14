@@ -1,17 +1,17 @@
+import './topAlbums.css';
 import { mount } from 'svelte';
 import { get } from 'svelte/store';
 import TopAlbums from './TopAlbums.svelte';
 import errorMessages from './errorMessages.json';
-import './topAlbums.css';
 import type { RenderSettings } from '@/helpers/renderContent';
+import * as constants from '@/helpers/constants';
 
 const PROFILE_CONTAINER_SELECTOR = '.bubble_header.profile_header + .bubble_content';
 
 export async function render(settings: RenderSettings) {
   const { configStore, context } = settings;
-  const config = get(configStore);
 
-  if (!config.lastfmApiKey) {
+  if (!context?.lastfmApiKey) {
     console.warn(errorMessages.noApiKey);
     return;
   }
@@ -32,5 +32,4 @@ export async function render(settings: RenderSettings) {
 export default {
   render,
   targetSelectors: [PROFILE_CONTAINER_SELECTOR],
-  order: 1,
 };

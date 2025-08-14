@@ -24,11 +24,37 @@ const entries = glob.sync('./src/*.{js,ts}')
     return acc;
   }, {});
 
+const toBaseKey = (p) => {
+  const parts = p.replace(/\\/g, "/").split("/");
+  const idx = parts.length - 1; // configDefaults.json
+  const mod  = parts[idx - 1];  // topArtists
+  const area = parts[idx - 2];  // profile
+  return area + capitalize(mod);
+};
+
+const configDefaultsPaths = glob.sync("src/modules/*/*/configDefaults.json");
+
+const configDefaults = configDefaultsPaths.reduce((acc, configPath) => {
+  const baseKey = toBaseKey(configPath);
+  const obj = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+
+  for (const [prop, value] of Object.entries(obj)) {
+    const flatKey = baseKey + capitalize(prop);
+    acc[flatKey] = value;
+  }
+  return acc;
+}, {});
+
+// Module config keys
 const moduleConfigKeys = [];
 
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 for (const entry of Object.keys(entries)) {
-  if (!entry.startsWith('content_')) continue;
-  if (entry.endsWith('_end')) continue;
+  if (!entry.startsWith('content_')) continue; // Ignore non-content_*.ts files
+  if (entry.endsWith('_end')) continue; // Ignore content_*_end.ts files
 
   const name = entry.replace(/^content_/, '');
   const moduleIndexPath = path.resolve(__dirname, 'src/modules', name, 'index.ts');
@@ -49,10 +75,6 @@ for (const entry of Object.keys(entries)) {
     const safeKey = `${name}${capitalize(mod)}`;
     moduleConfigKeys.push(safeKey);
   }
-}
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 const moduleTypesOutputPath = path.resolve(__dirname, 'src/generated/moduleTypes.d.ts');
@@ -77,6 +99,7 @@ fs.mkdirSync(path.dirname(moduleTypesOutputPath), { recursive: true });
 fs.writeFileSync(moduleTypesOutputPath, moduleToggleInterface);
 console.log('✅ Interface generated at', moduleTypesOutputPath);
 
+// Recent tracks background options
 const backgroundOptionsFolderPath = path.resolve(__dirname, 'src/modules/profile/recentTracks/styles/backgrounds');
 const backgroundOptionsFiles = fs.readdirSync(backgroundOptionsFolderPath);
 const backgroundOptionsImport = backgroundOptionsFiles.map(file => `@import './backgrounds/${file}';`).join('\n');
@@ -234,8 +257,9 @@ module.exports = (env) => {
         ...envKeys,
         'process.env.APP_VERSION': JSON.stringify(appVersion),
         'process.env.BROWSER_TARGET': JSON.stringify(browserTarget),
-        'process.env.MODULES_ARRAY': JSON.stringify(moduleConfigKeys),
+        'process.env.MODULES_ARRAY': JSON.stringify(Object.fromEntries(moduleConfigKeys.map(k => [k, true]))),
         'process.env.BACKGROUND_OPTIONS_QTY': JSON.stringify(backgroundOptionsFiles.length),
+        'process.env.CONFIG_DEFAULTS': JSON.stringify(configDefaults),
       }),
       new VueLoaderPlugin(),
       new CopyPlugin({

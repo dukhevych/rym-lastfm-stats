@@ -12,9 +12,11 @@ import {
   storageGet,
   storageSet,
   storageRemove,
-  getSyncedUserData,
-  getSyncedOptions,
-  updateSyncedOptions,
+  getProfileOptions,
+  getRymSyncTimestamp,
+  updateProfileOptions,
+  getUserData,
+  getLastFmApiKey,
 } from '@/helpers/storageUtils';
 import * as utils from '@/helpers/utils';
 
@@ -23,15 +25,20 @@ import FormToggle from './FormToggle.svelte';
 const appVersion = process.env.APP_VERSION;
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
 
+// FLAGS
 let isLoading = $state(true);
-let saved = $state(false);
-let dirty = $state(false);
+let signinInProgress = $state(false);
 
-const rymSyncTimestampLabel = $derived(() => {
-  if (!rymSyncTimestamp) return 'No sync performed yet';
-  return `Last sync ${formatDistanceToNow(rymSyncTimestamp, { addSuffix: true })}`;
-});
+let fallbackUsername = $state('');
+let activeTab = $state(new URLSearchParams(window.location.search).get('tab') || 'modules');
 
+let currentConfig = $state<AddonOptions>();
+let form: AddonOptions = $state(constants.PROFILE_OPTIONS_DEFAULT);
+
+let userData = $state<UserData>();
+const isLoggedIn = $derived(() => !!userData?.name);
+
+let dbRecordsQty = $state<number>();
 const dbRecordsQtyLabel = $derived(() => {
   if (!dbRecordsQty) return 'No records yet';
   let str = `Records: ${dbRecordsQty}`;
@@ -39,22 +46,14 @@ const dbRecordsQtyLabel = $derived(() => {
   return str;
 });
 
-const urlParams = new URLSearchParams(window.location.search);
-let activeTab = $state(urlParams.get('tab') || 'modules');
-
-let signinInProgress = $state(false);
-let fallbackUsername = $state('');
-const options: Partial<AddonOptions> = $state({});
-let config = $state<AddonOptions>();
-let userData = $state<UserData>();
-let dbRecordsQty = $state<number>();
-const isLoggedIn = $derived(() => !!userData?.name);
 let rymSyncTimestamp = $state<number>();
-let lastfmApiInputType = $state('password');
-const hasApiKey = $derived(
-  () => !!(options.lastfmApiKey && options.lastfmApiKey.length === 32),
-);
+const rymSyncTimestampLabel = $derived(() => {
+  if (!rymSyncTimestamp) return 'No sync performed yet';
+  return `Last sync ${formatDistanceToNow(rymSyncTimestamp, { addSuffix: true })}`;
+});
 
+let lastfmApiKey = $state('');
+let lastfmApiInputType = $state('password');
 let submitTimer: NodeJS.Timeout | null = null;
 
 const moduleSettingsPreviews = {
@@ -108,35 +107,20 @@ function handleApiKeyBlur(e: Event) {
 }
 
 async function submit() {
-  const newConfig = JSON.parse(JSON.stringify(options));
-
+  const newConfig = JSON.parse(JSON.stringify(form));
   Object.keys(newConfig).forEach((key) => {
-    if (config && newConfig[key] === config[key as keyof AddonOptions]) {
+    if (currentConfig && newConfig[key] === currentConfig[key as keyof AddonOptions]) {
       delete newConfig[key];
     }
   });
-
-  await updateSyncedOptions(newConfig);
-
-  config = newConfig;
-  saved = true;
-
-  if (submitTimer) {
-    clearTimeout(submitTimer);
-  }
-
-  submitTimer = setTimeout(() => {
-    if (!dirty) {
-      saved = false;
-    }
-  }, 3000);
-  dirty = false;
+  await updateProfileOptions(newConfig);
+  currentConfig = newConfig;
 }
 
 async function reset() {
   const doConfirm = confirm('Are you sure you want to reset all settings?');
   if (!doConfirm) return;
-  Object.assign(options, constants.PROFILE_OPTIONS_DEFAULT);
+  Object.assign(form, constants.PROFILE_OPTIONS_DEFAULT);
   await submit();
 }
 
@@ -192,37 +176,24 @@ async function openAuthPage() {
 }
 
 async function init() {
-  try {
-    const syncedOptions = await getSyncedOptions();
-    dbRecordsQty = await RecordsAPI.getQty();
+  const data = await Promise.all([
+    getProfileOptions(),
+    getLastFmApiKey(),
+    getUserData(),
+    RecordsAPI.getQty(),
+    getRymSyncTimestamp(),
+  ]);
 
-    config = syncedOptions;
+  console.log('data', JSON.stringify(data, null, 2));
 
-    Object.assign(options, config);
+  currentConfig = data[0];
+  form = data[0];
+  lastfmApiKey = data[1];
+  userData = data[2];
+  dbRecordsQty = data[3] ?? null;
+  rymSyncTimestamp = data[4] ?? null;
 
-    const syncedUserData = await getSyncedUserData();
-
-    userData = syncedUserData;
-
-    rymSyncTimestamp = await storageGet('rymSyncTimestamp', 'local');
-
-    const debouncedSubmit = utils.debounce(() => {
-      submit();
-    }, 300);
-
-    // watch(
-    //   () => options,
-    //   () => {
-    //     saved = false;
-    //     dirty = true;
-    //     debouncedSubmit();
-    //   },
-    //   { deep: true },
-    // );
-    isLoading = false;
-  } catch (error) {
-    console.error(error);
-  }
+  isLoading = false;
 }
 
 function openRymSync() {
@@ -409,11 +380,12 @@ interface TabLinkProps {
               {isValid ? validStatus : invalidStatus}
             </div>
           </div>
-          {#if note}
+          {#if note && note.length > 0}
             <div class="text-xs text-gray-600 dark:text-gray-300 text-right grow flex flex-col gap-1">
               {#if typeof note === 'string'}
                 {note}
-              {:else}
+              {/if}
+              {#if Array.isArray(note)}
                 {#each note as n}
                   <p>{n}</p>
                 {/each}
@@ -518,12 +490,12 @@ interface TabLinkProps {
         note: userData?.name ? [
           'Username:',
           userData.name,
-        ] : undefined,
+        ] : 'Guest',
         action: openAuthPage,
         isLoading: signinInProgress,
       })}
       {@render card({
-        isValid: hasApiKey(),
+        isValid: lastfmApiKey.length === 32,
         title: 'API Key',
         validStatus: 'Configured',
         invalidStatus: 'Not configured',
@@ -541,6 +513,14 @@ interface TabLinkProps {
         action: openRymSync,
       })}
     </div>
+
+    <pre>{JSON.stringify(constants.MODULE_TOGGLE_CONFIG, null, 2)}</pre>
+    <pre>{JSON.stringify(constants.CONFIG_DEFAULTS, null, 2)}</pre>
+    <pre>{JSON.stringify(constants.PROFILE_OPTIONS_DEFAULT, null, 2)}</pre>
+    <!-- <pre>{JSON.stringify(options, null, 2)}</pre>
+
+    <pre>{JSON.stringify(utils.pick(options, Object.keys(constants.MODULE_TOGGLE_CONFIG) as (keyof AddonOptions)[]), null, 2)}</pre>
+    <pre>{JSON.stringify(utils.omit(options, Object.keys(constants.MODULE_TOGGLE_CONFIG) as (keyof AddonOptions)[]), null, 2)}</pre> -->
 
     <div>
       <nav>
@@ -611,7 +591,7 @@ interface TabLinkProps {
           </div>
         </header>
         <div class="flex">
-          <div class="flex flex-col gap-3 w-1/3 border-r border-gray-200 dark:border-gray-800">
+          <aside class="flex flex-col gap-3 w-1/3 border-r border-gray-200 dark:border-gray-800">
             <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4">
               <h4 class="font-medium text-gray-900 dark:text-gray-100 px-4 flex items-baseline justify-between">
                 Last.fm Stats
@@ -619,9 +599,9 @@ interface TabLinkProps {
                   Updates every {utils.msToHuman(constants.STATS_CACHE_LIFETIME_GUEST_MS)}
                 </span>
               </h4>
-              {#if !hasApiKey() || !isLoggedIn()}
+              {#if !lastfmApiKey || !isLoggedIn()}
                 <div class="text-xs dark:text-orange-200 text-red-600 px-4 flex flex-col gap-1">
-                  {#if !hasApiKey()}
+                  {#if !lastfmApiKey}
                     <p>Add a Last.fm API key to increase rate limit</p>
                   {/if}
                   {#if !isLoggedIn()}
@@ -671,10 +651,10 @@ interface TabLinkProps {
                 </label>
               </div>
             </div>
-            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4 bg-gray-50 dark:bg-gray-900">
+            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4">
               <h4 class="font-medium text-gray-900 dark:text-gray-100 px-3 flex items-baseline justify-between">
                 Profile Features
-                {#if !hasApiKey()}
+                {#if !lastfmApiKey}
                   <span class="text-xs dark:text-orange-200 text-red-600">
                     ⚠️ Last.fm API key is required
                   </span>
@@ -692,7 +672,7 @@ interface TabLinkProps {
                       Show recent tracks on profile
                     </p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!hasApiKey()} />
+                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!lastfmApiKey} />
                 </label>
                 <label
                   class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
@@ -703,7 +683,7 @@ interface TabLinkProps {
                     <span class="text-sm font-medium">Top Albums Widget</span>
                     <p class="text-xs text-gray-500">Show top albums on profile</p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!hasApiKey()} />
+                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!lastfmApiKey} />
                 </label>
                 <label
                   class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
@@ -714,7 +694,7 @@ interface TabLinkProps {
                     <span class="text-sm font-medium">Top Artists Widget</span>
                     <p class="text-xs text-gray-500">Show top artists on profile</p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!hasApiKey()} />
+                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!lastfmApiKey} />
                 </label>
                 <label
                   class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
@@ -727,11 +707,11 @@ interface TabLinkProps {
                       Enhanced search filtering
                     </p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!hasApiKey()} />
+                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!lastfmApiKey} />
                 </label>
               </div>
             </div>
-            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4 bg-gray-50 dark:bg-gray-900">
+            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4">
               <h4 class="font-medium text-gray-900 dark:text-gray-100 px-3">
                 Other Features
               </h4>
@@ -756,7 +736,7 @@ interface TabLinkProps {
                 </label>
               </div>
             </div>
-          </div>
+          </aside>
 
           <!-- Visual preview -->
           <div class="w-2/3 *:w-full *:max-w-[800px] flex items-center flex-col gap-3">
@@ -788,14 +768,16 @@ interface TabLinkProps {
         </div>
       </div>
 
-      <div class="space-y-6" class:hidden={activeTab !== 'recent-tracks'}>
-        <div class="flex items-center gap-2 mb-4">
-          {@render iconClock(5)}
-          <h3 class="text-lg font-semibold">Recent Tracks</h3>
-        </div>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
-          Configure the recent tracks widget
-        </p>
+      <div class="mt-[-1px] flex flex-col gap-6 border border-gray-200 dark:border-gray-800 rounded-xl p-4 bg-gray-50 dark:bg-gray-900" class:hidden={activeTab !== 'recent-tracks'}>
+        <header class="flex flex-col gap-2">
+          <div class="flex items-center justify-center gap-2">
+            {@render iconClock(5)}
+            <h3 class="text-lg font-semibold">Recent Tracks</h3>
+          </div>
+          <div class="text-gray-600 dark:text-gray-400 text-center">
+            Configure the recent tracks widget
+          </div>
+        </header>
 
         <!-- <div class="flex"> -->
           <div class="flex flex-col gap-3 border border-gray-200 dark:border-gray-800">
@@ -843,17 +825,6 @@ interface TabLinkProps {
         Save Configuration
       </button>
     </div>
-
-    <!-- <form>
-      <h2>Modules Turn On/Off</h2>
-      <fieldset>
-        {#each constants.MODULES_ARRAY as module}
-          <div>
-            <FormToggle bind:checked={options[module as keyof ModuleToggleConfig]} label={module} />
-          </div>
-        {/each}
-      </fieldset>
-    </form> -->
   </main>
   <!-- <div>
     <button class="btn btn-neutral">Neutral</button>

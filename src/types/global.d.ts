@@ -1,3 +1,5 @@
+import type { RenderSettings } from '@/helpers/renderContent';
+
 declare global {
   interface UserData {
     name?: string;
@@ -6,22 +8,22 @@ declare global {
     // add other properties if needed
   }
 
-  interface AddonOptionsBase extends ModuleToggleConfig {
-    recentTracksShowOnLoad: boolean;
-    recentTracksBackground: number;
-    recentTracksLimit: number;
-    recentTracksAnimation: 'auto' | 'on' | 'off';
-    topArtistsLimit: number;
-    topArtistsPeriod: string;
-    topAlbumsPeriod: string;
-    rymPlayHistoryHide: boolean;
-    recentTracksPollingEnabled: boolean;
+  interface AddonOptions extends ModuleToggleConfig {
+    profileRecentTracksShowOnLoad: boolean;
+    profileRecentTracksBackground: number;
+    profileRecentTracksLimit: number;
+    profileRecentTracksAnimation: 'auto' | 'on' | 'off';
+    profileTopArtistsLimit: number;
+    profileTopArtistsPeriod: LastFmPeriod;
+    profileTopAlbumsPeriod: LastFmPeriod;
+    profileRecentTracksRymHistoryHide: boolean;
+    profileRecentTracksPolling: boolean;
   }
 
-  interface AddonOptions extends AddonOptionsBase {
-    lastfmApiKey: string;
-    userName?: string;
-  }
+  // interface AddonOptions extends AddonOptionsBase {
+  //   lastfmApiKey: string;
+  //   userName?: string;
+  // }
 
   interface VibrantSwatch {
     hex: string;
@@ -55,6 +57,17 @@ declare global {
     dark: VibrantUiColorSet;
     palette: VibrantPalette;
   }
+
+  type LastFmPeriod = 'overall' | '7day' | '1month' | '3month' | '6month' | '12month';
+
+  type Range<
+    N extends number,
+    Result extends unknown[] = []
+  > = Result['length'] extends N
+    ? Result[number] | N
+    : Range<N, [...Result, Result['length']]>;
+
+    RenderSettings
 }
 
 export {};

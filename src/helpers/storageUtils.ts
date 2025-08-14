@@ -1,24 +1,17 @@
-declare const chrome: any;
-
 import browser from 'webextension-polyfill';
-
 import * as constants from './constants';
 
 const STORAGE_TYPES = ['local', 'sync'];
 
 export type StorageType = 'local' | 'sync';
 
-export interface StorageGetResult {
-  [key: string]: any;
-}
+export interface StorageGetResult { [key: string]: any; }
 
 export function storageGet<T = StorageGetResult>(
   keys: string | string[] | null,
   storageType: StorageType = 'sync'
 ): Promise<T> {
-  if (!STORAGE_TYPES.includes(storageType)) {
-    throw new Error(`Invalid storage type: ${storageType}`);
-  }
+  if (!STORAGE_TYPES.includes(storageType)) throw new Error(`Invalid storage type: ${storageType}`);
 
   return new Promise<T>((resolve, reject) => {
     browser.storage[storageType].get(keys)
@@ -29,9 +22,7 @@ export function storageGet<T = StorageGetResult>(
           resolve(result as T);
         }
       })
-      .catch((err: any) => {
-        reject(err);
-      });
+      .catch((err: any) => reject(err));
   });
 }
 
@@ -39,18 +30,8 @@ export function storageSet(
   payload: { [key: string]: any; },
   storageType: StorageType = 'sync'
 ): Promise<void> {
-  if (!STORAGE_TYPES.includes(storageType)) {
-    throw new Error(`Invalid storage type: ${storageType}`);
-  }
-
+  if (!STORAGE_TYPES.includes(storageType)) throw new Error(`Invalid storage type: ${storageType}`);
   return browser.storage[storageType].set(payload);
-  // const promises = [browser.storage[storageType].set(payload)];
-
-  // if (storageType === 'sync') {
-  //   promises.push(browser.storage.local.set(payload));
-  // }
-
-  // return Promise.all(promises);
 }
 
 export interface StorageRemoveOptions {
@@ -69,34 +50,53 @@ export function storageRemove(
   return browser.storage[storageType].remove(keys);
 }
 
-export async function getSyncedOptions() {
-  let result;
-
-  result = await storageGet(Object.keys(constants.OPTIONS_DEFAULT), 'local') as AddonOptions;
-
-  if (!result) {
-    result = await storageGet(Object.keys(constants.OPTIONS_DEFAULT), 'sync') as AddonOptions;
-  }
-
+export async function storageGetSyncedWithLocal(keys: string | string[] | null) {
+  let result = await storageGet(keys, 'local');
+  result = result || await storageGet(keys, 'sync');
   return result;
-};
+}
 
-export async function updateSyncedOptions(options: Partial<AddonOptions>) {
+export async function storageSetSyncedWithLocal(payload: { [key: string]: any; }) {
   return Promise.all([
-    storageSet(options, 'sync'),
-    storageSet(options, 'local'),
+    storageSet(payload, 'sync'),
+    storageSet(payload, 'local'),
   ]);
 }
 
-export function getSyncedUserData() {
-  return storageGet('userData');
+export async function getLastFmApiKey() {
+  return (await storageGetSyncedWithLocal('lastfmApiKey')) as unknown as string ?? '';
+}
+
+export async function setLastFmApiKey(key: string) {
+  return storageSetSyncedWithLocal({ lastfmApiKey: key });
+}
+
+export async function getRymSyncTimestamp() {
+  return (await storageGet('rymSyncTimestamp', 'local')) as unknown as number ?? null;
+}
+
+export async function setRymSyncTimestamp(timestamp: number) {
+  return storageSet({ rymSyncTimestamp: timestamp }, 'local');
+}
+
+export async function getProfileOptions(): Promise<AddonOptions> {
+  const keysToGet = Object.keys(constants.PROFILE_OPTIONS_DEFAULT);
+  const result = await storageGetSyncedWithLocal(keysToGet) as AddonOptions;
+  return Object.assign({}, constants.PROFILE_OPTIONS_DEFAULT, result);
+}
+
+export async function updateProfileOptions(options: Partial<AddonOptions>) {
+  return storageSetSyncedWithLocal(options);
+}
+
+export async function getUserData() {
+  return (await storageGetSyncedWithLocal('userData')) as UserData;
 };
 
-export const getFullConfig = async () => {
-  const storageItems = await getSyncedOptions();
-  const config = { ...constants.OPTIONS_DEFAULT, ...storageItems };
-  return config;
-}
+export async function getLastfmUserName() {
+  const userData = await getUserData() as UserData;
+  return userData?.name ?? '';
+};
 
 /**
  * Generates a deterministic and safe key for browser.storage.local/sync
@@ -124,8 +124,3 @@ export function generateStorageKey(prefix: string, ...parts: (string | number | 
   // Convert final hash to base36 (letters + numbers), strip sign
   return `${prefix}_${Math.abs(hash).toString(36)}`;
 }
-
-export async function getLastfmUserName() {
-  const userData = await getSyncedUserData() as UserData;
-  return userData?.name ?? '';
-};

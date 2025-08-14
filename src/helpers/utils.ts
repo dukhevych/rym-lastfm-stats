@@ -415,3 +415,11 @@ export function msToHuman(ms: number, options = {}) {
   const duration = intervalToDuration({ start: 0, end: ms });
   return formatDuration(duration, options);
 }
+
+export function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Partial<T> {
+  const result: Partial<T> = {};
+  for (const key of keys) {
+    result[key] = obj[key];
+  }
+  return result;
+}

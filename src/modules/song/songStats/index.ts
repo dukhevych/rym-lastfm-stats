@@ -15,7 +15,7 @@ import {
 } from '@/modules/song/targets';
 
 async function render(settings: RenderSettings) {
-  const { configStore } = settings;
+  const { configStore, context } = settings;
   const config = get(configStore);
 
   const parent: HTMLElement | null = document.querySelector(PARENT_SELECTOR);
@@ -57,9 +57,9 @@ async function render(settings: RenderSettings) {
   mount(EntityStats, {
     target: mountPoint,
     props: {
-      config,
+      context: context!,
       entityId,
-      entityTitle,
+      entityTitles: new Set([entityTitle]),
       artistNames,
       entityType: ERYMReleaseType.Single,
       moduleName: 'songStats',
