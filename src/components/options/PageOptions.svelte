@@ -9,7 +9,6 @@ import * as api from '@/helpers/api';
 import * as constants from '@/helpers/constants';
 import { RecordsAPI } from '@/helpers/records-api';
 import {
-  storageGet,
   storageSet,
   storageRemove,
   getProfileOptions,
@@ -92,7 +91,7 @@ const moduleSettingsPreviews = {
   ],
 };
 
-let activePreviewKey = $state('artist-stats');
+let activePreviewKey = $state('');
 
 function handleApiKeyFocus(e: Event) {
   (e.target as HTMLInputElement).select();
@@ -107,12 +106,7 @@ function handleApiKeyBlur(e: Event) {
 }
 
 async function submit() {
-  const newConfig = JSON.parse(JSON.stringify(form));
-  Object.keys(newConfig).forEach((key) => {
-    if (currentConfig && newConfig[key] === currentConfig[key as keyof AddonOptions]) {
-      delete newConfig[key];
-    }
-  });
+  const newConfig = $state.snapshot(form);
   await updateProfileOptions(newConfig);
   currentConfig = newConfig;
 }
@@ -183,8 +177,6 @@ async function init() {
     RecordsAPI.getQty(),
     getRymSyncTimestamp(),
   ]);
-
-  console.log('data', JSON.stringify(data, null, 2));
 
   currentConfig = data[0];
   form = data[0];
@@ -453,7 +445,7 @@ interface TabLinkProps {
 {/snippet}
 
 <div
-  class="min-h-viewport flex flex-col"
+  class="min-h-viewport flex flex-col {isLoading ? 'opacity-50 blur-xs' : ''}"
   style:display={isLoading ? 'none' : 'block'}
 >
   <header>
@@ -480,7 +472,9 @@ interface TabLinkProps {
       </div>
     </nav>
   </header>
-  <main class="max-w-screen-xl mx-auto w-full flex flex-col gap-3">
+  <main
+    class="max-w-screen-xl mx-auto w-full flex flex-col gap-3"
+  >
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       {@render card({
         isValid: isLoggedIn(),
@@ -513,14 +507,6 @@ interface TabLinkProps {
         action: openRymSync,
       })}
     </div>
-
-    <pre>{JSON.stringify(constants.MODULE_TOGGLE_CONFIG, null, 2)}</pre>
-    <pre>{JSON.stringify(constants.CONFIG_DEFAULTS, null, 2)}</pre>
-    <pre>{JSON.stringify(constants.PROFILE_OPTIONS_DEFAULT, null, 2)}</pre>
-    <!-- <pre>{JSON.stringify(options, null, 2)}</pre>
-
-    <pre>{JSON.stringify(utils.pick(options, Object.keys(constants.MODULE_TOGGLE_CONFIG) as (keyof AddonOptions)[]), null, 2)}</pre>
-    <pre>{JSON.stringify(utils.omit(options, Object.keys(constants.MODULE_TOGGLE_CONFIG) as (keyof AddonOptions)[]), null, 2)}</pre> -->
 
     <div>
       <nav>
@@ -587,19 +573,19 @@ interface TabLinkProps {
             <h3 class="text-lg font-semibold">Module Settings</h3>
           </div>
           <div class="text-gray-600 dark:text-gray-400 text-center">
-            Enable or disable specific enhancement modules
+            Enable or disable specific enhancement modules.
           </div>
         </header>
         <div class="flex">
           <aside class="flex flex-col gap-3 w-1/3 border-r border-gray-200 dark:border-gray-800">
-            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4">
-              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-4 flex items-baseline justify-between">
+            <div class="flex flex-col border-y border-l border-gray-200 dark:border-gray-800">
+              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-4 flex items-baseline justify-between bg-gray-200 dark:bg-gray-800 py-3">
                 Last.fm Stats
                 <span class="text-xs dark:text-blue-200 text-blue-600">
                   Updates every {utils.msToHuman(constants.STATS_CACHE_LIFETIME_GUEST_MS)}
                 </span>
               </h4>
-              {#if !lastfmApiKey || !isLoggedIn()}
+              {#if !isLoading && (!lastfmApiKey || !isLoggedIn())}
                 <div class="text-xs dark:text-orange-200 text-red-600 px-4 flex flex-col gap-1">
                   {#if !lastfmApiKey}
                     <p>Add a Last.fm API key to increase rate limit</p>
@@ -621,7 +607,7 @@ interface TabLinkProps {
                       Show Last.fm stats on artist pages
                     </p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked />
+                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.artistArtistStats} />
                 </label>
                 <label
                   class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-4 select-none"
@@ -634,7 +620,7 @@ interface TabLinkProps {
                       Show Last.fm stats on release pages
                     </p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked />
+                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.releaseReleaseStats} />
                 </label>
                 <label
                   class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-4 select-none"
@@ -647,14 +633,14 @@ interface TabLinkProps {
                       Show Last.fm stats on song pages
                     </p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked />
+                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.songSongStats} />
                 </label>
               </div>
             </div>
-            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4">
-              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-3 flex items-baseline justify-between">
+            <div class="flex flex-col border-y border-l border-gray-200 dark:border-gray-800">
+              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-4 flex items-baseline justify-between bg-gray-200 dark:bg-gray-800 py-3">
                 Profile Features
-                {#if !lastfmApiKey}
+                {#if !isLoading && !lastfmApiKey}
                   <span class="text-xs dark:text-orange-200 text-red-600">
                     ⚠️ Last.fm API key is required
                   </span>
@@ -672,7 +658,7 @@ interface TabLinkProps {
                       Show recent tracks on profile
                     </p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!lastfmApiKey} />
+                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.profileRecentTracks} disabled={!lastfmApiKey} />
                 </label>
                 <label
                   class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
@@ -683,7 +669,7 @@ interface TabLinkProps {
                     <span class="text-sm font-medium">Top Albums Widget</span>
                     <p class="text-xs text-gray-500">Show top albums on profile</p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!lastfmApiKey} />
+                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.profileTopAlbums} disabled={!lastfmApiKey} />
                 </label>
                 <label
                   class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
@@ -694,7 +680,7 @@ interface TabLinkProps {
                     <span class="text-sm font-medium">Top Artists Widget</span>
                     <p class="text-xs text-gray-500">Show top artists on profile</p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!lastfmApiKey} />
+                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.profileTopArtists} disabled={!lastfmApiKey} />
                 </label>
                 <label
                   class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
@@ -707,12 +693,12 @@ interface TabLinkProps {
                       Enhanced search filtering
                     </p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked disabled={!lastfmApiKey} />
+                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.searchStrictResults} disabled={!lastfmApiKey} />
                 </label>
               </div>
             </div>
-            <div class="flex flex-col gap-4 border-y border-l border-gray-200 dark:border-gray-800 py-4">
-              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-3">
+            <div class="flex flex-col border-y border-l border-gray-200 dark:border-gray-800">
+              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-4 flex items-baseline justify-between bg-gray-200 dark:bg-gray-800 py-3">
                 Other Features
               </h4>
               <div>
@@ -723,7 +709,7 @@ interface TabLinkProps {
                     <span class="text-sm font-medium">List User Ratings</span>
                     <p class="text-xs text-gray-500">Show ratings in lists</p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked />
+                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.listUserRating} />
                 </label>
                 <label
                   class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md rounded-r-none py-2 px-3 select-none"
@@ -732,7 +718,7 @@ interface TabLinkProps {
                     <span class="text-sm font-medium">Chart User Ratings</span>
                     <p class="text-xs text-gray-500">Show ratings in charts</p>
                   </div>
-                  <input type="checkbox" class="toggle toggle-primary" checked />
+                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.chartsUserRating} />
                 </label>
               </div>
             </div>
@@ -820,22 +806,12 @@ interface TabLinkProps {
     </div>
 
     <div class="flex justify-end">
-      <button class="btn btn-primary">
+      <button class="btn btn-primary" onclick={submit}>
         {@render iconSettings(5)}
         Save Configuration
       </button>
     </div>
   </main>
-  <!-- <div>
-    <button class="btn btn-neutral">Neutral</button>
-    <button class="btn btn-primary">Primary</button>
-    <button class="btn btn-secondary">Secondary</button>
-    <button class="btn btn-accent">Accent</button>
-    <button class="btn btn-info">Info</button>
-    <button class="btn btn-success">Success</button>
-    <button class="btn btn-warning">Warning</button>
-    <button class="btn btn-error">Error</button>
-  </div> -->
 </div>
 
 <style>
