@@ -30,6 +30,7 @@
     background-blend-mode: difference;
     background-position: center, 0 2px;
   }
+
   &.is-now-playing.bg-option-5:after {
     animation: bg-option-5-animation 30s linear infinite;
   }

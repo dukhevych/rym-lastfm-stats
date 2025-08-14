@@ -29,6 +29,9 @@
         var(--clr-palette-darkvibrant) 10px
       );
     background-size: 100% 100%, 100% 100%;
+  }
+
+  &.is-now-playing.bg-option-13:after {
     animation: bg-option-13-animation 0.2s infinite steps(1);
   }
 }

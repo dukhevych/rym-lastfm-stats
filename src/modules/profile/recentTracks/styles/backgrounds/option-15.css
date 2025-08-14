@@ -132,6 +132,7 @@
     --bg-option-bar-11: 10;
     --bg-option-bar-12: 0;
   }
+
   &.is-now-playing.bg-option-15:after {
     animation: bg-option-15-animation 1.5s linear infinite;
   }

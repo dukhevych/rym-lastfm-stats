@@ -1,12 +1,5 @@
 [data-element="rymstats-track-panel"] {
   &.bg-option-2:after {
-    /* --clr-palette-vibrant: #f00;
-    --clr-palette-muted: #0f0;
-    --clr-palette-darkvibrant: #00f;
-    --clr-palette-lightmuted: #ff0;
-    --clr-palette-lightvibrant: #0ff;
-    --clr-palette-darkmuted: #f0f; */
-
     background-image:
       repeating-linear-gradient(
         to right,

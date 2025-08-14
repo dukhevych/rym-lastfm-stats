@@ -21,7 +21,9 @@
         var(--clr-palette-lightvibrant) 20px
       );
     background-blend-mode: multiply;
+  }
 
+  &.is-now-playing.bg-option-9:after {
     animation: bg-option-9-diagonal 0.6s linear infinite;
   }
 }
