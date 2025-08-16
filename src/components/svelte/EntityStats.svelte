@@ -210,9 +210,7 @@
   }
 
   function checkCacheValidity(cache: EntityStatsCache) {
-    const cacheLifetime = userName
-      ? constants.STATS_CACHE_LIFETIME_MS
-      : constants.STATS_CACHE_LIFETIME_GUEST_MS;
+    const cacheLifetime = constants.getStatsCacheLifetime(userName, context.lastfmApiKey);
 
     return (
       cache &&

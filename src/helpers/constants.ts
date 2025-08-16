@@ -13,7 +13,19 @@ export const TOP_ALBUMS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const TOP_ARTISTS_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 export const STATS_CACHE_LIFETIME_GUEST_MS = isDev ? 10 * 1000 : 3 * 60 * 60 * 1000; // 30 seconds / 3 hours
 export const STATS_CACHE_LIFETIME_MS = isDev ? 30 * 1000 : 5 * 60 * 1000; // 30 seconds /5 minutes
-export const RYM_SYNC_OUTDATED_THRESHOLD_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+export const STATS_CACHE_LIFETIME_WITH_API_KEY_MS = isDev ? 30 * 1000 : 1 * 60 * 1000; // 30 seconds / 1 minute
+export const RYM_SYNC_OUTDATED_THRESHOLD_MS = isDev ? 1000 * 60 * 60 * 24 * 1 : 1000 * 60 * 60 * 24 * 30; // 30 days
+
+export function getStatsCacheLifetime(userName: string | null | undefined, lastfmApiKey: string | null | undefined) {
+  // With Last.fm Api Key it's ok to cache for a really shorter time
+  if (lastfmApiKey) return STATS_CACHE_LIFETIME_WITH_API_KEY_MS;
+
+  // If no Api Key but signed in with Last.fm
+  if (userName) return STATS_CACHE_LIFETIME_MS;
+
+  // If no Api Key and not signed in with Last.fm - it's reasonable to cache for much longer time
+  return STATS_CACHE_LIFETIME_GUEST_MS;
+}
 
 export const APP_VERSION = manifest.version;
 export const APP_NAME = manifest.name;

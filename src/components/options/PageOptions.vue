@@ -248,7 +248,7 @@
 
             <!-- LAST.FM API KEY -->
             <FormInput
-              v-model="options.lastfmApiKey"
+              v-model="lastFmApiKey"
               name="lastfmApiKey"
               clearable
               placeholder="Add your lastfm API key here"
@@ -369,7 +369,7 @@
 
             <!-- RECENT TRACKS LIMIT -->
             <FormRange
-              v-model="options.recentTracksLimit"
+              v-model="options.profileRecentTracksLimit"
               name="recentTracksLimit"
               :label="`Recent tracks limit (${constants.RECENT_TRACKS_LIMIT_MIN}-${constants.RECENT_TRACKS_LIMIT_MAX})`"
               :min="constants.RECENT_TRACKS_LIMIT_MIN"
@@ -397,7 +397,7 @@
 
             <!-- TOP ARTISTS LIMIT -->
             <FormRange
-              v-model="options.topArtistsLimit"
+              v-model="options.profileTopArtistsLimit"
               name="topArtistsLimit"
               :label="`Top artists limit (${constants.TOP_ARTISTS_LIMIT_MIN}-${constants.TOP_ARTISTS_LIMIT_MAX})`"
               :min="constants.TOP_ARTISTS_LIMIT_MIN"
@@ -428,7 +428,7 @@
 
             <!-- RYM PLAY HISTORY HIDE -->
             <FormCheckbox
-              v-model="options.rymPlayHistoryHide"
+              v-model="options.profileRecentTracksShowOnLoad"
               name="rymPlayHistoryHide"
               label="Hide default 'RYM Play History' section"
             />
@@ -612,9 +612,11 @@ import {
   storageGet,
   storageSet,
   storageRemove,
-  getSyncedUserData,
-  getSyncedOptions,
-  updateSyncedOptions,
+  getUserData,
+  getProfileOptions,
+  updateProfileOptions,
+  getLastFmApiKey,
+  setLastFmApiKey,
 } from '@/helpers/storageUtils';
 import * as utils from '@/helpers/utils';
 
@@ -637,8 +639,9 @@ const identityApiSupported = !!(browser.identity && browser.identity.launchWebAu
 const fallbackUsername = ref('');
 
 // STATE
-const options = reactive(Object.assign({}, constants.OPTIONS_DEFAULT));
+const options = reactive(Object.assign({}, constants.PROFILE_OPTIONS_DEFAULT));
 const config = ref<AddonOptions>();
+const lastFmApiKey = ref<string>();
 const userData = ref<UserData>();
 const isLoggedIn = computed(() => {
   return userData.value && userData.value.name;
@@ -670,7 +673,7 @@ const submit = async () => {
     }
   });
 
-  await updateSyncedOptions(newConfig);
+  await updateProfileOptions(newConfig);
 
   config.value = newConfig;
   saved.value = true;
@@ -753,29 +756,32 @@ const closeModalHandler = (e: KeyboardEvent) => {
 
 const init = async () => {
   try {
-    const syncedOptions = await getSyncedOptions();
+    const syncedOptions = await getProfileOptions();
     dbRecordsQty.value = await RecordsAPI.getQty()
 
     config.value = syncedOptions;
 
     Object.assign(options, config.value);
 
-    const syncedUserData = await getSyncedUserData();
+    const syncedUserData = await getUserData();
 
     userData.value = syncedUserData;
 
     rymSyncTimestamp.value = await storageGet('rymSyncTimestamp', 'local');
+
+    lastFmApiKey.value = await getLastFmApiKey();
 
     const debouncedSubmit = utils.debounce(() => {
       submit();
     }, 300);
 
     watch(
-      () => options,
-      () => {
+      () => [options, lastFmApiKey],
+      async () => {
         saved.value = false;
         dirty.value = true;
-        debouncedSubmit();
+        await setLastFmApiKey(lastFmApiKey.value || '');
+        submit();
       },
       { deep: true },
     );
@@ -799,7 +805,7 @@ const init = async () => {
 };
 
 const hasApiKey = computed(() => {
-  return options.lastfmApiKey && options.lastfmApiKey.length === 32;
+  return lastFmApiKey.value && lastFmApiKey.value.length === 32;
 });
 
 const openRymSync = () => {

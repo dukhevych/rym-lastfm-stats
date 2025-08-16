@@ -2,7 +2,6 @@
 
 <script lang="ts">
 import { formatDistanceToNow } from 'date-fns';
-// import { watch } from 'runed';
 import browser from 'webextension-polyfill';
 
 import * as api from '@/helpers/api';
@@ -20,6 +19,8 @@ import {
 import * as utils from '@/helpers/utils';
 
 import FormToggle from './FormToggle.svelte';
+import FormToggleGroup from './FormToggleGroup.svelte';
+import TabContent from './TabContent.svelte';
 
 const appVersion = process.env.APP_VERSION;
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
@@ -30,6 +31,24 @@ let signinInProgress = $state(false);
 
 let fallbackUsername = $state('');
 let activeTab = $state(new URLSearchParams(window.location.search).get('tab') || 'modules');
+
+const tabs = [
+  {
+    id: 'modules',
+    label: 'Modules',
+    icon: iconSwitch,
+  },
+  {
+    id: 'customization',
+    label: 'Customization',
+    icon: iconSettings,
+  },
+  {
+    id: 'api-auth',
+    label: 'API & Auth',
+    icon: iconKey,
+  },
+];
 
 let currentConfig = $state<AddonOptions>();
 let form: AddonOptions = $state(constants.PROFILE_OPTIONS_DEFAULT);
@@ -49,6 +68,16 @@ let rymSyncTimestamp = $state<number>();
 const rymSyncTimestampLabel = $derived(() => {
   if (!rymSyncTimestamp) return 'No sync performed yet';
   return `Last sync ${formatDistanceToNow(rymSyncTimestamp, { addSuffix: true })}`;
+});
+const isRymSyncOutdated = $derived(() => {
+  if (!rymSyncTimestamp) return false;
+  const date = new Date(rymSyncTimestamp);
+  const now = new Date();
+  return now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS;
+});
+const hasRymSyncWarning = $derived(() => {
+  if (!rymSyncTimestamp) return true;
+  return isRymSyncOutdated();
 });
 
 let lastfmApiKey = $state('');
@@ -259,7 +288,6 @@ interface TabLinkProps {
   href: string;
   label: string;
   icon: (size?: number) => any;
-  isActive: boolean;
   onClick: (e: MouseEvent) => void;
 }
 </script>
@@ -268,13 +296,11 @@ interface TabLinkProps {
   href,
   label,
   icon,
-  isActive,
   onClick
 }: TabLinkProps)}
   <a
     href={href}
     onclick={onClick}
-    class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {isActive ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}"
   >
     {@render icon()}
     {label}
@@ -316,6 +342,12 @@ interface TabLinkProps {
   </svg>
 {/snippet}
 
+{#snippet iconSwitch(size = 4)}
+<svg width="800px" height="800px" class="h-4 w-4" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <path d="M156.31,43.63a9.9,9.9,0,0,0-14,14,60.1,60.1,0,1,1-85,0,9.9,9.9,0,0,0-14-14c-31,31-31,82,0,113s82,31,113,0A79.37,79.37,0,0,0,156.31,43.63Zm-56.5,66.5a10,10,0,0,0,10-10v-70a10,10,0,0,0-20,0v70A10,10,0,0,0,99.81,110.13Z" fill="currentColor" />
+</svg>
+{/snippet}
+
 {#snippet iconClock(size = 4)}
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -347,12 +379,12 @@ interface TabLinkProps {
     this={!isValid && action ? 'button' : 'div'}
     data-slot="card"
     class={[
-      'text-card-foreground flex flex-col gap-6 rounded-xl py-6 border-2 text-left',
-      isValid ? 'shadow-sm border-green-200 bg-green-50 dark:bg-green-900 dark:border-green-800' : '',
+      'flex flex-col gap-6 rounded-2xl border-2 text-left',
+      isValid ? 'shadow-sm border-teal-800 bg-teal-900/80' : '',
       !isValid ? 'border-zinc-200 bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800' : '',
       hasWarning ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-800' : '',
       isLoading ? 'pointer-events-none opacity-50' : '',
-      (!isValid && action) ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800' : '',
+      (!isValid && action) ? 'cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800' : '',
     ].join(' ')}
     onclick={!isValid && action ? action : undefined}
     role={!isValid && action ? 'button' : undefined}
@@ -368,12 +400,12 @@ interface TabLinkProps {
         <div class="flex grow items-center gap-1">
           <div>
             <h3 class="font-bold">{title}</h3>
-            <div class="text-sm text-gray-600 dark:text-gray-400">
+            <div class="text-sm text-zinc-600 dark:text-zinc-400">
               {isValid ? validStatus : invalidStatus}
             </div>
           </div>
           {#if note && note.length > 0}
-            <div class="text-xs text-gray-600 dark:text-gray-300 text-right grow flex flex-col gap-1">
+            <div class="text-xs text-zinc-600 dark:text-zinc-300 text-right grow flex flex-col gap-1">
               {#if typeof note === 'string'}
                 {note}
               {/if}
@@ -445,37 +477,33 @@ interface TabLinkProps {
 {/snippet}
 
 <div
-  class="min-h-viewport flex flex-col {isLoading ? 'opacity-50 blur-xs' : ''}"
+  class="min-h-viewport flex flex-col {isLoading ? 'opacity-50 blur-xs' : ''} gap-6"
   style:display={isLoading ? 'none' : 'block'}
 >
-  <header>
-    <nav class="navbar bg-base-200 shadow-sm">
-      <div
-        class="max-w-screen-xl mx-auto flex grow items-center justify-center py-3"
+  <header class="max-w-screen-lg w-full mx-auto flex flex-col gap-2">
+    <div class="flex flex-col gap-2 grow items-center justify-center py-6">
+      <a
+        href="https://rateyourmusic.com"
+        target="_blank"
+        class="flex items-center gap-3"
       >
-        <a
-          href="https://rateyourmusic.com"
-          target="_blank"
-          class="flex items-center gap-3"
-        >
-          <img src="/icons/icon48.png" alt="" />
-          <h1 class="relative select-none text-2xl font-bold">
-            <span
-              class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
-            >
-              {appVersion}
-              {#if constants.isDev}DEV{/if}
-            </span>
-            <span class="text-red-600">RYM Last.fm Stats</span>
-          </h1>
-        </a>
+        <img src="/icons/icon48.png" alt="" />
+        <h1 class="relative select-none text-2xl font-bold">
+          <span
+            class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
+          >
+            {appVersion}
+            {#if constants.isDev}DEV{/if}
+          </span>
+          <span class="text-red-600">RYM Last.fm Stats</span>
+        </h1>
+      </a>
+      <div class="text-muted">
+        Configure your Last.fm and RateYourMusic integration settings
       </div>
-    </nav>
-  </header>
-  <main
-    class="max-w-screen-xl mx-auto w-full flex flex-col gap-3"
-  >
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    </div>
+    <!-- STATUS CARDS -->
+    <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
       {@render card({
         isValid: isLoggedIn(),
         title: 'Last.fm OAuth',
@@ -507,86 +535,49 @@ interface TabLinkProps {
         action: openRymSync,
       })}
     </div>
+  </header>
+  <main
+    class="max-w-screen-lg mx-auto w-full flex flex-col gap-3 p-6 bg-zinc-900 border-1 border-zinc-700 rounded-2xl"
+  >
+
+    <nav>
+      <ul class="flex *:grow gap-2 rounded-2xl p-2 bg-zinc-800">
+        {#each tabs as tab}
+          <li
+            class="
+              *:flex *:transition-colors *:items-center *:gap-2 *:justify-center *:rounded-xl *:p-1 *:text-sm
+              {activeTab === tab.id ?
+                '*:bg-teal-900 pointer-events-none' :
+                '*:opacity-50 *:hover:opacity-100'
+              }
+            "
+          >
+            {@render tabLink({
+              href: '#',
+              label: tab.label,
+              icon: tab.icon,
+              onClick: () => activeTab = tab.id,
+            })}
+          </li>
+        {/each}
+      </ul>
+    </nav>
 
     <div>
-      <nav>
-        <ul class="tabs mx-6 tabs-lift *:grow relative">
-          <li class="*:flex *:items-center *:gap-2">
-            {@render tabLink({
-              href: '#',
-              label: 'Modules',
-              icon: iconSettings,
-              isActive: activeTab === 'modules',
-              onClick: () => activeTab = 'modules',
-            })}
-          </li>
-          <li class="*:flex *:items-center *:gap-2">
-            {@render tabLink({
-              href: '#',
-              label: 'Recent Tracks',
-              icon: iconClock,
-              isActive: activeTab === 'recent-tracks',
-              onClick: () => activeTab = 'recent-tracks',
-            })}
-          </li>
-          <li class="*:flex *:items-center *:gap-2">
-            {@render tabLink({
-              href: '#',
-              label: 'Top Content',
-              icon: iconBarChart,
-              isActive: activeTab === 'top-content',
-              onClick: () => activeTab = 'top-content',
-            })}
-          </li>
-          <li class="*:flex *:items-center *:gap-2">
-            {@render tabLink({
-              href: '#',
-              label: 'API & Auth',
-              icon: iconKey,
-              isActive: activeTab === 'api-auth',
-              onClick: () => activeTab = 'api-auth',
-            })}
-          </li>
-        </ul>
-        <!-- <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'modules' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=modules" onclick={(e) => { e.preventDefault(); activeTab = 'modules' }}>
-          {@render iconSettings()}
-          Modules
-        </a> -->
-        <!-- <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'recent-tracks' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=recent-tracks" onclick={(e) => { e.preventDefault(); activeTab = 'recent-tracks' }}>
-          {@render iconClock()}
-          Recent Tracks
-        </a>
-        <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'top-content' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=top-content" onclick={(e) => { e.preventDefault(); activeTab = 'top-content' }}>
-          {@render iconBarChart()}
-          Top Content
-        </a>
-        <a class="tab [--tab-border-color:var(--color-gray-200)] dark:[--tab-border-color:var(--color-gray-800)] {activeTab === 'api-auth' ? 'tab-active [--tab-bg:var(--color-gray-50)] dark:[--tab-bg:var(--color-gray-900)]' : ''}" href="#tab=api-auth" onclick={(e) => { e.preventDefault(); activeTab = 'api-auth' }}>
-          {@render iconKey()}
-          API & Auth
-        </a> -->
-      </nav>
-
-      <div class="mt-[-1px] flex flex-col gap-6 border border-gray-200 dark:border-gray-800 rounded-xl p-4 bg-gray-50 dark:bg-gray-900" class:hidden={activeTab !== 'modules'}>
-        <header class="flex flex-col gap-2">
-          <div class="flex items-center justify-center gap-2">
-            {@render iconSettings(5)}
-            <h3 class="text-lg font-semibold">Module Settings</h3>
-          </div>
-          <div class="text-gray-600 dark:text-gray-400 text-center">
-            Enable or disable specific enhancement modules.
-          </div>
-        </header>
-        <div class="flex">
-          <aside class="flex flex-col gap-3 w-1/3 border-r border-gray-200 dark:border-gray-800">
-            <div class="flex flex-col border-y border-l border-gray-200 dark:border-gray-800">
-              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-4 flex items-baseline justify-between bg-gray-200 dark:bg-gray-800 py-3">
-                Last.fm Stats
-                <span class="text-xs dark:text-blue-200 text-blue-600">
-                  Updates every {utils.msToHuman(constants.STATS_CACHE_LIFETIME_GUEST_MS)}
-                </span>
-              </h4>
+      <TabContent
+        active={activeTab === 'modules'}
+        icon={iconSwitch}
+        title="Modules Settings"
+        description="Enable or disable specific enhancement modules."
+      >
+        <aside class="flex flex-col gap-8 w-1/3">
+          <FormToggleGroup title="Last.fm Stats">
+            {#snippet note()}
+              Updates once in &lt; <strong>{utils.msToHuman(constants.getStatsCacheLifetime(userData?.name, lastfmApiKey))}</strong> &gt;
+            {/snippet}
+            {#snippet warning()}
               {#if !isLoading && (!lastfmApiKey || !isLoggedIn())}
-                <div class="text-xs dark:text-orange-200 text-red-600 px-4 flex flex-col gap-1">
+                <div class="text-xs text-orange-200 flex flex-col gap-1">
                   {#if !lastfmApiKey}
                     <p>Add a Last.fm API key to increase rate limit</p>
                   {/if}
@@ -595,218 +586,146 @@ interface TabLinkProps {
                   {/if}
                 </div>
               {/if}
-              <div>
-                <label
-                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-4 select-none"
-                  onmouseenter={() => activePreviewKey = 'artist-stats'}
-                  onmouseleave={() => activePreviewKey = ''}
-                >
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-medium">Artist Statistics</span>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                      Show Last.fm stats on artist pages
-                    </p>
-                  </div>
-                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.artistArtistStats} />
-                </label>
-                <label
-                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-4 select-none"
-                  onmouseenter={() => activePreviewKey = 'release-stats'}
-                  onmouseleave={() => activePreviewKey = ''}
-                >
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-medium">Release Statistics</span>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                      Show Last.fm stats on release pages
-                    </p>
-                  </div>
-                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.releaseReleaseStats} />
-                </label>
-                <label
-                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-4 select-none"
-                  onmouseenter={() => activePreviewKey = 'song-stats'}
-                  onmouseleave={() => activePreviewKey = ''}
-                >
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-medium">Song Statistics</span>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                      Show Last.fm stats on song pages
-                    </p>
-                  </div>
-                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.songSongStats} />
-                </label>
-              </div>
+            {/snippet}
+
+            <FormToggle
+              label="Artist Statistics"
+              description="Show Last.fm stats on artist pages"
+              bind:checked={form.artistArtistStats}
+              name="artistArtistStats"
+            />
+
+            <FormToggle
+              label="Release Statistics"
+              description="Show Last.fm stats on release pages"
+              bind:checked={form.releaseReleaseStats}
+              name="releaseReleaseStats"
+            />
+
+            <FormToggle
+              label="Song Statistics"
+              description="Show Last.fm stats on song pages"
+              bind:checked={form.songSongStats}
+              name="songSongStats"
+            />
+          </FormToggleGroup>
+
+          <FormToggleGroup title="Profile">
+            {#snippet note()}
+              {#if !isLoading && !lastfmApiKey}
+                <span class="text-orange-200 not-italic">
+                  ⚠️ Last.fm API key is required
+                </span>
+              {/if}
+            {/snippet}
+
+            <FormToggle
+              label="Recent Tracks Widget"
+              description="Show recent tracks on profile"
+              bind:checked={form.profileRecentTracks}
+              disabled={!lastfmApiKey}
+              name="profileRecentTracks"
+            />
+            <FormToggle
+              label="Top Albums Widget"
+              description="Show top albums on profile"
+              bind:checked={form.profileTopAlbums}
+              disabled={!lastfmApiKey}
+              name="profileTopAlbums"
+            />
+            <FormToggle
+              label="Top Artists Widget"
+              description="Show top artists on profile"
+              bind:checked={form.profileTopArtists}
+              disabled={!lastfmApiKey}
+              name="profileTopArtists"
+            />
+            <FormToggle
+              label="Strict Search Results"
+              description="Enhanced search filtering"
+              bind:checked={form.searchStrictResults}
+              disabled={!lastfmApiKey}
+              name="searchStrictResults"
+            />
+          </FormToggleGroup>
+
+          <FormToggleGroup title="RYM Ratings">
+            {#snippet note()}
+              {#if !isLoading && hasRymSyncWarning()}
+                <span class="text-orange-200 not-italic">
+                  ⚠️
+                  {#if !rymSyncTimestamp}RYM Sync is required{/if}
+                  {#if isRymSyncOutdated()}RYM Sync is outdated{/if}
+                </span>
+              {/if}
+            {/snippet}
+
+            <FormToggle
+              label="List User Ratings"
+              description="Show user ratings in lists"
+              bind:checked={form.listUserRating}
+              name="listUserRating"
+            />
+
+            <FormToggle
+              label="Chart User Ratings"
+              description="Show ratings in charts"
+              bind:checked={form.chartsUserRating}
+              name="chartsUserRating"
+            />
+          </FormToggleGroup>
+        </aside>
+
+        <!-- Visual preview -->
+        <div class="w-2/3 *:w-full *:max-w-[800px] flex items-center flex-col gap-3">
+          {#if !activePreviewKey}
+            <div class="h-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 text-center text-xl font-medium p-4 rounded-lg bg-zinc-100 dark:bg-zinc-800 cursor-default">
+              Hover over a module in sidebar to see it's visual preview
             </div>
-            <div class="flex flex-col border-y border-l border-gray-200 dark:border-gray-800">
-              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-4 flex items-baseline justify-between bg-gray-200 dark:bg-gray-800 py-3">
-                Profile Features
-                {#if !isLoading && !lastfmApiKey}
-                  <span class="text-xs dark:text-orange-200 text-red-600">
-                    ⚠️ Last.fm API key is required
-                  </span>
-                {/if}
-              </h4>
-              <div>
-                <label
-                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
-                  onmouseenter={() => activePreviewKey = 'recent-tracks'}
-                  onmouseleave={() => activePreviewKey = ''}
-                >
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-medium">Recent Tracks Widget</span>
-                    <p class="text-xs text-gray-500">
-                      Show recent tracks on profile
-                    </p>
-                  </div>
-                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.profileRecentTracks} disabled={!lastfmApiKey} />
-                </label>
-                <label
-                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
-                  onmouseenter={() => activePreviewKey = 'top-albums'}
-                  onmouseleave={() => activePreviewKey = ''}
-                >
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-medium">Top Albums Widget</span>
-                    <p class="text-xs text-gray-500">Show top albums on profile</p>
-                  </div>
-                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.profileTopAlbums} disabled={!lastfmApiKey} />
-                </label>
-                <label
-                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
-                  onmouseenter={() => activePreviewKey = 'top-artists'}
-                  onmouseleave={() => activePreviewKey = ''}
-                >
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-medium">Top Artists Widget</span>
-                    <p class="text-xs text-gray-500">Show top artists on profile</p>
-                  </div>
-                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.profileTopArtists} disabled={!lastfmApiKey} />
-                </label>
-                <label
-                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 py-2 px-3 select-none"
-                  onmouseenter={() => activePreviewKey = 'strict-search'}
-                  onmouseleave={() => activePreviewKey = ''}
-                >
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-medium">Strict Search Results</span>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                      Enhanced search filtering
-                    </p>
-                  </div>
-                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.searchStrictResults} disabled={!lastfmApiKey} />
-                </label>
-              </div>
+          {:else}
+            <div class="flex flex-col gap-3">
+              <h3 class="text-lg font-semibold">Visual Preview</h3>
+              {#each Object.entries(moduleSettingsPreviews) as [key, previews]}
+                <div data-preview-key={key} class:hidden={activePreviewKey !== key}>
+                  {#each previews as preview}
+                    {#if typeof preview === 'string'}
+                      <img src={preview} alt={`Visual preview for ${key}`} />
+                    {/if}
+                    {#if typeof preview === 'object' && preview.type === 'animation'}
+                      <div class="grid relative">
+                        <img src={preview.on} alt="" class="[grid-area:1/1] animate-fadeA will-change-opacity" />
+                        <img src={preview.off} alt="" class="[grid-area:1/1] animate-fadeB pointer-events-none will-change-opacity" />
+                      </div>
+                    {/if}
+                  {/each}
+                </div>
+              {/each}
             </div>
-            <div class="flex flex-col border-y border-l border-gray-200 dark:border-gray-800">
-              <h4 class="font-medium text-gray-900 dark:text-gray-100 px-4 flex items-baseline justify-between bg-gray-200 dark:bg-gray-800 py-3">
-                Other Features
-              </h4>
-              <div>
-                <label
-                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md rounded-r-none py-2 px-3 select-none"
-                >
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-medium">List User Ratings</span>
-                    <p class="text-xs text-gray-500">Show ratings in lists</p>
-                  </div>
-                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.listUserRating} />
-                </label>
-                <label
-                  class="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md rounded-r-none py-2 px-3 select-none"
-                >
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-medium">Chart User Ratings</span>
-                    <p class="text-xs text-gray-500">Show ratings in charts</p>
-                  </div>
-                  <input type="checkbox" class="toggle toggle-primary" bind:checked={form.chartsUserRating} />
-                </label>
-              </div>
-            </div>
-          </aside>
-
-          <!-- Visual preview -->
-          <div class="w-2/3 *:w-full *:max-w-[800px] flex items-center flex-col gap-3">
-            {#if !activePreviewKey}
-              <div class="h-full flex items-center justify-center text-gray-600 dark:text-gray-400 text-center text-xl font-medium p-4 rounded-lg bg-gray-100 dark:bg-gray-800 cursor-default">
-                Hover over a module in sidebar to see it's visual preview
-              </div>
-            {:else}
-              <div class="flex flex-col gap-3">
-                <h3 class="text-lg font-semibold">Visual Preview</h3>
-                {#each Object.entries(moduleSettingsPreviews) as [key, previews]}
-                  <div data-preview-key={key} class:hidden={activePreviewKey !== key}>
-                    {#each previews as preview}
-                      {#if typeof preview === 'string'}
-                        <img src={preview} alt={`Visual preview for ${key}`} />
-                      {/if}
-                      {#if typeof preview === 'object' && preview.type === 'animation'}
-                        <div class="grid relative">
-                          <img src={preview.on} alt="" class="[grid-area:1/1] animate-fadeA will-change-opacity" />
-                          <img src={preview.off} alt="" class="[grid-area:1/1] animate-fadeB pointer-events-none will-change-opacity" />
-                        </div>
-                      {/if}
-                    {/each}
-                  </div>
-                {/each}
-              </div>
-            {/if}
-          </div>
+          {/if}
         </div>
-      </div>
+      </TabContent>
 
-      <div class="mt-[-1px] flex flex-col gap-6 border border-gray-200 dark:border-gray-800 rounded-xl p-4 bg-gray-50 dark:bg-gray-900" class:hidden={activeTab !== 'recent-tracks'}>
-        <header class="flex flex-col gap-2">
-          <div class="flex items-center justify-center gap-2">
-            {@render iconClock(5)}
-            <h3 class="text-lg font-semibold">Recent Tracks</h3>
-          </div>
-          <div class="text-gray-600 dark:text-gray-400 text-center">
-            Configure the recent tracks widget
-          </div>
-        </header>
+      <TabContent
+        active={activeTab === 'customization'}
+        icon={iconSettings}
+        title="Customization"
+        description="Profile modules customization"
+      >
+        SETTINGS GO HERE
+      </TabContent>
 
-        <!-- <div class="flex"> -->
-          <div class="flex flex-col gap-3 border border-gray-200 dark:border-gray-800">
-            SETTINGS GO HERE
-          </div>
-        <!-- </div> -->
-      </div>
-
-      <div class="space-y-6" class:hidden={activeTab !== 'top-content'}>
-        <div class="flex items-center gap-2 mb-4">
-          {@render iconBarChart(5)}
-          <h3 class="text-lg font-semibold">Top Content</h3>
-        </div>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
-          Configure the top content widgets
-        </p>
-
-        <div class="flex">
-          <div class="flex flex-col gap-3 border-r border-gray-200 dark:border-gray-800">
-            SETTINGS GO HERE
-          </div>
-        </div>
-      </div>
-
-      <div class="space-y-6" class:hidden={activeTab !== 'api-auth'}>
-        <div class="flex items-center gap-2 mb-4">
-          {@render iconKey(5)}
-          <h3 class="text-lg font-semibold">API & Auth</h3>
-        </div>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
-          Configure the API and authentication settings
-        </p>
-
-        <div class="flex">
-          <div class="flex flex-col gap-3 border-r border-gray-200 dark:border-gray-800">
-            SETTINGS GO HERE
-          </div>
-        </div>
-      </div>
+      <TabContent
+        active={activeTab === 'api-auth'}
+        icon={iconKey}
+        title="API & Auth"
+        description="Configure the API and authentication settings"
+      >
+        SETTINGS GO HERE
+      </TabContent>
     </div>
 
     <div class="flex justify-end">
-      <button class="btn btn-primary" onclick={submit}>
+      <button type="submit" class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800" onclick={submit}>
         {@render iconSettings(5)}
         Save Configuration
       </button>

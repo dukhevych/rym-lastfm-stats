@@ -1,10 +1,11 @@
 @import "tailwindcss";
 @config "../../../tailwind.config.mjs";
 
-@plugin "daisyui" {
-  themes: lemonade --default, night --prefersdark;
-}
-/*
 :root {
-  color-scheme: light dark;
-} */
+  color-scheme: dark;
+}
+
+body {
+  background: #0f0f0f !important;
+  color: #e5e5e5 !important;
+}

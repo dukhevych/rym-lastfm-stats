@@ -52,7 +52,7 @@ $effect(() => {
 
 const settingsAnimationOptions = $derived(() => {
   return [
-    { label: 'Dynamic', value: 'auto' },
+    { label: 'Dynamic (default)', value: 'auto' },
     { label: 'Always on', value: 'on' },
     { label: 'Always off', value: 'off' },
   ];
@@ -69,7 +69,7 @@ const isRymSyncOutdated = $derived(() => {
   if (!rymSyncTimestamp) return false;
   const date = new Date(rymSyncTimestamp);
   const now = new Date();
-  return now.getTime() - date.getTime() > 1000 * 60 * 60 * 24 * 14; // 14 days
+  return now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS;
 });
 
 const pollingProgressAngle = $derived(() => {
