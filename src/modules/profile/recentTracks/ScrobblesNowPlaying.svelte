@@ -160,20 +160,6 @@ const onToggleBackground = async () => {
   ]);
 };
 
-// const getReleaseRYMData = async () => {
-//   albumsFromDB = await RecordsAPI.getByArtistAndTitle(
-//     track.artistName,
-//     track.albumName,
-//     albumNameFallback(),
-//   );
-
-//   isLoaded = true;
-// };
-
-// $effect(() => {
-//   if (track && track.artistName && track.albumName) getReleaseRYMData();
-// });
-
 const handleSettingsSubmit = async (e: Event) => {
   e.preventDefault();
   await Promise.all([
@@ -222,8 +208,8 @@ $effect(() => {
       <label class="flex gap-2">
         <input
           type="checkbox"
-          id="recent-tracks-polling-enabled"
-          name="recent-tracks-polling-enabled"
+          id="recent-tracks-polling"
+          name="recent-tracks-polling"
           bind:checked={innerConfig.profileRecentTracksPolling}
         />
         <strong

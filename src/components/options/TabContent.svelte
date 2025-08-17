@@ -14,7 +14,7 @@ interface Props {
 const { active, icon, title, description, children }: Props = $props();
 </script>
 
-<div class="flex flex-col gap-4 rounded-xl p-4" class:hidden={!active}>
+<div class="flex flex-col gap-4 rounded-xl" class:hidden={!active}>
   <header class="flex flex-col gap-2">
     <div class="flex items-center justify-center gap-2">
       <span class="*:w-6 *:h-6">
@@ -28,7 +28,7 @@ const { active, icon, title, description, children }: Props = $props();
       </div>
     {/if}
   </header>
-  <div class="flex gap-3">
+  <div class="flex flex-col">
     {@render children()}
   </div>
 </div>

@@ -1,7 +1,7 @@
 {
   "showOnLoad": false,
   "background": 1,
-  "pollingEnabled": true,
+  "polling": true,
   "limit": 10,
   "animation": "auto",
   "rymHistoryHide": false

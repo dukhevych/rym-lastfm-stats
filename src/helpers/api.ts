@@ -109,4 +109,3 @@ export function fetchUserData(
       return undefined;
     });
 }
-

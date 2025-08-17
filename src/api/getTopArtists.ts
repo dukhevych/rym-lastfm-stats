@@ -10,7 +10,7 @@ export interface TopArtist {
   image: Array<{ size: string; '#text': string }>;
 }
 
-export interface TopArtistsResponse {
+export interface UserTopArtistsResponse {
   topartists: {
     artist: TopArtist[];
     '@attr': {
@@ -23,42 +23,81 @@ export interface TopArtistsResponse {
   };
 }
 
-interface GetTopArtistsParams {
-  username: string;
-  period: LastFmPeriod;
-  limit?: number;
-  page?: number;
+export interface ChartTopArtistsResponse {
+  artists: {
+    artist: TopArtist[];
+    '@attr': {
+      page: string;
+      perPage: string;
+      totalPages: string;
+      total: string;
+    };
+  };
 }
 
-interface GetTopArtistsOptions {
-  params: GetTopArtistsParams;
+interface GetTopArtistsBase {
   apiKey: string;
   signal?: AbortSignal;
 }
 
+interface GetTopArtistsUserParams {
+  params: {
+    username: string;
+    period: LastFmPeriod;
+    limit?: number;
+    page?: number;
+  };
+}
+
+interface GetTopArtistsChartParams {
+  params?: {
+    username?: undefined; // ensures TS knows it's the chart branch
+    limit?: number;
+    page?: number;
+  };
+}
+
+// overloads
+export async function getTopArtists(
+  options: GetTopArtistsUserParams & GetTopArtistsBase
+): Promise<UserTopArtistsResponse>;
+
+export async function getTopArtists(
+  options: GetTopArtistsChartParams & GetTopArtistsBase
+): Promise<ChartTopArtistsResponse>;
+
+// implementation
 export async function getTopArtists({
-  params,
+  params = {},
   apiKey,
   signal,
-}: GetTopArtistsOptions): Promise<TopArtistsResponse> {
+}: (GetTopArtistsUserParams | GetTopArtistsChartParams) & GetTopArtistsBase) {
   const searchParams = new URLSearchParams({
-    method: 'user.gettopartists',
-    user: params.username,
     api_key: apiKey,
     format: 'json',
   });
 
-  searchParams.set('limit', String(params.limit || 8));
-  searchParams.set('period', params.period);
+  if (params.username) {
+    searchParams.set('method', 'user.gettopartists');
+    searchParams.set('user', params.username);
+    searchParams.set('limit', String(params.limit || 8));
+    if ('period' in params && params.period) {
+      searchParams.set('period', params.period);
+    }
+  } else {
+    searchParams.set('method', 'chart.getTopArtists');
+    if (params.limit) searchParams.set('limit', String(params.limit));
+  }
+
   if (params.page) searchParams.set('page', String(params.page));
 
   const url = `${BASE_URL}?${searchParams.toString()}`;
   const res = await fetch(url, { signal });
+  const json = await res.json();
 
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || `Failed to fetch top artists: ${res.statusText}`);
+  if (!res.ok || json.error) {
+    throw new Error(json.message || `Failed to fetch top artists: ${res.statusText}`);
   }
 
-  return res.json();
+  return json;
 }
