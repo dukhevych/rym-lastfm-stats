@@ -789,14 +789,14 @@ interface TabLinkProps {
                         onfocus={handleApiKeyFocus}
                         onblur={handleApiKeyBlur}
                         disabled={lastfmApiKeyValidationInProgress}
+                        readonly={!!lastfmApiKeySaved}
                         id="lastFmApiKey"
                         class="
-                          w-full block
-                          min-w-0
-                          block border font-mono text-sm rounded-lg p-2.5 outline-none
+                          w-full block min-w-0 font-mono rounded-lg outline-none
+                          border text-sm p-2.5
                           bg-zinc-700 border-zinc-600 placeholder-zinc-400 text-white
-                          focus:border-zinc-500 focus:ring-teal-500 focus:border-teal-500
-                          focus:placeholder-transparent
+                          focus:border-zinc-500 focus:ring-teal-500 focus:border-teal-500 focus:placeholder-transparent
+                          disabled:opacity-50 disabled:cursor-wait
                         "
                         bind:value={lastfmApiKey}
                         bind:this={lastfmApiKeyInput}
@@ -811,10 +811,10 @@ interface TabLinkProps {
                 <div class="flex gap-4 items-center w-full">
                   <button
                     type="submit"
-                    disabled={lastfmApiKeyValidationInProgress}
+                    disabled={lastfmApiKeyValidationInProgress || !!lastfmApiKeySaved}
                     class="
                       inline-flex gap-2 cursor-pointer px-5 py-2 text-sm font-medium text-white items-center border-1
-                      bg-yellow-900/50 border-yellow-800 hover:bg-yellow-800/50 disabled:opacity-50 disabled:cursor-wait
+                      bg-yellow-900/50 border-yellow-800 hover:bg-yellow-800/50 disabled:opacity-50 disabled:pointer-events-none
                       focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
                       rounded-lg text-center
                     "
@@ -822,6 +822,18 @@ interface TabLinkProps {
                     {@render iconKey(5)}
                     Save API Key
                   </button>
+                  {#if lastfmApiKeySaved}
+                    <button
+                      type="button"
+                      class="
+                        inline-flex gap-2 cursor-pointer p-0 text-sm font-medium items-center
+                        hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
+                        hover:underline
+                      "
+                    >
+                      Remove API Key
+                    </button>
+                  {/if}
                   <a href="https://www.last.fm/api/accounts" target="_blank" class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2 ml-auto">
                     <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4">
                       <line x1="10.8492" y1="13.0606" x2="19.435" y2="4.47485" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
