@@ -809,15 +809,13 @@ interface TabLinkProps {
                           bg-zinc-700 border-zinc-600 placeholder-zinc-400 text-white
                           focus:border-zinc-500 focus:ring-teal-500 focus:border-teal-500 focus:placeholder-transparent
                           disabled:opacity-50 disabled:cursor-wait
+                          read-only:bg-teal-900/50 read-only:border-transparent read-only:cursor-default
                         "
                         bind:value={lastfmApiKey}
                         bind:this={lastfmApiKeyInput}
                         placeholder="PASTE API KEY HERE"
                       />
                     </div>
-                  </div>
-                  <div class="text-xs text-zinc-400">
-                    Optional: Provides access to additional Last.fm features and higher rate limits
                   </div>
                 </div>
                 <div class="flex gap-4 items-center w-full">
@@ -833,7 +831,7 @@ interface TabLinkProps {
                       "
                     >
                       {@render iconKey(5)}
-                      Add API Key
+                      Save API Key
                     </button>
                   {/if}
                   {#if lastfmApiKeySaved}
@@ -841,7 +839,7 @@ interface TabLinkProps {
                       type="button"
                       onclick={removeApiKey}
                       class="
-                        inline-flex gap-2 cursor-pointer p-0 text-sm font-medium items-center
+                        inline-flex ml-auto gap-2 cursor-pointer p-0 text-sm font-medium items-center
                         hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
                         hover:underline
                       "
@@ -867,6 +865,10 @@ interface TabLinkProps {
                     {@render iconSuccess()} API key configured successfully. Enhanced features and higher Last.fm API rate limits are now available.
                   </div>
                 {/if}
+
+                <div class="text-xs text-zinc-400">
+                  Optional: Provides access to additional Last.fm features and higher rate limits
+                </div>
               </form>
             </div>
             <div class="flex flex-col gap-2">
@@ -883,30 +885,36 @@ interface TabLinkProps {
                 </form>
               {:else if userData}
                 <div class="text-sm">Logged in as:</div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-col gap-3">
                   <a
                     href={userData.url}
                     target="_blank"
-                    class="h-10 flex items-center gap-2 hover:bg-zinc-700/50 pr-4 rounded-[9999px]"
+                    class="h-10 flex items-center justify-between bg-zinc-700/50 pr-4 rounded-r-lg rounded-l-[2.5rem] hover:bg-zinc-700/70 transition-colors text-zinc-400 hover:text-white"
                   >
-                    <img
-                      src={userData.image}
-                      alt={userData.name?.[1]?.toUpperCase() || ''}
-                      class="h-9 w-9 bg-zinc-700 text-center rounded-full outline outline-1 outline-zinc-300"
-                    >
-                    <strong>{userData.name}</strong>
+                    <span class="flex items-center gap-2 h-full">
+                      <img
+                        src={userData.image}
+                        alt={userData.name?.[1]?.toUpperCase() || ''}
+                        class="h-10 w-10 bg-zinc-700 text-center rounded-full outline outline-1 outline-zinc-300"
+                      >
+                      <strong class="text-white">{userData.name}</strong>
+                    </span>
+                    <span class="text-xs">Click to open profile</span>
                   </a>
                   <button
+                    type="button"
                     onclick={logout}
-                    class="h-10 w-10 flex items-center justify-center hover:bg-zinc-700/50 cursor-pointer rounded-full"
-                    aria-label="Logout"
-                    title="Logout"
+                    class="
+                      inline-flex ml-auto gap-2 cursor-pointer p-0 text-sm font-medium items-center
+                      hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
+                      hover:underline
+                    "
                   >
-                    <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 ml-1">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M15.9908 7.82251C16.2897 7.5357 16.7644 7.54547 17.0512 7.84433L20.541 11.4807C20.8195 11.7709 20.8195 12.2291 20.541 12.5193L17.0512 16.1557C16.7644 16.4545 16.2897 16.4643 15.9908 16.1775C15.692 15.8907 15.6822 15.4159 15.969 15.1171L18.2404 12.7502L11.2727 12.7502C10.8585 12.7502 10.5227 12.4144 10.5227 12.0002C10.5227 11.586 10.8585 11.2502 11.2727 11.2502L18.2408 11.2502L15.969 8.88295C15.6822 8.58409 15.692 8.10932 15.9908 7.82251Z" fill="currentColor"/>
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M3.25 4C3.25 3.58579 3.58579 3.25 4 3.25H13.4545C13.8688 3.25 14.2045 3.58579 14.2045 4V7C14.2045 7.41421 13.8688 7.75 13.4545 7.75C13.0403 7.75 12.7045 7.41421 12.7045 7V4.75H4.75V19.25H12.7045V17C12.7045 16.5858 13.0403 16.25 13.4545 16.25C13.8688 16.25 14.2045 16.5858 14.2045 17V20C14.2045 20.4142 13.8688 20.75 13.4545 20.75H4C3.58579 20.75 3.25 20.4142 3.25 20V4Z" fill="currentColor"/>
-                    </svg>
+                    Logout
                   </button>
+                  <div class="flex items-center gap-2 border-zinc-600 text-xs border rounded-xl p-2">
+                    {@render iconSuccess()} <p>Logged in as <strong>{userData.name}</strong> last.fm user. Personal scrobbling stats and additional Profile features are now available.</p>
+                  </div>
                 </div>
               {/if}
             </div>
