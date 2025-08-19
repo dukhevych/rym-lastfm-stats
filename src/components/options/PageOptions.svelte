@@ -63,6 +63,14 @@ const tabs: Tab[] = [
 
 let hashValue = window.location.hash ? window.location.hash.slice(1) : null;
 
+async function removeApiKey() {
+  const doConfirm = confirm('Are you sure you want to remove the API key?');
+  if (!doConfirm) return;
+  await setLastFmApiKey('');
+  lastfmApiKeySaved = '';
+  lastfmApiKey = '';
+}
+
 function getInitialTab() {
   if (hashValue) return tabs.find((tab) => tab.id === hashValue)?.id || 'modules';
   return 'modules';
@@ -108,6 +116,13 @@ let lastfmApiKeyValidationInProgress = $state(false);
 
 async function onSubmitLastFmApiKey(e: Event) {
   e.preventDefault();
+  if (!lastfmApiKey) return;
+  if (lastfmApiKey === lastfmApiKeySaved) return;
+  if (lastfmApiKey.length !== 32) {
+    alert('Invalid API key. It should be 32 characters long.');
+    return;
+  }
+
   lastfmApiKeyValidationInProgress = true;
 
   try {
@@ -120,10 +135,7 @@ async function onSubmitLastFmApiKey(e: Event) {
     lastfmApiKeySaved = lastfmApiKey;
   } catch (err) {
     console.error(err);
-    await setLastFmApiKey('');
-    if (lastfmApiKey === lastfmApiKeySaved) {
-      lastfmApiKeySaved = '';
-    }
+    alert('Please check your API key and try again');
   }
 
   lastfmApiKeyValidationInProgress = false;
@@ -809,22 +821,25 @@ interface TabLinkProps {
                   </div>
                 </div>
                 <div class="flex gap-4 items-center w-full">
-                  <button
-                    type="submit"
-                    disabled={lastfmApiKeyValidationInProgress || !!lastfmApiKeySaved}
-                    class="
-                      inline-flex gap-2 cursor-pointer px-5 py-2 text-sm font-medium text-white items-center border-1
-                      bg-yellow-900/50 border-yellow-800 hover:bg-yellow-800/50 disabled:opacity-50 disabled:pointer-events-none
-                      focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
-                      rounded-lg text-center
-                    "
-                  >
-                    {@render iconKey(5)}
-                    Save API Key
-                  </button>
+                  {#if !lastfmApiKeySaved}
+                    <button
+                      type="submit"
+                      disabled={lastfmApiKeyValidationInProgress || !!lastfmApiKeySaved}
+                      class="
+                        inline-flex gap-2 cursor-pointer px-5 py-2 text-sm font-medium text-white items-center border-1
+                        bg-yellow-900/50 border-yellow-800 hover:bg-yellow-800/50 disabled:opacity-50 disabled:pointer-events-none
+                        focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
+                        rounded-lg text-center
+                      "
+                    >
+                      {@render iconKey(5)}
+                      Add API Key
+                    </button>
+                  {/if}
                   {#if lastfmApiKeySaved}
                     <button
                       type="button"
+                      onclick={removeApiKey}
                       class="
                         inline-flex gap-2 cursor-pointer p-0 text-sm font-medium items-center
                         hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
@@ -834,6 +849,7 @@ interface TabLinkProps {
                       Remove API Key
                     </button>
                   {/if}
+                  {#if !lastfmApiKeySaved}
                   <a href="https://www.last.fm/api/accounts" target="_blank" class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2 ml-auto">
                     <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4">
                       <line x1="10.8492" y1="13.0606" x2="19.435" y2="4.47485" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -843,6 +859,7 @@ interface TabLinkProps {
                     </svg>
                     See my API keys
                   </a>
+                  {/if}
                 </div>
 
                 {#if lastfmApiKeySaved}
