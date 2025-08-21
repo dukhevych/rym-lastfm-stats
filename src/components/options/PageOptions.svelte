@@ -13,7 +13,8 @@ import { RecordsAPI } from '@/helpers/records-api';
 import {
   storageSet,
   storageRemove,
-  getProfileOptions,
+  getModuleToggleConfig,
+  getModuleCustomizationConfig,
   getRymSyncTimestamp,
   updateProfileOptions,
   getUserData,
@@ -77,9 +78,9 @@ function getInitialTab() {
 }
 
 let activeTab = $state(getInitialTab());
-
-let currentConfig = $state<AddonOptions>();
-let form: AddonOptions = $state(constants.PROFILE_OPTIONS_DEFAULT);
+// let currentConfig = $state<ModuleToggleConfig>();
+let formModules: ModuleToggleConfig = $state(constants.MODULE_TOGGLE_CONFIG);
+let formCustomization: AddonOptions = $state(constants.MODULE_CUSTOMIZATION_CONFIG);
 
 let userData = $state<UserData>();
 const isLoggedIn = $derived(() => !!userData?.name);
@@ -190,15 +191,15 @@ function handleApiKeyBlur(e: Event) {
 }
 
 async function submit() {
-  const newConfig = $state.snapshot(form);
+  const newConfig = $state.snapshot(formModules);
   await updateProfileOptions(newConfig);
-  currentConfig = newConfig;
+  // currentConfig = newConfig;
 }
 
 async function reset() {
   const doConfirm = confirm('Are you sure you want to reset all settings?');
   if (!doConfirm) return;
-  Object.assign(form, constants.PROFILE_OPTIONS_DEFAULT);
+  Object.assign(formModules, constants.PROFILE_OPTIONS_DEFAULT);
   await submit();
 }
 
@@ -260,20 +261,24 @@ async function openAuthPage() {
 
 async function init() {
   const data = await Promise.all([
-    getProfileOptions(),
+    getModuleToggleConfig(),
+    getModuleCustomizationConfig(),
     getLastFmApiKey(),
     getUserData(),
     RecordsAPI.getQty(),
     getRymSyncTimestamp(),
   ]);
 
-  currentConfig = data[0];
-  form = data[0];
-  lastfmApiKeySaved = data[1];
-  lastfmApiKey = data[1];
-  userData = data[2];
-  dbRecordsQty = data[3] ?? null;
-  rymSyncTimestamp = data[4] ?? null;
+  console.log(data[0]);
+
+  // currentConfig = data[0];
+  formModules = data[0];
+  formCustomization = data[1];
+  lastfmApiKeySaved = data[2];
+  lastfmApiKey = data[2];
+  userData = data[3];
+  dbRecordsQty = data[4] ?? null;
+  rymSyncTimestamp = data[5] ?? null;
 
   isLoading = false;
 }
@@ -335,14 +340,14 @@ async function fallbackLogin() {
 init();
 
 interface CardProps {
-  isValid: boolean;
+  valid: boolean;
   title: string;
   validStatus: string;
   invalidStatus: string;
   action?: () => void;
-  hasWarning?: boolean;
+  warning?: boolean;
   note?: string | string[];
-  isLoading?: boolean;
+  loading?: boolean;
 }
 
 interface TabLinkProps {
@@ -393,9 +398,9 @@ interface TabLinkProps {
 {/snippet}
 
 {#snippet card({
-  isValid,
-  hasWarning = false,
-  isLoading = false,
+  valid,
+  warning = false,
+  loading = false,
   title,
   note,
   validStatus,
@@ -403,25 +408,25 @@ interface TabLinkProps {
   action,
 }: CardProps)}
   <svelte:element
-    this={!isValid && action ? 'button' : 'div'}
+    this={!valid && action ? 'button' : 'div'}
     data-slot="card"
     class={[
       'flex flex-col gap-6 rounded-2xl border-2 text-left',
-      !isValid && 'bg-zinc-900 border-zinc-700',
-      isValid && 'shadow-sm border-teal-800 bg-teal-900/50',
-      hasWarning && 'bg-yellow-900/50 border-yellow-800',
-      isLoading && 'pointer-events-none opacity-50',
-      ((!isValid || hasWarning) && action) && 'cursor-pointer',
-      (!isValid && action) && 'hover:bg-zinc-800',
-      (hasWarning && action) && 'hover:bg-yellow-800/50',
+      !valid && 'bg-zinc-900 border-zinc-700',
+      valid && 'shadow-sm border-teal-800 bg-teal-900/50',
+      warning && 'bg-yellow-900/50 border-yellow-800',
+      loading && 'pointer-events-none opacity-50',
+      ((!valid || warning) && action) && 'cursor-pointer',
+      (!valid && action) && 'hover:bg-zinc-800',
+      (warning && action) && 'hover:bg-yellow-800/50',
     ].filter(Boolean).join(' ')}
-    onclick={(!isValid || hasWarning) && action ? action : undefined}
-    role={(!isValid || hasWarning) && action ? 'button' : undefined}
+    onclick={(!valid || warning) && action ? action : undefined}
+    role={(!valid || warning) && action ? 'button' : undefined}
   >
     <div data-slot="card-content" class="p-4">
       <div class="flex items-center gap-2">
-        {#if isValid}
-          {#if hasWarning}
+        {#if valid}
+          {#if warning}
             {@render iconWarning()}
           {:else}
             {@render iconSuccess()}
@@ -434,7 +439,7 @@ interface TabLinkProps {
           <div>
             <h3 class="font-bold">{title}</h3>
             <div class="text-sm text-zinc-600 dark:text-zinc-400">
-              {isValid ? validStatus : invalidStatus}
+              {valid ? validStatus : invalidStatus}
             </div>
           </div>
           {#if note && note.length > 0}
@@ -509,6 +514,18 @@ interface TabLinkProps {
   </svg>
 {/snippet}
 
+{#snippet iconPatreon(classes = '')}
+  <svg fill="none" width="800px" height="800px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 {classes}">
+    <path d="M20.23 1.604c-0.008-0-0.017-0-0.027-0-5.961 0-10.793 4.832-10.793 10.793s4.832 10.793 10.793 10.793c5.955 0 10.783-4.822 10.793-10.775v-0.001c-0.004-5.953-4.816-10.781-10.763-10.809h-0.003zM1.004 1.604v28.792h5.274v-28.792z" fill="currentColor" />
+  </svg>
+{/snippet}
+
+{#snippet iconGithub(classes = '')}
+<svg class="h-4 w-4 {classes}" width="800px" height="800px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <path fill="currentColor" fill-rule="evenodd" d="M8 1C4.133 1 1 4.13 1 7.993c0 3.09 2.006 5.71 4.787 6.635.35.064.478-.152.478-.337 0-.166-.006-.606-.01-1.19-1.947.423-2.357-.937-2.357-.937-.319-.808-.778-1.023-.778-1.023-.635-.434.048-.425.048-.425.703.05 1.073.72 1.073.72.624 1.07 1.638.76 2.037.582.063-.452.244-.76.444-.935-1.554-.176-3.188-.776-3.188-3.456 0-.763.273-1.388.72-1.876-.072-.177-.312-.888.07-1.85 0 0 .586-.189 1.924.716A6.711 6.711 0 018 4.381c.595.003 1.194.08 1.753.236 1.336-.905 1.923-.717 1.923-.717.382.963.142 1.674.07 1.85.448.49.72 1.114.72 1.877 0 2.686-1.638 3.278-3.197 3.45.251.216.475.643.475 1.296 0 .934-.009 1.688-.009 1.918 0 .187.127.404.482.336A6.996 6.996 0 0015 7.993 6.997 6.997 0 008 1z" clip-rule="evenodd"/>
+</svg>
+{/snippet}
+
 {#snippet iconError(size = 5)}
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -531,8 +548,26 @@ interface TabLinkProps {
   class="min-h-viewport flex flex-col {isLoading ? 'opacity-50 blur-xs' : ''} gap-3"
   style:display={isLoading ? 'none' : 'block'}
 >
-  <header class="max-w-screen-lg w-full mx-auto flex flex-col gap-3">
-    <div class="flex flex-col gap-2 grow items-center justify-center py-6">
+  <header class="max-w-screen-lg w-full mx-auto flex items-center gap-3">
+    <div class="flex flex-col flex-1 justify-start">
+      <a
+        href="https://www.patreon.com/c/BohdanDukhevych"
+        target="_blank"
+        class="flex items-center gap-2 py-0.5 font-bold hover:underline text-white"
+      >
+        {@render iconPatreon('text-[#f96854] h-6 w-6')}
+        <span>Support project</span>
+      </a>
+      <a
+        href={reportIssueUrl()}
+        target="_blank"
+        class="flex items-center gap-2 py-0.5 font-bold hover:underline text-white"
+      >
+        {@render iconGithub('text-[#08872B] h-6 w-6')}
+        <span>Report Issue</span>
+      </a>
+    </div>
+    <div class="flex flex-col gap-2 items-center justify-center py-6">
       <a
         href="https://rateyourmusic.com"
         target="_blank"
@@ -553,14 +588,17 @@ interface TabLinkProps {
         Configure your Last.fm and RateYourMusic integration settings
       </div>
     </div>
+    <div class="flex flex-1 justify-end">
+
+    </div>
   </header>
   <main
-    class="max-w-screen-lg mx-auto w-full flex flex-col gap-3"
+    class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-6 pb-6"
   >
     <!-- STATUS CARDS -->
     <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
       {@render card({
-        isValid: isLoggedIn(),
+        valid: isLoggedIn(),
         title: 'Last.fm',
         validStatus: 'Connected',
         invalidStatus: 'Not connected',
@@ -569,10 +607,10 @@ interface TabLinkProps {
           userData.name,
         ] : 'Guest',
         action: openAuthPage,
-        isLoading: signinInProgress,
+        loading: signinInProgress,
       })}
       {@render card({
-        isValid: !!lastfmApiKeySaved,
+        valid: !!lastfmApiKeySaved,
         title: 'Last.fm API Key',
         validStatus: 'Configured',
         invalidStatus: 'Not configured',
@@ -584,11 +622,11 @@ interface TabLinkProps {
         },
       })}
       {@render card({
-        isValid: !!rymSyncTimestamp,
+        valid: !!rymSyncTimestamp,
         title: 'RYM Sync',
         validStatus: isRymSyncOutdated() ? 'Outdated' : 'Completed',
         invalidStatus: 'Not completed',
-        hasWarning: isRymSyncOutdated(),
+        warning: isRymSyncOutdated(),
         note: [
           rymSyncTimestampLabel(),
           dbRecordsQtyLabel(),
@@ -596,6 +634,8 @@ interface TabLinkProps {
         action: openRymSync,
       })}
     </div>
+
+    <!-- CTA -->
     {#if setupProgress() < 3}
       <h2 class="text-zinc-400 text-lg text-center flex flex-col">
         <strong>You're almost there!</strong>
@@ -603,7 +643,10 @@ interface TabLinkProps {
         <span class="text-sm text-white/50">Configure the remaining settings to complete the setup and get the most out of the extension:</span>
       </h2>
     {/if}
+
+    <!-- CONTENT AREA -->
     <div class="p-6 bg-zinc-900 border-1 border-zinc-700 rounded-2xl flex flex-col gap-3">
+      <!-- TABS -->
       <nav>
         <ul class="flex *:grow *:basis-0 gap-2 rounded-2xl p-1 bg-zinc-800">
           {#each tabs as tab}
@@ -627,6 +670,7 @@ interface TabLinkProps {
         </ul>
       </nav>
 
+      <!-- TAB CONTENT -->
       <div>
         <TabContent
           active={activeTab === 'modules'}
@@ -640,8 +684,8 @@ interface TabLinkProps {
                 <FormToggle
                   label="Last.fm Link in RYM Header"
                   description="Adds Last.fm link in RYM Header any page"
-                  bind:checked={form.mainLastfmProfile}
-                  name="mainLastfmProfile"
+                  bind:checked={formModules.mainHeaderLastfmLink}
+                  name="mainHeaderLastfmLink"
                   newOption
                 />
               </FormToggleGroup>
@@ -666,21 +710,21 @@ interface TabLinkProps {
                 <FormToggle
                   label="Artist Statistics"
                   description="Show Last.fm stats on artist pages"
-                  bind:checked={form.artistArtistStats}
+                  bind:checked={formModules.artistArtistStats}
                   name="artistArtistStats"
                 />
 
                 <FormToggle
                   label="Release Statistics"
                   description="Show Last.fm stats on release pages"
-                  bind:checked={form.releaseReleaseStats}
+                  bind:checked={formModules.releaseReleaseStats}
                   name="releaseReleaseStats"
                 />
 
                 <FormToggle
                   label="Song Statistics"
                   description="Show Last.fm stats on song pages"
-                  bind:checked={form.songSongStats}
+                  bind:checked={formModules.songSongStats}
                   name="songSongStats"
                   newOption
                 />
@@ -698,28 +742,28 @@ interface TabLinkProps {
                 <FormToggle
                   label="Recent Tracks Widget"
                   description="Show recent tracks on profile"
-                  bind:checked={form.profileRecentTracks}
+                  bind:checked={formModules.profileRecentTracks}
                   disabled={!lastfmApiKeySaved}
                   name="profileRecentTracks"
                 />
                 <FormToggle
                   label="Top Albums Widget"
                   description="Show top albums on profile"
-                  bind:checked={form.profileTopAlbums}
+                  bind:checked={formModules.profileTopAlbums}
                   disabled={!lastfmApiKeySaved}
                   name="profileTopAlbums"
                 />
                 <FormToggle
                   label="Top Artists Widget"
                   description="Show top artists on profile"
-                  bind:checked={form.profileTopArtists}
+                  bind:checked={formModules.profileTopArtists}
                   disabled={!lastfmApiKeySaved}
                   name="profileTopArtists"
                 />
                 <FormToggle
                   label="Strict Search Results"
                   description="Enhanced search filtering"
-                  bind:checked={form.searchStrictResults}
+                  bind:checked={formModules.searchStrictResults}
                   disabled={!lastfmApiKeySaved}
                   name="searchStrictResults"
                 />
@@ -739,7 +783,7 @@ interface TabLinkProps {
                 <FormToggle
                   label="List User Ratings"
                   description="Show user ratings in lists"
-                  bind:checked={form.listUserRating}
+                  bind:checked={formModules.listUserRating}
                   name="listUserRating"
                   newOption
                 />
@@ -747,7 +791,7 @@ interface TabLinkProps {
                 <FormToggle
                   label="Chart User Ratings"
                   description="Show ratings in charts"
-                  bind:checked={form.chartsUserRating}
+                  bind:checked={formModules.chartsUserRating}
                   name="chartsUserRating"
                   newOption
                 />
@@ -790,7 +834,7 @@ interface TabLinkProps {
           title="Customization"
           description="Profile modules customization"
         >
-          SETTINGS GO HERE
+          <pre>{JSON.stringify(formCustomization, null, 2)}</pre>
         </TabContent>
 
         <TabContent
@@ -941,15 +985,29 @@ interface TabLinkProps {
           </div>
         </TabContent>
       </div>
+    </div>
 
-      <div class="flex justify-end">
-        <button type="submit" class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800" onclick={submit}>
-          {@render iconSettings(5)}
-          Save Configuration
-        </button>
-      </div>
+    <!-- ACTIONS -->
+    <div class="flex gap-2 justify-end">
+      <button type="button" class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800" onclick={reset}>
+        Reset
+      </button>
+      <button type="submit" class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800" onclick={submit}>
+        {@render iconSettings(5)}
+        Save Configuration
+      </button>
     </div>
   </main>
+
+  <footer class="flex flex-col gap-6 py-6 px-6 bg-zinc-900">
+    <div class="max-w-screen-lg mx-auto w-full">
+      <div class="text-xs text-zinc-400 text-center">
+        <p>
+          <strong>Disclaimer:</strong> This extension is not affiliated with Last.fm or RYM. It is a third-party tool that allows you to enhance your Last.fm experience.
+        </p>
+      </div>
+    </div>
+  </footer>
 </div>
 
 <style>

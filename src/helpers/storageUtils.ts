@@ -79,6 +79,26 @@ export async function setRymSyncTimestamp(timestamp: number) {
   return storageSet({ rymSyncTimestamp: timestamp }, 'local');
 }
 
+export async function getModuleCustomizationConfig() {
+  const keysToGet = Object.keys(constants.MODULE_CUSTOMIZATION_CONFIG);
+  const result = await storageGetSyncedWithLocal(keysToGet) as ModuleCustomizationConfig;
+  return Object.assign({}, constants.MODULE_CUSTOMIZATION_CONFIG, result);
+}
+
+export async function setModuleCustomizationConfig(config: ModuleCustomizationConfig) {
+  return storageSet(config, 'sync');
+}
+
+export async function getModuleToggleConfig() {
+  const keysToGet = Object.keys(constants.MODULE_TOGGLE_CONFIG);
+  const result = await storageGetSyncedWithLocal(keysToGet) as ModuleToggleConfig;
+  return Object.assign({}, constants.MODULE_TOGGLE_CONFIG, result);
+}
+
+export async function setModuleToggleConfig(config: ModuleToggleConfig) {
+  return storageSet(config, 'sync');
+}
+
 export async function getProfileOptions(): Promise<AddonOptions> {
   const keysToGet = Object.keys(constants.PROFILE_OPTIONS_DEFAULT);
   const result = await storageGetSyncedWithLocal(keysToGet) as AddonOptions;

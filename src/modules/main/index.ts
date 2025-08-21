@@ -1,5 +1,5 @@
-import lastfmProfile from './lastfmProfile';
+import headerLastfmLink from './headerLastfmLink';
 
 export default {
-  lastfmProfile,
+  headerLastfmLink,
 };

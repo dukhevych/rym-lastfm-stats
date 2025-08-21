@@ -10,8 +10,16 @@ async function render(settings: RenderSettings) {
   const headerEl = document.getElementById('page_header')!;
   const profileLinkEl = headerEl.querySelector('.header_profile');
 
-  if (!profileLinkEl) {
+  if (!profileLinkEl || !userData.name) {
     return;
+  }
+
+  console.log(config.mainHeaderLastfmLinkLabel);
+
+  let label = config.mainHeaderLastfmLinkLabel;
+
+  if (label.indexOf('$username') !== -1) {
+    label = label.replace('$username', userData.name);
   }
 
   const lastfmProfileEl = createElement('a', {
@@ -41,7 +49,7 @@ async function render(settings: RenderSettings) {
         fontWeight: 'bold',
         paddingInline: '0.5em',
       },
-    }, 'Open Last.fm'),
+    }, label),
   ]);
 
   const wrapper = createElement('div', {

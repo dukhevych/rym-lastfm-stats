@@ -112,10 +112,11 @@ export const RECENT_TRACKS_LIMIT_MAX = 20;
 export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
 
 export const MODULE_TOGGLE_CONFIG = process.env.MODULES_ARRAY as unknown as ModuleToggleConfig;
-export const CONFIG_DEFAULTS = process.env.CONFIG_DEFAULTS as unknown as AddonOptions;
+export const MODULE_CUSTOMIZATION_CONFIG = process.env.CONFIG_DEFAULTS as unknown as AddonOptions;
+
 export const PROFILE_OPTIONS_DEFAULT: AddonOptions = {
   ...MODULE_TOGGLE_CONFIG,
-  ...CONFIG_DEFAULTS,
+  ...MODULE_CUSTOMIZATION_CONFIG,
 };
 
 // [Addon entity type]: [RYM entity code]

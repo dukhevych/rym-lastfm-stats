@@ -12,7 +12,7 @@ declare global {
     tracks?: number | null;
   }
 
-  interface AddonOptions extends ModuleToggleConfig {
+  interface ModuleCustomizationConfig {
     profileRecentTracksShowOnLoad: boolean;
     profileRecentTracksBackground: number;
     profileRecentTracksLimit: number;
@@ -22,12 +22,10 @@ declare global {
     profileTopAlbumsPeriod: LastFmPeriod;
     profileRecentTracksRymHistoryHide: boolean;
     profileRecentTracksPolling: boolean;
+    mainHeaderLastfmLinkLabel: string;
   }
 
-  // interface AddonOptions extends AddonOptionsBase {
-  //   lastfmApiKey: string;
-  //   userName?: string;
-  // }
+  interface AddonOptions extends ModuleToggleConfig, ModuleCustomizationConfig {}
 
   interface VibrantSwatch {
     hex: string;
