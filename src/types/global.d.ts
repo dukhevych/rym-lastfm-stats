@@ -5,7 +5,11 @@ declare global {
     name?: string;
     image?: string;
     url?: string;
-    // add other properties if needed
+    playcount?: number | null;
+    registered?: number | null;
+    albums?: number | null;
+    artists?: number | null;
+    tracks?: number | null;
   }
 
   interface AddonOptions extends ModuleToggleConfig {

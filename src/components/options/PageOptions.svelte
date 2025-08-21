@@ -237,7 +237,12 @@ async function openAuthPage() {
     const normalizedData = {
       name: data.name,
       url: data.url,
-      image: data.image?.[0]?.['#text'],
+      image: data.image?.[1]?.['#text'],
+      playcount: data.playcount ? +data.playcount : null,
+      registered: data.registered ? +data.registered?.['#text'] : null,
+      albums: data.album_count ? +data.album_count : null,
+      artists: data.artist_count ? +data.artist_count : null,
+      tracks: data.track_count ? +data.track_count : null,
     };
 
     userData = normalizedData;
@@ -631,6 +636,15 @@ interface TabLinkProps {
         >
           <div class="flex gap-3">
             <aside class="flex flex-col gap-8 w-1/3">
+              <FormToggleGroup>
+                <FormToggle
+                  label="Last.fm Link in RYM Header"
+                  description="Adds Last.fm link in RYM Header any page"
+                  bind:checked={form.mainLastfmProfile}
+                  name="mainLastfmProfile"
+                />
+              </FormToggleGroup>
+
               <FormToggleGroup title="Last.fm Stats">
                 {#snippet note()}
                   Updates once in &lt; <strong>{utils.msToHuman(constants.getStatsCacheLifetime(userData?.name, lastfmApiKeySaved))}</strong> &gt;

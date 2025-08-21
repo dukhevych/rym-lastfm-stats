@@ -80,6 +80,9 @@ interface LastFmUser {
     '#text': string;
   }>;
   type?: string;
+  album_count?: string;
+  artist_count?: string;
+  track_count?: string;
 }
 
 interface LastFmUserResponse {
