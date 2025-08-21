@@ -642,6 +642,7 @@ interface TabLinkProps {
                   description="Adds Last.fm link in RYM Header any page"
                   bind:checked={form.mainLastfmProfile}
                   name="mainLastfmProfile"
+                  newOption
                 />
               </FormToggleGroup>
 
@@ -681,6 +682,7 @@ interface TabLinkProps {
                   description="Show Last.fm stats on song pages"
                   bind:checked={form.songSongStats}
                   name="songSongStats"
+                  newOption
                 />
               </FormToggleGroup>
 
@@ -739,6 +741,7 @@ interface TabLinkProps {
                   description="Show user ratings in lists"
                   bind:checked={form.listUserRating}
                   name="listUserRating"
+                  newOption
                 />
 
                 <FormToggle
@@ -746,6 +749,7 @@ interface TabLinkProps {
                   description="Show ratings in charts"
                   bind:checked={form.chartsUserRating}
                   name="chartsUserRating"
+                  newOption
                 />
               </FormToggleGroup>
             </aside>

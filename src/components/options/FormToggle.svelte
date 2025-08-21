@@ -1,6 +1,12 @@
 <svelte:options runes={true} />
 
-<label class="block select-none">
+<label class="block select-none relative">
+  {#if newOption}
+    <span class="text-xs text-red-400 absolute top-0 left-0 translate-x-[-25%] translate-y-[-25%] -rotate-45 origin-center">
+      New
+    </span>
+  {/if}
+
   <input
     type="checkbox"
     class="sr-only peer"
@@ -40,6 +46,7 @@
     description?: string;
     disabled?: boolean;
     name: string;
+    newOption?: boolean;
   }
 
   let {
@@ -47,6 +54,7 @@
     label,
     description,
     disabled = false,
+    newOption = false,
     name,
   }: Props = $props();
 </script>
