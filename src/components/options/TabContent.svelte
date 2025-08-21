@@ -15,9 +15,9 @@ const { active, icon, title, description, children }: Props = $props();
 </script>
 
 <div class="flex flex-col gap-4 rounded-xl" class:hidden={!active}>
-  <header class="flex flex-col gap-2">
+  <header class="flex flex-col gap-2 py-2">
     <div class="flex items-center justify-center gap-2">
-      <span class="*:w-6 *:h-6">
+      <span class="*:w-6 *:h-6 *:text-orange-700">
         {@render icon()}
       </span>
       <h3 class="text-lg font-semibold">{title}</h3>

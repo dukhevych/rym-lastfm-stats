@@ -606,7 +606,7 @@ interface TabLinkProps {
               class="
                 *:flex *:transition-colors *:items-center *:gap-2 *:justify-center *:rounded-xl *:p-1 *:text-sm
                 {activeTab === tab.id ?
-                  '*:bg-teal-900 pointer-events-none' :
+                  '*:bg-orange-800 pointer-events-none' :
                   '*:opacity-50 *:hover:opacity-100'
                 }
               "
@@ -806,10 +806,10 @@ interface TabLinkProps {
                         class="
                           w-full block min-w-0 font-mono rounded-lg outline-none
                           border text-sm p-2.5
-                          bg-zinc-700 border-zinc-600 placeholder-zinc-400 text-white
-                          focus:border-zinc-500 focus:ring-teal-500 focus:border-teal-500 focus:placeholder-transparent
+                          bg-orange-700 border-orange-600 placeholder-zinc-400 text-white
+                          focus:border-zinc-500 focus:ring-orange-500 focus:border-orange-500 focus:placeholder-transparent
                           disabled:opacity-50 disabled:cursor-wait
-                          read-only:bg-teal-900/50 read-only:border-transparent read-only:cursor-default
+                          read-only:bg-orange-900/50 read-only:border-transparent read-only:cursor-default
                         "
                         bind:value={lastfmApiKey}
                         bind:this={lastfmApiKeyInput}
@@ -818,7 +818,7 @@ interface TabLinkProps {
                     </div>
                   </div>
                 </div>
-                <div class="flex gap-4 items-center w-full">
+                <div class="flex gap-4 px-2.5 items-center w-full">
                   {#if !lastfmApiKeySaved}
                     <button
                       type="submit"
@@ -889,7 +889,7 @@ interface TabLinkProps {
                   <a
                     href={userData.url}
                     target="_blank"
-                    class="h-10 flex items-center justify-between bg-zinc-700/50 pr-4 rounded-r-lg rounded-l-[2.5rem] hover:bg-zinc-700/70 transition-colors text-zinc-400 hover:text-white"
+                    class="h-10 flex items-center justify-between bg-zinc-700/50 pr-2.5 rounded-r-lg rounded-l-[2.5rem] hover:bg-zinc-700/70 transition-colors text-zinc-400 hover:text-white"
                   >
                     <span class="flex items-center gap-2 h-full">
                       <img
@@ -901,17 +901,19 @@ interface TabLinkProps {
                     </span>
                     <span class="text-xs">Click to open profile</span>
                   </a>
-                  <button
-                    type="button"
-                    onclick={logout}
-                    class="
-                      inline-flex ml-auto gap-2 cursor-pointer p-0 text-sm font-medium items-center
-                      hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
-                      hover:underline
-                    "
-                  >
-                    Logout
-                  </button>
+                  <div class="flex gap-2 px-2.5">
+                    <button
+                      type="button"
+                      onclick={logout}
+                      class="
+                        inline-flex ml-auto gap-2 cursor-pointer p-0 text-sm font-medium items-center
+                        hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
+                        hover:underline
+                      "
+                    >
+                      Logout
+                    </button>
+                  </div>
                   <div class="flex items-center gap-2 border-zinc-600 text-xs border rounded-xl p-2">
                     {@render iconSuccess()} <p>Logged in as <strong>{userData.name}</strong> last.fm user. Personal scrobbling stats and additional Profile features are now available.</p>
                   </div>
