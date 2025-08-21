@@ -192,3 +192,17 @@ export const RYMOwnershipAltToCode: Partial<Record<ERYMOwnershipAltText, ERYMOwn
 
 import backgroundNames from '@/config/background.json';
 export const RECENT_TRACK_BACKGROUND_NAMES = backgroundNames as string[];
+
+export const SLOGAN_VARIANTS = [
+  'Scrobbles meet scores.',
+  'From headphones to head-to-head rankings.',
+  'Numbers sound better with context.',
+  'Your listening history, engraved into RYM.',
+  'Turning raw plays into rated passion.',
+  'Plays, weighed and displayed.',
+  'Your listens, tallied with taste.',
+  'Your music life, charted and rated.',
+  'Scrobbles decoded, taste encoded.',
+  'Hear it. Scrobble it. See it on RYM.',
+  'Listening translated into language of taste.',
+]

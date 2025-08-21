@@ -23,6 +23,7 @@
     "verbatimModuleSyntax": true,
     "types": [
       "node",
+      "chrome",
       "firefox-webext-browser"
     ]
   },

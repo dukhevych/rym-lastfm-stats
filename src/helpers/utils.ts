@@ -423,3 +423,22 @@ export function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Pa
   }
   return result;
 }
+
+export async function detectBrowser(): Promise<"firefox" | "chrome" | "other"> {
+  // Firefox exposes getBrowserInfo
+  if (typeof browser !== "undefined" && browser.runtime?.getBrowserInfo) {
+    try {
+      const info = await browser.runtime.getBrowserInfo();
+      if (info.name.toLowerCase().includes("firefox")) return "firefox";
+    } catch {
+      // ignore
+    }
+  }
+
+  // Chrome-based check
+  if (typeof chrome !== "undefined" && chrome.runtime?.id) {
+    return "chrome";
+  }
+
+  return "other";
+}

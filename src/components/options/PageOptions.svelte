@@ -27,14 +27,17 @@ import FormToggle from './FormToggle.svelte';
 import FormToggleGroup from './FormToggleGroup.svelte';
 import TabContent from './TabContent.svelte';
 
-const appVersion = process.env.APP_VERSION;
-const SYSTEM_API_KEY = process.env.LASTFM_API_KEY;
+const appVersion = process.env.APP_VERSION!;
+const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
 
 // FLAGS
 let isLoading = $state(true);
 let signinInProgress = $state(false);
 let lastfmApiKeyInput: HTMLInputElement | null = null;
 let fallbackUsername = $state('');
+
+let browserName = $state<"firefox" | "chrome" | "other">();
+const slogan = $derived(() => constants.SLOGAN_VARIANTS[Math.floor(Math.random() * constants.SLOGAN_VARIANTS.length)]);
 
 type TabId = 'modules' | 'customization' | 'api-auth';
 
@@ -267,9 +270,8 @@ async function init() {
     getUserData(),
     RecordsAPI.getQty(),
     getRymSyncTimestamp(),
+    utils.detectBrowser(),
   ]);
-
-  console.log(data[0]);
 
   // currentConfig = data[0];
   formModules = data[0];
@@ -279,6 +281,7 @@ async function init() {
   userData = data[3];
   dbRecordsQty = data[4] ?? null;
   rymSyncTimestamp = data[5] ?? null;
+  browserName = data[6];
 
   isLoading = false;
 }
@@ -293,6 +296,13 @@ async function logout() {
   await storageRemove('userData');
   userData = undefined;
 }
+
+const feedbackUrl = $derived(() => {
+  if (browserName === 'firefox') {
+    return 'https://addons.mozilla.org/en-US/firefox/addon/rym-last-fm-stats/';
+  }
+  return 'https://chromewebstore.google.com/detail/rym-lastfm-stats/bckjjmcflcmmcnlogmgogofcmldpcgpk/reviews';
+});
 
 const reportIssueUrl = $derived(() => {
   const baseUrl = 'https://github.com/dukhevych/rym-lastfm-stats/issues/new';
@@ -478,6 +488,13 @@ interface TabLinkProps {
   </svg>
 {/snippet}
 
+{#snippet iconBug(classes = '')}
+<svg class="h-4 w-4 {classes}" width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M17.416 2.62412C17.7607 2.39435 17.8538 1.9287 17.624 1.58405C17.3943 1.23941 16.9286 1.14628 16.584 1.37604L13.6687 3.31955C13.1527 3.11343 12.5897 3.00006 12.0001 3.00006C11.4105 3.00006 10.8474 3.11345 10.3314 3.31962L7.41603 1.37604C7.07138 1.14628 6.60573 1.23941 6.37596 1.58405C6.1462 1.9287 6.23933 2.39435 6.58397 2.62412L8.9437 4.19727C8.24831 4.84109 7.75664 5.70181 7.57617 6.6719C8.01128 6.55973 8.46749 6.50006 8.93763 6.50006H15.0626C15.5328 6.50006 15.989 6.55973 16.4241 6.6719C16.2436 5.70176 15.7519 4.841 15.0564 4.19717L17.416 2.62412Z" fill="currentColor" />
+  <path d="M1.25 14.0001C1.25 13.5859 1.58579 13.2501 2 13.2501H5V11.9376C5 11.1019 5.26034 10.327 5.70435 9.68959L3.22141 8.69624C2.83684 8.54238 2.6498 8.10589 2.80366 7.72131C2.95752 7.33673 3.39401 7.1497 3.77859 7.30356L6.91514 8.55841C7.50624 8.20388 8.19807 8.00006 8.9375 8.00006H15.0625C15.8019 8.00006 16.4938 8.20388 17.0849 8.55841L20.2214 7.30356C20.606 7.1497 21.0425 7.33673 21.1963 7.72131C21.3502 8.10589 21.1632 8.54238 20.7786 8.69624L18.2957 9.68959C18.7397 10.327 19 11.1019 19 11.9376V13.2501H22C22.4142 13.2501 22.75 13.5859 22.75 14.0001C22.75 14.4143 22.4142 14.7501 22 14.7501H19V15.0001C19 16.1808 18.7077 17.2932 18.1915 18.2689L20.7786 19.3039C21.1632 19.4578 21.3502 19.8943 21.1963 20.2789C21.0425 20.6634 20.606 20.8505 20.2214 20.6966L17.3288 19.5394C16.1974 20.8664 14.5789 21.7655 12.75 21.9604V15.0001C12.75 14.5858 12.4142 14.2501 12 14.2501C11.5858 14.2501 11.25 14.5858 11.25 15.0001V21.9604C9.42109 21.7655 7.80265 20.8664 6.67115 19.5394L3.77859 20.6966C3.39401 20.8505 2.95752 20.6634 2.80366 20.2789C2.6498 19.8943 2.83684 19.4578 3.22141 19.3039L5.80852 18.2689C5.29231 17.2932 5 16.1808 5 15.0001V14.7501H2C1.58579 14.7501 1.25 14.4143 1.25 14.0001Z" fill="currentColor" />
+</svg>
+{/snippet}
+
 {#snippet iconWarning(size = 5)}
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -548,48 +565,78 @@ interface TabLinkProps {
   class="min-h-viewport flex flex-col {isLoading ? 'opacity-50 blur-xs' : ''} gap-3"
   style:display={isLoading ? 'none' : 'block'}
 >
-  <header class="max-w-screen-lg w-full mx-auto flex items-center gap-3">
-    <div class="flex flex-col flex-1 justify-start">
-      <a
-        href="https://www.patreon.com/c/BohdanDukhevych"
-        target="_blank"
-        class="flex items-center gap-2 py-0.5 font-bold hover:underline text-white"
-      >
-        {@render iconPatreon('text-[#f96854] h-6 w-6')}
-        <span>Support project</span>
-      </a>
-      <a
-        href={reportIssueUrl()}
-        target="_blank"
-        class="flex items-center gap-2 py-0.5 font-bold hover:underline text-white"
-      >
-        {@render iconGithub('text-[#08872B] h-6 w-6')}
-        <span>Report Issue</span>
-      </a>
-    </div>
-    <div class="flex flex-col gap-2 items-center justify-center py-6">
-      <a
-        href="https://rateyourmusic.com"
-        target="_blank"
-        class="flex items-center gap-3"
-      >
-        <img src="/icons/icon48.png" alt="" />
-        <h1 class="relative select-none text-2xl font-bold">
-          <span
-            class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
-          >
-            {appVersion}
-            {#if constants.isDev}DEV{/if}
-          </span>
-          <span class="text-red-600">RYM Last.fm Stats</span>
-        </h1>
-      </a>
-      <div class="text-muted">
-        Configure your Last.fm and RateYourMusic integration settings
+  <header class="flex flex-col gap-3">
+    <div class="bg-zinc-900 py-2">
+      <div class="max-w-screen-lg w-full mx-auto">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-3 text-sm text-white font-bold">
+            <a
+              href="https://www.patreon.com/c/BohdanDukhevych"
+              target="_blank"
+              class="flex items-center gap-2 py-0.5 hover:underline"
+            >
+              {@render iconPatreon('text-[#f96854] h-5 w-5')}
+              <span>Support project</span>
+            </a>
+            |
+            <a
+              href={feedbackUrl()}
+              target="_blank"
+              class="flex items-center gap-2 py-0.5 hover:underline"
+            >
+              <span>Leave feedback</span>
+            </a>
+          </div>
+          <div class="flex items-center gap-3 text-sm text-white font-bold">
+            <a
+              href={reportIssueUrl()}
+              target="_blank"
+              class="flex items-center gap-2 py-0.5 hover:underline"
+            >
+              {@render iconBug('text-red-400 h-5 w-5')}
+              <span>Report issue</span>
+            </a>
+            |
+            <a
+              href="https://github.com/dukhevych/rym-lastfm-stats"
+              target="_blank"
+              class="flex items-center gap-2 py-0.5 hover:underline"
+            >
+              {@render iconGithub('h-5 w-5 text-[#08872B]')}
+              <span>Github</span>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="flex flex-1 justify-end">
-
+    <div class="max-w-screen-lg w-full mx-auto">
+      <div class="flex items-center gap-3">
+        <div class="flex flex-col flex-1 justify-start">
+        </div>
+        <div class="flex flex-col gap-2 items-center justify-center py-3">
+          <a
+            href="https://rateyourmusic.com"
+            target="_blank"
+            class="flex items-center gap-3"
+          >
+            <img src="/icons/icon48.png" alt="" />
+            <h1 class="relative select-none text-2xl font-bold">
+              <span
+                class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
+              >
+                {appVersion}
+                {#if constants.isDev}DEV{/if}
+              </span>
+              <span class="text-red-600">RYM Last.fm Stats</span>
+            </h1>
+          </a>
+          <div class="text-zinc-400 text-sm italic">
+            ✦ {slogan()} ✦
+          </div>
+        </div>
+        <div class="flex flex-1 justify-end">
+        </div>
+      </div>
     </div>
   </header>
   <main
@@ -868,7 +915,7 @@ interface TabLinkProps {
                         class="
                           w-full block min-w-0 font-mono rounded-lg outline-none
                           border text-sm p-2.5
-                          bg-orange-700 border-orange-600 placeholder-zinc-400 text-white
+                          bg-orange-700/50 border-orange-600 placeholder-zinc-400 text-white
                           focus:border-zinc-500 focus:ring-orange-500 focus:border-orange-500 focus:placeholder-transparent
                           disabled:opacity-50 disabled:cursor-wait
                           read-only:bg-orange-900/50 read-only:border-transparent read-only:cursor-default
@@ -910,15 +957,26 @@ interface TabLinkProps {
                     </button>
                   {/if}
                   {#if !lastfmApiKeySaved}
-                  <a href="https://www.last.fm/api/accounts" target="_blank" class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2 ml-auto">
-                    <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4">
-                      <line x1="10.8492" y1="13.0606" x2="19.435" y2="4.47485" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M19.7886 4.12134L20.1421 8.01042" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M19.7886 4.12134L15.8995 3.76778" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M18 13.1465V17.6465C18 19.3033 16.6569 20.6465 15 20.6465H6C4.34315 20.6465 3 19.3033 3 17.6465V8.64648C3 6.98963 4.34315 5.64648 6 5.64648H10.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    See my API keys
-                  </a>
+                  <div class="flex items-center ml-auto gap-3">
+                    <a href="https://www.last.fm/api/account/create" target="_blank" class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2">
+                      <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4">
+                        <line x1="10.8492" y1="13.0606" x2="19.435" y2="4.47485" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19.7886 4.12134L20.1421 8.01042" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19.7886 4.12134L15.8995 3.76778" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18 13.1465V17.6465C18 19.3033 16.6569 20.6465 15 20.6465H6C4.34315 20.6465 3 19.3033 3 17.6465V8.64648C3 6.98963 4.34315 5.64648 6 5.64648H10.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      Create new API key
+                    </a>
+                    <a href="https://www.last.fm/api/accounts" target="_blank" class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2">
+                      <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4">
+                        <line x1="10.8492" y1="13.0606" x2="19.435" y2="4.47485" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19.7886 4.12134L20.1421 8.01042" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19.7886 4.12134L15.8995 3.76778" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18 13.1465V17.6465C18 19.3033 16.6569 20.6465 15 20.6465H6C4.34315 20.6465 3 19.3033 3 17.6465V8.64648C3 6.98963 4.34315 5.64648 6 5.64648H10.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      See my API keys
+                    </a>
+                  </div>
                   {/if}
                 </div>
 
@@ -999,12 +1057,15 @@ interface TabLinkProps {
     </div>
   </main>
 
-  <footer class="flex flex-col gap-6 py-6 px-6 bg-zinc-900">
+  <footer class="flex flex-col gap-6 py-4 px-6 bg-zinc-900">
     <div class="max-w-screen-lg mx-auto w-full">
-      <div class="text-xs text-zinc-400 text-center">
-        <p>
-          <strong>Disclaimer:</strong> This extension is not affiliated with Last.fm or RYM. It is a third-party tool that allows you to enhance your Last.fm experience.
-        </p>
+      <div class="text-xs text-zinc-400 flex gap-1 justify-between">
+        <div>
+          <strong>Disclaimer:</strong> This extension is a third-party tool and it's not affiliated with Last.fm or RYM.
+        </div>
+        <div class="text-white">
+          <a class="hover:underline" href="mailto:landenmetal@gmail.com">Contact developer</a>&nbsp;&nbsp;|&nbsp;&nbsp;<span>RYM Last.fm Stats © {new Date().getFullYear()}</span>
+        </div>
       </div>
     </div>
   </footer>

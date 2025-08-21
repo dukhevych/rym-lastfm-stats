@@ -3,6 +3,8 @@
   "name": "RYM Last.fm Stats",
   "version": "1.0",
   "description": "Display Last.fm stats on RYM pages",
+  "homepage_url": "https://github.com/dukhevych/rym-lastfm-stats",
+  "author": "Bohdan Dukhevych <landenmetal@gmail.com>",
   "permissions": [
     "storage",
     "scripting",
@@ -85,12 +87,14 @@
     "default_popup": "popup.html",
     "default_icon": {
       "128": "icons/icon128.png"
-    }
+    },
+    "default_title": "RYM Last.fm Stats"
   },
   "options_page": "options.html",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "incognito": "spanning"
 }
