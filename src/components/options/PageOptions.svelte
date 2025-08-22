@@ -6,6 +6,8 @@ import type { Snippet } from 'svelte';
 import { getTopArtists } from '@/api/getTopArtists';
 import { tick } from 'svelte';
 import browser from 'webextension-polyfill';
+import AppHeader from './AppHeader.svelte';
+import AppStatusCard from './AppStatusCard.svelte';
 
 import * as api from '@/helpers/api';
 import * as constants from '@/helpers/constants';
@@ -35,9 +37,6 @@ let isLoading = $state(true);
 let signinInProgress = $state(false);
 let lastfmApiKeyInput: HTMLInputElement | null = null;
 let fallbackUsername = $state('');
-
-let browserName = $state<"firefox" | "chrome" | "other">();
-const slogan = $derived(() => constants.SLOGAN_VARIANTS[Math.floor(Math.random() * constants.SLOGAN_VARIANTS.length)]);
 
 type TabId = 'modules' | 'customization' | 'api-auth';
 
@@ -81,9 +80,9 @@ function getInitialTab() {
 }
 
 let activeTab = $state(getInitialTab());
-// let currentConfig = $state<ModuleToggleConfig>();
+
 let formModules: ModuleToggleConfig = $state(constants.MODULE_TOGGLE_CONFIG);
-let formCustomization: AddonOptions = $state(constants.MODULE_CUSTOMIZATION_CONFIG);
+let formCustomization: ModuleCustomizationConfig = $state(constants.MODULE_CUSTOMIZATION_CONFIG);
 
 let userData = $state<UserData>();
 const isLoggedIn = $derived(() => !!userData?.name);
@@ -270,7 +269,6 @@ async function init() {
     getUserData(),
     RecordsAPI.getQty(),
     getRymSyncTimestamp(),
-    utils.detectBrowser(),
   ]);
 
   // currentConfig = data[0];
@@ -281,7 +279,6 @@ async function init() {
   userData = data[3];
   dbRecordsQty = data[4] ?? null;
   rymSyncTimestamp = data[5] ?? null;
-  browserName = data[6];
 
   isLoading = false;
 }
@@ -296,25 +293,6 @@ async function logout() {
   await storageRemove('userData');
   userData = undefined;
 }
-
-const feedbackUrl = $derived(() => {
-  if (browserName === 'firefox') {
-    return 'https://addons.mozilla.org/en-US/firefox/addon/rym-last-fm-stats/';
-  }
-  return 'https://chromewebstore.google.com/detail/rym-lastfm-stats/bckjjmcflcmmcnlogmgogofcmldpcgpk/reviews';
-});
-
-const reportIssueUrl = $derived(() => {
-  const baseUrl = 'https://github.com/dukhevych/rym-lastfm-stats/issues/new';
-
-  const params = new URLSearchParams({
-    template: 'bug_report.yml',
-    browser: navigator.userAgent,
-    'extension-version': browser.runtime.getManifest().version,
-  });
-
-  return `${baseUrl}?${params.toString()}`;
-});
 
 async function fallbackLogin() {
   const userDataRaw = await api.fetchUserDataByName(
@@ -407,69 +385,6 @@ interface TabLinkProps {
 </svg>
 {/snippet}
 
-{#snippet card({
-  valid,
-  warning = false,
-  loading = false,
-  title,
-  note,
-  validStatus,
-  invalidStatus,
-  action,
-}: CardProps)}
-  <svelte:element
-    this={!valid && action ? 'button' : 'div'}
-    data-slot="card"
-    class={[
-      'flex flex-col gap-6 rounded-2xl border-2 text-left',
-      !valid && 'bg-zinc-900 border-zinc-700',
-      valid && 'shadow-sm border-teal-800 bg-teal-900/50',
-      warning && 'bg-yellow-900/50 border-yellow-800',
-      loading && 'pointer-events-none opacity-50',
-      ((!valid || warning) && action) && 'cursor-pointer',
-      (!valid && action) && 'hover:bg-zinc-800',
-      (warning && action) && 'hover:bg-yellow-800/50',
-    ].filter(Boolean).join(' ')}
-    onclick={(!valid || warning) && action ? action : undefined}
-    role={(!valid || warning) && action ? 'button' : undefined}
-  >
-    <div data-slot="card-content" class="p-4">
-      <div class="flex items-center gap-2">
-        {#if valid}
-          {#if warning}
-            {@render iconWarning()}
-          {:else}
-            {@render iconSuccess()}
-          {/if}
-        {:else}
-          {@render iconError()}
-        {/if}
-
-        <div class="flex grow items-center gap-1">
-          <div>
-            <h3 class="font-bold">{title}</h3>
-            <div class="text-sm text-zinc-600 dark:text-zinc-400">
-              {valid ? validStatus : invalidStatus}
-            </div>
-          </div>
-          {#if note && note.length > 0}
-            <div class="text-xs text-zinc-600 dark:text-zinc-300 text-right grow flex flex-col gap-1">
-              {#if typeof note === 'string'}
-                {note}
-              {/if}
-              {#if Array.isArray(note)}
-                {#each note as n}
-                  <p>{n}</p>
-                {/each}
-              {/if}
-            </div>
-          {/if}
-        </div>
-      </div>
-    </div>
-  </svelte:element>
-{/snippet}
-
 {#snippet iconSettings(size = 4)}
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -485,31 +400,6 @@ interface TabLinkProps {
     ><path
       d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
     ></path><circle cx="12" cy="12" r="3"></circle>
-  </svg>
-{/snippet}
-
-{#snippet iconBug(classes = '')}
-<svg class="h-4 w-4 {classes}" width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M17.416 2.62412C17.7607 2.39435 17.8538 1.9287 17.624 1.58405C17.3943 1.23941 16.9286 1.14628 16.584 1.37604L13.6687 3.31955C13.1527 3.11343 12.5897 3.00006 12.0001 3.00006C11.4105 3.00006 10.8474 3.11345 10.3314 3.31962L7.41603 1.37604C7.07138 1.14628 6.60573 1.23941 6.37596 1.58405C6.1462 1.9287 6.23933 2.39435 6.58397 2.62412L8.9437 4.19727C8.24831 4.84109 7.75664 5.70181 7.57617 6.6719C8.01128 6.55973 8.46749 6.50006 8.93763 6.50006H15.0626C15.5328 6.50006 15.989 6.55973 16.4241 6.6719C16.2436 5.70176 15.7519 4.841 15.0564 4.19717L17.416 2.62412Z" fill="currentColor" />
-  <path d="M1.25 14.0001C1.25 13.5859 1.58579 13.2501 2 13.2501H5V11.9376C5 11.1019 5.26034 10.327 5.70435 9.68959L3.22141 8.69624C2.83684 8.54238 2.6498 8.10589 2.80366 7.72131C2.95752 7.33673 3.39401 7.1497 3.77859 7.30356L6.91514 8.55841C7.50624 8.20388 8.19807 8.00006 8.9375 8.00006H15.0625C15.8019 8.00006 16.4938 8.20388 17.0849 8.55841L20.2214 7.30356C20.606 7.1497 21.0425 7.33673 21.1963 7.72131C21.3502 8.10589 21.1632 8.54238 20.7786 8.69624L18.2957 9.68959C18.7397 10.327 19 11.1019 19 11.9376V13.2501H22C22.4142 13.2501 22.75 13.5859 22.75 14.0001C22.75 14.4143 22.4142 14.7501 22 14.7501H19V15.0001C19 16.1808 18.7077 17.2932 18.1915 18.2689L20.7786 19.3039C21.1632 19.4578 21.3502 19.8943 21.1963 20.2789C21.0425 20.6634 20.606 20.8505 20.2214 20.6966L17.3288 19.5394C16.1974 20.8664 14.5789 21.7655 12.75 21.9604V15.0001C12.75 14.5858 12.4142 14.2501 12 14.2501C11.5858 14.2501 11.25 14.5858 11.25 15.0001V21.9604C9.42109 21.7655 7.80265 20.8664 6.67115 19.5394L3.77859 20.6966C3.39401 20.8505 2.95752 20.6634 2.80366 20.2789C2.6498 19.8943 2.83684 19.4578 3.22141 19.3039L5.80852 18.2689C5.29231 17.2932 5 16.1808 5 15.0001V14.7501H2C1.58579 14.7501 1.25 14.4143 1.25 14.0001Z" fill="currentColor" />
-</svg>
-{/snippet}
-
-{#snippet iconWarning(size = 5)}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-{size} w-{size} text-yellow-600"
-  >
-    <path d="M12 2L2 22h20L12 2z"></path>
-    <circle cx="12" cy="12" r="1"></circle>
   </svg>
 {/snippet}
 
@@ -531,158 +421,53 @@ interface TabLinkProps {
   </svg>
 {/snippet}
 
-{#snippet iconPatreon(classes = '')}
-  <svg fill="none" width="800px" height="800px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 {classes}">
-    <path d="M20.23 1.604c-0.008-0-0.017-0-0.027-0-5.961 0-10.793 4.832-10.793 10.793s4.832 10.793 10.793 10.793c5.955 0 10.783-4.822 10.793-10.775v-0.001c-0.004-5.953-4.816-10.781-10.763-10.809h-0.003zM1.004 1.604v28.792h5.274v-28.792z" fill="currentColor" />
-  </svg>
-{/snippet}
-
-{#snippet iconGithub(classes = '')}
-<svg class="h-4 w-4 {classes}" width="800px" height="800px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="none">
-  <path fill="currentColor" fill-rule="evenodd" d="M8 1C4.133 1 1 4.13 1 7.993c0 3.09 2.006 5.71 4.787 6.635.35.064.478-.152.478-.337 0-.166-.006-.606-.01-1.19-1.947.423-2.357-.937-2.357-.937-.319-.808-.778-1.023-.778-1.023-.635-.434.048-.425.048-.425.703.05 1.073.72 1.073.72.624 1.07 1.638.76 2.037.582.063-.452.244-.76.444-.935-1.554-.176-3.188-.776-3.188-3.456 0-.763.273-1.388.72-1.876-.072-.177-.312-.888.07-1.85 0 0 .586-.189 1.924.716A6.711 6.711 0 018 4.381c.595.003 1.194.08 1.753.236 1.336-.905 1.923-.717 1.923-.717.382.963.142 1.674.07 1.85.448.49.72 1.114.72 1.877 0 2.686-1.638 3.278-3.197 3.45.251.216.475.643.475 1.296 0 .934-.009 1.688-.009 1.918 0 .187.127.404.482.336A6.996 6.996 0 0015 7.993 6.997 6.997 0 008 1z" clip-rule="evenodd"/>
-</svg>
-{/snippet}
-
-{#snippet iconError(size = 5)}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-{size} w-{size} text-red-600"
-  >
-    <path d="M18 6L6 18"></path>
-    <path d="M6 6l12 12"></path>
-  </svg>
-{/snippet}
-
 <div
   class="min-h-viewport flex flex-col {isLoading ? 'opacity-50 blur-xs' : ''} gap-3"
   style:display={isLoading ? 'none' : 'block'}
 >
-  <header class="flex flex-col gap-3">
-    <div class="bg-zinc-900 py-2">
-      <div class="max-w-screen-lg w-full mx-auto">
-        <div class="flex justify-between items-center">
-          <div class="flex items-center gap-3 text-sm text-white font-bold">
-            <a
-              href="https://www.patreon.com/c/BohdanDukhevych"
-              target="_blank"
-              class="flex items-center gap-2 py-0.5 hover:underline"
-            >
-              {@render iconPatreon('text-[#f96854] h-5 w-5')}
-              <span>Support project</span>
-            </a>
-            |
-            <a
-              href={feedbackUrl()}
-              target="_blank"
-              class="flex items-center gap-2 py-0.5 hover:underline"
-            >
-              <span>Leave feedback</span>
-            </a>
-          </div>
-          <div class="flex items-center gap-3 text-sm text-white font-bold">
-            <a
-              href={reportIssueUrl()}
-              target="_blank"
-              class="flex items-center gap-2 py-0.5 hover:underline"
-            >
-              {@render iconBug('text-red-400 h-5 w-5')}
-              <span>Report issue</span>
-            </a>
-            |
-            <a
-              href="https://github.com/dukhevych/rym-lastfm-stats"
-              target="_blank"
-              class="flex items-center gap-2 py-0.5 hover:underline"
-            >
-              {@render iconGithub('h-5 w-5 text-[#08872B]')}
-              <span>Github</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="max-w-screen-lg w-full mx-auto">
-      <div class="flex items-center gap-3">
-        <div class="flex flex-col flex-1 justify-start">
-        </div>
-        <div class="flex flex-col gap-2 items-center justify-center py-3">
-          <a
-            href="https://rateyourmusic.com"
-            target="_blank"
-            class="flex items-center gap-3"
-          >
-            <img src="/icons/icon48.png" alt="" />
-            <h1 class="relative select-none text-2xl font-bold">
-              <span
-                class="absolute right-0 top-0 -translate-y-1/2 text-[10px] font-bold"
-              >
-                {appVersion}
-                {#if constants.isDev}DEV{/if}
-              </span>
-              <span class="text-red-600">RYM Last.fm Stats</span>
-            </h1>
-          </a>
-          <div class="text-zinc-400 text-sm italic">
-            ✦ {slogan()} ✦
-          </div>
-        </div>
-        <div class="flex flex-1 justify-end">
-        </div>
-      </div>
-    </div>
-  </header>
-  <main
-    class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-6 pb-6"
-  >
+  <AppHeader />
+  <main class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-6 pb-6">
     <!-- STATUS CARDS -->
-    <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
-      {@render card({
-        valid: isLoggedIn(),
-        title: 'Last.fm',
-        validStatus: 'Connected',
-        invalidStatus: 'Not connected',
-        note: userData?.name ? [
-          'Username:',
+    <section aria-label="Extension Status" class="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+      <AppStatusCard
+        valid={isLoggedIn()}
+        title="Last.fm"
+        validStatus="Connected"
+        invalidStatus="Not connected"
+        note={userData?.name ? [
+          'Usernames:',
           userData.name,
-        ] : 'Guest',
-        action: openAuthPage,
-        loading: signinInProgress,
-      })}
-      {@render card({
-        valid: !!lastfmApiKeySaved,
-        title: 'Last.fm API Key',
-        validStatus: 'Configured',
-        invalidStatus: 'Not configured',
-        action: () => {
+        ] : 'Guest'}
+        action={openAuthPage}
+        loading={signinInProgress}
+      />
+      <AppStatusCard
+        valid={!!lastfmApiKeySaved}
+        title="Last.fm API Key"
+        validStatus="Configured"
+        invalidStatus="Not configured"
+        action={() => {
           activeTab = 'api-auth';
           tick().then(() => {
             lastfmApiKeyInput?.focus();
           });
-        },
-      })}
-      {@render card({
-        valid: !!rymSyncTimestamp,
-        title: 'RYM Sync',
-        validStatus: isRymSyncOutdated() ? 'Outdated' : 'Completed',
-        invalidStatus: 'Not completed',
-        warning: isRymSyncOutdated(),
-        note: [
+        }}
+      />
+      <AppStatusCard
+        valid={!!rymSyncTimestamp}
+        title="RYM Sync"
+        validStatus={isRymSyncOutdated() ? 'Outdated' : 'Completed'}
+        invalidStatus="Not completed"
+        warning={isRymSyncOutdated()}
+        note={[
           rymSyncTimestampLabel(),
           dbRecordsQtyLabel(),
-        ],
-        action: openRymSync,
-      })}
-    </div>
+        ]}
+        action={openRymSync}
+      />
+    </section>
 
-    <!-- CTA -->
+    <!-- SETUP PROGRESS -->
     {#if setupProgress() < 3}
       <h2 class="text-zinc-400 text-lg text-center flex flex-col">
         <strong>You're almost there!</strong>
@@ -693,8 +478,7 @@ interface TabLinkProps {
 
     <!-- CONTENT AREA -->
     <div class="p-6 bg-zinc-900 border-1 border-zinc-700 rounded-2xl flex flex-col gap-3">
-      <!-- TABS -->
-      <nav>
+      <nav aria-label="Extension Settings Navigation">
         <ul class="flex *:grow *:basis-0 gap-2 rounded-2xl p-1 bg-zinc-800">
           {#each tabs as tab}
             <li
@@ -729,8 +513,8 @@ interface TabLinkProps {
             <aside class="flex flex-col gap-8 w-1/3">
               <FormToggleGroup>
                 <FormToggle
-                  label="Last.fm Link in RYM Header"
-                  description="Adds Last.fm link in RYM Header any page"
+                  label="Last.fm profile Link"
+                  description="Adds link to the header of all RYM pages"
                   bind:checked={formModules.mainHeaderLastfmLink}
                   name="mainHeaderLastfmLink"
                   newOption
@@ -881,7 +665,51 @@ interface TabLinkProps {
           title="Customization"
           description="Profile modules customization"
         >
-          <pre>{JSON.stringify(formCustomization, null, 2)}</pre>
+          <FormToggleGroup title="Recent Tracks Widget">
+            <FormToggle
+              label="Show on load"
+              description="Show a list of recent tracks on profile load"
+              bind:checked={formCustomization.profileRecentTracksShowOnLoad}
+              name="profileRecentTracksShowOnLoad"
+            />
+            <FormToggle
+              label="Periodic updates"
+              description="Update recent tracks list periodically"
+              bind:checked={formCustomization.profileRecentTracksPolling}
+              name="profileRecentTracksPolling"
+            />
+            <input
+              type="text"
+              class="
+                w-full block min-w-0 font-mono rounded-xl outline-none
+                border text-sm p-2.5
+                bg-orange-700/50 border-orange-600 placeholder-zinc-400 text-white
+                focus:border-zinc-500 focus:ring-orange-500 focus:border-orange-500 focus:placeholder-transparent
+              "
+              bind:value={formCustomization.mainHeaderLastfmLinkLabel}
+            />
+            {formCustomization.mainHeaderLastfmLinkLabel}
+          </FormToggleGroup>
+          <!-- "profileTopArtistsLimit": 5,
+          "profileTopArtistsPeriod": "12month",
+          "profileTopAlbumsPeriod": "1month",
+          "profileRecentTracksShowOnLoad": true,
+          "profileRecentTracksBackground": 1,
+          "profileRecentTracksPolling": true,
+          "profileRecentTracksLimit": 10,
+          "profileRecentTracksAnimation": "auto",
+          "profileRecentTracksRymHistoryHide": false,
+          "mainHeaderLastfmLinkLabel": "Open $username" -->
+          {#each Object.entries(formCustomization) as [key, value]}
+            {#if typeof value === 'boolean'}
+              <FormToggle
+                label={key}
+                description={key}
+                bind:checked={formCustomization[key as keyof ModuleCustomizationConfig] as boolean}
+                name={key}
+              />
+            {/if}
+          {/each}
         </TabContent>
 
         <TabContent

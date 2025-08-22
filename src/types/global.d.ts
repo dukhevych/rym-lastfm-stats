@@ -13,16 +13,16 @@ declare global {
   }
 
   interface ModuleCustomizationConfig {
-    profileRecentTracksShowOnLoad: boolean;
+    mainHeaderLastfmLinkLabel: string;
+    profileRecentTracksAnimation: 'auto' | 'on' | 'off';
     profileRecentTracksBackground: number;
     profileRecentTracksLimit: number;
-    profileRecentTracksAnimation: 'auto' | 'on' | 'off';
+    profileRecentTracksPolling: boolean;
+    profileRecentTracksRymHistoryHide: boolean;
+    profileRecentTracksShowOnLoad: boolean;
+    profileTopAlbumsPeriod: LastFmPeriod;
     profileTopArtistsLimit: number;
     profileTopArtistsPeriod: LastFmPeriod;
-    profileTopAlbumsPeriod: LastFmPeriod;
-    profileRecentTracksRymHistoryHide: boolean;
-    profileRecentTracksPolling: boolean;
-    mainHeaderLastfmLinkLabel: string;
   }
 
   interface AddonOptions extends ModuleToggleConfig, ModuleCustomizationConfig {}
