@@ -43,7 +43,7 @@ const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
 let isLoading = $state(true);
 let signinInProgress = $state(false);
 let lastfmApiKeyInput: HTMLInputElement | null = null;
-let fallbackUsername = $state('');
+// let fallbackUsername = $state('');
 
 type TabId = 'modules' | 'customization' | 'api-auth';
 
@@ -303,36 +303,26 @@ async function logout() {
   userData = null;
 }
 
-async function fallbackLogin() {
-  const userDataRaw = await api.fetchUserDataByName(
-    fallbackUsername,
-    SYSTEM_API_KEY!,
-  );
+// async function fallbackLogin() {
+//   const userDataRaw = await api.fetchUserDataByName(
+//     fallbackUsername,
+//     SYSTEM_API_KEY!,
+//   );
 
-  if (userDataRaw) {
-    const normalizedData = {
-      name: userDataRaw.name,
-      url: userDataRaw.url,
-      image: userDataRaw.image?.[0]?.['#text'],
-    };
+//   if (userDataRaw) {
+//     const normalizedData = {
+//       name: userDataRaw.name,
+//       url: userDataRaw.url,
+//       image: userDataRaw.image?.[0]?.['#text'],
+//     };
 
-    userData = normalizedData;
+//     userData = normalizedData;
 
-    await storageSet({
-      userData: normalizedData,
-    });
-  }
-}
-
-// watch(
-//   () => $state.snapshot(options),
-//   (v, v2) => {
-//     console.log('options changed');
-//     console.log(JSON.stringify(v, null, 2));
-//     console.log(JSON.stringify(v2, null, 2));
-//   },
-//   { lazy: true },
-// );
+//     await storageSet({
+//       userData: normalizedData,
+//     });
+//   }
+// }
 
 init();
 
@@ -735,8 +725,6 @@ onMount(() => {
                 name="mainHeaderLastfmLinkLabel"
               />
             </FormToggleGroup>
-
-
 
             <FormToggleGroup title="Top Artists Widget">
               <FormSlider
@@ -1153,22 +1141,24 @@ onMount(() => {
     </div>
 
     <!-- ACTIONS -->
-    <div class="flex gap-2 justify-end">
-      <button
-        type="button"
-        class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
-        onclick={reset}
-      >
-        Reset
-      </button>
-      <button
-        type="submit"
-        class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
-        onclick={submit}
-      >
-        {@render iconSettings()}
-        Save Configuration
-      </button>
+    <div class="actions-panel">
+      <div class="actions-panel-inner flex gap-2 justify-end p-4">
+        <button
+          type="button"
+          class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
+          onclick={reset}
+        >
+          Reset
+        </button>
+        <button
+          type="submit"
+          class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
+          onclick={submit}
+        >
+          {@render iconSettings()}
+          Save Configuration
+        </button>
+      </div>
     </div>
   </main>
 
@@ -1191,7 +1181,9 @@ onMount(() => {
   </footer>
 </div>
 
-<style>
+<style lang="postcss">
+@reference "../../assets/styles/options.css";
+
 /* fix for Chrome default extension font style */
 :global(body) {
   font-size: inherit;
@@ -1224,5 +1216,23 @@ onMount(() => {
 }
 .animate-fadeB {
   animation: fadeB 5s infinite ease-in-out;
+}
+
+.actions-panel {
+  container-type: scroll-state;
+  position: sticky;
+  bottom: 0;
+
+  .actions-panel-inner {
+    @apply border-1 border-transparent;
+  }
+
+  @supports (container-type: scroll-state) {
+    .actions-panel-inner {
+      @container scroll-state(stuck: bottom) {
+        @apply border-zinc-700 bg-zinc-900 shadow-2xl rounded-t-2xl;
+      }
+    }
+  }
 }
 </style>

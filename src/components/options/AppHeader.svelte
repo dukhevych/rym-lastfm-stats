@@ -95,6 +95,7 @@
 <script lang="ts">
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
+import browser from 'webextension-polyfill';
 
 const appVersion = process.env.APP_VERSION!;
 

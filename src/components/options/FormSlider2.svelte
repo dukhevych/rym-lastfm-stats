@@ -26,10 +26,6 @@ let legendRange = $derived(() => {
   return Array.from({ length: maxVal - minVal + 1 }, (_, i) => minVal + i);
 });
 
-let rangeNegativeMargin = $derived(() => {
-  return (100 / (Number(max) - Number(min)) / 2).toFixed(2);
-});
-
 function handleInput(event: Event): void {
   const target = event.target as HTMLInputElement;
   value = Number(target.value);

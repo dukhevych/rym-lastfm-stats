@@ -30,7 +30,6 @@
   interface Props {
     value: string;
     label: string;
-    description?: string;
     disabled?: boolean;
     name: string;
     newOption?: boolean;
@@ -39,7 +38,6 @@
   let {
     value = $bindable(),
     label,
-    description,
     disabled = false,
     newOption = false,
     name,

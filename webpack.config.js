@@ -194,7 +194,10 @@ module.exports = (env) => {
                 dev: process.env.NODE_ENV !== 'production',
                 runes: true,
               },
-              preprocess: require('svelte-preprocess')(),
+              preprocess: require('svelte-preprocess')({
+                postcss: true,
+                typescript: true,
+              }),
             },
           },
         },
