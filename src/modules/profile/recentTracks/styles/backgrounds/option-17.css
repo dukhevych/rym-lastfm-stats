@@ -1,0 +1,38 @@
+
+@keyframes bg-option-17-animation {
+  from { background-position-y: calc(50cqw + 50cqh); }
+  to   { background-position-y: calc(-50cqw + 50cqh); }
+}
+
+[data-element="rymstats-track-panel"] {
+  container-type: size;
+}
+
+[data-element="rymstats-track-panel"] {
+  &.bg-option-17:after {
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        var(--clr-palette-darkmuted) 0,
+        var(--clr-palette-darkmuted) 2px,
+        transparent 2px,
+        transparent 6px
+      );
+    background-blend-mode: difference;
+    background-position: center, 0 2px;
+  }
+
+  &.bg-option-17:before {
+    inset: 0;
+    transform: none;
+    background-position-x: 50%;
+    background-position-y: calc(50cqw + 50cqh);
+    background-repeat: repeat-y;
+    background-size: 100% 100cqw;
+    will-change: background-position;
+  }
+
+  &.is-now-playing.bg-option-17:before {
+    animation: bg-option-17-animation 60s infinite linear;
+  }
+}
