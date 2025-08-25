@@ -1,4 +1,3 @@
-<!-- FormRange.svelte -->
 <script lang="ts">
 interface Props {
   label?: string;
@@ -6,6 +5,7 @@ interface Props {
   value: string | number;
   min?: string | number;
   max?: string | number;
+  description?: string;
   disabled?: boolean;
   [key: string]: any;
 }
@@ -16,6 +16,7 @@ let {
   value = $bindable(),
   min = 0,
   max = 100,
+  description = '',
   disabled = false,
   ...restProps
 }: Props = $props();
@@ -45,8 +46,11 @@ function handleLegendClick(_value: number): void {
     [--range-thumb:theme(colors.orange.600)]
   "
 >
-  <div class="font-bold">
-    <label for={name}>{label}: {value}</label>
+  <div class="flex flex-col gap-1">
+    <label for={name} class="text-sm font-bold">{label}: {value}</label>
+    {#if description}
+      <p class="text-xs text-zinc-400">{description}</p>
+    {/if}
   </div>
   <div>
     <div class="flex items-center gap-2">

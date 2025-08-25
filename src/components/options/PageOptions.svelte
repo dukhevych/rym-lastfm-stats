@@ -9,6 +9,7 @@ import browser from 'webextension-polyfill';
 import AppHeader from './AppHeader.svelte';
 import AppStatusCard from './AppStatusCard.svelte';
 import FormInput from './FormInput.svelte';
+import FormSelect from './FormSelect.svelte';
 import FormSlider from './FormSlider2.svelte';
 
 import * as api from '@/helpers/api';
@@ -717,7 +718,7 @@ onMount(() => {
           title="Customization"
           description="Profile modules customization"
         >
-          <div class="columns-2 gap-6 *:overflow-hidden *:mb-2">
+          <div class="columns-2 gap-6 *:break-inside-avoid *:mb-10">
             <FormToggleGroup title="Global">
               <FormInput
                 label="Last.fm link label"
@@ -726,163 +727,95 @@ onMount(() => {
               />
             </FormToggleGroup>
 
-            <FormToggleGroup title="Top Artists Widget">
+            <FormToggleGroup
+              title={`Top Artists Widget ${!formModulesSaved.profileTopArtists ? '(Disabled)' : ''}`}
+            >
               <FormSlider
-                label="Limit"
-                description="Limit the number of top artists to show"
+                label="Top Artists limit"
+                description="Change the number of top artists to show"
                 bind:value={formCustomization.profileTopArtistsLimit}
                 min={constants.TOP_ARTISTS_LIMIT_MIN}
                 max={constants.TOP_ARTISTS_LIMIT_MAX}
                 name="profileTopArtistsLimit"
+                disabled={!formModulesSaved.profileTopArtists}
               />
 
-              <div>
-                <label
-                  for="profileTopArtistsPeriod"
-                  class="block mb-2 text-sm font-medium text-white"
-                >
-                  Top Artists time period (default)
-                </label>
-                <select
-                  class="
-                    text-sm
-                    rounded-xl
-                    focus-visible:ring-zinc-400/50
-                    focus-visible:ring-1
-                    block w-full px-4 py-3
-                    bg-zinc-800
-                    placeholder-zinc-400
-                    text-white
-                    focus-visible:ring-blue-400/50
-                  "
-                  bind:value={formCustomization.profileTopArtistsPeriod}
-                  id="profileTopArtistsPeriod"
-                  name="profileTopArtistsPeriod"
-                >
-                  {#each constants.PERIOD_OPTIONS as option}
-                    <option value={option.value}>{option.label}</option>
-                  {/each}
-                </select>
-              </div>
+              <FormSelect
+                label="Top Artists time period"
+                description="Select the time period for the top artists widget"
+                bind:value={formCustomization.profileTopArtistsPeriod}
+                name="profileTopArtistsPeriod"
+                options={constants.PERIOD_OPTIONS}
+                disabled={!formModulesSaved.profileTopArtists}
+              />
             </FormToggleGroup>
 
-            <FormToggleGroup title="Top Albums Widget">
-              <div>
-                <label
-                  for="profileTopAlbumsPeriod"
-                  class="block mb-2 text-sm font-medium text-white"
-                >
-                  Top Albums time period (default)
-                </label>
-                <select
-                  class="
-                    text-sm
-                    rounded-xl
-                    focus-visible:ring-zinc-400/50
-                    focus-visible:ring-1
-                    block w-full px-4 py-3
-                    bg-zinc-800
-                    placeholder-zinc-400
-                    text-white
-                    focus-visible:ring-blue-400/50
-                  "
-                  bind:value={formCustomization.profileTopAlbumsPeriod}
-                  id="profileTopAlbumsPeriod"
-                  name="profileTopAlbumsPeriod"
-                >
-                  {#each constants.PERIOD_OPTIONS as option}
-                    <option value={option.value}>{option.label}</option>
-                  {/each}
-                </select>
-              </div>
+            <FormToggleGroup
+              title={`Top Albums Widget ${!formModulesSaved.profileTopAlbums ? '(Disabled)' : ''}`}
+            >
+              <FormSelect
+                label="Top Albums time period"
+                description="Select the time period for the top albums widget"
+                bind:value={formCustomization.profileTopAlbumsPeriod}
+                name="profileTopAlbumsPeriod"
+                options={constants.PERIOD_OPTIONS}
+                disabled={!formModulesSaved.profileTopAlbums}
+              />
             </FormToggleGroup>
 
-            <FormToggleGroup title="Recent Tracks Widget">
+            <FormToggleGroup
+              title={`Recent Tracks Widget ${!formModulesSaved.profileRecentTracks ? '(Disabled)' : ''}`}
+            >
               <FormToggle
                 label="Show on load"
                 description="Show a list of recent tracks on profile load"
                 bind:checked={formCustomization.profileRecentTracksShowOnLoad}
                 name="profileRecentTracksShowOnLoad"
+                disabled={!formModulesSaved.profileRecentTracks}
               />
+
               <FormToggle
                 label="Periodic updates"
                 description="Update recent tracks list periodically"
                 bind:checked={formCustomization.profileRecentTracksPolling}
                 name="profileRecentTracksPolling"
+                disabled={!formModulesSaved.profileRecentTracks}
               />
+
               <FormToggle
                 label="Hide RYM history"
-                description="Removes default RYM Play History from user profiles"
+                description="Hides the default RYM Play History widget on user profiles"
                 bind:checked={formCustomization.profileRecentTracksRymHistoryHide}
                 name="profileRecentTracksRymHistoryHide"
+                disabled={!formModulesSaved.profileRecentTracks}
               />
 
               <FormSlider
-                label="Limit"
-                description="Limit the number of recent tracks to show"
+                label="Tracks limit"
+                description="Select how many of recent scrobbles to fetch"
                 bind:value={formCustomization.profileRecentTracksLimit}
                 min={constants.RECENT_TRACKS_LIMIT_MIN}
                 max={constants.RECENT_TRACKS_LIMIT_MAX}
                 name="profileRecentTracksLimit"
+                disabled={!formModulesSaved.profileRecentTracks}
               />
 
-              <div>
-                <label
-                  for="profileRecentTracksAnimation"
-                  class="block mb-2 text-sm font-medium text-white"
-                >
-                  "Disc rotation" animation
-                </label>
-                <select
-                  class="
-                    text-sm
-                    rounded-xl
-                    focus-visible:ring-zinc-400/50
-                    focus-visible:ring-1
-                    block w-full px-4 py-3
-                    bg-zinc-800
-                    placeholder-zinc-400
-                    text-white
-                    focus-visible:ring-blue-400/50
-                  "
-                  bind:value={formCustomization.profileRecentTracksAnimation}
-                  id="profileRecentTracksAnimation"
-                  name="profileRecentTracksAnimation"
-                >
-                  {#each constants.NOW_PLAYING_ANIMATION_OPTIONS as option}
-                    <option value={option.value}>{option.label}</option>
-                  {/each}
-                </select>
-              </div>
+              <FormSelect
+                label="Disc rotation animation"
+                description="Toggle the animation of the disc rotation"
+                bind:value={formCustomization.profileRecentTracksAnimation}
+                name="profileRecentTracksAnimation"
+                options={constants.NOW_PLAYING_ANIMATION_OPTIONS}
+                disabled={!formModulesSaved.profileRecentTracks}
+              />
 
-              <div>
-                <label
-                  for="profileRecentTracksBackground"
-                  class="block mb-2 text-sm font-medium text-white"
-                >
-                  Background style
-                </label>
-                <select
-                  class="
-                    text-sm
-                    rounded-xl
-                    focus-visible:ring-zinc-400/50
-                    focus-visible:ring-1
-                    block w-full px-4 py-3
-                    bg-zinc-800
-                    placeholder-zinc-400
-                    text-white
-                    focus-visible:ring-blue-400/50
-                  "
-                  bind:value={formCustomization.profileRecentTracksBackground}
-                  id="profileRecentTracksBackground"
-                  name="profileRecentTracksBackground"
-                >
-                  {#each constants.RECENT_TRACK_BACKGROUND_OPTIONS as option}
-                    <option value={option.value}>{option.label}</option>
-                  {/each}
-                </select>
-              </div>
+              <FormSelect
+                label="Background style"
+                bind:value={formCustomization.profileRecentTracksBackground}
+                name="profileRecentTracksBackground"
+                options={constants.RECENT_TRACK_BACKGROUND_OPTIONS}
+                disabled={!formModulesSaved.profileRecentTracks}
+              />
             </FormToggleGroup>
           </div>
         </TabContent>

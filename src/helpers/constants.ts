@@ -108,8 +108,8 @@ export const TOP_ARTISTS_LIMIT_DEFAULT = 5;
 
 // RECENT TRACKS
 export const RECENT_TRACKS_LIMIT_MIN = 1;
-export const RECENT_TRACKS_LIMIT_MAX = 20;
-export const RECENT_TRACKS_LIMIT_DEFAULT = 10;
+export const RECENT_TRACKS_LIMIT_MAX = 10;
+export const RECENT_TRACKS_LIMIT_DEFAULT = 5;
 
 export const MODULE_TOGGLE_CONFIG = process.env.MODULES_ARRAY as unknown as ModuleToggleConfig;
 export const MODULE_CUSTOMIZATION_CONFIG = process.env.CONFIG_DEFAULTS as unknown as AddonOptions;
