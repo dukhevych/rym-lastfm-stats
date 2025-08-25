@@ -247,7 +247,6 @@ export function extractReleaseSuffixNumericValue(value: string): number | null {
   return null;
 }
 
-
 export interface ReleaseTitleExtras {
   value: string;
   normalized: string;

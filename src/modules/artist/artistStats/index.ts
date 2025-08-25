@@ -10,6 +10,7 @@ import {
 } from '@/modules/artist/targets';
 import type { RenderSettings } from '@/helpers/renderContent';
 import { get } from 'svelte/store';
+import { generateStorageKey, storageSet } from '@/helpers/storageUtils';
 
 async function render(settings: RenderSettings) {
   const { configStore, context } = settings;
@@ -68,6 +69,14 @@ async function render(settings: RenderSettings) {
       artistAdditionalNames,
     },
   });
+
+  await storageSet({
+    [generateStorageKey('artistNames', artistId)]: [
+      artistName,
+      artistNameLocalized,
+      ...artistAkaNames,
+    ].filter(Boolean),
+  }, 'local');
 }
 
 export default {

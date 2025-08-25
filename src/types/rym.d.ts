@@ -31,7 +31,7 @@ declare global {
     _match?: 'full' | 'partial';
   }
 
-  type RYMArtistName = { artistNameLocalized: string; artistName: string };
+  type RYMArtistName = { artistNameLocalized: string; artistName: string; artistId?: string };
   type RYMArtistNames = RYMArtistName[];
 }
 

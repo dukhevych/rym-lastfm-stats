@@ -17,17 +17,18 @@ export function getReleaseYear(parentEl: HTMLElement): number | '' {
 }
 
 export function getArtistNames(parentEl: HTMLElement): RYMArtistNames {
-  const artistLinks = parentEl.querySelectorAll(INFO_ARTISTS_SELECTOR);
+  const artistLinks: HTMLAnchorElement[] = Array.from(parentEl.querySelectorAll(INFO_ARTISTS_SELECTOR));
 
   return Array.from(artistLinks)
-    .map((artist) => {
-      let localizedName = artist.querySelector('.subtext')?.textContent || '';
+    .map((artistLink) => {
+      let localizedName = artistLink.querySelector('.subtext')?.textContent || '';
       if (localizedName) {
         localizedName = localizedName.replace(/^\[|\]$/g, '');
       }
       return {
         artistNameLocalized: localizedName,
-        artistName: getDirectInnerText(artist),
+        artistName: getDirectInnerText(artistLink),
+        artistId: extractNumbers(artistLink.title),
       };
     });
 }

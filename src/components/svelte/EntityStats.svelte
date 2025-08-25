@@ -22,6 +22,7 @@
     entityTitles: Set<string>;
     entityType: ERYMReleaseType;
     artistNames: RYMArtistNames;
+    additionalArtistNames?: string[];
     moduleName: string;
   }
 
@@ -31,6 +32,7 @@
     entityTitles,
     entityType,
     artistNames,
+    additionalArtistNames = [],
     moduleName,
   }: Props = $props();
 
@@ -40,6 +42,10 @@
     artistNames.forEach(({ artistNameLocalized, artistName }) => {
       artistNameLocalized && variants.add(artistNameLocalized);
       artistName && variants.add(artistName);
+    });
+
+    additionalArtistNames.forEach((name) => {
+      variants.add(name);
     });
 
     return Array.from(variants);

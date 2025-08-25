@@ -3,6 +3,7 @@ import EntityStats from '@/components/svelte/EntityStats.svelte';
 import { createElement as h } from '@/helpers/dom';
 import { ERYMReleaseType } from '@/helpers/enums';
 import errorMessages from './errorMessages.json';
+import { generateStorageKey, storageGet } from '@/helpers/storageUtils';
 
 import {
   PARENT_SELECTOR,
@@ -37,6 +38,9 @@ async function render(settings: RenderSettings) {
   }
 
   const artistNames = getArtistNames(parent);
+  const artistIds = artistNames.map((artist) => artist.artistId);
+  const additionalArtistNames: string[] = Object.values(await storageGet(artistIds.map(id => generateStorageKey('artistNames', id)), 'local')).flat();
+
   const entityType = getReleaseType(parent) ?? ERYMReleaseType.Album;
   const { title, titleLocalized } = getReleaseTitle(parent);
 
@@ -55,6 +59,7 @@ async function render(settings: RenderSettings) {
       context: context!,
       entityId,
       artistNames,
+      additionalArtistNames,
       entityType,
       entityTitles,
       moduleName: 'releaseStats',
