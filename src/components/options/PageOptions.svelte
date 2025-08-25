@@ -70,10 +70,16 @@ const formModulesChanged = $derived(() => {
   return JSON.stringify(formModules) !== JSON.stringify(formModulesSaved);
 });
 
-let formCustomizationSaved: ModuleCustomizationConfig = $state(props.formCustomization);
-let formCustomization: ModuleCustomizationConfig = $state(props.formCustomization);
+let formCustomizationSaved: ModuleCustomizationConfig = $state(
+  props.formCustomization,
+);
+let formCustomization: ModuleCustomizationConfig = $state(
+  props.formCustomization,
+);
 const formCustomizationChanged = $derived(() => {
-  return JSON.stringify(formCustomization) !== JSON.stringify(formCustomizationSaved);
+  return (
+    JSON.stringify(formCustomization) !== JSON.stringify(formCustomizationSaved)
+  );
 });
 
 const tabs: () => Tab[] = $derived(() => [
@@ -97,7 +103,8 @@ const tabs: () => Tab[] = $derived(() => [
 ]);
 
 function getInitialTab() {
-  if (hashValue) return tabs().find((tab) => tab.id === hashValue)?.id || 'modules';
+  if (hashValue)
+    return tabs().find((tab) => tab.id === hashValue)?.id || 'modules';
   return 'modules';
 }
 
@@ -123,14 +130,20 @@ const isRymSyncOutdated = $derived(() => {
   if (!rymSyncTimestamp) return false;
   const date = new Date(rymSyncTimestamp);
   const now = new Date();
-  return now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS;
+  return (
+    now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS
+  );
 });
 const hasRymSyncWarning = $derived(() => {
   if (!rymSyncTimestamp) return true;
   return isRymSyncOutdated();
 });
 
-const setupProgress = $derived(() => [isLoggedIn(), !!lastfmApiKeySaved, rymSyncTimestamp].filter(Boolean).length);
+const setupProgress = $derived(
+  () =>
+    [isLoggedIn(), !!lastfmApiKeySaved, rymSyncTimestamp].filter(Boolean)
+      .length,
+);
 
 let lastfmApiKeySaved = $state(props.lastfmApiKey);
 let lastfmApiKey = $state(props.lastfmApiKey);
@@ -191,12 +204,8 @@ const moduleSettingsPreviews = {
     '/images/options/recent-tracks-3-playing.jpg',
     '/images/options/recent-tracks-1-stopped.jpg',
   ],
-  'top-albums': [
-    '/images/options/top-albums.jpg',
-  ],
-  'top-artists': [
-    '/images/options/top-artists.jpg',
-  ],
+  'top-albums': ['/images/options/top-albums.jpg'],
+  'top-artists': ['/images/options/top-artists.jpg'],
 };
 
 let activePreviewKey = $state('');
@@ -357,19 +366,22 @@ onMount(() => {
   modified = false,
   onClick,
 }: TabLinkProps)}
-  <a
-    href={href}
-    onclick={onClick}
-  >
+  <a {href} onclick={onClick}>
     <span class="relative">
-      <span class="absolute top-1/2 -translate-y-1/2 right-full mr-2">{@render icon()}</span>
+      <span class="absolute top-1/2 -translate-y-1/2 right-full mr-2"
+        >{@render icon()}</span
+      >
       {label}
-      <span class="absolute top-1/2 -translate-y-1/2 left-full ml-2 bg-current rounded-full transition-opacity w-1.5 h-1.5 {modified ? 'opacity-100' : 'opacity-0'}"></span>
+      <span
+        class="absolute top-1/2 -translate-y-1/2 left-full ml-2 bg-current rounded-full transition-opacity w-1.5 h-1.5 {modified
+          ? 'opacity-100'
+          : 'opacity-0'}"
+      ></span>
     </span>
   </a>
 {/snippet}
 
-{#snippet iconKey(size = 4)}
+{#snippet iconKey(classes = '')}
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -380,20 +392,29 @@ onMount(() => {
     stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
-    class="h-{size} w-{size}"
+    class="h-4 w-4 {classes}"
     ><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"
     ></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"
     ></circle>
   </svg>
 {/snippet}
 
-{#snippet iconSwitch(size = 4)}
-<svg width="800px" height="800px" class="h-4 w-4" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <path d="M156.31,43.63a9.9,9.9,0,0,0-14,14,60.1,60.1,0,1,1-85,0,9.9,9.9,0,0,0-14-14c-31,31-31,82,0,113s82,31,113,0A79.37,79.37,0,0,0,156.31,43.63Zm-56.5,66.5a10,10,0,0,0,10-10v-70a10,10,0,0,0-20,0v70A10,10,0,0,0,99.81,110.13Z" fill="currentColor" />
-</svg>
+{#snippet iconSwitch(classes = '')}
+  <svg
+    width="800px"
+    height="800px"
+    class="h-4 w-4 {classes}"
+    viewBox="0 0 200 200"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M156.31,43.63a9.9,9.9,0,0,0-14,14,60.1,60.1,0,1,1-85,0,9.9,9.9,0,0,0-14-14c-31,31-31,82,0,113s82,31,113,0A79.37,79.37,0,0,0,156.31,43.63Zm-56.5,66.5a10,10,0,0,0,10-10v-70a10,10,0,0,0-20,0v70A10,10,0,0,0,99.81,110.13Z"
+      fill="currentColor"
+    />
+  </svg>
 {/snippet}
 
-{#snippet iconSettings(size = 4)}
+{#snippet iconSettings(classes = '')}
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -404,14 +425,14 @@ onMount(() => {
     stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
-    class="h-{size} w-{size}"
+    class="h-4 w-4 {classes}"
     ><path
       d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
     ></path><circle cx="12" cy="12" r="3"></circle>
   </svg>
 {/snippet}
 
-{#snippet iconSuccess(size = 5)}
+{#snippet iconSuccess(classes = '')}
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -422,7 +443,7 @@ onMount(() => {
     stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
-    class="h-{size} w-{size} text-green-600"
+    class="h-4 w-4 text-green-600 {classes}"
   >
     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
     <path d="m9 11 3 3L22 4"></path>
@@ -430,22 +451,26 @@ onMount(() => {
 {/snippet}
 
 <div
-  class="min-h-viewport flex flex-col {isLoading ? 'opacity-50 blur-xs' : ''} gap-3"
+  class="min-h-viewport flex flex-col {isLoading
+    ? 'opacity-50 blur-xs'
+    : ''} gap-3"
   style:display={isLoading ? 'none' : 'block'}
 >
   <AppHeader />
-  <main class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-6 pb-6">
+  <main
+    class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-6 pb-6"
+  >
     <!-- STATUS CARDS -->
-    <section aria-label="Extension Status" class="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+    <section
+      aria-label="Extension Status"
+      class="w-full grid grid-cols-1 md:grid-cols-3 gap-4"
+    >
       <AppStatusCard
         valid={isLoggedIn()}
         title="Last.fm"
         validStatus="Connected"
         invalidStatus="Not connected"
-        note={userData?.name ? [
-          'Usernames:',
-          userData.name,
-        ] : 'Guest'}
+        note={userData?.name ? ['Usernames:', userData.name] : 'Guest'}
         action={openAuthPage}
         loading={signinInProgress}
       />
@@ -467,10 +492,7 @@ onMount(() => {
         validStatus={isRymSyncOutdated() ? 'Outdated' : 'Completed'}
         invalidStatus="Not completed"
         warning={isRymSyncOutdated()}
-        note={[
-          rymSyncTimestampLabel(),
-          dbRecordsQtyLabel(),
-        ]}
+        note={[rymSyncTimestampLabel(), dbRecordsQtyLabel()]}
         action={openRymSync}
       />
     </section>
@@ -480,22 +502,26 @@ onMount(() => {
       <h2 class="text-zinc-400 text-lg text-center flex flex-col">
         <strong>You're almost there!</strong>
         <span class="text-sm text-white/50">{setupProgress()} / 3</span>
-        <span class="text-sm text-white/50">Configure the remaining settings to complete the setup and get the most out of the extension:</span>
+        <span class="text-sm text-white/50"
+          >Configure the remaining settings to complete the setup and get the
+          most out of the extension:</span
+        >
       </h2>
     {/if}
 
     <!-- CONTENT AREA -->
-    <div class="p-6 bg-zinc-900 border-1 border-zinc-700 rounded-2xl flex flex-col gap-3">
+    <div
+      class="p-6 bg-zinc-900 border-1 border-zinc-700 rounded-2xl flex flex-col gap-3"
+    >
       <nav aria-label="Extension Settings Navigation">
         <ul class="flex *:grow *:basis-0 gap-2 rounded-2xl p-1 bg-zinc-800">
           {#each tabs() as tab}
             <li
               class="
                 *:flex *:transition-colors *:items-center *:gap-2 *:justify-center *:rounded-xl *:p-1 *:text-sm
-                {activeTab === tab.id ?
-                  '*:bg-orange-800 pointer-events-none' :
-                  '*:opacity-50 *:hover:opacity-100'
-                }
+                {activeTab === tab.id
+                ? '*:bg-orange-800 pointer-events-none'
+                : '*:opacity-50 *:hover:opacity-100'}
               "
             >
               {@render tabLink({
@@ -503,7 +529,7 @@ onMount(() => {
                 label: tab.label,
                 icon: tab.icon,
                 modified: tab.modified,
-                onClick: () => activeTab = tab.id,
+                onClick: () => (activeTab = tab.id),
               })}
             </li>
           {/each}
@@ -515,7 +541,6 @@ onMount(() => {
         <TabContent
           active={activeTab === 'modules'}
           icon={iconSwitch}
-          modified={formModulesChanged()}
           title="Modules"
           description="Enable or disable specific enhancement modules."
         >
@@ -533,7 +558,14 @@ onMount(() => {
 
               <FormToggleGroup title="Last.fm Stats">
                 {#snippet note()}
-                  Updates once in &lt; <strong>{utils.msToHuman(constants.getStatsCacheLifetime(userData?.name, lastfmApiKeySaved))}</strong> &gt;
+                  Updates once in &lt; <strong
+                    >{utils.msToHuman(
+                      constants.getStatsCacheLifetime(
+                        userData?.name,
+                        lastfmApiKeySaved,
+                      ),
+                    )}</strong
+                  > &gt;
                 {/snippet}
                 {#snippet warning()}
                   {#if !isLoading && (!lastfmApiKeySaved || !isLoggedIn())}
@@ -542,7 +574,11 @@ onMount(() => {
                         <p>Add a Last.fm API key to increase rate limit</p>
                       {/if}
                       {#if !isLoggedIn()}
-                        <p>Connect to Last.fm to <strong>enable personal scrobbling</strong> stats</p>
+                        <p>
+                          Connect to Last.fm to <strong
+                            >enable personal scrobbling</strong
+                          > stats
+                        </p>
                       {/if}
                     </div>
                   {/if}
@@ -642,22 +678,38 @@ onMount(() => {
             <!-- Visual preview -->
             <div class="w-2/3 *:w-full flex items-center flex-col gap-3">
               {#if !activePreviewKey}
-                <div class="h-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 text-center text-xl font-medium p-4 rounded-lg bg-zinc-100 dark:bg-zinc-800 cursor-default">
+                <div
+                  class="h-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 text-center text-xl font-medium p-4 rounded-lg bg-zinc-100 dark:bg-zinc-800 cursor-default"
+                >
                   Hover over a module in sidebar to see it's visual preview
                 </div>
               {:else}
                 <div class="flex flex-col gap-3">
                   <h3 class="text-lg font-semibold">Visual Preview</h3>
                   {#each Object.entries(moduleSettingsPreviews) as [key, previews]}
-                    <div data-preview-key={key} class:hidden={activePreviewKey !== key}>
+                    <div
+                      data-preview-key={key}
+                      class:hidden={activePreviewKey !== key}
+                    >
                       {#each previews as preview}
                         {#if typeof preview === 'string'}
-                          <img src={preview} alt={`Visual preview for ${key}`} />
+                          <img
+                            src={preview}
+                            alt={`Visual preview for ${key}`}
+                          />
                         {/if}
                         {#if typeof preview === 'object' && preview.type === 'animation'}
                           <div class="grid relative">
-                            <img src={preview.on} alt="" class="[grid-area:1/1] animate-fadeA will-change-opacity" />
-                            <img src={preview.off} alt="" class="[grid-area:1/1] animate-fadeB pointer-events-none will-change-opacity" />
+                            <img
+                              src={preview.on}
+                              alt=""
+                              class="[grid-area:1/1] animate-fadeA will-change-opacity"
+                            />
+                            <img
+                              src={preview.off}
+                              alt=""
+                              class="[grid-area:1/1] animate-fadeB pointer-events-none will-change-opacity"
+                            />
                           </div>
                         {/if}
                       {/each}
@@ -673,42 +725,178 @@ onMount(() => {
           active={activeTab === 'customization'}
           icon={iconSettings}
           title="Customization"
-          modified={formCustomizationChanged()}
           description="Profile modules customization"
         >
-          <FormToggleGroup title="Recent Tracks Widget">
-            <FormToggle
-              label="Show on load"
-              description="Show a list of recent tracks on profile load"
-              bind:checked={formCustomization.profileRecentTracksShowOnLoad}
-              name="profileRecentTracksShowOnLoad"
-            />
-            <FormToggle
-              label="Periodic updates"
-              description="Update recent tracks list periodically"
-              bind:checked={formCustomization.profileRecentTracksPolling}
-              name="profileRecentTracksPolling"
-            />
-            <FormSlider
-              label="Limit"
-              description="Limit the number of recent tracks to show"
-              bind:value={formCustomization.profileRecentTracksLimit}
-              min={constants.RECENT_TRACKS_LIMIT_MIN}
-              max={constants.RECENT_TRACKS_LIMIT_MAX}
-              name="profileRecentTracksLimit"
-            />
-            <!-- {formCustomization.mainHeaderLastfmLinkLabel} -->
-          </FormToggleGroup>
-          <!-- "profileTopArtistsLimit": 5,
-          "profileTopArtistsPeriod": "12month",
-          "profileTopAlbumsPeriod": "1month",
-          "profileRecentTracksShowOnLoad": true,
-          "profileRecentTracksBackground": 1,
-          "profileRecentTracksPolling": true,
-          "profileRecentTracksLimit": 10,
-          "profileRecentTracksAnimation": "auto",
-          "profileRecentTracksRymHistoryHide": false,
-          "mainHeaderLastfmLinkLabel": "Open $username" -->
+          <div class="columns-2 gap-6 *:overflow-hidden *:mb-2">
+            <FormToggleGroup title="Global">
+              <FormInput
+                label="Last.fm link label"
+                bind:value={formCustomization.mainHeaderLastfmLinkLabel}
+                name="mainHeaderLastfmLinkLabel"
+              />
+            </FormToggleGroup>
+
+
+
+            <FormToggleGroup title="Top Artists Widget">
+              <FormSlider
+                label="Limit"
+                description="Limit the number of top artists to show"
+                bind:value={formCustomization.profileTopArtistsLimit}
+                min={constants.TOP_ARTISTS_LIMIT_MIN}
+                max={constants.TOP_ARTISTS_LIMIT_MAX}
+                name="profileTopArtistsLimit"
+              />
+
+              <div>
+                <label
+                  for="profileTopArtistsPeriod"
+                  class="block mb-2 text-sm font-medium text-white"
+                >
+                  Top Artists time period (default)
+                </label>
+                <select
+                  class="
+                    text-sm
+                    rounded-xl
+                    focus-visible:ring-zinc-400/50
+                    focus-visible:ring-1
+                    block w-full px-4 py-3
+                    bg-zinc-800
+                    placeholder-zinc-400
+                    text-white
+                    focus-visible:ring-blue-400/50
+                  "
+                  bind:value={formCustomization.profileTopArtistsPeriod}
+                  id="profileTopArtistsPeriod"
+                  name="profileTopArtistsPeriod"
+                >
+                  {#each constants.PERIOD_OPTIONS as option}
+                    <option value={option.value}>{option.label}</option>
+                  {/each}
+                </select>
+              </div>
+            </FormToggleGroup>
+
+            <FormToggleGroup title="Top Albums Widget">
+              <div>
+                <label
+                  for="profileTopAlbumsPeriod"
+                  class="block mb-2 text-sm font-medium text-white"
+                >
+                  Top Albums time period (default)
+                </label>
+                <select
+                  class="
+                    text-sm
+                    rounded-xl
+                    focus-visible:ring-zinc-400/50
+                    focus-visible:ring-1
+                    block w-full px-4 py-3
+                    bg-zinc-800
+                    placeholder-zinc-400
+                    text-white
+                    focus-visible:ring-blue-400/50
+                  "
+                  bind:value={formCustomization.profileTopAlbumsPeriod}
+                  id="profileTopAlbumsPeriod"
+                  name="profileTopAlbumsPeriod"
+                >
+                  {#each constants.PERIOD_OPTIONS as option}
+                    <option value={option.value}>{option.label}</option>
+                  {/each}
+                </select>
+              </div>
+            </FormToggleGroup>
+
+            <FormToggleGroup title="Recent Tracks Widget">
+              <FormToggle
+                label="Show on load"
+                description="Show a list of recent tracks on profile load"
+                bind:checked={formCustomization.profileRecentTracksShowOnLoad}
+                name="profileRecentTracksShowOnLoad"
+              />
+              <FormToggle
+                label="Periodic updates"
+                description="Update recent tracks list periodically"
+                bind:checked={formCustomization.profileRecentTracksPolling}
+                name="profileRecentTracksPolling"
+              />
+              <FormToggle
+                label="Hide RYM history"
+                description="Removes default RYM Play History from user profiles"
+                bind:checked={formCustomization.profileRecentTracksRymHistoryHide}
+                name="profileRecentTracksRymHistoryHide"
+              />
+
+              <FormSlider
+                label="Limit"
+                description="Limit the number of recent tracks to show"
+                bind:value={formCustomization.profileRecentTracksLimit}
+                min={constants.RECENT_TRACKS_LIMIT_MIN}
+                max={constants.RECENT_TRACKS_LIMIT_MAX}
+                name="profileRecentTracksLimit"
+              />
+
+              <div>
+                <label
+                  for="profileRecentTracksAnimation"
+                  class="block mb-2 text-sm font-medium text-white"
+                >
+                  "Disc rotation" animation
+                </label>
+                <select
+                  class="
+                    text-sm
+                    rounded-xl
+                    focus-visible:ring-zinc-400/50
+                    focus-visible:ring-1
+                    block w-full px-4 py-3
+                    bg-zinc-800
+                    placeholder-zinc-400
+                    text-white
+                    focus-visible:ring-blue-400/50
+                  "
+                  bind:value={formCustomization.profileRecentTracksAnimation}
+                  id="profileRecentTracksAnimation"
+                  name="profileRecentTracksAnimation"
+                >
+                  {#each constants.NOW_PLAYING_ANIMATION_OPTIONS as option}
+                    <option value={option.value}>{option.label}</option>
+                  {/each}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  for="profileRecentTracksBackground"
+                  class="block mb-2 text-sm font-medium text-white"
+                >
+                  Background style
+                </label>
+                <select
+                  class="
+                    text-sm
+                    rounded-xl
+                    focus-visible:ring-zinc-400/50
+                    focus-visible:ring-1
+                    block w-full px-4 py-3
+                    bg-zinc-800
+                    placeholder-zinc-400
+                    text-white
+                    focus-visible:ring-blue-400/50
+                  "
+                  bind:value={formCustomization.profileRecentTracksBackground}
+                  id="profileRecentTracksBackground"
+                  name="profileRecentTracksBackground"
+                >
+                  {#each constants.RECENT_TRACK_BACKGROUND_OPTIONS as option}
+                    <option value={option.value}>{option.label}</option>
+                  {/each}
+                </select>
+              </div>
+            </FormToggleGroup>
+          </div>
         </TabContent>
 
         <TabContent
@@ -725,10 +913,9 @@ onMount(() => {
                 class="flex flex-col gap-3 items-start rounded-xl"
               >
                 <div class="flex flex-col gap-2 w-full items-start">
-                  <label
-                    for="lastFmApiKey"
-                    class="text-sm font-medium"
-                  >Last.fm API Key</label>
+                  <label for="lastFmApiKey" class="text-sm font-medium"
+                    >Last.fm API Key</label
+                  >
 
                   <div class="flex gap-1 w-full items-center">
                     <div class="grow">
@@ -758,7 +945,8 @@ onMount(() => {
                   {#if !lastfmApiKeySaved}
                     <button
                       type="submit"
-                      disabled={lastfmApiKeyValidationInProgress || !!lastfmApiKeySaved}
+                      disabled={lastfmApiKeyValidationInProgress ||
+                        !!lastfmApiKeySaved}
                       class="
                         inline-flex gap-2 cursor-pointer px-5 py-2 text-sm font-medium text-white items-center border-1
                         bg-yellow-900/50 border-yellow-800 hover:bg-yellow-800/50 disabled:opacity-50 disabled:pointer-events-none
@@ -766,7 +954,7 @@ onMount(() => {
                         rounded-lg text-center
                       "
                     >
-                      {@render iconKey(5)}
+                      {@render iconKey()}
                       Save API Key
                     </button>
                   {/if}
@@ -784,37 +972,117 @@ onMount(() => {
                     </button>
                   {/if}
                   {#if !lastfmApiKeySaved}
-                  <div class="flex items-center ml-auto gap-3">
-                    <a href="https://www.last.fm/api/account/create" target="_blank" class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2">
-                      <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4">
-                        <line x1="10.8492" y1="13.0606" x2="19.435" y2="4.47485" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M19.7886 4.12134L20.1421 8.01042" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M19.7886 4.12134L15.8995 3.76778" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M18 13.1465V17.6465C18 19.3033 16.6569 20.6465 15 20.6465H6C4.34315 20.6465 3 19.3033 3 17.6465V8.64648C3 6.98963 4.34315 5.64648 6 5.64648H10.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      Create new API key
-                    </a>
-                    <a href="https://www.last.fm/api/accounts" target="_blank" class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2">
-                      <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4">
-                        <line x1="10.8492" y1="13.0606" x2="19.435" y2="4.47485" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M19.7886 4.12134L20.1421 8.01042" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M19.7886 4.12134L15.8995 3.76778" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M18 13.1465V17.6465C18 19.3033 16.6569 20.6465 15 20.6465H6C4.34315 20.6465 3 19.3033 3 17.6465V8.64648C3 6.98963 4.34315 5.64648 6 5.64648H10.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      See my API keys
-                    </a>
-                  </div>
+                    <div class="flex items-center ml-auto gap-3">
+                      <a
+                        href="https://www.last.fm/api/account/create"
+                        target="_blank"
+                        class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2"
+                      >
+                        <svg
+                          width="800px"
+                          height="800px"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="w-4 h-4"
+                        >
+                          <line
+                            x1="10.8492"
+                            y1="13.0606"
+                            x2="19.435"
+                            y2="4.47485"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M19.7886 4.12134L20.1421 8.01042"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M19.7886 4.12134L15.8995 3.76778"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M18 13.1465V17.6465C18 19.3033 16.6569 20.6465 15 20.6465H6C4.34315 20.6465 3 19.3033 3 17.6465V8.64648C3 6.98963 4.34315 5.64648 6 5.64648H10.5"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
+                        Create new API key
+                      </a>
+                      <a
+                        href="https://www.last.fm/api/accounts"
+                        target="_blank"
+                        class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2"
+                      >
+                        <svg
+                          width="800px"
+                          height="800px"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="w-4 h-4"
+                        >
+                          <line
+                            x1="10.8492"
+                            y1="13.0606"
+                            x2="19.435"
+                            y2="4.47485"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M19.7886 4.12134L20.1421 8.01042"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M19.7886 4.12134L15.8995 3.76778"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M18 13.1465V17.6465C18 19.3033 16.6569 20.6465 15 20.6465H6C4.34315 20.6465 3 19.3033 3 17.6465V8.64648C3 6.98963 4.34315 5.64648 6 5.64648H10.5"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
+                        See my API keys
+                      </a>
+                    </div>
                   {/if}
                 </div>
 
                 {#if lastfmApiKeySaved}
-                  <div class="flex items-center gap-2 border-zinc-600 text-xs border rounded-xl p-2">
-                    {@render iconSuccess()} API key configured successfully. Enhanced features and higher Last.fm API rate limits are now available.
+                  <div
+                    class="flex items-center gap-2 border-zinc-600 text-xs border rounded-xl p-2"
+                  >
+                    {@render iconSuccess()} API key configured successfully. Enhanced
+                    features and higher Last.fm API rate limits are now available.
                   </div>
                 {/if}
 
                 <div class="text-xs text-zinc-400">
-                  Optional: Provides access to additional Last.fm features and higher rate limits
+                  Optional: Provides access to additional Last.fm features and
+                  higher rate limits
                 </div>
               </form>
             </div>
@@ -822,11 +1090,16 @@ onMount(() => {
               {#if !isLoggedIn()}
                 <form
                   autocomplete="off"
-                  onsubmit={(e) => {e.preventDefault();}}
+                  onsubmit={(e) => {
+                    e.preventDefault();
+                  }}
                   class="flex flex-col gap-2 items-start rounded-xl bg-zinc-800 p-4 border-2 border-zinc-700"
                 >
-                  <button type="submit" class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800">
-                    {@render iconKey(5)}
+                  <button
+                    type="submit"
+                    class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
+                  >
+                    {@render iconKey()}
                     Login
                   </button>
                 </form>
@@ -843,7 +1116,7 @@ onMount(() => {
                         src={userData.image}
                         alt={userData.name?.[1]?.toUpperCase() || ''}
                         class="h-10 w-10 bg-zinc-700 text-center rounded-full outline outline-1 outline-zinc-300"
-                      >
+                      />
                       <strong class="text-white">{userData.name}</strong>
                     </span>
                     <span class="text-xs">Click to open profile</span>
@@ -861,8 +1134,15 @@ onMount(() => {
                       Logout
                     </button>
                   </div>
-                  <div class="flex items-center gap-2 border-zinc-600 text-xs border rounded-xl p-2">
-                    {@render iconSuccess()} <p>Logged in as <strong>{userData.name}</strong> last.fm user. Personal scrobbling stats and additional Profile features are now available.</p>
+                  <div
+                    class="flex items-center gap-2 border-zinc-600 text-xs border rounded-xl p-2"
+                  >
+                    {@render iconSuccess()}
+                    <p>
+                      Logged in as <strong>{userData.name}</strong> last.fm user.
+                      Personal scrobbling stats and additional Profile features are
+                      now available.
+                    </p>
                   </div>
                 </div>
               {/if}
@@ -874,11 +1154,19 @@ onMount(() => {
 
     <!-- ACTIONS -->
     <div class="flex gap-2 justify-end">
-      <button type="button" class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800" onclick={reset}>
+      <button
+        type="button"
+        class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
+        onclick={reset}
+      >
         Reset
       </button>
-      <button type="submit" class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800" onclick={submit}>
-        {@render iconSettings(5)}
+      <button
+        type="submit"
+        class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
+        onclick={submit}
+      >
+        {@render iconSettings()}
         Save Configuration
       </button>
     </div>
@@ -888,10 +1176,15 @@ onMount(() => {
     <div class="max-w-screen-lg mx-auto w-full">
       <div class="text-xs text-zinc-400 flex gap-1 justify-between">
         <div>
-          <strong>Disclaimer:</strong> This extension is a third-party tool and it's not affiliated with Last.fm or RYM.
+          <strong>Disclaimer:</strong> This extension is a third-party tool and it's
+          not affiliated with Last.fm or RYM.
         </div>
         <div class="text-white">
-          <a class="hover:underline" href="mailto:landenmetal@gmail.com">Contact developer</a>&nbsp;&nbsp;|&nbsp;&nbsp;<span>RYM Last.fm Stats © {new Date().getFullYear()}</span>
+          <a class="hover:underline" href="mailto:landenmetal@gmail.com"
+            >Contact developer</a
+          >&nbsp;&nbsp;|&nbsp;&nbsp;<span
+            >RYM Last.fm Stats © {new Date().getFullYear()}</span
+          >
         </div>
       </div>
     </div>
@@ -906,12 +1199,24 @@ onMount(() => {
 }
 
 @keyframes fadeA {
-  0%, 89.99% { opacity: 1; }
-  90%, 100% { opacity: 0; }
+  0%,
+  89.99% {
+    opacity: 1;
+  }
+  90%,
+  100% {
+    opacity: 0;
+  }
 }
 @keyframes fadeB {
-  0%, 89.99% { opacity: 0; }
-  90%, 100% { opacity: 1; }
+  0%,
+  89.99% {
+    opacity: 0;
+  }
+  90%,
+  100% {
+    opacity: 1;
+  }
 }
 
 .animate-fadeA {

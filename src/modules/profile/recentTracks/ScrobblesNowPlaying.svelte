@@ -50,14 +50,6 @@ $effect(() => {
   }
 });
 
-const settingsAnimationOptions = $derived(() => {
-  return [
-    { label: 'Dynamic (default)', value: 'auto' },
-    { label: 'Always on', value: 'on' },
-    { label: 'Always off', value: 'off' },
-  ];
-});
-
 const settingsBackgroundOptions = $derived(() => {
   return constants.RECENT_TRACK_BACKGROUND_NAMES.map((name, index) => ({
     label: name,
@@ -224,7 +216,7 @@ $effect(() => {
           class="rounded-md border border-gray-300 p-2"
           bind:value={innerConfig.profileRecentTracksAnimation}
         >
-          {#each settingsAnimationOptions() as option}
+          {#each constants.NOW_PLAYING_ANIMATION_OPTIONS as option}
             <option value={option.value}>{option.label}</option>
           {/each}
         </select>

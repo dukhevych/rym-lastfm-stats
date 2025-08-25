@@ -771,10 +771,6 @@ const init = async () => {
 
     lastFmApiKey.value = await getLastFmApiKey();
 
-    const debouncedSubmit = utils.debounce(() => {
-      submit();
-    }, 300);
-
     watch(
       () => [options, lastFmApiKey],
       async () => {

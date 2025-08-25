@@ -32,13 +32,11 @@ let rangeNegativeMargin = $derived(() => {
 
 function handleInput(event: Event): void {
   const target = event.target as HTMLInputElement;
-  value = target.value;
+  value = Number(target.value);
 }
 
 function handleLegendClick(_value: number): void {
-  if (!disabled) {
-    value = _value;
-  }
+  if (!disabled) value = _value;
 }
 </script>
 
@@ -46,11 +44,13 @@ function handleLegendClick(_value: number): void {
   class="
     flex flex-col gap-1
     bg-zinc-800 rounded-xl py-3 px-4
+    [--range-track:theme(colors.zinc.600)]
+    [--range-fill:theme(colors.orange.700)]
+    [--range-thumb:theme(colors.orange.600)]
   "
 >
-<!-- hover:bg-zinc-700  -->
   <div class="font-bold">
-    <label for={name}>{label}</label>
+    <label for={name}>{label}: {value}</label>
   </div>
   <div>
     <div class="flex items-center gap-2">
@@ -59,10 +59,7 @@ function handleLegendClick(_value: number): void {
           id={name}
           type="range"
           {name}
-          class="
-            block w-full {disabled ? '' : 'cursor-pointer'}
-            [--range-track:theme(colors.zinc.600)] [--range-fill:theme(colors.teal.500)] [--range-thumb:theme(colors.orange.600)]
-          "
+          class="block w-full {disabled ? '' : 'cursor-pointer'}"
           {value}
           {min}
           {max}
@@ -73,19 +70,22 @@ function handleLegendClick(_value: number): void {
         <div class="relative mt-2">
           <div
             class="
-              flex justify-between px-3 text-sm text-gray-500
+              flex justify-between text-sm text-gray-500 relative h-5
             "
-            style="margin-left: -{rangeNegativeMargin()}%; margin-right: -{rangeNegativeMargin()}%;"
+            style="margin-inline: calc(var(--range-thumb-width, 16px) / 2)"
           >
-            {#each legendRange() as n}
+            {#each legendRange() as n, i}
               <span
-                class="shrink-0 grow basis-0 text-center {+n === +value
-                  ? 'font-bold text-gray-900 dark:text-gray-100'
-                  : 'text-gray-500'}"
+                class="
+                  absolute top-0 text-center
+                  translate-x-[-50%]
+                  {+n === +value ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-500'}
+                "
+                style="left: {i * 100 / (+max - +min)}%;"
               >
                 <button
                   type="button"
-                  class="inline-flex cursor-pointer px-2 {disabled
+                  class="inline-flex cursor-pointer px-1 {disabled
                     ? 'pointer-events-none'
                     : ''}"
                   onclick={() => handleLegendClick(n)}
@@ -117,8 +117,8 @@ input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   margin-top: -6px;
-  /* width: 16px;
-  height: 16px; */
+  width: var(--range-thumb-width, 16px);
+  height: var(--range-thumb-height, 16px);
   background: var(--range-thumb);
   border-radius: 50%;
   cursor: pointer;
@@ -145,8 +145,8 @@ input[type="range"]::-moz-range-progress {
   border-radius: 3px;
 }
 input[type="range"]::-moz-range-thumb {
-  /* width: 16px; */
-  /* height: 16px; */
+  width: var(--range-thumb-width, 16px);
+  height: var(--range-thumb-height, 16px);
   background: var(--range-thumb);
   border-radius: 50%;
   border-color: white;

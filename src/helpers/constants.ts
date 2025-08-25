@@ -191,7 +191,11 @@ export const RYMOwnershipAltToCode: Partial<Record<ERYMOwnershipAltText, ERYMOwn
 };
 
 import backgroundNames from '@/config/background.json';
-export const RECENT_TRACK_BACKGROUND_NAMES = backgroundNames as string[];
+export const RECENT_TRACK_BACKGROUND_NAMES = backgroundNames;
+export const RECENT_TRACK_BACKGROUND_OPTIONS: { label: string, value: number }[] = RECENT_TRACK_BACKGROUND_NAMES.map((name, index) => ({
+  label: name,
+  value: index,
+}));
 
 export const SLOGAN_VARIANTS = [
   'Scrobbles meet scores.',
@@ -206,3 +210,10 @@ export const SLOGAN_VARIANTS = [
   'Hear it. Scrobble it. See it on RYM.',
   'Listening translated into language of taste.',
 ]
+
+export type AnimationOption = 'auto' | 'on' | 'off';
+export const NOW_PLAYING_ANIMATION_OPTIONS: { label: string, value: AnimationOption }[] = [
+  { label: 'Dynamic (default)', value: 'auto' },
+  { label: 'Always on', value: 'on' },
+  { label: 'Always off', value: 'off' },
+];

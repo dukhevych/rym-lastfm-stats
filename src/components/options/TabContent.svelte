@@ -8,7 +8,6 @@ interface Props {
   icon: Snippet;
   title: string;
   description?: string;
-  modified?: boolean;
   children: Snippet;
 }
 
@@ -17,7 +16,6 @@ const {
   icon,
   title,
   description,
-  modified = false,
   children,
 }: Props = $props();
 </script>

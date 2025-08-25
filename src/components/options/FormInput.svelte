@@ -24,23 +24,6 @@
     bind:value
     disabled={disabled}
   />
-
-  <div
-    class="flex items-center justify-between cursor-pointer bg-zinc-800 rounded-xl hover:bg-zinc-700 py-2 px-4 gap-2
-           peer-focus-visible:ring-1 peer-focus-visible:ring-zinc-400/50 peer-disabled:opacity-50
-           peer-checked:[&_.toggle]:bg-orange-700 peer-checked:[&_.toggle::after]:translate-x-5
-           peer-checked:[&_.text]:text-white"
-  >
-
-    <span class="text flex flex-col gap-0.5 order-1 text-zinc-400">
-      <strong class="text-sm">{label}</strong>
-      {#if description}
-        <p class="text-xs text-zinc-400">
-          {description}
-        </p>
-      {/if}
-    </span>
-  </div>
 </div>
 
 <script lang="ts">
