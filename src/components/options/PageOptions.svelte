@@ -4,23 +4,19 @@
 import { formatDistanceToNow } from 'date-fns';
 import type { Snippet } from 'svelte';
 import { getTopArtists } from '@/api/getTopArtists';
-import { tick } from 'svelte';
+import { tick, onMount, onDestroy } from 'svelte';
 import browser from 'webextension-polyfill';
 import AppHeader from './AppHeader.svelte';
 import AppStatusCard from './AppStatusCard.svelte';
+import FormInput from './FormInput.svelte';
+import FormSlider from './FormSlider2.svelte';
 
 import * as api from '@/helpers/api';
 import * as constants from '@/helpers/constants';
-import { RecordsAPI } from '@/helpers/records-api';
 import {
   storageSet,
   storageRemove,
-  getModuleToggleConfig,
-  getModuleCustomizationConfig,
-  getRymSyncTimestamp,
   updateProfileOptions,
-  getUserData,
-  getLastFmApiKey,
   setLastFmApiKey,
 } from '@/helpers/storageUtils';
 import * as utils from '@/helpers/utils';
@@ -29,7 +25,18 @@ import FormToggle from './FormToggle.svelte';
 import FormToggleGroup from './FormToggleGroup.svelte';
 import TabContent from './TabContent.svelte';
 
-const appVersion = process.env.APP_VERSION!;
+interface OptionsProps {
+  formModules: ModuleToggleConfig;
+  formCustomization: ModuleCustomizationConfig;
+  lastfmApiKeySaved: string;
+  lastfmApiKey: string;
+  userData: UserData;
+  dbRecordsQty: number | null;
+  rymSyncTimestamp: number | null;
+}
+
+const props: OptionsProps = $props();
+
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
 
 // FLAGS
@@ -44,25 +51,8 @@ interface Tab {
   id: TabId;
   label: string;
   icon: Snippet;
+  modified?: boolean;
 }
-
-const tabs: Tab[] = [
-  {
-    id: 'modules',
-    label: 'Modules',
-    icon: iconSwitch,
-  },
-  {
-    id: 'customization',
-    label: 'Customization',
-    icon: iconSettings,
-  },
-  {
-    id: 'api-auth',
-    label: 'API & Auth',
-    icon: iconKey,
-  },
-];
 
 let hashValue = window.location.hash ? window.location.hash.slice(1) : null;
 
@@ -74,20 +64,49 @@ async function removeApiKey() {
   lastfmApiKey = '';
 }
 
+let formModulesSaved: ModuleToggleConfig = $state(props.formModules);
+let formModules: ModuleToggleConfig = $state(props.formModules);
+const formModulesChanged = $derived(() => {
+  return JSON.stringify(formModules) !== JSON.stringify(formModulesSaved);
+});
+
+let formCustomizationSaved: ModuleCustomizationConfig = $state(props.formCustomization);
+let formCustomization: ModuleCustomizationConfig = $state(props.formCustomization);
+const formCustomizationChanged = $derived(() => {
+  return JSON.stringify(formCustomization) !== JSON.stringify(formCustomizationSaved);
+});
+
+const tabs: () => Tab[] = $derived(() => [
+  {
+    id: 'modules',
+    label: 'Modules',
+    icon: iconSwitch,
+    modified: formModulesChanged(),
+  },
+  {
+    id: 'customization',
+    label: 'Customization',
+    icon: iconSettings,
+    modified: formCustomizationChanged(),
+  },
+  {
+    id: 'api-auth',
+    label: 'API & Auth',
+    icon: iconKey,
+  },
+]);
+
 function getInitialTab() {
-  if (hashValue) return tabs.find((tab) => tab.id === hashValue)?.id || 'modules';
+  if (hashValue) return tabs().find((tab) => tab.id === hashValue)?.id || 'modules';
   return 'modules';
 }
 
 let activeTab = $state(getInitialTab());
 
-let formModules: ModuleToggleConfig = $state(constants.MODULE_TOGGLE_CONFIG);
-let formCustomization: ModuleCustomizationConfig = $state(constants.MODULE_CUSTOMIZATION_CONFIG);
-
-let userData = $state<UserData>();
+let userData = $state<UserData | null>(props.userData);
 const isLoggedIn = $derived(() => !!userData?.name);
 
-let dbRecordsQty = $state<number>();
+let dbRecordsQty = $state<number | null>(props.dbRecordsQty ?? null);
 const dbRecordsQtyLabel = $derived(() => {
   if (!dbRecordsQty) return 'No records yet';
   let str = `Records: ${dbRecordsQty}`;
@@ -95,7 +114,7 @@ const dbRecordsQtyLabel = $derived(() => {
   return str;
 });
 
-let rymSyncTimestamp = $state<number>();
+let rymSyncTimestamp = $state<number | null>(props.rymSyncTimestamp);
 const rymSyncTimestampLabel = $derived(() => {
   if (!rymSyncTimestamp) return 'No sync performed yet';
   return `Last sync ${formatDistanceToNow(rymSyncTimestamp, { addSuffix: true })}`;
@@ -113,8 +132,8 @@ const hasRymSyncWarning = $derived(() => {
 
 const setupProgress = $derived(() => [isLoggedIn(), !!lastfmApiKeySaved, rymSyncTimestamp].filter(Boolean).length);
 
-let lastfmApiKeySaved = $state('');
-let lastfmApiKey = $state('');
+let lastfmApiKeySaved = $state(props.lastfmApiKey);
+let lastfmApiKey = $state(props.lastfmApiKey);
 let lastfmApiKeyValidationInProgress = $state(false);
 
 async function onSubmitLastFmApiKey(e: Event) {
@@ -195,7 +214,6 @@ function handleApiKeyBlur(e: Event) {
 async function submit() {
   const newConfig = $state.snapshot(formModules);
   await updateProfileOptions(newConfig);
-  // currentConfig = newConfig;
 }
 
 async function reset() {
@@ -261,25 +279,7 @@ async function openAuthPage() {
   }
 }
 
-async function init() {
-  const data = await Promise.all([
-    getModuleToggleConfig(),
-    getModuleCustomizationConfig(),
-    getLastFmApiKey(),
-    getUserData(),
-    RecordsAPI.getQty(),
-    getRymSyncTimestamp(),
-  ]);
-
-  // currentConfig = data[0];
-  formModules = data[0];
-  formCustomization = data[1];
-  lastfmApiKeySaved = data[2];
-  lastfmApiKey = data[2];
-  userData = data[3];
-  dbRecordsQty = data[4] ?? null;
-  rymSyncTimestamp = data[5] ?? null;
-
+function init() {
   isLoading = false;
 }
 
@@ -291,7 +291,7 @@ async function logout() {
   const doConfirm = confirm('Are you sure you want to logout?');
   if (!doConfirm) return;
   await storageRemove('userData');
-  userData = undefined;
+  userData = null;
 }
 
 async function fallbackLogin() {
@@ -327,37 +327,45 @@ async function fallbackLogin() {
 
 init();
 
-interface CardProps {
-  valid: boolean;
-  title: string;
-  validStatus: string;
-  invalidStatus: string;
-  action?: () => void;
-  warning?: boolean;
-  note?: string | string[];
-  loading?: boolean;
-}
-
 interface TabLinkProps {
   href: string;
   label: string;
   icon: (size?: number) => any;
+  modified?: boolean;
   onClick: (e: MouseEvent) => void;
 }
+
+onMount(() => {
+  const handler = (event: BeforeUnloadEvent) => {
+    if (formModulesChanged() || formCustomizationChanged()) {
+      event.preventDefault();
+    }
+  };
+
+  window.addEventListener('beforeunload', handler);
+
+  onDestroy(() => {
+    window.removeEventListener('beforeunload', handler);
+  });
+});
 </script>
 
 {#snippet tabLink({
   href,
   label,
   icon,
-  onClick
+  modified = false,
+  onClick,
 }: TabLinkProps)}
   <a
     href={href}
     onclick={onClick}
   >
-    {@render icon()}
-    {label}
+    <span class="relative">
+      <span class="absolute top-1/2 -translate-y-1/2 right-full mr-2">{@render icon()}</span>
+      {label}
+      <span class="absolute top-1/2 -translate-y-1/2 left-full ml-2 bg-current rounded-full transition-opacity w-1.5 h-1.5 {modified ? 'opacity-100' : 'opacity-0'}"></span>
+    </span>
   </a>
 {/snippet}
 
@@ -480,7 +488,7 @@ interface TabLinkProps {
     <div class="p-6 bg-zinc-900 border-1 border-zinc-700 rounded-2xl flex flex-col gap-3">
       <nav aria-label="Extension Settings Navigation">
         <ul class="flex *:grow *:basis-0 gap-2 rounded-2xl p-1 bg-zinc-800">
-          {#each tabs as tab}
+          {#each tabs() as tab}
             <li
               class="
                 *:flex *:transition-colors *:items-center *:gap-2 *:justify-center *:rounded-xl *:p-1 *:text-sm
@@ -494,6 +502,7 @@ interface TabLinkProps {
                 href: `#${tab.id}`,
                 label: tab.label,
                 icon: tab.icon,
+                modified: tab.modified,
                 onClick: () => activeTab = tab.id,
               })}
             </li>
@@ -506,6 +515,7 @@ interface TabLinkProps {
         <TabContent
           active={activeTab === 'modules'}
           icon={iconSwitch}
+          modified={formModulesChanged()}
           title="Modules"
           description="Enable or disable specific enhancement modules."
         >
@@ -663,6 +673,7 @@ interface TabLinkProps {
           active={activeTab === 'customization'}
           icon={iconSettings}
           title="Customization"
+          modified={formCustomizationChanged()}
           description="Profile modules customization"
         >
           <FormToggleGroup title="Recent Tracks Widget">
@@ -678,17 +689,15 @@ interface TabLinkProps {
               bind:checked={formCustomization.profileRecentTracksPolling}
               name="profileRecentTracksPolling"
             />
-            <input
-              type="text"
-              class="
-                w-full block min-w-0 font-mono rounded-xl outline-none
-                border text-sm p-2.5
-                bg-orange-700/50 border-orange-600 placeholder-zinc-400 text-white
-                focus:border-zinc-500 focus:ring-orange-500 focus:border-orange-500 focus:placeholder-transparent
-              "
-              bind:value={formCustomization.mainHeaderLastfmLinkLabel}
+            <FormSlider
+              label="Limit"
+              description="Limit the number of recent tracks to show"
+              bind:value={formCustomization.profileRecentTracksLimit}
+              min={constants.RECENT_TRACKS_LIMIT_MIN}
+              max={constants.RECENT_TRACKS_LIMIT_MAX}
+              name="profileRecentTracksLimit"
             />
-            {formCustomization.mainHeaderLastfmLinkLabel}
+            <!-- {formCustomization.mainHeaderLastfmLinkLabel} -->
           </FormToggleGroup>
           <!-- "profileTopArtistsLimit": 5,
           "profileTopArtistsPeriod": "12month",
@@ -700,16 +709,6 @@ interface TabLinkProps {
           "profileRecentTracksAnimation": "auto",
           "profileRecentTracksRymHistoryHide": false,
           "mainHeaderLastfmLinkLabel": "Open $username" -->
-          {#each Object.entries(formCustomization) as [key, value]}
-            {#if typeof value === 'boolean'}
-              <FormToggle
-                label={key}
-                description={key}
-                bind:checked={formCustomization[key as keyof ModuleCustomizationConfig] as boolean}
-                name={key}
-              />
-            {/if}
-          {/each}
         </TabContent>
 
         <TabContent

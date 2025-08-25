@@ -1,6 +1,11 @@
 <svelte:options runes={true} />
 
-<label class="block select-none relative">
+<div class="block select-none relative">
+  {#if label}
+    <span class="text flex flex-col gap-0.5 order-1 text-zinc-400">
+      <strong class="text-sm">{label}</strong>
+    </span>
+  {/if}
   {#if newOption}
     <span class="text-xs text-red-400 absolute top-0 left-0 translate-x-[-25%] translate-y-[-25%] -rotate-45 origin-center">
       New
@@ -8,27 +13,26 @@
   {/if}
 
   <input
-    type="checkbox"
-    class="sr-only peer"
+    type="text"
+    class="
+      w-full block min-w-0 font-mono rounded-xl outline-none
+      border text-sm p-2.5
+      bg-zinc-700 border-zinc-600 placeholder-zinc-400 text-white
+      focus:border-zinc-500 focus:ring-zinc-500 focus:border-zinc-500 focus:placeholder-transparent
+    "
     name={name}
-    bind:checked={checked}
+    bind:value
     disabled={disabled}
   />
 
-  <span
-    class="flex items-center justify-between cursor-pointer bg-zinc-800 rounded-xl hover:bg-zinc-700 py-3 px-4 gap-2
+  <div
+    class="flex items-center justify-between cursor-pointer bg-zinc-800 rounded-xl hover:bg-zinc-700 py-2 px-4 gap-2
            peer-focus-visible:ring-1 peer-focus-visible:ring-zinc-400/50 peer-disabled:opacity-50
            peer-checked:[&_.toggle]:bg-orange-700 peer-checked:[&_.toggle::after]:translate-x-5
            peer-checked:[&_.text]:text-white"
   >
-    <span
-      class="toggle order-2 relative w-11 h-6 rounded-full bg-zinc-700 border border-zinc-600
-             after:content-[''] after:absolute after:top-[50%] after:left-[2px] after:h-5 after:w-5 after:bg-white after:translate-y-[-50%]
-             after:border after:border-zinc-300 after:rounded-full
-             after:transition-transform"
-    ></span>
 
-    <span class="text flex flex-col gap-1 order-1 text-zinc-400">
+    <span class="text flex flex-col gap-0.5 order-1 text-zinc-400">
       <strong class="text-sm">{label}</strong>
       {#if description}
         <p class="text-xs text-zinc-400">
@@ -36,12 +40,12 @@
         </p>
       {/if}
     </span>
-  </span>
-</label>
+  </div>
+</div>
 
 <script lang="ts">
   interface Props {
-    checked: boolean;
+    value: string;
     label: string;
     description?: string;
     disabled?: boolean;
@@ -50,7 +54,7 @@
   }
 
   let {
-    checked = $bindable(),
+    value = $bindable(),
     label,
     description,
     disabled = false,

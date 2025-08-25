@@ -20,7 +20,7 @@ const {
 }: Props = $props();
 </script>
 
-<div class="flex flex-col gap-2" style:order={order}>
+<div class="flex flex-col gap-3" style:order={order}>
   {#if title}
     <header class="flex flex-col px-4 gap-2">
       <h4 class="flex items-baseline justify-between -mr-4">

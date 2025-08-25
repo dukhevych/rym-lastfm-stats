@@ -8,10 +8,18 @@ interface Props {
   icon: Snippet;
   title: string;
   description?: string;
+  modified?: boolean;
   children: Snippet;
 }
 
-const { active, icon, title, description, children }: Props = $props();
+const {
+  active,
+  icon,
+  title,
+  description,
+  modified = false,
+  children,
+}: Props = $props();
 </script>
 
 <article class="flex flex-col gap-4 rounded-xl" class:hidden={!active}>
@@ -20,7 +28,9 @@ const { active, icon, title, description, children }: Props = $props();
       <span class="*:w-6 *:h-6 *:text-orange-700">
         {@render icon()}
       </span>
-      <h3 class="text-lg font-semibold">{title}</h3>
+      <h3 class="text-lg font-semibold relative">
+        {title}
+      </h3>
     </div>
     {#if description}
       <div class="text-zinc-600 dark:text-zinc-400 text-center">
