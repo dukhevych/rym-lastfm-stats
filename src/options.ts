@@ -23,7 +23,7 @@ async function initApp() {
   ]);
 
   mount(App, {
-    target: document.getElementById('app2'),
+    target: document.getElementById('app')!,
     props: {
       formModules: data[0],
       formCustomization: data[1],

@@ -213,6 +213,8 @@ const moduleSettingsPreviews = {
 
 let activePreviewKey = $state('');
 
+const identityApiSupported = !!(browser.identity && browser.identity.launchWebAuthFlow);
+
 function handleApiKeyFocus(e: Event) {
   (e.target as HTMLInputElement).select();
 }
@@ -236,13 +238,6 @@ async function submit() {
   formModulesSaved = newFormModules;
   formCustomizationSaved = newFormCustomization;
   submitInProgress = false;
-}
-
-async function reset() {
-  const doConfirm = confirm('Are you sure you want to reset all settings?');
-  if (!doConfirm) return;
-  Object.assign(formModules, constants.PROFILE_OPTIONS_DEFAULT);
-  await submit();
 }
 
 async function openAuthPage() {
@@ -316,26 +311,43 @@ async function logout() {
   userData = null;
 }
 
-// async function fallbackLogin() {
-//   const userDataRaw = await api.fetchUserDataByName(
-//     fallbackUsername,
-//     SYSTEM_API_KEY!,
-//   );
+async function fallbackLogin() {
+  const username = prompt('Enter your Last.fm username');
 
-//   if (userDataRaw) {
-//     const normalizedData = {
-//       name: userDataRaw.name,
-//       url: userDataRaw.url,
-//       image: userDataRaw.image?.[0]?.['#text'],
-//     };
+  if (!username) return;
 
-//     userData = normalizedData;
+  signinInProgress = true;
 
-//     await storageSet({
-//       userData: normalizedData,
-//     });
-//   }
-// }
+  try {
+    const data = await api.fetchUserDataByName(username, SYSTEM_API_KEY!);
+
+    if (data && data.name) {
+      const normalizedData = {
+        name: data.name,
+        url: data.url,
+        image: data.image?.[1]?.['#text'],
+        playcount: data.playcount ? +data.playcount : null,
+        registered: data.registered ? +data.registered?.['#text'] : null,
+        albums: data.album_count ? +data.album_count : null,
+        artists: data.artist_count ? +data.artist_count : null,
+        tracks: data.track_count ? +data.track_count : null,
+      };
+
+      userData = normalizedData;
+
+      await storageSet({
+        userData: normalizedData,
+      });
+    } else {
+      alert('Failed to load profile.');
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Failed to load profile.');
+  }
+
+  signinInProgress = false;
+};
 
 init();
 
@@ -382,6 +394,25 @@ onMount(() => {
       ></span>
     </span>
   </a>
+{/snippet}
+
+
+{#snippet iconWarning(classes = '')}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class="h-4 w-4 text-yellow-600 {classes}"
+  >
+    <path d="M12 2L2 22h20L12 2z"></path>
+    <circle cx="12" cy="12" r="1"></circle>
+  </svg>
 {/snippet}
 
 {#snippet iconKey(classes = '')}
@@ -499,6 +530,31 @@ onMount(() => {
         action={openRymSync}
       />
     </section>
+
+    {#if isRymSyncOutdated()}
+      <blockquote class="text-sm text-zinc-500 text-center text-balance flex flex-col gap-4">
+        <p class="font-bold text-white font-bold">
+          Keep your data fresh and up to date.
+        </p>
+        <p>
+          <a
+            href="https://rateyourmusic.com/music_export?sync"
+            target="_blank"
+            class="
+              inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold text-white inline-flex items-center
+              bg-orange-700 hover:bg-orange-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-orange-300
+              rounded-lg text-center
+            "
+          >
+            Re-run RYM Sync
+          </a>
+        </p>
+        <p>
+          RYM Last.fm Stats <strong>automatically</strong> tracks your RYM ratings whenever you rate a release. In addition, it parses your Profile and Collection pages when you visit them, adding new records to its internal database.
+          Keep in mind that the RateYourMusic database is <em>constantly changing</em> — some releases may be updated or even removed. To ensure your data stays accurate, it’s recommended to run RYM Sync periodically.
+        </p>
+      </blockquote>
+    {/if}
 
     <!-- SETUP PROGRESS -->
     {#if setupProgress() < 3}
@@ -1006,9 +1062,10 @@ onMount(() => {
 
                 {#if lastfmApiKeySaved}
                   <div
-                    class="flex items-center gap-2 border-zinc-600 text-xs border rounded-xl p-2"
+                    class="flex items-center gap-2 border-zinc-600 text-sm text-balance border rounded-xl p-4"
                   >
-                    {@render iconSuccess()} API key configured successfully. Enhanced
+                    {@render iconSuccess('shrink-0')}
+                    API key configured successfully. Enhanced
                     features and higher Last.fm API rate limits are now available.
                   </div>
                 {/if}
@@ -1021,21 +1078,32 @@ onMount(() => {
             </div>
             <div class="flex flex-col gap-2">
               {#if !isLoggedIn()}
-                <form
-                  autocomplete="off"
-                  onsubmit={(e) => {
-                    e.preventDefault();
-                  }}
-                  class="flex flex-col gap-2 items-start rounded-xl bg-zinc-800 p-4 border-2 border-zinc-700"
+                <div
+                  class="flex gap-2 items-center justify-between rounded-xl bg-zinc-800 p-4 border-2 border-zinc-700"
                 >
+                  {#if identityApiSupported}
+                    <button
+                      disabled={signinInProgress}
+                      onclick={openAuthPage}
+                      class="
+                        inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm text-shadow-sm transition-colors text-white inline-flex items-center bg-clr-lastfm hover:bg-clr-lastfm-light focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:focus-visible:ring-blue-800 font-bold
+                        disabled:opacity-50 disabled:pointer-events-none
+                      "
+                    >
+                      {@render iconKey()}
+                      Login via Last.fm
+                    </button>
+
+                    <span>or</span>
+                  {/if}
+
                   <button
-                    type="submit"
-                    class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
+                    onclick={fallbackLogin}
+                    class="px-5 py-2.5 bg-white/5 cursor-pointer text-sm rounded-lg text-zinc-300 hover:underline font-bold"
                   >
-                    {@render iconKey()}
-                    Login
+                    Manual Login
                   </button>
-                </form>
+                </div>
               {:else if userData}
                 <div class="text-sm">Logged in as:</div>
                 <div class="flex flex-col gap-3">
@@ -1068,14 +1136,12 @@ onMount(() => {
                     </button>
                   </div>
                   <div
-                    class="flex items-center gap-2 border-zinc-600 text-xs border rounded-xl p-2"
+                    class="flex items-center text-balance gap-2 border-zinc-600 text-sm border rounded-xl p-4"
                   >
-                    {@render iconSuccess()}
-                    <p>
-                      Logged in as <strong>{userData.name}</strong> last.fm user.
+                    {@render iconSuccess('shrink-0')}
+                      Successfully logged in with last.fm OAuth.
                       Personal scrobbling stats and additional Profile features are
                       now available.
-                    </p>
                   </div>
                 </div>
               {/if}
