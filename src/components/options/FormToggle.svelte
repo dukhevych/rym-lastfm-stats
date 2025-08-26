@@ -16,10 +16,18 @@
   />
 
   <span
-    class="flex items-center justify-between cursor-pointer bg-zinc-800 rounded-xl hover:bg-zinc-700 py-3 px-4 gap-2
-           peer-focus-visible:ring-1 peer-focus-visible:ring-zinc-400/50 peer-disabled:opacity-50
-           peer-checked:[&_.toggle]:bg-orange-700 peer-checked:[&_.toggle::after]:translate-x-5
-           peer-checked:[&_.text]:text-white"
+    class="
+      flex items-center justify-between gap-2
+      cursor-pointer
+      bg-zinc-800
+      not-peer-disabled:hover:bg-zinc-700
+      py-3 px-4 rounded-xl
+      peer-focus-visible:ring-1 peer-focus-visible:ring-zinc-400/50
+      peer-disabled:opacity-50 peer-disabled:pointer-events-none
+      peer-checked:[&_.toggle]:bg-orange-700
+      peer-checked:[&_.toggle::after]:translate-x-5
+      peer-checked:[&_.text]:text-white
+    "
   >
     <span
       class="toggle order-2 relative w-11 h-6 rounded-full bg-zinc-700 border border-zinc-600

@@ -67,7 +67,7 @@ function handleLegendClick(_value: number): void {
           {...restProps}
           oninput={handleInput}
         />
-        <div class="relative mt-2">
+        <div class="relative mt-0.5">
           <div
             class="
               flex justify-between text-sm text-gray-500 relative h-5

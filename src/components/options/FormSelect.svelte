@@ -42,8 +42,6 @@ let {
       text-white
       bg-zinc-700
       p-2
-      border
-      border-zinc-500
     "
     disabled={disabled}
     bind:value={value}

@@ -86,7 +86,10 @@ export async function getModuleCustomizationConfig() {
 }
 
 export async function setModuleCustomizationConfig(config: ModuleCustomizationConfig) {
-  return storageSet(config, 'sync');
+  return Promise.all([
+    storageSet(config, 'sync'),
+    storageSet(config, 'local'),
+  ]);
 }
 
 export async function getModuleToggleConfig() {
@@ -96,7 +99,10 @@ export async function getModuleToggleConfig() {
 }
 
 export async function setModuleToggleConfig(config: ModuleToggleConfig) {
-  return storageSet(config, 'sync');
+  return Promise.all([
+    storageSet(config, 'sync'),
+    storageSet(config, 'local'),
+  ]);
 }
 
 export async function getProfileOptions(): Promise<AddonOptions> {

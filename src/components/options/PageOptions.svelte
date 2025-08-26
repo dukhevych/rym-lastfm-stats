@@ -17,7 +17,8 @@ import * as constants from '@/helpers/constants';
 import {
   storageSet,
   storageRemove,
-  updateProfileOptions,
+  setModuleCustomizationConfig,
+  setModuleToggleConfig,
   setLastFmApiKey,
 } from '@/helpers/storageUtils';
 import * as utils from '@/helpers/utils';
@@ -43,6 +44,7 @@ const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
 // FLAGS
 let isLoading = $state(true);
 let signinInProgress = $state(false);
+let submitInProgress = $state(false);
 let lastfmApiKeyInput: HTMLInputElement | null = null;
 // let fallbackUsername = $state('');
 
@@ -222,8 +224,18 @@ function handleApiKeyBlur(e: Event) {
 }
 
 async function submit() {
-  const newConfig = $state.snapshot(formModules);
-  await updateProfileOptions(newConfig);
+  submitInProgress = true;
+  const newFormModules = $state.snapshot(formModules);
+  const newFormCustomization = $state.snapshot(formCustomization);
+
+  await Promise.all([
+    setModuleToggleConfig(newFormModules),
+    setModuleCustomizationConfig(newFormCustomization),
+    utils.wait(150),
+  ]);
+  formModulesSaved = newFormModules;
+  formCustomizationSaved = newFormCustomization;
+  submitInProgress = false;
 }
 
 async function reset() {
@@ -1075,17 +1087,23 @@ onMount(() => {
 
     <!-- ACTIONS -->
     <div class="actions-panel">
-      <div class="actions-panel-inner flex gap-2 justify-end p-4">
-        <button
+      <div class="actions-panel-inner flex gap-6 justify-end items-center p-4">
+        <!-- <button
           type="button"
-          class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
+          class="inline-flex gap-2 cursor-pointer hover:underline text-sm font-bold text-white inline-flex items-center focus-visible:outline-none rounded-lg text-center"
           onclick={reset}
         >
           Reset
-        </button>
+        </button> -->
         <button
           type="submit"
-          class="inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-medium text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800"
+          disabled={submitInProgress}
+          class="
+            inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold text-white inline-flex items-center
+            bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300
+            rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800
+            disabled:opacity-50 disabled:pointer-events-none
+          "
           onclick={submit}
         >
           {@render iconSettings()}
@@ -1165,6 +1183,12 @@ onMount(() => {
       @container scroll-state(stuck: bottom) {
         @apply border-zinc-700 bg-zinc-900 shadow-2xl rounded-t-2xl;
       }
+    }
+  }
+
+  @supports not (container-type: scroll-state) {
+    .actions-panel-inner {
+      @apply border-zinc-700 bg-zinc-900 shadow-2xl rounded-2xl;
     }
   }
 }
