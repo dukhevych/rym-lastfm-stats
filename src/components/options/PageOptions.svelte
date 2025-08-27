@@ -70,8 +70,11 @@ async function removeApiKey() {
 
 let formModulesSaved: ModuleToggleConfig = $state(props.formModules);
 let formModules: ModuleToggleConfig = $state(props.formModules);
+const formModulesChangedFields = $derived(() => {
+  return Object.keys(formModules).filter(key => formModules[key as keyof ModuleToggleConfig] !== formModulesSaved[key as keyof ModuleToggleConfig]);
+});
 const formModulesChanged = $derived(() => {
-  return JSON.stringify(formModules) !== JSON.stringify(formModulesSaved);
+  return formModulesChangedFields().length > 0;
 });
 
 let formCustomizationSaved: ModuleCustomizationConfig = $state(
@@ -80,10 +83,11 @@ let formCustomizationSaved: ModuleCustomizationConfig = $state(
 let formCustomization: ModuleCustomizationConfig = $state(
   props.formCustomization,
 );
+const formCustomizationChangedFields = $derived(() => {
+  return Object.keys(formCustomization).filter(key => formCustomization[key as keyof ModuleCustomizationConfig] !== formCustomizationSaved[key as keyof ModuleCustomizationConfig]);
+});
 const formCustomizationChanged = $derived(() => {
-  return (
-    JSON.stringify(formCustomization) !== JSON.stringify(formCustomizationSaved)
-  );
+  return formCustomizationChangedFields().length > 0;
 });
 
 const tabs: () => Tab[] = $derived(() => [
@@ -1153,29 +1157,29 @@ onMount(() => {
     </div>
 
     <!-- ACTIONS -->
-    <div class="actions-panel">
-      <div class="actions-panel-inner flex gap-6 justify-end items-center p-4">
-        <!-- <button
-          type="button"
-          class="inline-flex gap-2 cursor-pointer hover:underline text-sm font-bold text-white inline-flex items-center focus-visible:outline-none rounded-lg text-center"
-          onclick={reset}
-        >
-          Reset
-        </button> -->
-        <button
-          type="submit"
-          disabled={submitInProgress}
-          class="
-            inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold text-white inline-flex items-center
-            bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300
-            rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800
-            disabled:opacity-50 disabled:pointer-events-none
-          "
-          onclick={submit}
-        >
-          {@render iconSettings()}
-          Save Configuration
-        </button>
+    <div class="actions-panel" class:is-sticky={formModulesChanged() || formCustomizationChanged()}>
+      <div class="actions-panel-inner flex gap-6 justify-between items-center p-4">
+        {#if formModulesChanged() || formCustomizationChanged()}
+          <div class="text-sm p-2 border-1 border-orange-700/50 rounded-lg">
+            {formModulesChangedFields().length + formCustomizationChangedFields().length} unsaved changes
+          </div>
+        {/if}
+        <div class="ml-auto">
+          <button
+            type="submit"
+            disabled={submitInProgress}
+            class="
+              inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold text-white inline-flex items-center
+              bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300
+              rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800
+              disabled:opacity-50 disabled:pointer-events-none
+            "
+            onclick={submit}
+          >
+            {@render iconSettings()}
+            Save Configuration
+          </button>
+        </div>
       </div>
     </div>
   </main>
@@ -1236,14 +1240,14 @@ onMount(() => {
   animation: fadeB 5s infinite ease-in-out;
 }
 
-.actions-panel {
+.actions-panel-inner {
+  @apply border-1 border-transparent;
+}
+
+.actions-panel.is-sticky {
   container-type: scroll-state;
   position: sticky;
   bottom: 0;
-
-  .actions-panel-inner {
-    @apply border-1 border-transparent;
-  }
 
   @supports (container-type: scroll-state) {
     .actions-panel-inner {
