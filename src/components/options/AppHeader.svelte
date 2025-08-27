@@ -124,7 +124,7 @@ init();
             class="flex items-center gap-2 py-0.5 hover:underline"
           >
             {@render iconBug('text-red-400 h-5 w-5')}
-            <span>Report issue</span>
+            <span>Report bug</span>
           </a>
           |
           <a

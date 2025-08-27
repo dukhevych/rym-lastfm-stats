@@ -20,9 +20,9 @@ const {
 }: Props = $props();
 </script>
 
-<article class="flex flex-col gap-4 rounded-xl" class:hidden={!active}>
-  <header class="flex flex-col gap-2 py-2">
-    <div class="flex items-center justify-center gap-2">
+<article class="flex flex-col rounded-xl" class:hidden={!active}>
+  <header class="flex flex-col gap-2 py-4">
+    <div class="items-center justify-center gap-2 hidden lg:flex">
       <span class="*:w-6 *:h-6 *:text-orange-700">
         {@render icon()}
       </span>
