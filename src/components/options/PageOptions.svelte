@@ -2,16 +2,10 @@
 
 <script lang="ts">
 import { formatDistanceToNow } from 'date-fns';
-import type { Snippet } from 'svelte';
-import { getTopArtists } from '@/api/getTopArtists';
 import { tick, onMount, onDestroy } from 'svelte';
 import browser from 'webextension-polyfill';
-import AppHeader from './AppHeader.svelte';
-import AppStatusCard from './AppStatusCard.svelte';
-import FormInput from './FormInput.svelte';
-import FormSelect from './FormSelect.svelte';
-import FormSlider from './FormSlider2.svelte';
 
+import { getTopArtists } from '@/api/getTopArtists';
 import * as api from '@/helpers/api';
 import * as constants from '@/helpers/constants';
 import {
@@ -23,9 +17,16 @@ import {
 } from '@/helpers/storageUtils';
 import * as utils from '@/helpers/utils';
 
+import AppHeader from './AppHeader.svelte';
+import AppStatusCard from './AppStatusCard.svelte';
+import FormInput from './FormInput.svelte';
+import FormSelect from './FormSelect.svelte';
+import FormSlider from './FormSlider2.svelte';
 import FormToggle from './FormToggle.svelte';
 import FormToggleGroup from './FormToggleGroup.svelte';
 import TabContent from './TabContent.svelte';
+
+import type { Snippet } from 'svelte';
 
 interface OptionsProps {
   formModules: ModuleToggleConfig;

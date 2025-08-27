@@ -93,9 +93,10 @@
 </header>
 
 <script lang="ts">
+import browser from 'webextension-polyfill';
+
 import * as constants from '@/helpers/constants';
 import * as utils from '@/helpers/utils';
-import browser from 'webextension-polyfill';
 
 const appVersion = process.env.APP_VERSION!;
 
