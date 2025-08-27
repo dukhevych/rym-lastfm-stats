@@ -1,45 +1,56 @@
 <svelte:options runes={true} />
 
-<div class="block select-none relative">
-  {#if label}
-    <span class="text flex flex-col gap-0.5 order-1 text-zinc-400">
-      <strong class="text-sm">{label}</strong>
-    </span>
-  {/if}
-  {#if newOption}
-    <span class="text-xs text-red-400 absolute top-0 left-0 translate-x-[-25%] translate-y-[-25%] -rotate-45 origin-center">
-      New
-    </span>
-  {/if}
+<script lang="ts">
+import type { Snippet } from "svelte";
+
+interface Props {
+  value: string;
+  label?: string;
+  description?: string | Snippet;
+  newOption?: boolean;
+  [key: string]: any;
+}
+
+let {
+  value = $bindable(),
+  label,
+  description,
+  newOption = false,
+  ...restProps
+}: Props = $props();
+</script>
+
+<div class="rounded-xl flex flex-col block w-full px-4 py-3 bg-zinc-800 gap-2">
+  <div class="flex flex-col gap-1">
+    <label
+      for={restProps.name}
+      class="text-sm text-white"
+    >
+      <strong>{label}</strong>
+    </label>
+    {#if description}
+      {#if typeof description === 'string'}
+        <p class="text-xs text-zinc-400">{description}</p>
+      {:else}
+        <p class="text-xs text-zinc-400">
+          {@render description()}
+        </p>
+      {/if}
+    {/if}
+  </div>
 
   <input
     type="text"
     class="
-      w-full block min-w-0 font-mono rounded-xl outline-none
-      border text-sm p-2.5
-      bg-zinc-700 border-zinc-600 placeholder-zinc-400 text-white
-      focus:border-zinc-500 focus:ring-zinc-500 focus:border-zinc-500 focus:placeholder-transparent
+      outline-none
+      border-b-2
+      border-orange-700
+      text-sm p-2
+      bg-zinc-700 placeholder-zinc-400 text-white
+      focus:ring-zinc-500
     "
-    name={name}
+    name={restProps.name}
     bind:value
-    disabled={disabled}
+    {...restProps}
   />
 </div>
-
-<script lang="ts">
-  interface Props {
-    value: string;
-    label: string;
-    disabled?: boolean;
-    name: string;
-    newOption?: boolean;
-  }
-
-  let {
-    value = $bindable(),
-    label,
-    disabled = false,
-    newOption = false,
-    name,
-  }: Props = $props();
-</script>

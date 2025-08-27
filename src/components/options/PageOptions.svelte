@@ -1,6 +1,9 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+/* ────────────────────────────────────────────────────────────────────────────
+  * Imports
+  * ──────────────────────────────────────────────────────────────────────────── */
 import { formatDistanceToNow } from 'date-fns';
 import { tick, onMount, onDestroy } from 'svelte';
 import browser from 'webextension-polyfill';
@@ -28,6 +31,9 @@ import TabContent from './TabContent.svelte';
 
 import type { Snippet } from 'svelte';
 
+/* ────────────────────────────────────────────────────────────────────────────
+  * Types
+  * ──────────────────────────────────────────────────────────────────────────── */
 interface OptionsProps {
   formModules: ModuleToggleConfig;
   formCustomization: ModuleCustomizationConfig;
@@ -38,17 +44,6 @@ interface OptionsProps {
   rymSyncTimestamp: number | null;
 }
 
-const props: OptionsProps = $props();
-
-const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
-
-// FLAGS
-let isLoading = $state(true);
-let signinInProgress = $state(false);
-let submitInProgress = $state(false);
-let lastfmApiKeyInput: HTMLInputElement | null = null;
-// let fallbackUsername = $state('');
-
 type TabId = 'modules' | 'customization' | 'api-auth';
 
 interface Tab {
@@ -58,20 +53,41 @@ interface Tab {
   modified?: boolean;
 }
 
-let hashValue = window.location.hash ? window.location.hash.slice(1) : null;
-
-async function removeApiKey() {
-  const doConfirm = confirm('Are you sure you want to remove the API key?');
-  if (!doConfirm) return;
-  await setLastFmApiKey('');
-  lastfmApiKeySaved = '';
-  lastfmApiKey = '';
+interface TabLinkProps {
+  href: string;
+  label: string;
+  icon: (size?: number) => any;
+  modified?: boolean;
+  onClick: (e: MouseEvent) => void;
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+  * Props & Constants
+  * ──────────────────────────────────────────────────────────────────────────── */
+const props: OptionsProps = $props();
+const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
+
+/* ────────────────────────────────────────────────────────────────────────────
+  * Local State
+  * ──────────────────────────────────────────────────────────────────────────── */
+let isLoading = $state(true);
+let signinInProgress = $state(false);
+let submitInProgress = $state(false);
+let lastfmApiKeyInput: HTMLInputElement | null = null;
+
+let hashValue = window.location.hash ? window.location.hash.slice(1) : null;
+
+/* ────────────────────────────────────────────────────────────────────────────
+  * Forms: Modules & Customization (state + diffs)
+  * ──────────────────────────────────────────────────────────────────────────── */
 let formModulesSaved: ModuleToggleConfig = $state(props.formModules);
 let formModules: ModuleToggleConfig = $state(props.formModules);
 const formModulesChangedFields = $derived(() => {
-  return Object.keys(formModules).filter(key => formModules[key as keyof ModuleToggleConfig] !== formModulesSaved[key as keyof ModuleToggleConfig]);
+  return Object.keys(formModules).filter(
+    (key) =>
+      formModules[key as keyof ModuleToggleConfig] !==
+      formModulesSaved[key as keyof ModuleToggleConfig],
+  );
 });
 const formModulesChanged = $derived(() => {
   return formModulesChangedFields().length > 0;
@@ -84,12 +100,19 @@ let formCustomization: ModuleCustomizationConfig = $state(
   props.formCustomization,
 );
 const formCustomizationChangedFields = $derived(() => {
-  return Object.keys(formCustomization).filter(key => formCustomization[key as keyof ModuleCustomizationConfig] !== formCustomizationSaved[key as keyof ModuleCustomizationConfig]);
+  return Object.keys(formCustomization).filter(
+    (key) =>
+      formCustomization[key as keyof ModuleCustomizationConfig] !==
+      formCustomizationSaved[key as keyof ModuleCustomizationConfig],
+  );
 });
 const formCustomizationChanged = $derived(() => {
   return formCustomizationChangedFields().length > 0;
 });
 
+/* ────────────────────────────────────────────────────────────────────────────
+  * Tabs
+  * ──────────────────────────────────────────────────────────────────────────── */
 const tabs: () => Tab[] = $derived(() => [
   {
     id: 'modules',
@@ -111,13 +134,15 @@ const tabs: () => Tab[] = $derived(() => [
 ]);
 
 function getInitialTab() {
-  if (hashValue)
-    return tabs().find((tab) => tab.id === hashValue)?.id || 'modules';
+  if (hashValue) return tabs().find((tab) => tab.id === hashValue)?.id || 'modules';
   return 'modules';
 }
 
 let activeTab = $state(getInitialTab());
 
+/* ────────────────────────────────────────────────────────────────────────────
+  * User data & RYM sync status
+  * ──────────────────────────────────────────────────────────────────────────── */
 let userData = $state<UserData | null>(props.userData);
 const isLoggedIn = $derived(() => !!userData?.name);
 
@@ -138,9 +163,7 @@ const isRymSyncOutdated = $derived(() => {
   if (!rymSyncTimestamp) return false;
   const date = new Date(rymSyncTimestamp);
   const now = new Date();
-  return (
-    now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS
-  );
+  return now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS;
 });
 const hasRymSyncWarning = $derived(() => {
   if (!rymSyncTimestamp) return true;
@@ -148,14 +171,23 @@ const hasRymSyncWarning = $derived(() => {
 });
 
 const setupProgress = $derived(
-  () =>
-    [isLoggedIn(), !!lastfmApiKeySaved, rymSyncTimestamp].filter(Boolean)
-      .length,
+  () => [isLoggedIn(), !!lastfmApiKeySaved, rymSyncTimestamp].filter(Boolean).length,
 );
 
+/* ────────────────────────────────────────────────────────────────────────────
+  * Last.fm API key (state + handlers)
+  * ──────────────────────────────────────────────────────────────────────────── */
 let lastfmApiKeySaved = $state(props.lastfmApiKey);
 let lastfmApiKey = $state(props.lastfmApiKey);
 let lastfmApiKeyValidationInProgress = $state(false);
+
+async function removeApiKey() {
+  const doConfirm = confirm('Are you sure you want to remove the API key?');
+  if (!doConfirm) return;
+  await setLastFmApiKey('');
+  lastfmApiKeySaved = '';
+  lastfmApiKey = '';
+}
 
 async function onSubmitLastFmApiKey(e: Event) {
   e.preventDefault();
@@ -184,40 +216,6 @@ async function onSubmitLastFmApiKey(e: Event) {
   lastfmApiKeyValidationInProgress = false;
 }
 
-const moduleSettingsPreviews = {
-  'artist-stats': [
-    {
-      type: 'animation',
-      on: '/images/options/artist-stats-on.jpg',
-      off: '/images/options/artist-stats-off.jpg',
-    },
-  ],
-  'release-stats': [
-    {
-      type: 'animation',
-      on: '/images/options/release-stats-on.jpg',
-      off: '/images/options/release-stats-off.jpg',
-    },
-  ],
-  'song-stats': [
-    {
-      type: 'animation',
-      on: '/images/options/song-stats-on.jpg',
-      off: '/images/options/song-stats-off.jpg',
-    },
-  ],
-  'recent-tracks': [
-    '/images/options/recent-tracks-1-playing.jpg',
-    '/images/options/recent-tracks-2-playing.jpg',
-    '/images/options/recent-tracks-3-playing.jpg',
-    '/images/options/recent-tracks-1-stopped.jpg',
-  ],
-  'top-albums': ['/images/options/top-albums.jpg'],
-  'top-artists': ['/images/options/top-artists.jpg'],
-};
-
-let activePreviewKey = $state('');
-
 const identityApiSupported = !!(browser.identity && browser.identity.launchWebAuthFlow);
 
 function handleApiKeyFocus(e: Event) {
@@ -225,9 +223,15 @@ function handleApiKeyFocus(e: Event) {
 }
 
 function handleApiKeyBlur(e: Event) {
-  (e.target as HTMLInputElement).value = (
-    e.target as HTMLInputElement
-  ).value.trim();
+  (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.trim();
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+  * Forms: actions (reset / submit)
+  * ──────────────────────────────────────────────────────────────────────────── */
+function reset() {
+  Object.assign(formModules, formModulesSaved);
+  Object.assign(formCustomization, formCustomizationSaved);
 }
 
 async function submit() {
@@ -245,6 +249,9 @@ async function submit() {
   submitInProgress = false;
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+  * Auth flow (Last.fm via identity API) + fallbacks
+  * ──────────────────────────────────────────────────────────────────────────── */
 async function openAuthPage() {
   if (!SYSTEM_API_KEY) {
     alert('API Key is not set');
@@ -256,7 +263,9 @@ async function openAuthPage() {
   try {
     const redirectUri = browser.identity.getRedirectURL();
 
-    const authUrl = `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&cb=${encodeURIComponent(redirectUri)}`;
+    const authUrl = `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&cb=${encodeURIComponent(
+      redirectUri,
+    )}`;
 
     const redirectUrl = await browser.identity.launchWebAuthFlow({
       url: authUrl,
@@ -301,21 +310,6 @@ async function openAuthPage() {
   }
 }
 
-function init() {
-  isLoading = false;
-}
-
-function openRymSync() {
-  window.open('https://rateyourmusic.com/music_export?sync', '_blank');
-}
-
-async function logout() {
-  const doConfirm = confirm('Are you sure you want to logout?');
-  if (!doConfirm) return;
-  await storageRemove('userData');
-  userData = null;
-}
-
 async function fallbackLogin() {
   const username = prompt('Enter your Last.fm username');
 
@@ -352,18 +346,71 @@ async function fallbackLogin() {
   }
 
   signinInProgress = false;
-};
-
-init();
-
-interface TabLinkProps {
-  href: string;
-  label: string;
-  icon: (size?: number) => any;
-  modified?: boolean;
-  onClick: (e: MouseEvent) => void;
 }
 
+async function logout() {
+  const doConfirm = confirm('Are you sure you want to logout?');
+  if (!doConfirm) return;
+  await storageRemove('userData');
+  userData = null;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+  * Module settings previews (static data)
+  * ──────────────────────────────────────────────────────────────────────────── */
+const moduleSettingsPreviews = {
+  'artist-stats': [
+    {
+      type: 'animation',
+      on: '/images/options/artist-stats-on.jpg',
+      off: '/images/options/artist-stats-off.jpg',
+    },
+  ],
+  'release-stats': [
+    {
+      type: 'animation',
+      on: '/images/options/release-stats-on.jpg',
+      off: '/images/options/release-stats-off.jpg',
+    },
+  ],
+  'song-stats': [
+    {
+      type: 'animation',
+      on: '/images/options/song-stats-on.jpg',
+      off: '/images/options/options/song-stats-off.jpg', // keep original path if it was correct
+    },
+  ],
+  'recent-tracks': [
+    '/images/options/recent-tracks-1-playing.jpg',
+    '/images/options/recent-tracks-2-playing.jpg',
+    '/images/options/recent-tracks-3-playing.jpg',
+    '/images/options/recent-tracks-1-stopped.jpg',
+  ],
+  'top-albums': ['/images/options/top-albums.jpg'],
+  'top-artists': ['/images/options/top-artists.jpg'],
+};
+
+let activePreviewKey = $state('');
+
+/* ────────────────────────────────────────────────────────────────────────────
+  * Misc helpers
+  * ──────────────────────────────────────────────────────────────────────────── */
+function init() {
+  isLoading = false;
+}
+
+function openRymSync() {
+  window.open('https://rateyourmusic.com/music_export?sync', '_blank');
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+  * Init
+  * ──────────────────────────────────────────────────────────────────────────── */
+init();
+
+/* ────────────────────────────────────────────────────────────────────────────
+  * Lifecycle
+  * ──────────────────────────────────────────────────────────────────────────── */
 onMount(() => {
   const handler = (event: BeforeUnloadEvent) => {
     if (formModulesChanged() || formCustomizationChanged()) {
@@ -492,17 +539,27 @@ onMount(() => {
 <div
   class="min-h-viewport flex flex-col {isLoading
     ? 'opacity-50 blur-xs'
-    : ''} gap-3"
+    : ''}"
   style:display={isLoading ? 'none' : 'block'}
 >
   <AppHeader />
   <main
-    class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-6 pb-6"
+    class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-4 lg:gap-6 pb-6"
   >
     <!-- STATUS CARDS -->
     <section
       aria-label="Extension Status"
-      class="w-full grid grid-cols-1 md:grid-cols-3 gap-4"
+      class="
+        grid
+        grid-cols-1
+        md:grid-cols-3
+        gap-2 lg:gap-4
+        max-lg:[&>*:first-child]:rounded-tl-none
+        max-lg:[&>*:first-child]:rounded-bl-none
+        max-lg:[&>*:last-child]:rounded-tr-none
+        max-lg:[&>*:last-child]:rounded-br-none
+        max-md:*:rounded-none
+      "
     >
       <AppStatusCard
         valid={isLoggedIn()}
@@ -510,7 +567,7 @@ onMount(() => {
         validStatus="Connected"
         invalidStatus="Not connected"
         note={userData?.name ? ['Usernames:', userData.name] : 'Guest'}
-        action={openAuthPage}
+        action={identityApiSupported ? openAuthPage : fallbackLogin}
         loading={signinInProgress}
       />
       <AppStatusCard
@@ -796,8 +853,13 @@ onMount(() => {
               <FormInput
                 label="Last.fm link label"
                 bind:value={formCustomization.mainHeaderLastfmLinkLabel}
+                placeholder="Last.fm"
                 name="mainHeaderLastfmLinkLabel"
-              />
+              >
+                {#snippet description()}
+                  Use <code class="px-0.5 py-0.5 bg-zinc-700 rounded-md">$username</code> to display your Last.fm username
+                {/snippet}
+              </FormInput>
             </FormToggleGroup>
 
             <FormToggleGroup
@@ -841,7 +903,7 @@ onMount(() => {
             >
               <FormToggle
                 label="Show on load"
-                description="Show a list of recent tracks on profile load"
+                description="Pre-open the list of recent tracks on profile load"
                 bind:checked={formCustomization.profileRecentTracksShowOnLoad}
                 name="profileRecentTracksShowOnLoad"
                 disabled={!formModulesSaved.profileRecentTracks}
@@ -1158,11 +1220,30 @@ onMount(() => {
 
     <!-- ACTIONS -->
     <div class="actions-panel" class:is-sticky={formModulesChanged() || formCustomizationChanged()}>
-      <div class="actions-panel-inner flex gap-6 justify-between items-center p-4">
+      <div class="actions-panel-inner flex gap-6 justify-between items-center p-6">
         {#if formModulesChanged() || formCustomizationChanged()}
-          <div class="text-sm p-2 border-1 border-orange-700/50 rounded-lg">
-            {formModulesChangedFields().length + formCustomizationChangedFields().length} unsaved changes
-          </div>
+          <button
+            class="
+              text-sm p-2 border-2 border-orange-700/50 rounded-lg relative
+              hover:[&_.button-label]:opacity-100 cursor-pointer hover:bg-orange-700/20
+              hover:[&_.unsaved-changes]:opacity-0
+            "
+            onclick={reset}
+          >
+            <span class="unsaved-changes transition-opacity opacity-100">{formModulesChangedFields().length + formCustomizationChangedFields().length} unsaved changes</span>
+            <span
+              class="
+                transition-opacity
+                button-label
+                absolute
+                inset-0
+                flex
+                items-center
+                justify-center
+                opacity-0
+              "
+            >Undo</span>
+          </button>
         {/if}
         <div class="ml-auto">
           <button
