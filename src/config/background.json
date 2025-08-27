@@ -16,5 +16,6 @@
   "Flow",
   "EQ LG",
   "EQ SM inverted",
-  "Scrolling"
+  "Scrolling",
+  "EQ LG + Scrolling"
 ]

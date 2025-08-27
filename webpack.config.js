@@ -8,7 +8,7 @@ const dotenvExpand = require('dotenv-expand');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const glob = require('glob');
 const TerserPlugin = require('terser-webpack-plugin');
-const { VueLoaderPlugin } = require('vue-loader');
+// const { VueLoaderPlugin } = require('vue-loader');
 const { DefinePlugin } = require('webpack');
 
 const generateManifest = require('./manifest.config.js');
@@ -180,9 +180,9 @@ module.exports = (env) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
-        vue$: 'vue/dist/vue.runtime.esm-browser.prod.js',
+        // vue$: 'vue/dist/vue.runtime.esm-browser.prod.js',
       },
-      extensions: ['mjs', '.ts', '.js', '.vue', '.svelte'],
+      extensions: ['mjs', '.ts', '.js', '.svelte'],
       mainFields: ['svelte', 'browser', 'module', 'main'],
       conditionNames: ['svelte', 'browser', 'import', 'module', 'default'],
     },
@@ -203,10 +203,6 @@ module.exports = (env) => {
               }),
             },
           },
-        },
-        {
-          test: /\.vue$/,
-          loader: 'vue-loader',
         },
         {
           test: /\.js$/,
@@ -267,7 +263,7 @@ module.exports = (env) => {
         'process.env.BACKGROUND_OPTIONS_QTY': JSON.stringify(backgroundOptionsFiles.length),
         'process.env.CONFIG_DEFAULTS': JSON.stringify(configDefaults),
       }),
-      new VueLoaderPlugin(),
+      // new VueLoaderPlugin(),
       new CopyPlugin({
         patterns: [
           { from: 'public', to: '.' },
@@ -291,7 +287,7 @@ module.exports = (env) => {
         ],
       }),
       new ESLintPlugin({
-        extensions: ['js', 'ts', 'vue', 'svelte'],
+        extensions: ['js', 'ts', 'svelte'],
         configType: 'flat',
         fix: process.env.NODE_ENV === 'production',
         failOnError: true,

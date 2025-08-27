@@ -3,10 +3,10 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import importPlugin from 'eslint-plugin-import';
 import sveltePlugin from 'eslint-plugin-svelte';
-import vuePlugin from 'eslint-plugin-vue';
+// import vuePlugin from 'eslint-plugin-vue';
 import globals from 'globals';
 import svelteParser from 'svelte-eslint-parser';
-import vueParser from 'vue-eslint-parser';
+// import vueParser from 'vue-eslint-parser';
 
 export default [
   js.configs.recommended,
@@ -55,39 +55,39 @@ export default [
     },
   },
 
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parser: vueParser,
-      parserOptions: {
-        parser: '@typescript-eslint/parser',
-        ecmaVersion: 2022,
-        sourceType: 'module',
-        extraFileExtensions: ['.vue'],
-      },
-    },
-    plugins: {
-      vue: vuePlugin,
-    },
-    rules: {
-      ...vuePlugin.configs['flat/recommended'].rules,
-      'max-len': 'off',
-      'vue/max-len': ['warn', {
-        code: 200,
-        template: 300,
-        comments: 120,
-        ignorePattern: '',
-        ignoreComments: false,
-        ignoreTrailingComments: false,
-        ignoreUrls: true,
-        ignoreStrings: true,
-        ignoreTemplateLiterals: true,
-        ignoreRegExpLiterals: true,
-        ignoreHTMLAttributeValues: true,
-        ignoreHTMLTextContents: true,
-      }],
-    },
-  },
+  // {
+  //   files: ['**/*.vue'],
+  //   languageOptions: {
+  //     parser: vueParser,
+  //     parserOptions: {
+  //       parser: '@typescript-eslint/parser',
+  //       ecmaVersion: 2022,
+  //       sourceType: 'module',
+  //       extraFileExtensions: ['.vue'],
+  //     },
+  //   },
+  //   plugins: {
+  //     vue: vuePlugin,
+  //   },
+  //   rules: {
+  //     ...vuePlugin.configs['flat/recommended'].rules,
+  //     'max-len': 'off',
+  //     'vue/max-len': ['warn', {
+  //       code: 200,
+  //       template: 300,
+  //       comments: 120,
+  //       ignorePattern: '',
+  //       ignoreComments: false,
+  //       ignoreTrailingComments: false,
+  //       ignoreUrls: true,
+  //       ignoreStrings: true,
+  //       ignoreTemplateLiterals: true,
+  //       ignoreRegExpLiterals: true,
+  //       ignoreHTMLAttributeValues: true,
+  //       ignoreHTMLTextContents: true,
+  //     }],
+  //   },
+  // },
 
   {
     files: ['**/*.svelte'],
