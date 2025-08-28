@@ -24,7 +24,7 @@ import AppHeader from './AppHeader.svelte';
 import AppStatusCard from './AppStatusCard.svelte';
 import FormInput from './FormInput.svelte';
 import FormSelect from './FormSelect.svelte';
-import FormSlider from './FormSlider2.svelte';
+import FormSlider from './FormSlider.svelte';
 import FormToggle from './FormToggle.svelte';
 import FormToggleGroup from './FormToggleGroup.svelte';
 import TabContent from './TabContent.svelte';
@@ -73,7 +73,11 @@ const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
 let isLoading = $state(true);
 let signinInProgress = $state(false);
 let submitInProgress = $state(false);
-let lastfmApiKeyInput: HTMLInputElement | null = null;
+
+type ApiKeyInputComponent = {
+  focus: () => void;
+};
+let lastfmApiKeyInput = {} as ApiKeyInputComponent;
 
 let hashValue = window.location.hash ? window.location.hash.slice(1) : null;
 
@@ -179,6 +183,7 @@ const setupProgress = $derived(
   * ──────────────────────────────────────────────────────────────────────────── */
 let lastfmApiKeySaved = $state(props.lastfmApiKey);
 let lastfmApiKey = $state(props.lastfmApiKey);
+let lastfmApiKeyInputType: 'password' | 'text' = $state('password');
 let lastfmApiKeyValidationInProgress = $state(false);
 
 async function removeApiKey() {
@@ -219,10 +224,12 @@ async function onSubmitLastFmApiKey(e: Event) {
 const identityApiSupported = !!(browser.identity && browser.identity.launchWebAuthFlow);
 
 function handleApiKeyFocus(e: Event) {
+  lastfmApiKeyInputType = 'text';
   (e.target as HTMLInputElement).select();
 }
 
 function handleApiKeyBlur(e: Event) {
+  lastfmApiKeyInputType = 'password';
   (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.trim();
 }
 
@@ -852,7 +859,7 @@ onMount(() => {
           title="Customization"
           description="Profile modules customization"
         >
-          <div class="columns-2 gap-6 *:break-inside-avoid *:mb-10">
+          <div class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10">
             <FormToggleGroup title="Global">
               <FormInput
                 label="Last.fm link label"
@@ -870,7 +877,7 @@ onMount(() => {
               title={`Top Artists Widget ${!formModulesSaved.profileTopArtists ? '(Disabled)' : ''}`}
             >
               <FormSlider
-                label="Top Artists limit"
+                label="Limit"
                 description="Change the number of top artists to show"
                 bind:value={formCustomization.profileTopArtistsLimit}
                 min={constants.TOP_ARTISTS_LIMIT_MIN}
@@ -880,8 +887,8 @@ onMount(() => {
               />
 
               <FormSelect
-                label="Top Artists time period"
-                description="Select the time period for the top artists widget"
+                label="Time period"
+                description="Filter top artists by specific time period"
                 bind:value={formCustomization.profileTopArtistsPeriod}
                 name="profileTopArtistsPeriod"
                 options={constants.PERIOD_OPTIONS}
@@ -893,8 +900,8 @@ onMount(() => {
               title={`Top Albums Widget ${!formModulesSaved.profileTopAlbums ? '(Disabled)' : ''}`}
             >
               <FormSelect
-                label="Top Albums time period"
-                description="Select the time period for the top albums widget"
+                label="Time period"
+                description="Filter top albums by specific time period"
                 bind:value={formCustomization.profileTopAlbumsPeriod}
                 name="profileTopAlbumsPeriod"
                 options={constants.PERIOD_OPTIONS}
@@ -965,42 +972,26 @@ onMount(() => {
           title="API & Auth"
           description="Configure the API and authentication settings"
         >
-          <div class="flex *:grow *:basis-[0] *:min-w-0 gap-6">
+          <div class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10">
             <div>
               <form
                 autocomplete="off"
                 onsubmit={onSubmitLastFmApiKey}
                 class="flex flex-col gap-3 items-start rounded-xl"
               >
-                <div class="flex flex-col gap-2 w-full items-start">
-                  <label for="lastFmApiKey" class="text-sm font-medium"
-                    >Last.fm API Key</label
-                  >
-
-                  <div class="flex gap-1 w-full items-center">
-                    <div class="grow">
-                      <input
-                        type="text"
-                        onfocus={handleApiKeyFocus}
-                        onblur={handleApiKeyBlur}
-                        disabled={lastfmApiKeyValidationInProgress}
-                        readonly={!!lastfmApiKeySaved}
-                        id="lastFmApiKey"
-                        class="
-                          w-full block min-w-0 font-mono rounded-lg outline-none
-                          border text-sm p-2.5
-                          bg-orange-700/50 border-orange-600 placeholder-zinc-400 text-white
-                          focus:border-zinc-500 focus:ring-orange-500 focus:border-orange-500 focus:placeholder-transparent
-                          disabled:opacity-50 disabled:cursor-wait
-                          read-only:bg-orange-900/50 read-only:border-transparent read-only:cursor-default
-                        "
-                        bind:value={lastfmApiKey}
-                        bind:this={lastfmApiKeyInput}
-                        placeholder="PASTE API KEY HERE"
-                      />
-                    </div>
-                  </div>
-                </div>
+                <FormInput
+                  label="Last.fm API Key"
+                  type={lastfmApiKeyInputType}
+                  class="font-mono tracking-widest"
+                  bind:value={lastfmApiKey}
+                  name="lastfmApiKey"
+                  placeholder="PASTE API KEY HERE"
+                  onfocus={handleApiKeyFocus}
+                  onblur={handleApiKeyBlur}
+                  disabled={lastfmApiKeyValidationInProgress}
+                  readonly={!!lastfmApiKeySaved}
+                  bind:this={lastfmApiKeyInput}
+                />
                 <div class="flex gap-4 px-2.5 items-center w-full">
                   {#if !lastfmApiKeySaved}
                     <button

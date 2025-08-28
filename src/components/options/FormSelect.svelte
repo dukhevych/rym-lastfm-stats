@@ -33,6 +33,8 @@ let {
     class="
       text-sm
       font-bold
+      h-10
+      leading-none
       outline-none
       focus:ring-zinc-400/50
       focus:ring-1
@@ -40,7 +42,7 @@ let {
       text-white
       bg-zinc-700
       border-b-2
-      border-orange-700
+      border-teal-700
       p-2
     "
     bind:value={value}
