@@ -1,5 +1,3 @@
-import type { RenderSettings } from '@/helpers/renderContent';
-
 declare global {
   interface UserData {
     name?: string;
@@ -68,8 +66,6 @@ declare global {
   > = Result['length'] extends N
     ? Result[number] | N
     : Range<N, [...Result, Result['length']]>;
-
-    RenderSettings
 }
 
 export {};

@@ -1,7 +1,7 @@
 export default {
   important: true,
   content: [
-    './src/**/*.{vue,svelte,html,js,ts}',
+    './src/**/*.{svelte,html,js,ts}',
     './public/**/*.html',
   ],
   theme: {

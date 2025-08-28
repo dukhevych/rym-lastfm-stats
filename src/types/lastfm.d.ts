@@ -27,8 +27,6 @@ export interface LastFmAlbumBasic {
   image?: LastFmImage[];
 }
 
-// user.getInfo
-
 export interface LastFmUser {
   id: string;
   name: string;
@@ -45,8 +43,14 @@ export interface LastFmUser {
     unixtime: string;
     '#text': string;
   };
-  image?: LastFmImage[];
+  image?: Array<{
+    size: string;
+    '#text': string;
+  }>;
   type?: string;
+  album_count?: string;
+  artist_count?: string;
+  track_count?: string;
 }
 
 export interface LastFmUserResponse {

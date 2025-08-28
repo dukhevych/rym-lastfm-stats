@@ -44,7 +44,7 @@ RYM Last.fm Stats is a browser extension that enhances your experience on RateYo
 
 ## Technologies Used
 
-- Vue.js
+- Svelte
 - Webpack
 - Tailwind CSS
 - ESLint

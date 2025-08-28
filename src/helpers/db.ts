@@ -1,5 +1,4 @@
 import * as constants from '@/helpers/constants';
-// import * as utils from '@/helpers/utils';
 
 export function getDatabaseName() {
   return constants.RYM_DB_NAME;
