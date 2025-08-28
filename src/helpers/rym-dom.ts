@@ -64,7 +64,8 @@ export function isDarkMode() {
 export function detectLastfmUserName() {
   let userName = null;
 
-  const firstLastFmLink = Array.from(document.querySelectorAll('a')).find((link) => {
+  const allLinks: HTMLAnchorElement[] = Array.from(document.querySelectorAll('#content_wrapper a'));
+  const firstLastFmLink = allLinks.find((link) => {
     if (link.closest('#shoutbox_commentarea') !== null) {
       return false;
     }
