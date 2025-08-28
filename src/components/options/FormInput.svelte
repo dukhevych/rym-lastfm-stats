@@ -2,13 +2,11 @@
 
 <script lang="ts">
 import type { Snippet } from 'svelte';
-import { onMount } from 'svelte';
 
 interface Props {
   value: string;
   label?: string;
   description?: string | Snippet;
-  newOption?: boolean;
   class?: string;
   clearable?: boolean;
   [key: string]: any;
@@ -18,7 +16,6 @@ let {
   value = $bindable(),
   label,
   description,
-  newOption = false,
   class: inputClasses = '',
   clearable = false,
   ...restProps

@@ -2,13 +2,17 @@
 
 <script lang="ts">
 /* ────────────────────────────────────────────────────────────────────────────
-  * Imports
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Imports
+ * ──────────────────────────────────────────────────────────────────────────── */
 import { formatDistanceToNow } from 'date-fns';
 import { tick, onMount, onDestroy } from 'svelte';
 import browser from 'webextension-polyfill';
 
 import { getTopArtists } from '@/api/getTopArtists';
+import iconKeySvg from '@/assets/icons/iconKey.svg';
+import iconSettingsSvg from '@/assets/icons/iconSettings.svg';
+import iconSuccessSvg from '@/assets/icons/iconSuccess.svg';
+import iconSwitchSvg from '@/assets/icons/iconSwitch.svg';
 import * as api from '@/helpers/api';
 import * as constants from '@/helpers/constants';
 import {
@@ -18,6 +22,7 @@ import {
   setModuleToggleConfig,
   setLastFmApiKey,
 } from '@/helpers/storageUtils';
+import { withSvgClass } from '@/helpers/svg';
 import * as utils from '@/helpers/utils';
 
 import AppHeader from './AppHeader.svelte';
@@ -32,8 +37,8 @@ import TabContent from './TabContent.svelte';
 import type { Snippet } from 'svelte';
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Types
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Types
+ * ──────────────────────────────────────────────────────────────────────────── */
 interface OptionsProps {
   formModules: ModuleToggleConfig;
   formCustomization: ModuleCustomizationConfig;
@@ -62,14 +67,14 @@ interface TabLinkProps {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Props & Constants
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Props & Constants
+ * ──────────────────────────────────────────────────────────────────────────── */
 const props: OptionsProps = $props();
 const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Local State
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Local State
+ * ──────────────────────────────────────────────────────────────────────────── */
 let isLoading = $state(true);
 let signinInProgress = $state(false);
 let submitInProgress = $state(false);
@@ -82,8 +87,8 @@ let lastfmApiKeyInput = {} as ApiKeyInputComponent;
 let hashValue = window.location.hash ? window.location.hash.slice(1) : null;
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Forms: Modules & Customization (state + diffs)
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Forms: Modules & Customization (state + diffs)
+ * ──────────────────────────────────────────────────────────────────────────── */
 let formModulesSaved: ModuleToggleConfig = $state(props.formModules);
 let formModules: ModuleToggleConfig = $state(props.formModules);
 const formModulesChangedFields = $derived(() => {
@@ -115,8 +120,8 @@ const formCustomizationChanged = $derived(() => {
 });
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Tabs
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Tabs
+ * ──────────────────────────────────────────────────────────────────────────── */
 const tabs: () => Tab[] = $derived(() => [
   {
     id: 'modules',
@@ -138,15 +143,16 @@ const tabs: () => Tab[] = $derived(() => [
 ]);
 
 function getInitialTab() {
-  if (hashValue) return tabs().find((tab) => tab.id === hashValue)?.id || 'modules';
+  if (hashValue)
+    return tabs().find((tab) => tab.id === hashValue)?.id || 'modules';
   return 'modules';
 }
 
 let activeTab = $state(getInitialTab());
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * User data & RYM sync status
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * User data & RYM sync status
+ * ──────────────────────────────────────────────────────────────────────────── */
 let userData = $state<UserData | null>(props.userData);
 const isLoggedIn = $derived(() => !!userData?.name);
 
@@ -167,7 +173,9 @@ const isRymSyncOutdated = $derived(() => {
   if (!rymSyncTimestamp) return false;
   const date = new Date(rymSyncTimestamp);
   const now = new Date();
-  return now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS;
+  return (
+    now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS
+  );
 });
 const hasRymSyncWarning = $derived(() => {
   if (!rymSyncTimestamp) return true;
@@ -175,12 +183,14 @@ const hasRymSyncWarning = $derived(() => {
 });
 
 const setupProgress = $derived(
-  () => [isLoggedIn(), !!lastfmApiKeySaved, rymSyncTimestamp].filter(Boolean).length,
+  () =>
+    [isLoggedIn(), !!lastfmApiKeySaved, rymSyncTimestamp].filter(Boolean)
+      .length,
 );
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Last.fm API key (state + handlers)
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Last.fm API key (state + handlers)
+ * ──────────────────────────────────────────────────────────────────────────── */
 let lastfmApiKeySaved = $state(props.lastfmApiKey);
 let lastfmApiKey = $state(props.lastfmApiKey);
 let lastfmApiKeyInputType: 'password' | 'text' = $state('password');
@@ -221,7 +231,9 @@ async function onSubmitLastFmApiKey(e: Event) {
   lastfmApiKeyValidationInProgress = false;
 }
 
-const identityApiSupported = !!(browser.identity && browser.identity.launchWebAuthFlow);
+const identityApiSupported = !!(
+  browser.identity && browser.identity.launchWebAuthFlow
+);
 
 function handleApiKeyFocus(e: Event) {
   lastfmApiKeyInputType = 'text';
@@ -230,12 +242,14 @@ function handleApiKeyFocus(e: Event) {
 
 function handleApiKeyBlur(e: Event) {
   lastfmApiKeyInputType = 'password';
-  (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.trim();
+  (e.target as HTMLInputElement).value = (
+    e.target as HTMLInputElement
+  ).value.trim();
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Forms: actions (reset / submit)
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Forms: actions (reset / submit)
+ * ──────────────────────────────────────────────────────────────────────────── */
 function reset() {
   Object.assign(formModules, formModulesSaved);
   Object.assign(formCustomization, formCustomizationSaved);
@@ -257,8 +271,8 @@ async function submit() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Auth flow (Last.fm via identity API) + fallbacks
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Auth flow (Last.fm via identity API) + fallbacks
+ * ──────────────────────────────────────────────────────────────────────────── */
 async function openAuthPage() {
   if (!SYSTEM_API_KEY) {
     alert('API Key is not set');
@@ -363,8 +377,8 @@ async function logout() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Module settings previews (static data)
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Module settings previews (static data)
+ * ──────────────────────────────────────────────────────────────────────────── */
 const moduleSettingsPreviews = {
   'artist-stats': [
     {
@@ -400,8 +414,8 @@ const moduleSettingsPreviews = {
 let activePreviewKey = $state('');
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Misc helpers
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Misc helpers
+ * ──────────────────────────────────────────────────────────────────────────── */
 function init() {
   isLoading = false;
 }
@@ -411,13 +425,13 @@ function openRymSync() {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Init
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Init
+ * ──────────────────────────────────────────────────────────────────────────── */
 init();
 
 /* ────────────────────────────────────────────────────────────────────────────
-  * Lifecycle
-  * ──────────────────────────────────────────────────────────────────────────── */
+ * Lifecycle
+ * ──────────────────────────────────────────────────────────────────────────── */
 onMount(() => {
   const handler = (event: BeforeUnloadEvent) => {
     if (formModulesChanged() || formCustomizationChanged()) {
@@ -442,115 +456,61 @@ onMount(() => {
 }: TabLinkProps)}
   <a {href} onclick={onClick}>
     <span class="relative">
-      <span class="absolute top-1/2 -translate-y-1/2 right-full mr-2 hidden sm:block"
-        >{@render icon()}</span
-      >
+      <span
+        class="
+          absolute
+          top-1/2
+          -translate-y-1/2
+          right-full
+          mr-2
+          hidden
+          sm:block
+        "
+      >{@render icon()}</span>
       {label}
       <span
-        class="absolute top-1/2 -translate-y-1/2 left-full ml-2 bg-current rounded-full transition-opacity w-1.5 h-1.5 {modified
-          ? 'opacity-100'
-          : 'opacity-0'}"
+        class="
+          absolute
+          top-1/2
+          -translate-y-1/2
+          left-full
+          ml-2
+          bg-current
+          rounded-full
+          transition-opacity
+          w-1.5
+          h-1.5
+          {modified ? 'opacity-100' : 'opacity-0'}
+        "
       ></span>
     </span>
   </a>
 {/snippet}
 
-
-{#snippet iconWarning(classes = '')}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-4 w-4 text-yellow-600 {classes}"
-  >
-    <path d="M12 2L2 22h20L12 2z"></path>
-    <circle cx="12" cy="12" r="1"></circle>
-  </svg>
-{/snippet}
-
 {#snippet iconKey(classes = '')}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-4 w-4 {classes}"
-    ><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"
-    ></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"
-    ></circle>
-  </svg>
+  {@html withSvgClass(iconKeySvg, `h-4 w-4 ${classes}`)}
 {/snippet}
 
 {#snippet iconSwitch(classes = '')}
-  <svg
-    width="800px"
-    height="800px"
-    class="h-4 w-4 {classes}"
-    viewBox="0 0 200 200"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M156.31,43.63a9.9,9.9,0,0,0-14,14,60.1,60.1,0,1,1-85,0,9.9,9.9,0,0,0-14-14c-31,31-31,82,0,113s82,31,113,0A79.37,79.37,0,0,0,156.31,43.63Zm-56.5,66.5a10,10,0,0,0,10-10v-70a10,10,0,0,0-20,0v70A10,10,0,0,0,99.81,110.13Z"
-      fill="currentColor"
-    />
-  </svg>
+  {@html withSvgClass(iconSwitchSvg, `h-4 w-4 ${classes}`)}
 {/snippet}
 
 {#snippet iconSettings(classes = '')}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-4 w-4 {classes}"
-    ><path
-      d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-    ></path><circle cx="12" cy="12" r="3"></circle>
-  </svg>
+  {@html withSvgClass(iconSettingsSvg, `h-4 w-4 ${classes}`)}
 {/snippet}
 
 {#snippet iconSuccess(classes = '')}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-4 w-4 text-green-600 {classes}"
-  >
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-    <path d="m9 11 3 3L22 4"></path>
-  </svg>
+  {@html withSvgClass(iconSuccessSvg, `h-4 w-4 text-green-600 ${classes}`)}
 {/snippet}
 
 <div
-  class="min-h-viewport flex flex-col {isLoading
-    ? 'opacity-50 blur-xs'
-    : ''}"
+  class="min-h-viewport flex flex-col {isLoading ? 'opacity-50 blur-xs' : ''}"
   style:display={isLoading ? 'none' : 'block'}
 >
   <AppHeader />
-  <main class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-4 lg:gap-6 pb-6">
+  <main
+    class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-4 lg:gap-6 pb-6"
+  >
     <!-- STATUS CARDS -->
     <section
       aria-label="Extension Status"
@@ -599,7 +559,9 @@ onMount(() => {
     </section>
 
     {#if isRymSyncOutdated()}
-      <blockquote class="text-sm text-zinc-500 text-center text-balance flex flex-col gap-4">
+      <blockquote
+        class="text-sm text-zinc-500 text-center text-balance flex flex-col gap-4"
+      >
         <p class="font-bold text-white font-bold">
           Keep your data fresh and up to date.
         </p>
@@ -608,17 +570,36 @@ onMount(() => {
             href="https://rateyourmusic.com/music_export?sync"
             target="_blank"
             class="
-              inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold text-white inline-flex items-center
-              bg-orange-700 hover:bg-orange-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-orange-300
-              rounded-lg text-center
+              inline-flex
+              gap-2
+              cursor-pointer
+              px-5
+              py-2.5
+              text-sm
+              font-bold
+              text-white
+              inline-flex
+              items-center
+              bg-orange-700
+              hover:bg-orange-800
+              focus-visible:ring-4
+              focus-visible:outline-none
+              focus-visible:ring-orange-300
+              rounded-lg
+              text-center
             "
           >
             Re-run RYM Sync
           </a>
         </p>
         <p>
-          RYM Last.fm Stats <strong>automatically</strong> tracks your RYM ratings whenever you rate a release. In addition, it parses your Profile and Collection pages when you visit them, adding new records to its internal database.
-          Keep in mind that the RateYourMusic database is <em>constantly changing</em> — some releases may be updated or even removed. To ensure your data stays accurate, it’s recommended to run RYM Sync periodically.
+          RYM Last.fm Stats <strong>automatically</strong> tracks your RYM
+          ratings whenever you rate a release. In addition, it parses your
+          Profile and Collection pages when you visit them, adding new records
+          to its internal database. Keep in mind that the RateYourMusic database
+          is <em>constantly changing</em> — some releases may be updated or even
+          removed. To ensure your data stays accurate, it’s recommended to run RYM
+          Sync periodically.
         </p>
       </blockquote>
     {/if}
@@ -645,15 +626,39 @@ onMount(() => {
       "
     >
       <!-- gap-1 md:gap-2 lg:gap-3 -->
-      <nav aria-label="Extension Settings Navigation" class="max-md:-mt-2 max-md:-mx-2">
-        <ul class="flex *:grow *:basis-0 md:gap-1 lg:gap-2 rounded-2xl max-md:rounded-none md:p-0.5 lg:p-1 bg-zinc-800">
+      <nav
+        aria-label="Extension Settings Navigation"
+        class="max-md:-mt-2 max-md:-mx-2"
+      >
+        <ul
+          class="
+            flex
+            *:grow
+            *:basis-0
+            md:gap-1
+            lg:gap-2
+            rounded-2xl
+            max-md:rounded-none
+            md:p-0.5
+            lg:p-1
+            bg-zinc-800
+          "
+        >
           {#each tabs() as tab}
             <li
               class="
-                *:flex *:transition-colors *:items-center *:gap-2 *:justify-center *:rounded-xl *:px-1 *:py-2 lg:*:py-1 *:text-sm max-md:*:rounded-none
-                {activeTab === tab.id
-                ? '*:bg-orange-800 pointer-events-none'
-                : '*:opacity-50 *:hover:opacity-100'}
+                *:flex
+                *:transition-colors
+                *:items-center
+                *:gap-2
+                *:justify-center
+                *:rounded-xl
+                *:px-1
+                *:py-2
+                lg:*:py-1
+                *:text-sm
+                max-md:*:rounded-none
+                {activeTab === tab.id ? '*:bg-orange-800 pointer-events-none' : '*:opacity-50 *:hover:opacity-100'}
               "
             >
               {@render tabLink({
@@ -811,7 +816,22 @@ onMount(() => {
             <div class="w-2/3 *:w-full flex items-center flex-col gap-3">
               {#if !activePreviewKey}
                 <div
-                  class="h-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 text-center text-xl font-medium p-4 rounded-lg bg-zinc-100 dark:bg-zinc-800 cursor-default"
+                  class="
+                    h-full
+                    flex
+                    items-center
+                    justify-center
+                    text-zinc-600
+                    dark:text-zinc-400
+                    text-center
+                    text-xl
+                    font-medium
+                    p-4
+                    rounded-lg
+                    bg-zinc-100
+                    dark:bg-zinc-800
+                    cursor-default
+                  "
                 >
                   Hover over a module in sidebar to see it's visual preview
                 </div>
@@ -859,7 +879,9 @@ onMount(() => {
           title="Customization"
           description="Profile modules customization"
         >
-          <div class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10">
+          <div
+            class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10"
+          >
             <FormToggleGroup title="Global">
               <FormInput
                 label="Last.fm link label"
@@ -868,7 +890,9 @@ onMount(() => {
                 name="mainHeaderLastfmLinkLabel"
               >
                 {#snippet description()}
-                  Use <code class="px-0.5 py-0.5 bg-zinc-700 rounded-md">$username</code> to display your Last.fm username
+                  Use <code class="px-0.5 py-0.5 bg-zinc-700 rounded-md"
+                    >$username</code
+                  > to display your Last.fm username
                 {/snippet}
               </FormInput>
             </FormToggleGroup>
@@ -931,7 +955,9 @@ onMount(() => {
               <FormToggle
                 label="Hide RYM history"
                 description="Hides the default RYM Play History widget on user profiles"
-                bind:checked={formCustomization.profileRecentTracksRymHistoryHide}
+                bind:checked={
+                  formCustomization.profileRecentTracksRymHistoryHide
+                }
                 name="profileRecentTracksRymHistoryHide"
                 disabled={!formModulesSaved.profileRecentTracks}
               />
@@ -972,7 +998,9 @@ onMount(() => {
           title="API & Auth"
           description="Configure the API and authentication settings"
         >
-          <div class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10">
+          <div
+            class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10"
+          >
             <div>
               <form
                 autocomplete="off"
@@ -999,10 +1027,26 @@ onMount(() => {
                       disabled={lastfmApiKeyValidationInProgress ||
                         !!lastfmApiKeySaved}
                       class="
-                        inline-flex gap-2 cursor-pointer px-5 py-2 text-sm font-medium text-white items-center border-1
-                        bg-yellow-900/50 border-yellow-800 hover:bg-yellow-800/50 disabled:opacity-50 disabled:pointer-events-none
-                        focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
-                        rounded-lg text-center
+                        inline-flex
+                        gap-2
+                        cursor-pointer
+                        px-5
+                        py-2
+                        text-sm
+                        font-medium
+                        text-white
+                        items-center
+                        border-1
+                        bg-yellow-900/50
+                        border-yellow-800
+                        hover:bg-yellow-800/50
+                        disabled:opacity-50
+                        disabled:pointer-events-none
+                        focus-visible:ring-2
+                        focus-visible:outline-none
+                        focus-visible:ring-blue-300
+                        rounded-lg
+                        text-center
                       "
                     >
                       {@render iconKey()}
@@ -1014,8 +1058,18 @@ onMount(() => {
                       type="button"
                       onclick={removeApiKey}
                       class="
-                        inline-flex ml-auto gap-2 cursor-pointer p-0 text-sm font-medium items-center
-                        hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
+                        inline-flex
+                        ml-auto
+                        gap-2
+                        cursor-pointer
+                        p-0
+                        text-sm
+                        font-medium
+                        items-center
+                        hover:text-red-400
+                        focus-visible:ring-2
+                        focus-visible:outline-none
+                        focus-visible:ring-blue-300
                         hover:underline
                       "
                     >
@@ -1127,8 +1181,8 @@ onMount(() => {
                     class="flex items-center gap-2 border-zinc-600 text-sm text-balance border rounded-xl p-4"
                   >
                     {@render iconSuccess('shrink-0')}
-                    API key configured successfully. Enhanced
-                    features and higher Last.fm API rate limits are now available.
+                    API key configured successfully. Enhanced features and higher
+                    Last.fm API rate limits are now available.
                   </div>
                 {/if}
 
@@ -1148,8 +1202,28 @@ onMount(() => {
                       disabled={signinInProgress}
                       onclick={openAuthPage}
                       class="
-                        inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm text-shadow-sm transition-colors text-white inline-flex items-center bg-clr-lastfm hover:bg-clr-lastfm-light focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:focus-visible:ring-blue-800 font-bold
-                        disabled:opacity-50 disabled:pointer-events-none
+                        inline-flex
+                        gap-2
+                        cursor-pointer
+                        px-5
+                        py-2.5
+                        text-sm
+                        text-shadow-sm
+                        transition-colors
+                        text-white
+                        inline-flex
+                        items-center
+                        bg-clr-lastfm
+                        hover:bg-clr-lastfm-light
+                        focus-visible:ring-4
+                        focus-visible:outline-none
+                        focus-visible:ring-blue-300
+                        rounded-lg
+                        text-center
+                        dark:focus-visible:ring-blue-800
+                        font-bold
+                        disabled:opacity-50
+                        disabled:pointer-events-none
                       "
                     >
                       {@render iconKey()}
@@ -1161,7 +1235,17 @@ onMount(() => {
 
                   <button
                     onclick={fallbackLogin}
-                    class="px-5 py-2.5 bg-white/5 cursor-pointer text-sm rounded-lg text-zinc-300 hover:underline font-bold"
+                    class="
+                      px-5
+                      py-2.5
+                      bg-white/5
+                      cursor-pointer
+                      text-sm
+                      rounded-lg
+                      text-zinc-300
+                      hover:underline
+                      font-bold
+                    "
                   >
                     Manual Login
                   </button>
@@ -1172,7 +1256,20 @@ onMount(() => {
                   <a
                     href={userData.url}
                     target="_blank"
-                    class="h-10 flex items-center justify-between bg-zinc-700/50 pr-2.5 rounded-r-lg rounded-l-[2.5rem] hover:bg-zinc-700/70 transition-colors text-zinc-400 hover:text-white"
+                    class="
+                      h-10
+                      flex
+                      items-center
+                      justify-between
+                      bg-zinc-700/50
+                      pr-2.5
+                      rounded-r-lg
+                      rounded-l-[2.5rem]
+                      hover:bg-zinc-700/70
+                      transition-colors
+                      text-zinc-400
+                      hover:text-white
+                    "
                   >
                     <span class="flex items-center gap-2 h-full">
                       <img
@@ -1201,9 +1298,8 @@ onMount(() => {
                     class="flex items-center text-balance gap-2 border-zinc-600 text-sm border rounded-xl p-4"
                   >
                     {@render iconSuccess('shrink-0')}
-                      Successfully logged in with last.fm OAuth.
-                      Personal scrobbling stats and additional Profile features are
-                      now available.
+                    Successfully logged in with last.fm OAuth. Personal scrobbling
+                    stats and additional Profile features are now available.
                   </div>
                 </div>
               {/if}
@@ -1214,8 +1310,13 @@ onMount(() => {
     </div>
 
     <!-- ACTIONS -->
-    <div class="actions-panel" class:is-sticky={formModulesChanged() || formCustomizationChanged()}>
-      <div class="actions-panel-inner flex gap-6 justify-between items-center p-6">
+    <div
+      class="actions-panel"
+      class:is-sticky={formModulesChanged() || formCustomizationChanged()}
+    >
+      <div
+        class="actions-panel-inner flex gap-6 justify-between items-center p-6"
+      >
         {#if formModulesChanged() || formCustomizationChanged()}
           <button
             class="
@@ -1225,7 +1326,10 @@ onMount(() => {
             "
             onclick={reset}
           >
-            <span class="unsaved-changes transition-opacity opacity-100">{formModulesChangedFields().length + formCustomizationChangedFields().length} unsaved changes</span>
+            <span class="unsaved-changes transition-opacity opacity-100"
+              >{formModulesChangedFields().length +
+                formCustomizationChangedFields().length} unsaved changes</span
+            >
             <span
               class="
                 transition-opacity
@@ -1236,8 +1340,8 @@ onMount(() => {
                 items-center
                 justify-center
                 opacity-0
-              "
-            >Undo</span>
+              ">Undo</span
+            >
           </button>
         {/if}
         <div class="ml-auto">
