@@ -1,31 +1,6 @@
+import type { LastFmUser, LastFmUserResponse } from '@/types/lastfm';
+
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
-
-interface LastFmUser {
-  id: string;
-  name: string;
-  realname?: string;
-  url: string;
-  country?: string;
-  age?: string;
-  gender?: string;
-  subscriber?: string;
-  playcount?: string;
-  playlists?: string;
-  bootstrap?: string;
-  registered?: {
-    unixtime: string;
-    '#text': string;
-  };
-  image?: Array<{
-    size: string;
-    '#text': string;
-  }>;
-  type?: string;
-}
-
-interface LastFmUserResponse {
-  user: LastFmUser;
-}
 
 export function fetchUserDataByName(
   username: string,
@@ -57,36 +32,6 @@ export function fetchUserDataByName(
       console.error('Error:', error);
       return undefined;
     });
-}
-
-interface LastFmUser {
-  id: string;
-  name: string;
-  realname?: string;
-  url: string;
-  country?: string;
-  age?: string;
-  gender?: string;
-  subscriber?: string;
-  playcount?: string;
-  playlists?: string;
-  bootstrap?: string;
-  registered?: {
-    unixtime: string;
-    '#text': string;
-  };
-  image?: Array<{
-    size: string;
-    '#text': string;
-  }>;
-  type?: string;
-  album_count?: string;
-  artist_count?: string;
-  track_count?: string;
-}
-
-interface LastFmUserResponse {
-  user: LastFmUser;
 }
 
 export function fetchUserData(

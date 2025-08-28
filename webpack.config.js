@@ -8,7 +8,6 @@ const dotenvExpand = require('dotenv-expand');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const glob = require('glob');
 const TerserPlugin = require('terser-webpack-plugin');
-// const { VueLoaderPlugin } = require('vue-loader');
 const { DefinePlugin } = require('webpack');
 
 const generateManifest = require('./manifest.config.js');
@@ -180,7 +179,6 @@ module.exports = (env) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
-        // vue$: 'vue/dist/vue.runtime.esm-browser.prod.js',
       },
       extensions: ['mjs', '.ts', '.js', '.svelte'],
       mainFields: ['svelte', 'browser', 'module', 'main'],
@@ -263,7 +261,6 @@ module.exports = (env) => {
         'process.env.BACKGROUND_OPTIONS_QTY': JSON.stringify(backgroundOptionsFiles.length),
         'process.env.CONFIG_DEFAULTS': JSON.stringify(configDefaults),
       }),
-      // new VueLoaderPlugin(),
       new CopyPlugin({
         patterns: [
           { from: 'public', to: '.' },

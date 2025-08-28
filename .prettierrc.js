@@ -4,6 +4,5 @@ module.exports = {
   singleQuote: true,
   tabWidth: 2,
   trailingComma: 'all',
-  vueIndentScriptAndStyle: false,
   svelteIndentScriptAndStyle: false,
 };

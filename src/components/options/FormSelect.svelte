@@ -1,27 +1,25 @@
 <script lang="ts">
 interface Props {
-  label?: string;
-  name: string;
   value: string | number;
   options: { value: string | number; label: string }[];
+  label?: string;
   description?: string;
-  disabled?: boolean;
+  [key: string]: any;
 }
 
 let {
-  label = '',
-  name,
   value = $bindable(),
   options,
-  description = '',
-  disabled = false,
+  label,
+  description,
+  ...restProps
 }: Props = $props();
 </script>
 
 <div class="rounded-xl flex flex-col block w-full px-4 py-3 bg-zinc-800 gap-2">
   <div class="flex flex-col gap-1">
     <label
-      for={name}
+      for={restProps.name}
       class="text-sm text-white"
     >
       <strong>{label}</strong>
@@ -35,18 +33,21 @@ let {
     class="
       text-sm
       font-bold
+      h-10
+      leading-none
       outline-none
       focus:ring-zinc-400/50
       focus:ring-1
       placeholder-zinc-400
       text-white
       bg-zinc-700
+      border-b-2
+      border-teal-700
       p-2
     "
-    disabled={disabled}
     bind:value={value}
-    id={name}
-    name={name}
+    id={restProps.name}
+    {...restProps}
   >
     {#each options as option}
       <option value={option.value}>{option.label}</option>

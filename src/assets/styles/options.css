@@ -8,4 +8,5 @@
 body {
   background: #0f0f0f !important;
   color: #e5e5e5 !important;
+  min-width: 360px;
 }

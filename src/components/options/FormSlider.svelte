@@ -1,80 +1,174 @@
-<svelte:options runes={true} />
+<script lang="ts">
+interface Props {
+  label?: string;
+  name: string;
+  value: string | number;
+  min?: string | number;
+  max?: string | number;
+  description?: string;
+  disabled?: boolean;
+  [key: string]: any;
+}
 
-<div class="relative">
-  <label for="labels-range-input">{label}: {value}</label>
-  <input id="labels-range-input" type="range" {min} {max} {step} class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer" bind:value {name} {disabled}>
-  <span class="text-sm text-zinc-400 absolute start-0 -bottom-6">{min}</span>
-  <!-- <span class="text-sm text-zinc-400 absolute start-1/3 -translate-x-1/2 rtl:translate-x-1/2 -bottom-6">{Math.round((max - min) / 3)}</span> -->
-  <!-- <span class="text-sm text-zinc-400 absolute start-2/3 -translate-x-1/2 rtl:translate-x-1/2 -bottom-6">{Math.round((max - min) * 2 / 3)}</span> -->
-  <span class="text-sm text-zinc-400 absolute start-3/3 -translate-x-1/2 rtl:translate-x-1/2 -bottom-6">{max}</span>
+let {
+  label = '',
+  name,
+  value = $bindable(),
+  min = 0,
+  max = 100,
+  description = '',
+  disabled = false,
+  ...restProps
+}: Props = $props();
+
+let legendRange = $derived(() => {
+  const minVal = Number(min);
+  const maxVal = Number(max);
+  return Array.from({ length: maxVal - minVal + 1 }, (_, i) => minVal + i);
+});
+
+function handleInput(event: Event): void {
+  const target = event.target as HTMLInputElement;
+  value = Number(target.value);
+}
+
+function handleLegendClick(_value: number): void {
+  if (!disabled) value = _value;
+}
+</script>
+
+<div
+  class="
+    flex flex-col gap-1
+    bg-zinc-800 rounded-xl py-3 px-4
+    [--range-track:theme(colors.zinc.600)]
+    [--range-fill:theme(colors.teal.700)]
+    [--range-thumb:theme(colors.teal.600)]
+  "
+>
+  <div class="flex flex-col gap-1">
+    <label for={name} class="text-sm font-bold">{label}: {value}</label>
+    {#if description}
+      <p class="text-xs text-zinc-400">{description}</p>
+    {/if}
+  </div>
+  <div>
+    <div class="flex items-center gap-2">
+      <div class="w-full">
+        <input
+          id={name}
+          type="range"
+          {name}
+          class="block w-full {disabled ? '' : 'cursor-pointer'}"
+          {value}
+          {min}
+          {max}
+          {disabled}
+          {...restProps}
+          oninput={handleInput}
+        />
+        <div class="relative mt-0.5">
+          <div
+            class="
+              flex justify-between text-sm text-gray-500 relative h-5
+            "
+            style="margin-inline: calc(var(--range-thumb-width, 16px) / 2)"
+          >
+            {#each legendRange() as n, i}
+              <span
+                class="
+                  absolute top-0 text-center
+                  translate-x-[-50%]
+                  {+n === +value ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-500'}
+                "
+                style="left: {i * 100 / (+max - +min)}%;"
+              >
+                <button
+                  type="button"
+                  class="inline-flex cursor-pointer px-1 {disabled
+                    ? 'pointer-events-none'
+                    : ''}"
+                  onclick={() => handleLegendClick(n)}
+                >
+                  {n}
+                </button>
+              </span>
+            {/each}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<style>
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--range-fill); /* fallback */
+}
 
-<!-- <div class="block select-none relative">
-  {#if label}
-    <span class="text flex flex-col gap-0.5 order-1 text-zinc-400">
-      <strong class="text-sm">{label}</strong>
-    </span>
-  {/if}
-  {#if newOption}
-    <span class="text-xs text-red-400 absolute top-0 left-0 translate-x-[-25%] translate-y-[-25%] -rotate-45 origin-center">
-      New
-    </span>
-  {/if}
+/* --- WebKit (Chrome, Safari, Edge) --- */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--range-track);
+  border-radius: 3px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -6px;
+  width: var(--range-thumb-width, 16px);
+  height: var(--range-thumb-height, 16px);
+  background: var(--range-thumb);
+  border-radius: 50%;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--range-fill) 0%,
+    var(--range-fill) calc(var(--value, 0) * 1%),
+    var(--range-track) calc(var(--value, 0) * 1%),
+    var(--range-track) 100%
+  );
+}
 
-  <input
-    type="text"
-    class="
-      w-full block min-w-0 font-mono rounded-xl outline-none
-      border text-sm p-2.5
-      bg-zinc-700 border-zinc-600 placeholder-zinc-400 text-white
-      focus:border-zinc-500 focus:ring-zinc-500 focus:border-zinc-500 focus:placeholder-transparent
-    "
-    name={name}
-    bind:value
-    disabled={disabled}
-  />
+/* --- Firefox --- */
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: var(--range-track);
+  border-radius: 3px;
+}
+input[type="range"]::-moz-range-progress {
+  background: var(--range-fill);
+  height: 6px;
+  border-radius: 3px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: var(--range-thumb-width, 16px);
+  height: var(--range-thumb-height, 16px);
+  background: var(--range-thumb);
+  border-radius: 50%;
+  border-color: white;
+  cursor: pointer;
+}
 
-  <div
-    class="flex items-center justify-between cursor-pointer bg-zinc-800 rounded-xl hover:bg-zinc-700 py-2 px-4 gap-2
-           peer-focus-visible:ring-1 peer-focus-visible:ring-zinc-400/50 peer-disabled:opacity-50
-           peer-checked:[&_.toggle]:bg-orange-700 peer-checked:[&_.toggle::after]:translate-x-5
-           peer-checked:[&_.text]:text-white"
-  >
+/* --- IE/old Edge --- */
+input[type="range"]::-ms-track {
+  height: 6px;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type="range"]::-ms-fill-lower {
+  background: var(--range-fill);
+}
+input[type="range"]::-ms-fill-upper {
+  background: var(--range-track);
+}
+input[type="range"]::-ms-thumb {
+  background: var(--range-thumb);
+  border-radius: 50%;
+}
 
-    <span class="text flex flex-col gap-0.5 order-1 text-zinc-400">
-      <strong class="text-sm">{label}</strong>
-      {#if description}
-        <p class="text-xs text-zinc-400">
-          {description}
-        </p>
-      {/if}
-    </span>
-  </div>
-</div> -->
-
-<script lang="ts">
-  interface Props {
-    value: number;
-    label: string;
-    description?: string;
-    disabled?: boolean;
-    name: string;
-    // newOption?: boolean;
-    min?: number;
-    max?: number;
-    step?: number;
-  }
-
-  let {
-    value = $bindable(),
-    label,
-    description,
-    disabled = false,
-    // newOption = false,
-    name,
-    min = 1,
-    step = 1,
-    max = 100,
-  }: Props = $props();
-</script>
+</style>

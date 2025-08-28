@@ -1,11 +1,18 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+/* ────────────────────────────────────────────────────────────────────────────
+ * Imports
+ * ──────────────────────────────────────────────────────────────────────────── */
 import { formatDistanceToNow } from 'date-fns';
 import { tick, onMount, onDestroy } from 'svelte';
 import browser from 'webextension-polyfill';
 
 import { getTopArtists } from '@/api/getTopArtists';
+import iconKeySvg from '@/assets/icons/iconKey.svg';
+import iconSettingsSvg from '@/assets/icons/iconSettings.svg';
+import iconSuccessSvg from '@/assets/icons/iconSuccess.svg';
+import iconSwitchSvg from '@/assets/icons/iconSwitch.svg';
 import * as api from '@/helpers/api';
 import * as constants from '@/helpers/constants';
 import {
@@ -15,19 +22,23 @@ import {
   setModuleToggleConfig,
   setLastFmApiKey,
 } from '@/helpers/storageUtils';
+import { withSvgClass } from '@/helpers/svg';
 import * as utils from '@/helpers/utils';
 
 import AppHeader from './AppHeader.svelte';
 import AppStatusCard from './AppStatusCard.svelte';
 import FormInput from './FormInput.svelte';
 import FormSelect from './FormSelect.svelte';
-import FormSlider from './FormSlider2.svelte';
+import FormSlider from './FormSlider.svelte';
 import FormToggle from './FormToggle.svelte';
 import FormToggleGroup from './FormToggleGroup.svelte';
 import TabContent from './TabContent.svelte';
 
 import type { Snippet } from 'svelte';
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Types
+ * ──────────────────────────────────────────────────────────────────────────── */
 interface OptionsProps {
   formModules: ModuleToggleConfig;
   formCustomization: ModuleCustomizationConfig;
@@ -38,17 +49,6 @@ interface OptionsProps {
   rymSyncTimestamp: number | null;
 }
 
-const props: OptionsProps = $props();
-
-const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
-
-// FLAGS
-let isLoading = $state(true);
-let signinInProgress = $state(false);
-let submitInProgress = $state(false);
-let lastfmApiKeyInput: HTMLInputElement | null = null;
-// let fallbackUsername = $state('');
-
 type TabId = 'modules' | 'customization' | 'api-auth';
 
 interface Tab {
@@ -58,20 +58,45 @@ interface Tab {
   modified?: boolean;
 }
 
-let hashValue = window.location.hash ? window.location.hash.slice(1) : null;
-
-async function removeApiKey() {
-  const doConfirm = confirm('Are you sure you want to remove the API key?');
-  if (!doConfirm) return;
-  await setLastFmApiKey('');
-  lastfmApiKeySaved = '';
-  lastfmApiKey = '';
+interface TabLinkProps {
+  href: string;
+  label: string;
+  icon: (size?: number) => any;
+  modified?: boolean;
+  onClick: (e: MouseEvent) => void;
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Props & Constants
+ * ──────────────────────────────────────────────────────────────────────────── */
+const props: OptionsProps = $props();
+const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Local State
+ * ──────────────────────────────────────────────────────────────────────────── */
+let isLoading = $state(true);
+let signinInProgress = $state(false);
+let submitInProgress = $state(false);
+
+type ApiKeyInputComponent = {
+  focus: () => void;
+};
+let lastfmApiKeyInput = {} as ApiKeyInputComponent;
+
+let hashValue = window.location.hash ? window.location.hash.slice(1) : null;
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Forms: Modules & Customization (state + diffs)
+ * ──────────────────────────────────────────────────────────────────────────── */
 let formModulesSaved: ModuleToggleConfig = $state(props.formModules);
 let formModules: ModuleToggleConfig = $state(props.formModules);
 const formModulesChangedFields = $derived(() => {
-  return Object.keys(formModules).filter(key => formModules[key as keyof ModuleToggleConfig] !== formModulesSaved[key as keyof ModuleToggleConfig]);
+  return Object.keys(formModules).filter(
+    (key) =>
+      formModules[key as keyof ModuleToggleConfig] !==
+      formModulesSaved[key as keyof ModuleToggleConfig],
+  );
 });
 const formModulesChanged = $derived(() => {
   return formModulesChangedFields().length > 0;
@@ -84,12 +109,19 @@ let formCustomization: ModuleCustomizationConfig = $state(
   props.formCustomization,
 );
 const formCustomizationChangedFields = $derived(() => {
-  return Object.keys(formCustomization).filter(key => formCustomization[key as keyof ModuleCustomizationConfig] !== formCustomizationSaved[key as keyof ModuleCustomizationConfig]);
+  return Object.keys(formCustomization).filter(
+    (key) =>
+      formCustomization[key as keyof ModuleCustomizationConfig] !==
+      formCustomizationSaved[key as keyof ModuleCustomizationConfig],
+  );
 });
 const formCustomizationChanged = $derived(() => {
   return formCustomizationChangedFields().length > 0;
 });
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Tabs
+ * ──────────────────────────────────────────────────────────────────────────── */
 const tabs: () => Tab[] = $derived(() => [
   {
     id: 'modules',
@@ -118,6 +150,9 @@ function getInitialTab() {
 
 let activeTab = $state(getInitialTab());
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * User data & RYM sync status
+ * ──────────────────────────────────────────────────────────────────────────── */
 let userData = $state<UserData | null>(props.userData);
 const isLoggedIn = $derived(() => !!userData?.name);
 
@@ -153,9 +188,21 @@ const setupProgress = $derived(
       .length,
 );
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Last.fm API key (state + handlers)
+ * ──────────────────────────────────────────────────────────────────────────── */
 let lastfmApiKeySaved = $state(props.lastfmApiKey);
 let lastfmApiKey = $state(props.lastfmApiKey);
+let lastfmApiKeyInputType: 'password' | 'text' = $state('password');
 let lastfmApiKeyValidationInProgress = $state(false);
+
+async function removeApiKey() {
+  const doConfirm = confirm('Are you sure you want to remove the API key?');
+  if (!doConfirm) return;
+  await setLastFmApiKey('');
+  lastfmApiKeySaved = '';
+  lastfmApiKey = '';
+}
 
 async function onSubmitLastFmApiKey(e: Event) {
   e.preventDefault();
@@ -184,50 +231,28 @@ async function onSubmitLastFmApiKey(e: Event) {
   lastfmApiKeyValidationInProgress = false;
 }
 
-const moduleSettingsPreviews = {
-  'artist-stats': [
-    {
-      type: 'animation',
-      on: '/images/options/artist-stats-on.jpg',
-      off: '/images/options/artist-stats-off.jpg',
-    },
-  ],
-  'release-stats': [
-    {
-      type: 'animation',
-      on: '/images/options/release-stats-on.jpg',
-      off: '/images/options/release-stats-off.jpg',
-    },
-  ],
-  'song-stats': [
-    {
-      type: 'animation',
-      on: '/images/options/song-stats-on.jpg',
-      off: '/images/options/song-stats-off.jpg',
-    },
-  ],
-  'recent-tracks': [
-    '/images/options/recent-tracks-1-playing.jpg',
-    '/images/options/recent-tracks-2-playing.jpg',
-    '/images/options/recent-tracks-3-playing.jpg',
-    '/images/options/recent-tracks-1-stopped.jpg',
-  ],
-  'top-albums': ['/images/options/top-albums.jpg'],
-  'top-artists': ['/images/options/top-artists.jpg'],
-};
-
-let activePreviewKey = $state('');
-
-const identityApiSupported = !!(browser.identity && browser.identity.launchWebAuthFlow);
+const identityApiSupported = !!(
+  browser.identity && browser.identity.launchWebAuthFlow
+);
 
 function handleApiKeyFocus(e: Event) {
+  lastfmApiKeyInputType = 'text';
   (e.target as HTMLInputElement).select();
 }
 
 function handleApiKeyBlur(e: Event) {
+  lastfmApiKeyInputType = 'password';
   (e.target as HTMLInputElement).value = (
     e.target as HTMLInputElement
   ).value.trim();
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Forms: actions (reset / submit)
+ * ──────────────────────────────────────────────────────────────────────────── */
+function reset() {
+  Object.assign(formModules, formModulesSaved);
+  Object.assign(formCustomization, formCustomizationSaved);
 }
 
 async function submit() {
@@ -245,6 +270,9 @@ async function submit() {
   submitInProgress = false;
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Auth flow (Last.fm via identity API) + fallbacks
+ * ──────────────────────────────────────────────────────────────────────────── */
 async function openAuthPage() {
   if (!SYSTEM_API_KEY) {
     alert('API Key is not set');
@@ -256,7 +284,9 @@ async function openAuthPage() {
   try {
     const redirectUri = browser.identity.getRedirectURL();
 
-    const authUrl = `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&cb=${encodeURIComponent(redirectUri)}`;
+    const authUrl = `https://www.last.fm/api/auth/?api_key=${SYSTEM_API_KEY}&cb=${encodeURIComponent(
+      redirectUri,
+    )}`;
 
     const redirectUrl = await browser.identity.launchWebAuthFlow({
       url: authUrl,
@@ -301,21 +331,6 @@ async function openAuthPage() {
   }
 }
 
-function init() {
-  isLoading = false;
-}
-
-function openRymSync() {
-  window.open('https://rateyourmusic.com/music_export?sync', '_blank');
-}
-
-async function logout() {
-  const doConfirm = confirm('Are you sure you want to logout?');
-  if (!doConfirm) return;
-  await storageRemove('userData');
-  userData = null;
-}
-
 async function fallbackLogin() {
   const username = prompt('Enter your Last.fm username');
 
@@ -352,18 +367,71 @@ async function fallbackLogin() {
   }
 
   signinInProgress = false;
-};
-
-init();
-
-interface TabLinkProps {
-  href: string;
-  label: string;
-  icon: (size?: number) => any;
-  modified?: boolean;
-  onClick: (e: MouseEvent) => void;
 }
 
+async function logout() {
+  const doConfirm = confirm('Are you sure you want to logout?');
+  if (!doConfirm) return;
+  await storageRemove('userData');
+  userData = null;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Module settings previews (static data)
+ * ──────────────────────────────────────────────────────────────────────────── */
+const moduleSettingsPreviews = {
+  'artist-stats': [
+    {
+      type: 'animation',
+      on: '/images/options/artist-stats-on.jpg',
+      off: '/images/options/artist-stats-off.jpg',
+    },
+  ],
+  'release-stats': [
+    {
+      type: 'animation',
+      on: '/images/options/release-stats-on.jpg',
+      off: '/images/options/release-stats-off.jpg',
+    },
+  ],
+  'song-stats': [
+    {
+      type: 'animation',
+      on: '/images/options/song-stats-on.jpg',
+      off: '/images/options/options/song-stats-off.jpg', // keep original path if it was correct
+    },
+  ],
+  'recent-tracks': [
+    '/images/options/recent-tracks-1-playing.jpg',
+    '/images/options/recent-tracks-2-playing.jpg',
+    '/images/options/recent-tracks-3-playing.jpg',
+    '/images/options/recent-tracks-1-stopped.jpg',
+  ],
+  'top-albums': ['/images/options/top-albums.jpg'],
+  'top-artists': ['/images/options/top-artists.jpg'],
+};
+
+let activePreviewKey = $state('');
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Misc helpers
+ * ──────────────────────────────────────────────────────────────────────────── */
+function init() {
+  isLoading = false;
+}
+
+function openRymSync() {
+  window.open('https://rateyourmusic.com/music_export?sync', '_blank');
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Init
+ * ──────────────────────────────────────────────────────────────────────────── */
+init();
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Lifecycle
+ * ──────────────────────────────────────────────────────────────────────────── */
 onMount(() => {
   const handler = (event: BeforeUnloadEvent) => {
     if (formModulesChanged() || formCustomizationChanged()) {
@@ -388,121 +456,75 @@ onMount(() => {
 }: TabLinkProps)}
   <a {href} onclick={onClick}>
     <span class="relative">
-      <span class="absolute top-1/2 -translate-y-1/2 right-full mr-2"
-        >{@render icon()}</span
-      >
+      <span
+        class="
+          absolute
+          top-1/2
+          -translate-y-1/2
+          right-full
+          mr-2
+          hidden
+          sm:block
+        "
+      >{@render icon()}</span>
       {label}
       <span
-        class="absolute top-1/2 -translate-y-1/2 left-full ml-2 bg-current rounded-full transition-opacity w-1.5 h-1.5 {modified
-          ? 'opacity-100'
-          : 'opacity-0'}"
+        class="
+          absolute
+          top-1/2
+          -translate-y-1/2
+          left-full
+          ml-2
+          bg-current
+          rounded-full
+          transition-opacity
+          w-1.5
+          h-1.5
+          {modified ? 'opacity-100' : 'opacity-0'}
+        "
       ></span>
     </span>
   </a>
 {/snippet}
 
-
-{#snippet iconWarning(classes = '')}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-4 w-4 text-yellow-600 {classes}"
-  >
-    <path d="M12 2L2 22h20L12 2z"></path>
-    <circle cx="12" cy="12" r="1"></circle>
-  </svg>
-{/snippet}
-
 {#snippet iconKey(classes = '')}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-4 w-4 {classes}"
-    ><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"
-    ></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"
-    ></circle>
-  </svg>
+  {@html withSvgClass(iconKeySvg, `h-4 w-4 ${classes}`)}
 {/snippet}
 
 {#snippet iconSwitch(classes = '')}
-  <svg
-    width="800px"
-    height="800px"
-    class="h-4 w-4 {classes}"
-    viewBox="0 0 200 200"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M156.31,43.63a9.9,9.9,0,0,0-14,14,60.1,60.1,0,1,1-85,0,9.9,9.9,0,0,0-14-14c-31,31-31,82,0,113s82,31,113,0A79.37,79.37,0,0,0,156.31,43.63Zm-56.5,66.5a10,10,0,0,0,10-10v-70a10,10,0,0,0-20,0v70A10,10,0,0,0,99.81,110.13Z"
-      fill="currentColor"
-    />
-  </svg>
+  {@html withSvgClass(iconSwitchSvg, `h-4 w-4 ${classes}`)}
 {/snippet}
 
 {#snippet iconSettings(classes = '')}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-4 w-4 {classes}"
-    ><path
-      d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-    ></path><circle cx="12" cy="12" r="3"></circle>
-  </svg>
+  {@html withSvgClass(iconSettingsSvg, `h-4 w-4 ${classes}`)}
 {/snippet}
 
 {#snippet iconSuccess(classes = '')}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="h-4 w-4 text-green-600 {classes}"
-  >
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-    <path d="m9 11 3 3L22 4"></path>
-  </svg>
+  {@html withSvgClass(iconSuccessSvg, `h-4 w-4 text-green-600 ${classes}`)}
 {/snippet}
 
 <div
-  class="min-h-viewport flex flex-col {isLoading
-    ? 'opacity-50 blur-xs'
-    : ''} gap-3"
+  class="min-h-viewport flex flex-col {isLoading ? 'opacity-50 blur-xs' : ''}"
   style:display={isLoading ? 'none' : 'block'}
 >
   <AppHeader />
   <main
-    class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-6 pb-6"
+    class="max-w-screen-lg mx-auto w-full flex flex-grow flex-col gap-4 lg:gap-6 pb-6"
   >
     <!-- STATUS CARDS -->
     <section
       aria-label="Extension Status"
-      class="w-full grid grid-cols-1 md:grid-cols-3 gap-4"
+      class="
+        grid
+        grid-cols-1
+        md:grid-cols-3
+        gap-2 lg:gap-4
+        max-lg:[&>*:first-child]:rounded-tl-none
+        max-lg:[&>*:first-child]:rounded-bl-none
+        max-lg:[&>*:last-child]:rounded-tr-none
+        max-lg:[&>*:last-child]:rounded-br-none
+        max-md:*:rounded-none
+      "
     >
       <AppStatusCard
         valid={isLoggedIn()}
@@ -510,7 +532,7 @@ onMount(() => {
         validStatus="Connected"
         invalidStatus="Not connected"
         note={userData?.name ? ['Usernames:', userData.name] : 'Guest'}
-        action={openAuthPage}
+        action={identityApiSupported ? openAuthPage : fallbackLogin}
         loading={signinInProgress}
       />
       <AppStatusCard
@@ -537,7 +559,9 @@ onMount(() => {
     </section>
 
     {#if isRymSyncOutdated()}
-      <blockquote class="text-sm text-zinc-500 text-center text-balance flex flex-col gap-4">
+      <blockquote
+        class="text-sm text-zinc-500 text-center text-balance flex flex-col gap-4"
+      >
         <p class="font-bold text-white font-bold">
           Keep your data fresh and up to date.
         </p>
@@ -546,17 +570,36 @@ onMount(() => {
             href="https://rateyourmusic.com/music_export?sync"
             target="_blank"
             class="
-              inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold text-white inline-flex items-center
-              bg-orange-700 hover:bg-orange-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-orange-300
-              rounded-lg text-center
+              inline-flex
+              gap-2
+              cursor-pointer
+              px-5
+              py-2.5
+              text-sm
+              font-bold
+              text-white
+              inline-flex
+              items-center
+              bg-orange-700
+              hover:bg-orange-800
+              focus-visible:ring-4
+              focus-visible:outline-none
+              focus-visible:ring-orange-300
+              rounded-lg
+              text-center
             "
           >
             Re-run RYM Sync
           </a>
         </p>
         <p>
-          RYM Last.fm Stats <strong>automatically</strong> tracks your RYM ratings whenever you rate a release. In addition, it parses your Profile and Collection pages when you visit them, adding new records to its internal database.
-          Keep in mind that the RateYourMusic database is <em>constantly changing</em> — some releases may be updated or even removed. To ensure your data stays accurate, it’s recommended to run RYM Sync periodically.
+          RYM Last.fm Stats <strong>automatically</strong> tracks your RYM
+          ratings whenever you rate a release. In addition, it parses your
+          Profile and Collection pages when you visit them, adding new records
+          to its internal database. Keep in mind that the RateYourMusic database
+          is <em>constantly changing</em> — some releases may be updated or even
+          removed. To ensure your data stays accurate, it’s recommended to run RYM
+          Sync periodically.
         </p>
       </blockquote>
     {/if}
@@ -575,17 +618,47 @@ onMount(() => {
 
     <!-- CONTENT AREA -->
     <div
-      class="p-6 bg-zinc-900 border-1 border-zinc-700 rounded-2xl flex flex-col gap-3"
+      class="
+        flex flex-col bg-zinc-900 border-zinc-700
+        p-2 md:p-4 lg:p-6
+        border-t-1 border-b-1 lg:border-1
+        lg:rounded-2xl
+      "
     >
-      <nav aria-label="Extension Settings Navigation">
-        <ul class="flex *:grow *:basis-0 gap-2 rounded-2xl p-1 bg-zinc-800">
+      <!-- gap-1 md:gap-2 lg:gap-3 -->
+      <nav
+        aria-label="Extension Settings Navigation"
+        class="max-md:-mt-2 max-md:-mx-2"
+      >
+        <ul
+          class="
+            flex
+            *:grow
+            *:basis-0
+            md:gap-1
+            lg:gap-2
+            rounded-2xl
+            max-md:rounded-none
+            md:p-0.5
+            lg:p-1
+            bg-zinc-800
+          "
+        >
           {#each tabs() as tab}
             <li
               class="
-                *:flex *:transition-colors *:items-center *:gap-2 *:justify-center *:rounded-xl *:p-1 *:text-sm
-                {activeTab === tab.id
-                ? '*:bg-orange-800 pointer-events-none'
-                : '*:opacity-50 *:hover:opacity-100'}
+                *:flex
+                *:transition-colors
+                *:items-center
+                *:gap-2
+                *:justify-center
+                *:rounded-xl
+                *:px-1
+                *:py-2
+                lg:*:py-1
+                *:text-sm
+                max-md:*:rounded-none
+                {activeTab === tab.id ? '*:bg-orange-800 pointer-events-none' : '*:opacity-50 *:hover:opacity-100'}
               "
             >
               {@render tabLink({
@@ -743,7 +816,22 @@ onMount(() => {
             <div class="w-2/3 *:w-full flex items-center flex-col gap-3">
               {#if !activePreviewKey}
                 <div
-                  class="h-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 text-center text-xl font-medium p-4 rounded-lg bg-zinc-100 dark:bg-zinc-800 cursor-default"
+                  class="
+                    h-full
+                    flex
+                    items-center
+                    justify-center
+                    text-zinc-600
+                    dark:text-zinc-400
+                    text-center
+                    text-xl
+                    font-medium
+                    p-4
+                    rounded-lg
+                    bg-zinc-100
+                    dark:bg-zinc-800
+                    cursor-default
+                  "
                 >
                   Hover over a module in sidebar to see it's visual preview
                 </div>
@@ -791,20 +879,29 @@ onMount(() => {
           title="Customization"
           description="Profile modules customization"
         >
-          <div class="columns-2 gap-6 *:break-inside-avoid *:mb-10">
+          <div
+            class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10"
+          >
             <FormToggleGroup title="Global">
               <FormInput
                 label="Last.fm link label"
                 bind:value={formCustomization.mainHeaderLastfmLinkLabel}
+                placeholder="Last.fm"
                 name="mainHeaderLastfmLinkLabel"
-              />
+              >
+                {#snippet description()}
+                  Use <code class="px-0.5 py-0.5 bg-zinc-700 rounded-md"
+                    >$username</code
+                  > to display your Last.fm username
+                {/snippet}
+              </FormInput>
             </FormToggleGroup>
 
             <FormToggleGroup
               title={`Top Artists Widget ${!formModulesSaved.profileTopArtists ? '(Disabled)' : ''}`}
             >
               <FormSlider
-                label="Top Artists limit"
+                label="Limit"
                 description="Change the number of top artists to show"
                 bind:value={formCustomization.profileTopArtistsLimit}
                 min={constants.TOP_ARTISTS_LIMIT_MIN}
@@ -814,8 +911,8 @@ onMount(() => {
               />
 
               <FormSelect
-                label="Top Artists time period"
-                description="Select the time period for the top artists widget"
+                label="Time period"
+                description="Filter top artists by specific time period"
                 bind:value={formCustomization.profileTopArtistsPeriod}
                 name="profileTopArtistsPeriod"
                 options={constants.PERIOD_OPTIONS}
@@ -827,8 +924,8 @@ onMount(() => {
               title={`Top Albums Widget ${!formModulesSaved.profileTopAlbums ? '(Disabled)' : ''}`}
             >
               <FormSelect
-                label="Top Albums time period"
-                description="Select the time period for the top albums widget"
+                label="Time period"
+                description="Filter top albums by specific time period"
                 bind:value={formCustomization.profileTopAlbumsPeriod}
                 name="profileTopAlbumsPeriod"
                 options={constants.PERIOD_OPTIONS}
@@ -841,7 +938,7 @@ onMount(() => {
             >
               <FormToggle
                 label="Show on load"
-                description="Show a list of recent tracks on profile load"
+                description="Pre-open the list of recent tracks on profile load"
                 bind:checked={formCustomization.profileRecentTracksShowOnLoad}
                 name="profileRecentTracksShowOnLoad"
                 disabled={!formModulesSaved.profileRecentTracks}
@@ -858,7 +955,9 @@ onMount(() => {
               <FormToggle
                 label="Hide RYM history"
                 description="Hides the default RYM Play History widget on user profiles"
-                bind:checked={formCustomization.profileRecentTracksRymHistoryHide}
+                bind:checked={
+                  formCustomization.profileRecentTracksRymHistoryHide
+                }
                 name="profileRecentTracksRymHistoryHide"
                 disabled={!formModulesSaved.profileRecentTracks}
               />
@@ -899,42 +998,28 @@ onMount(() => {
           title="API & Auth"
           description="Configure the API and authentication settings"
         >
-          <div class="flex *:grow *:basis-[0] *:min-w-0 gap-6">
+          <div
+            class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10"
+          >
             <div>
               <form
                 autocomplete="off"
                 onsubmit={onSubmitLastFmApiKey}
                 class="flex flex-col gap-3 items-start rounded-xl"
               >
-                <div class="flex flex-col gap-2 w-full items-start">
-                  <label for="lastFmApiKey" class="text-sm font-medium"
-                    >Last.fm API Key</label
-                  >
-
-                  <div class="flex gap-1 w-full items-center">
-                    <div class="grow">
-                      <input
-                        type="text"
-                        onfocus={handleApiKeyFocus}
-                        onblur={handleApiKeyBlur}
-                        disabled={lastfmApiKeyValidationInProgress}
-                        readonly={!!lastfmApiKeySaved}
-                        id="lastFmApiKey"
-                        class="
-                          w-full block min-w-0 font-mono rounded-lg outline-none
-                          border text-sm p-2.5
-                          bg-orange-700/50 border-orange-600 placeholder-zinc-400 text-white
-                          focus:border-zinc-500 focus:ring-orange-500 focus:border-orange-500 focus:placeholder-transparent
-                          disabled:opacity-50 disabled:cursor-wait
-                          read-only:bg-orange-900/50 read-only:border-transparent read-only:cursor-default
-                        "
-                        bind:value={lastfmApiKey}
-                        bind:this={lastfmApiKeyInput}
-                        placeholder="PASTE API KEY HERE"
-                      />
-                    </div>
-                  </div>
-                </div>
+                <FormInput
+                  label="Last.fm API Key"
+                  type={lastfmApiKeyInputType}
+                  class="font-mono tracking-widest"
+                  bind:value={lastfmApiKey}
+                  name="lastfmApiKey"
+                  placeholder="PASTE API KEY HERE"
+                  onfocus={handleApiKeyFocus}
+                  onblur={handleApiKeyBlur}
+                  disabled={lastfmApiKeyValidationInProgress}
+                  readonly={!!lastfmApiKeySaved}
+                  bind:this={lastfmApiKeyInput}
+                />
                 <div class="flex gap-4 px-2.5 items-center w-full">
                   {#if !lastfmApiKeySaved}
                     <button
@@ -942,10 +1027,26 @@ onMount(() => {
                       disabled={lastfmApiKeyValidationInProgress ||
                         !!lastfmApiKeySaved}
                       class="
-                        inline-flex gap-2 cursor-pointer px-5 py-2 text-sm font-medium text-white items-center border-1
-                        bg-yellow-900/50 border-yellow-800 hover:bg-yellow-800/50 disabled:opacity-50 disabled:pointer-events-none
-                        focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
-                        rounded-lg text-center
+                        inline-flex
+                        gap-2
+                        cursor-pointer
+                        px-5
+                        py-2
+                        text-sm
+                        font-medium
+                        text-white
+                        items-center
+                        border-1
+                        bg-yellow-900/50
+                        border-yellow-800
+                        hover:bg-yellow-800/50
+                        disabled:opacity-50
+                        disabled:pointer-events-none
+                        focus-visible:ring-2
+                        focus-visible:outline-none
+                        focus-visible:ring-blue-300
+                        rounded-lg
+                        text-center
                       "
                     >
                       {@render iconKey()}
@@ -957,8 +1058,18 @@ onMount(() => {
                       type="button"
                       onclick={removeApiKey}
                       class="
-                        inline-flex ml-auto gap-2 cursor-pointer p-0 text-sm font-medium items-center
-                        hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
+                        inline-flex
+                        ml-auto
+                        gap-2
+                        cursor-pointer
+                        p-0
+                        text-sm
+                        font-medium
+                        items-center
+                        hover:text-red-400
+                        focus-visible:ring-2
+                        focus-visible:outline-none
+                        focus-visible:ring-blue-300
                         hover:underline
                       "
                     >
@@ -1070,8 +1181,8 @@ onMount(() => {
                     class="flex items-center gap-2 border-zinc-600 text-sm text-balance border rounded-xl p-4"
                   >
                     {@render iconSuccess('shrink-0')}
-                    API key configured successfully. Enhanced
-                    features and higher Last.fm API rate limits are now available.
+                    API key configured successfully. Enhanced features and higher
+                    Last.fm API rate limits are now available.
                   </div>
                 {/if}
 
@@ -1091,8 +1202,28 @@ onMount(() => {
                       disabled={signinInProgress}
                       onclick={openAuthPage}
                       class="
-                        inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm text-shadow-sm transition-colors text-white inline-flex items-center bg-clr-lastfm hover:bg-clr-lastfm-light focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300 rounded-lg text-center dark:focus-visible:ring-blue-800 font-bold
-                        disabled:opacity-50 disabled:pointer-events-none
+                        inline-flex
+                        gap-2
+                        cursor-pointer
+                        px-5
+                        py-2.5
+                        text-sm
+                        text-shadow-sm
+                        transition-colors
+                        text-white
+                        inline-flex
+                        items-center
+                        bg-clr-lastfm
+                        hover:bg-clr-lastfm-light
+                        focus-visible:ring-4
+                        focus-visible:outline-none
+                        focus-visible:ring-blue-300
+                        rounded-lg
+                        text-center
+                        dark:focus-visible:ring-blue-800
+                        font-bold
+                        disabled:opacity-50
+                        disabled:pointer-events-none
                       "
                     >
                       {@render iconKey()}
@@ -1104,7 +1235,17 @@ onMount(() => {
 
                   <button
                     onclick={fallbackLogin}
-                    class="px-5 py-2.5 bg-white/5 cursor-pointer text-sm rounded-lg text-zinc-300 hover:underline font-bold"
+                    class="
+                      px-5
+                      py-2.5
+                      bg-white/5
+                      cursor-pointer
+                      text-sm
+                      rounded-lg
+                      text-zinc-300
+                      hover:underline
+                      font-bold
+                    "
                   >
                     Manual Login
                   </button>
@@ -1115,7 +1256,20 @@ onMount(() => {
                   <a
                     href={userData.url}
                     target="_blank"
-                    class="h-10 flex items-center justify-between bg-zinc-700/50 pr-2.5 rounded-r-lg rounded-l-[2.5rem] hover:bg-zinc-700/70 transition-colors text-zinc-400 hover:text-white"
+                    class="
+                      h-10
+                      flex
+                      items-center
+                      justify-between
+                      bg-zinc-700/50
+                      pr-2.5
+                      rounded-r-lg
+                      rounded-l-[2.5rem]
+                      hover:bg-zinc-700/70
+                      transition-colors
+                      text-zinc-400
+                      hover:text-white
+                    "
                   >
                     <span class="flex items-center gap-2 h-full">
                       <img
@@ -1144,9 +1298,8 @@ onMount(() => {
                     class="flex items-center text-balance gap-2 border-zinc-600 text-sm border rounded-xl p-4"
                   >
                     {@render iconSuccess('shrink-0')}
-                      Successfully logged in with last.fm OAuth.
-                      Personal scrobbling stats and additional Profile features are
-                      now available.
+                    Successfully logged in with last.fm OAuth. Personal scrobbling
+                    stats and additional Profile features are now available.
                   </div>
                 </div>
               {/if}
@@ -1157,12 +1310,39 @@ onMount(() => {
     </div>
 
     <!-- ACTIONS -->
-    <div class="actions-panel" class:is-sticky={formModulesChanged() || formCustomizationChanged()}>
-      <div class="actions-panel-inner flex gap-6 justify-between items-center p-4">
+    <div
+      class="actions-panel"
+      class:is-sticky={formModulesChanged() || formCustomizationChanged()}
+    >
+      <div
+        class="actions-panel-inner flex gap-6 justify-between items-center p-6"
+      >
         {#if formModulesChanged() || formCustomizationChanged()}
-          <div class="text-sm p-2 border-1 border-orange-700/50 rounded-lg">
-            {formModulesChangedFields().length + formCustomizationChangedFields().length} unsaved changes
-          </div>
+          <button
+            class="
+              text-sm p-2 border-2 border-orange-700/50 rounded-lg relative
+              hover:[&_.button-label]:opacity-100 cursor-pointer hover:bg-orange-700/20
+              hover:[&_.unsaved-changes]:opacity-0
+            "
+            onclick={reset}
+          >
+            <span class="unsaved-changes transition-opacity opacity-100"
+              >{formModulesChangedFields().length +
+                formCustomizationChangedFields().length} unsaved changes</span
+            >
+            <span
+              class="
+                transition-opacity
+                button-label
+                absolute
+                inset-0
+                flex
+                items-center
+                justify-center
+                opacity-0
+              ">Undo</span
+            >
+          </button>
         {/if}
         <div class="ml-auto">
           <button
