@@ -1,6 +1,6 @@
 @keyframes bg-option-18-animation-before {
-  from { background-position-y: calc(50cqw + 50cqh); }
-  to   { background-position-y: calc(-50cqw + 50cqh); }
+  from { background-position-y: calc(-50cqw + 50cqh); }
+  to   { background-position-y: calc(50cqw + 50cqh); }
 }
 
 @keyframes bg-option-18-animation-after {
@@ -146,7 +146,7 @@
     inset: 0;
     transform: none;
     background-position-x: 50%;
-    background-position-y: calc(50cqw + 50cqh);
+    background-position-y: calc(-50cqw + 50cqh);
     background-repeat: repeat-y;
     background-size: 100% 100cqw;
     will-change: background-position;
