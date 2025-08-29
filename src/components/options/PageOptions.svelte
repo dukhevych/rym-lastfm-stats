@@ -193,7 +193,6 @@ const setupProgress = $derived(
  * ──────────────────────────────────────────────────────────────────────────── */
 let lastfmApiKeySaved = $state(props.lastfmApiKey);
 let lastfmApiKey = $state(props.lastfmApiKey);
-let lastfmApiKeyInputType: 'password' | 'text' = $state('password');
 let lastfmApiKeyValidationInProgress = $state(false);
 
 async function removeApiKey() {
@@ -237,12 +236,10 @@ const identityApiSupported = !!(
 );
 
 function handleApiKeyFocus(e: Event) {
-  lastfmApiKeyInputType = 'text';
   (e.target as HTMLInputElement).select();
 }
 
 function handleApiKeyBlur(e: Event) {
-  lastfmApiKeyInputType = 'password';
   (e.target as HTMLInputElement).value = (
     e.target as HTMLInputElement
   ).value.trim();
@@ -466,8 +463,8 @@ onMount(() => {
           mr-2
           hidden
           sm:block
-        "
-      >{@render icon()}</span>
+        ">{@render icon()}</span
+      >
       {label}
       <span
         class="
@@ -659,7 +656,9 @@ onMount(() => {
                 lg:*:py-1
                 *:text-sm
                 max-md:*:rounded-none
-                {activeTab === tab.id ? '*:bg-orange-800 pointer-events-none' : '*:opacity-50 hover-fine:*:hover:opacity-100'}
+                {activeTab === tab.id
+                ? '*:bg-orange-800 pointer-events-none'
+                : '*:opacity-50 hover-fine:*:hover:opacity-100'}
               "
             >
               {@render tabLink({
@@ -1371,8 +1370,9 @@ onMount(() => {
           not affiliated with Last.fm or RYM.
         </div>
         <div class="text-white">
-          <a class="hover-fine:hover:underline" href="mailto:landenmetal@gmail.com"
-            >Contact developer</a
+          <a
+            class="hover-fine:hover:underline"
+            href="mailto:landenmetal@gmail.com">Contact developer</a
           >&nbsp;&nbsp;|&nbsp;&nbsp;<span
             >RYM Last.fm Stats © {new Date().getFullYear()}</span
           >
