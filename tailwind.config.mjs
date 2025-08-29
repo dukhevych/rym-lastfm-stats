@@ -19,4 +19,10 @@ export default {
       },
     },
   },
+  plugins: [
+    function ({ addVariant }) {
+      addVariant('hover-fine', '@media (hover: hover) and (pointer: fine)');
+      addVariant('hover-none', '@media (hover: none), (pointer: coarse)');
+    },
+  ]
 }

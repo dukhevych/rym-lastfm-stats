@@ -26,7 +26,7 @@ const {
       <h4 class="flex items-baseline justify-between -mr-4">
         <strong>{title}</strong>
         {#if note}
-          <span class="text-xs italic dark:text-zinc-200 text-zinc-600">
+          <span class="text-xs italic text-zinc-200">
             {@render note()}
           </span>
         {/if}

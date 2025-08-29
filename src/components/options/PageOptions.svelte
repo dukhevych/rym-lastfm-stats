@@ -226,6 +226,7 @@ async function onSubmitLastFmApiKey(e: Event) {
   } catch (err) {
     console.error(err);
     alert('Please check your API key and try again');
+    lastfmApiKeyInput.focus();
   }
 
   lastfmApiKeyValidationInProgress = false;
@@ -581,7 +582,7 @@ onMount(() => {
               inline-flex
               items-center
               bg-orange-700
-              hover:bg-orange-800
+              hover-fine:hover:bg-orange-800
               focus-visible:ring-4
               focus-visible:outline-none
               focus-visible:ring-orange-300
@@ -658,7 +659,7 @@ onMount(() => {
                 lg:*:py-1
                 *:text-sm
                 max-md:*:rounded-none
-                {activeTab === tab.id ? '*:bg-orange-800 pointer-events-none' : '*:opacity-50 *:hover:opacity-100'}
+                {activeTab === tab.id ? '*:bg-orange-800 pointer-events-none' : '*:opacity-50 hover-fine:*:hover:opacity-100'}
               "
             >
               {@render tabLink({
@@ -821,15 +822,13 @@ onMount(() => {
                     flex
                     items-center
                     justify-center
-                    text-zinc-600
-                    dark:text-zinc-400
+                    text-zinc-400
                     text-center
                     text-xl
                     font-medium
                     p-4
                     rounded-lg
-                    bg-zinc-100
-                    dark:bg-zinc-800
+                    bg-zinc-800
                     cursor-default
                   "
                 >
@@ -1009,8 +1008,8 @@ onMount(() => {
               >
                 <FormInput
                   label="Last.fm API Key"
-                  type={lastfmApiKeyInputType}
-                  class="font-mono tracking-widest"
+                  type="text"
+                  class="font-mono tracking-widest [-webkit-text-security:disc] focus:[-webkit-text-security:none]"
                   bind:value={lastfmApiKey}
                   name="lastfmApiKey"
                   placeholder="PASTE API KEY HERE"
@@ -1039,7 +1038,7 @@ onMount(() => {
                         border-1
                         bg-yellow-900/50
                         border-yellow-800
-                        hover:bg-yellow-800/50
+                        hover-fine:hover:bg-yellow-800/50
                         disabled:opacity-50
                         disabled:pointer-events-none
                         focus-visible:ring-2
@@ -1066,11 +1065,11 @@ onMount(() => {
                         text-sm
                         font-medium
                         items-center
-                        hover:text-red-400
+                        hover-fine:hover:text-red-400
                         focus-visible:ring-2
                         focus-visible:outline-none
                         focus-visible:ring-blue-300
-                        hover:underline
+                        hover-fine:hover:underline
                       "
                     >
                       Remove API Key
@@ -1081,7 +1080,7 @@ onMount(() => {
                       <a
                         href="https://www.last.fm/api/account/create"
                         target="_blank"
-                        class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2"
+                        class="text-zinc-400 text-xs hover-fine:hover:text-zinc-300 flex items-center gap-2"
                       >
                         <svg
                           width="800px"
@@ -1128,7 +1127,7 @@ onMount(() => {
                       <a
                         href="https://www.last.fm/api/accounts"
                         target="_blank"
-                        class="text-zinc-400 text-xs hover:text-zinc-300 flex items-center gap-2"
+                        class="text-zinc-400 text-xs hover-fine:hover:text-zinc-300 flex items-center gap-2"
                       >
                         <svg
                           width="800px"
@@ -1214,13 +1213,13 @@ onMount(() => {
                         inline-flex
                         items-center
                         bg-clr-lastfm
-                        hover:bg-clr-lastfm-light
+                        hover-fine:hover:bg-clr-lastfm-light
                         focus-visible:ring-4
                         focus-visible:outline-none
                         focus-visible:ring-blue-300
                         rounded-lg
                         text-center
-                        dark:focus-visible:ring-blue-800
+                        focus-visible:ring-blue-800
                         font-bold
                         disabled:opacity-50
                         disabled:pointer-events-none
@@ -1243,7 +1242,7 @@ onMount(() => {
                       text-sm
                       rounded-lg
                       text-zinc-300
-                      hover:underline
+                      hover-fine:hover:underline
                       font-bold
                     "
                   >
@@ -1265,10 +1264,10 @@ onMount(() => {
                       pr-2.5
                       rounded-r-lg
                       rounded-l-[2.5rem]
-                      hover:bg-zinc-700/70
+                      hover-fine:hover:bg-zinc-700/70
                       transition-colors
                       text-zinc-400
-                      hover:text-white
+                      hover-fine:hover:text-white
                     "
                   >
                     <span class="flex items-center gap-2 h-full">
@@ -1287,8 +1286,8 @@ onMount(() => {
                       onclick={logout}
                       class="
                         inline-flex ml-auto gap-2 cursor-pointer p-0 text-sm font-medium items-center
-                        hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
-                        hover:underline
+                        hover-fine:hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
+                        hover-fine:hover:underline
                       "
                     >
                       Logout
@@ -1321,8 +1320,8 @@ onMount(() => {
           <button
             class="
               text-sm p-2 border-2 border-orange-700/50 rounded-lg relative
-              hover:[&_.button-label]:opacity-100 cursor-pointer hover:bg-orange-700/20
-              hover:[&_.unsaved-changes]:opacity-0
+              hover-fine:hover:[&_.button-label]:opacity-100 cursor-pointer hover-fine:hover:bg-orange-700/20
+              hover-fine:hover:[&_.unsaved-changes]:opacity-0
             "
             onclick={reset}
           >
@@ -1350,8 +1349,8 @@ onMount(() => {
             disabled={submitInProgress}
             class="
               inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold text-white inline-flex items-center
-              bg-blue-700 hover:bg-blue-800 focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-300
-              rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus-visible:ring-blue-800
+              focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-800
+              rounded-lg text-center bg-blue-600 hover-fine:hover:bg-blue-700
               disabled:opacity-50 disabled:pointer-events-none
             "
             onclick={submit}
@@ -1372,7 +1371,7 @@ onMount(() => {
           not affiliated with Last.fm or RYM.
         </div>
         <div class="text-white">
-          <a class="hover:underline" href="mailto:landenmetal@gmail.com"
+          <a class="hover-fine:hover:underline" href="mailto:landenmetal@gmail.com"
             >Contact developer</a
           >&nbsp;&nbsp;|&nbsp;&nbsp;<span
             >RYM Last.fm Stats © {new Date().getFullYear()}</span

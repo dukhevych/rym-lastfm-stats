@@ -31,7 +31,7 @@ const {
       </h3>
     </div>
     {#if description}
-      <div class="text-zinc-600 dark:text-zinc-400 text-center">
+      <div class="text-zinc-400 text-center">
         {description}
       </div>
     {/if}

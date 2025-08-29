@@ -79,7 +79,7 @@ function handleLegendClick(_value: number): void {
                 class="
                   absolute top-0 text-center
                   translate-x-[-50%]
-                  {+n === +value ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-500'}
+                  {+n === +value ? 'font-bold text-gray-100' : 'text-gray-500'}
                 "
                 style="left: {i * 100 / (+max - +min)}%;"
               >

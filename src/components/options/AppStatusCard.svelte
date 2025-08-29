@@ -49,8 +49,8 @@ const {
     valid && !warning && 'shadow-sm border-teal-800 bg-teal-900/50',
     loading && 'pointer-events-none opacity-50',
     (!valid || warning) && action && 'cursor-pointer',
-    !valid && action && 'hover:bg-zinc-800',
-    warning && action && 'hover:bg-zinc-800',
+    !valid && action && 'hover-fine:hover:bg-zinc-800',
+    warning && action && 'hover-fine:hover:bg-zinc-800',
   ]
     .filter(Boolean)
     .join(' ')}
@@ -72,13 +72,13 @@ const {
       <div class="flex grow items-center gap-1">
         <div>
           <h3 class="font-bold">{title}</h3>
-          <div class="text-sm text-zinc-600 dark:text-zinc-400">
+          <div class="text-sm text-zinc-400">
             {valid ? validStatus : invalidStatus}
           </div>
         </div>
         {#if note && note.length > 0}
           <div
-            class="text-xs text-zinc-600 dark:text-zinc-300 text-right grow flex flex-col gap-1"
+            class="text-xs text-zinc-300 text-right grow flex flex-col gap-1"
           >
             {#if typeof note === 'string'}
               {note}

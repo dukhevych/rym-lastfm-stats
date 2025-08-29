@@ -64,7 +64,7 @@ init();
           <a
             href="https://www.patreon.com/c/BohdanDukhevych"
             target="_blank"
-            class="flex items-center gap-2 py-0.5 hover:underline"
+            class="flex items-center gap-2 py-0.5 hover-fine:hover:underline"
           >
             {@render iconPatreon('text-[#f96854] h-5 w-5')}
             <span>Support project</span>
@@ -73,7 +73,7 @@ init();
           <a
             href={feedbackUrl()}
             target="_blank"
-            class="flex items-center gap-2 py-0.5 hover:underline"
+            class="flex items-center gap-2 py-0.5 hover-fine:hover:underline"
           >
             <span>Leave feedback</span>
           </a>
@@ -82,7 +82,7 @@ init();
           <a
             href={reportIssueUrl()}
             target="_blank"
-            class="flex items-center gap-2 py-0.5 hover:underline"
+            class="flex items-center gap-2 py-0.5 hover-fine:hover:underline"
           >
             {@render iconBug('text-red-400 h-5 w-5')}
             <span>Report bug</span>
@@ -91,7 +91,7 @@ init();
           <a
             href="https://github.com/dukhevych/rym-lastfm-stats"
             target="_blank"
-            class="flex items-center gap-2 py-0.5 hover:underline"
+            class="flex items-center gap-2 py-0.5 hover-fine:hover:underline"
           >
             {@render iconGithub('h-5 w-5 text-[#08872B]')}
             <span>Github</span>
