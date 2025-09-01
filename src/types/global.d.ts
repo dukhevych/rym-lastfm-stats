@@ -66,6 +66,12 @@ declare global {
   > = Result['length'] extends N
     ? Result[number] | N
     : Range<N, [...Result, Result['length']]>;
+
+  interface Context {
+    isMyProfile?: boolean;
+    rymSyncTimestamp?: number;
+    lastfmApiKey?: string;
+  }
 }
 
 export {};

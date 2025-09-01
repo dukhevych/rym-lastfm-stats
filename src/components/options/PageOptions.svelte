@@ -30,6 +30,7 @@ import AppStatusCard from './AppStatusCard.svelte';
 import FormInput from './FormInput.svelte';
 import FormSelect from './FormSelect.svelte';
 import FormSlider from './FormSlider.svelte';
+import FormSlider2 from './FormSlider2.svelte';
 import FormToggle from './FormToggle.svelte';
 import FormToggleGroup from './FormToggleGroup.svelte';
 import TabContent from './TabContent.svelte';
@@ -898,7 +899,7 @@ onMount(() => {
             <FormToggleGroup
               title={`Top Artists Widget ${!formModulesSaved.profileTopArtists ? '(Disabled)' : ''}`}
             >
-              <FormSlider
+              <FormSlider2
                 label="Limit"
                 description="Change the number of top artists to show"
                 bind:value={formCustomization.profileTopArtistsLimit}
@@ -960,7 +961,7 @@ onMount(() => {
                 disabled={!formModulesSaved.profileRecentTracks}
               />
 
-              <FormSlider
+              <FormSlider2
                 label="Tracks limit"
                 description="Select how many of recent scrobbles to fetch"
                 bind:value={formCustomization.profileRecentTracksLimit}
@@ -1427,6 +1428,7 @@ onMount(() => {
   container-type: scroll-state;
   position: sticky;
   bottom: 0;
+  z-index: 100;
 
   @supports (container-type: scroll-state) {
     .actions-panel-inner {
