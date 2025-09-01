@@ -169,13 +169,23 @@ const rymSyncTimestampLabel = $derived(() => {
   if (!rymSyncTimestamp) return 'No sync performed yet';
   return `Last sync ${formatDistanceToNow(rymSyncTimestamp, { addSuffix: true })}`;
 });
-const isRymSyncOutdated = $derived(() => {
-  if (!rymSyncTimestamp) return false;
+const rymSyncLifetime = $derived(() => {
+  if (!rymSyncTimestamp) return;
   const date = new Date(rymSyncTimestamp);
   const now = new Date();
-  return (
-    now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS
-  );
+  return now.getTime() - date.getTime();
+});
+const rymSyncOutdatedSeverity = $derived(() => {
+  if (!rymSyncTimestamp) return;
+  if (!rymSyncLifetime()) return;
+  if (rymSyncLifetime() as number > (constants.RYM_SYNC_OUTDATED_THRESHOLD_MS * 1.5)) return 'critical';
+  if (rymSyncLifetime() as number > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS) return 'warning';
+  return 'info';
+});
+const isRymSyncOutdated = $derived(() => {
+  if (!rymSyncTimestamp) return;
+  if (!rymSyncLifetime()) return;
+  return !!rymSyncOutdatedSeverity();
 });
 const hasRymSyncWarning = $derived(() => {
   if (!rymSyncTimestamp) return true;
@@ -546,11 +556,11 @@ onMount(() => {
         }}
       />
       <AppStatusCard
-        valid={!!rymSyncTimestamp}
+        valid={rymSyncOutdatedSeverity() !== 'critical'}
         title="RYM Sync"
         validStatus={isRymSyncOutdated() ? 'Outdated' : 'Completed'}
-        invalidStatus="Not completed"
-        warning={isRymSyncOutdated()}
+        invalidStatus={isRymSyncOutdated() ? 'Not completed' : 'Critical'}
+        warning={rymSyncOutdatedSeverity() === 'warning'}
         note={[rymSyncTimestampLabel(), dbRecordsQtyLabel()]}
         action={openRymSync}
       />
