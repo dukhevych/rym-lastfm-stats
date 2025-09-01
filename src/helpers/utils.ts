@@ -442,3 +442,11 @@ export async function detectBrowser(): Promise<"firefox" | "chrome" | "other"> {
 
   return "other";
 }
+
+export function openOptionsViaBG() {
+  if (browser.runtime?.openOptionsPage) {
+    return browser.runtime.openOptionsPage();
+  }
+
+  return browser.runtime.sendMessage({ type: 'OPEN_OPTIONS' });
+}

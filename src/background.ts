@@ -393,7 +393,11 @@ interface RestartBackgroundMessage {
   type: 'RESTART_BACKGROUND';
 }
 
-type BackgroundMessage = DatabaseMessage | FetchImageMessage | GetWindowDataMessage | RestartBackgroundMessage;
+interface OpenOptionsMessage {
+  type: 'OPEN_OPTIONS';
+}
+
+type BackgroundMessage = DatabaseMessage | FetchImageMessage | GetWindowDataMessage | RestartBackgroundMessage | OpenOptionsMessage;
 
 browser.runtime.onMessage.addListener(
   (
@@ -467,6 +471,11 @@ browser.runtime.onMessage.addListener(
           }
         }
         return false;
+      }
+
+      case 'OPEN_OPTIONS': {
+        browser.runtime.openOptionsPage();
+        return true;
       }
 
       default:

@@ -1,16 +1,22 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+import browser from 'webextension-polyfill';
 import { formatDistanceToNow } from 'date-fns';
 
 import DialogBase from '@/components/svelte/DialogBase.svelte';
 import TextEffect from '@/components/svelte/TextEffect.svelte';
 import * as constants from '@/helpers/constants';
+import * as utils from '@/helpers/utils';
 import { updateProfileOptions } from '@/helpers/storageUtils';
 import { generateSearchUrl, generateSearchHint } from '@/helpers/string';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 
 import type { Writable } from 'svelte/store';
+
+const openAddonOptions = () => {
+  utils.openOptionsViaBG();
+};
 
 interface Props {
   track: TrackDataNormalized | null;
@@ -235,13 +241,22 @@ $effect(() => {
         </select>
       </label>
 
-      <div class="flex justify-end pt-4 gap-4">
-        <button
-          type="button"
-          class="link-alike"
-          onclick={() => (settingsDialogVisible = false)}>Cancel</button
-        >
-        <button type="submit" class="btn blue_btn btn_small">Save</button>
+      <div class="flex justify-between items-center pt-4">
+        <div>
+          <button
+            type="button"
+            class="link-alike"
+            onclick={openAddonOptions}>Go to Addon options</button
+          >
+        </div>
+        <div class="flex gap-4">
+          <button
+            type="button"
+            class="link-alike"
+            onclick={() => (settingsDialogVisible = false)}>Cancel</button
+          >
+          <button type="submit" class="btn blue_btn btn_small">Save</button>
+        </div>
       </div>
     </form>
   </DialogBase>
