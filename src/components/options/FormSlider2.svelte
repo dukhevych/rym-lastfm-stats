@@ -56,6 +56,7 @@ function handleLegendClick(_value: number): void {
               not-first:-ml-[2px]
               aspect-square w-6 h-6
               text-center
+              hover-fine:hover:[z-15 bg-teal-600 border-teal-400]
               {+n > +value ?
                 'bg-zinc-800 border-zinc-600' :
                 ''}
@@ -81,7 +82,7 @@ function handleLegendClick(_value: number): void {
         id={name}
         type="range"
         {name}
-        class="absolute inset-0 {disabled ? '' : 'cursor-pointer'} opacity-0"
+        class="absolute inset-0 {disabled ? '' : 'cursor-pointer'} opacity-0 z-100"
         {value}
         {min}
         {max}

@@ -2,6 +2,7 @@
 
 <script lang="ts">
 import type { Snippet } from 'svelte';
+import FormItem from './FormItem.svelte';
 
 interface Props {
   value: string;
@@ -32,23 +33,12 @@ export function focus(): void {
 }
 </script>
 
-<div class="rounded-xl flex flex-col block w-full px-4 py-3 bg-zinc-800 gap-2">
-  <div class="flex flex-col gap-1">
-    <label for={restProps.name} class="text-sm text-white">
-      <strong>{label}</strong>
-    </label>
-    {#if description}
-      {#if typeof description === 'string'}
-        <p class="text-xs text-zinc-400">{description}</p>
-      {:else}
-        <p class="text-xs text-zinc-400">
-          {@render description()}
-        </p>
-      {/if}
-    {/if}
-  </div>
-
-  <div class="flex items-center gap-2">
+<FormItem
+  {label}
+  {description}
+  name={restProps.name}
+>
+  {#snippet children()}
     <input
       type="text"
       class="
@@ -82,5 +72,5 @@ export function focus(): void {
         </svg>
       </button>
     {/if}
-  </div>
-</div>
+  {/snippet}
+</FormItem>

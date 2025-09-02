@@ -29,7 +29,7 @@ import AppHeader from './AppHeader.svelte';
 import AppStatusCard from './AppStatusCard.svelte';
 import FormInput from './FormInput.svelte';
 import FormSelect from './FormSelect.svelte';
-import FormSlider from './FormSlider.svelte';
+import FormItem from './FormItem.svelte';
 import FormSlider2 from './FormSlider2.svelte';
 import FormToggle from './FormToggle.svelte';
 import FormToggleGroup from './FormToggleGroup.svelte';
@@ -177,16 +177,22 @@ const rymSyncLifetime = $derived(() => {
   return now.getTime() - date.getTime();
 });
 const rymSyncOutdatedSeverity = $derived(() => {
-  if (!rymSyncTimestamp) return;
-  if (!rymSyncLifetime()) return;
+  if (!rymSyncTimestamp) return false;
+  if (!rymSyncLifetime()) return false;
   if (rymSyncLifetime() as number > (constants.RYM_SYNC_OUTDATED_THRESHOLD_MS * 1.5)) return 'critical';
   if (rymSyncLifetime() as number > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS) return 'warning';
-  return 'info';
+  return false;
+});
+const rymSyncStatus = $derived(() => {
+  if (rymSyncOutdatedSeverity() === 'critical') return 'invalid';
+  if (rymSyncOutdatedSeverity() === 'warning') return 'warning';
+  if (!rymSyncOutdatedSeverity()) return 'valid';
+  return 'invalid';
 });
 const isRymSyncOutdated = $derived(() => {
   if (!rymSyncTimestamp) return;
   if (!rymSyncLifetime()) return;
-  return !!rymSyncOutdatedSeverity();
+  return rymSyncOutdatedSeverity();
 });
 const hasRymSyncWarning = $derived(() => {
   if (!rymSyncTimestamp) return true;
@@ -247,6 +253,10 @@ const identityApiSupported = !!(
 );
 
 function handleApiKeyFocus(e: Event) {
+  (e.target as HTMLInputElement).select();
+}
+
+function handleApiKeyClick(e: Event) {
   (e.target as HTMLInputElement).select();
 }
 
@@ -536,7 +546,7 @@ onMount(() => {
       "
     >
       <AppStatusCard
-        valid={isLoggedIn()}
+        status={isLoggedIn() ? 'valid' : 'invalid'}
         title="Last.fm"
         validStatus="Connected"
         invalidStatus="Not connected"
@@ -545,7 +555,7 @@ onMount(() => {
         loading={signinInProgress}
       />
       <AppStatusCard
-        valid={!!lastfmApiKeySaved}
+        status={lastfmApiKeySaved ? 'valid' : 'invalid'}
         title="Last.fm API Key"
         validStatus="Configured"
         invalidStatus="Not configured"
@@ -557,17 +567,17 @@ onMount(() => {
         }}
       />
       <AppStatusCard
-        valid={rymSyncOutdatedSeverity() !== 'critical'}
+        status={rymSyncStatus()}
         title="RYM Sync"
-        validStatus={isRymSyncOutdated() ? 'Outdated' : 'Completed'}
-        invalidStatus={isRymSyncOutdated() ? 'Not completed' : 'Critical'}
-        warning={rymSyncOutdatedSeverity() === 'warning'}
+        validStatus="Completed"
+        invalidStatus={isRymSyncOutdated() ? 'Needs re-run' : 'Not completed'}
+        warningStatus="Slightly outdated"
         note={[rymSyncTimestampLabel(), dbRecordsQtyLabel()]}
         action={openRymSync}
       />
     </section>
 
-    {#if isRymSyncOutdated()}
+    {#if rymSyncOutdatedSeverity() === 'critical'}
       <blockquote
         class="text-sm text-zinc-500 text-center text-balance flex flex-col gap-4"
       >
@@ -608,7 +618,7 @@ onMount(() => {
           to its internal database. Keep in mind that the RateYourMusic database
           is <em>constantly changing</em> — some releases may be updated or even
           removed. To ensure your data stays accurate, it’s recommended to run RYM
-          Sync periodically.
+          Sync periodically (<strong>at least once a month</strong>).
         </p>
       </blockquote>
     {/if}
@@ -1019,17 +1029,24 @@ onMount(() => {
                 <FormInput
                   label="Last.fm API Key"
                   type="text"
-                  class="font-mono tracking-widest [-webkit-text-security:disc] focus:[-webkit-text-security:none]"
+                  class="
+                    font-mono
+                    tracking-widest
+                    [-webkit-text-security:disc]
+                    focus:[-webkit-text-security:none]
+                    read-only:cursor-default
+                  "
                   bind:value={lastfmApiKey}
                   name="lastfmApiKey"
                   placeholder="PASTE API KEY HERE"
                   onfocus={handleApiKeyFocus}
                   onblur={handleApiKeyBlur}
+                  onclick={handleApiKeyClick}
                   disabled={lastfmApiKeyValidationInProgress}
                   readonly={!!lastfmApiKeySaved}
                   bind:this={lastfmApiKeyInput}
                 />
-                <div class="flex gap-4 px-2.5 items-center w-full">
+                <div class="flex gap-4 px-4 items-center w-full">
                   {#if !lastfmApiKeySaved}
                     <button
                       type="submit"
@@ -1059,7 +1076,7 @@ onMount(() => {
                       "
                     >
                       {@render iconKey()}
-                      Save API Key
+                      Verify API Key
                     </button>
                   {/if}
                   {#if lastfmApiKeySaved}
@@ -1195,13 +1212,15 @@ onMount(() => {
                   </div>
                 {/if}
 
-                <div class="text-xs text-zinc-400">
-                  Optional: Provides access to additional Last.fm features and
-                  higher rate limits
-                </div>
+                {#if !lastfmApiKeySaved}
+                  <div class="text-xs text-zinc-400 px-4">
+                    Optional: Provides access to additional Last.fm features and
+                    higher rate limits
+                  </div>
+                {/if}
               </form>
             </div>
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-3">
               {#if !isLoggedIn()}
                 <div
                   class="flex gap-2 items-center justify-between rounded-xl bg-zinc-800 p-4 border-2 border-zinc-700"
@@ -1260,13 +1279,13 @@ onMount(() => {
                   </button>
                 </div>
               {:else if userData}
-                <div class="text-sm">Logged in as:</div>
-                <div class="flex flex-col gap-3">
+                <FormItem label="Logged in as:">
                   <a
                     href={userData.url}
                     target="_blank"
                     class="
                       h-10
+                      w-full
                       flex
                       items-center
                       justify-between
@@ -1290,6 +1309,8 @@ onMount(() => {
                     </span>
                     <span class="text-xs">Click to open profile</span>
                   </a>
+                </FormItem>
+                <div class="flex grow flex-col gap-3">
                   <div class="flex gap-2 px-2.5">
                     <button
                       type="button"
@@ -1360,8 +1381,13 @@ onMount(() => {
             class="
               inline-flex gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold text-white inline-flex items-center
               focus-visible:ring-4 focus-visible:outline-none focus-visible:ring-blue-800
-              rounded-lg text-center bg-blue-600 hover-fine:hover:bg-blue-700
+              rounded-lg text-center
               disabled:opacity-50 disabled:pointer-events-none
+              border-1 bg-yellow-900/50
+              border-yellow-800
+              hover-fine:hover:bg-yellow-800/50
+              relative
+              active:t-[2px]
             "
             onclick={submit}
           >
