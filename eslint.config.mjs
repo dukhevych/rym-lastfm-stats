@@ -5,6 +5,7 @@ import importPlugin from 'eslint-plugin-import';
 import sveltePlugin from 'eslint-plugin-svelte';
 import globals from 'globals';
 import svelteParser from 'svelte-eslint-parser';
+import prettierConfig from 'eslint-config-prettier';
 
 export default [
   js.configs.recommended,
@@ -77,4 +78,6 @@ export default [
       '**/src/libs/**',
     ],
   },
+
+  prettierConfig,
 ];

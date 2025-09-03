@@ -14,7 +14,9 @@
     "lint:fix": "eslint . --fix",
     "publish": "bash ./scripts/trigger-publish.sh",
     "lint:firefox": "web-ext lint --source-dir=dist/firefox",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
