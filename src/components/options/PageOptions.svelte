@@ -28,8 +28,8 @@ import * as utils from '@/helpers/utils';
 import AppHeader from './AppHeader.svelte';
 import AppStatusCard from './AppStatusCard.svelte';
 import FormInput from './FormInput.svelte';
-import FormSelect from './FormSelect.svelte';
 import FormItem from './FormItem.svelte';
+import FormSelect from './FormSelect.svelte';
 import FormSlider2 from './FormSlider2.svelte';
 import FormToggle from './FormToggle.svelte';
 import FormToggleGroup from './FormToggleGroup.svelte';
@@ -179,8 +179,13 @@ const rymSyncLifetime = $derived(() => {
 const rymSyncOutdatedSeverity = $derived(() => {
   if (!rymSyncTimestamp) return false;
   if (!rymSyncLifetime()) return false;
-  if (rymSyncLifetime() as number > (constants.RYM_SYNC_OUTDATED_THRESHOLD_MS * 1.5)) return 'critical';
-  if (rymSyncLifetime() as number > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS) return 'warning';
+  if (
+    (rymSyncLifetime() as number) >
+    constants.RYM_SYNC_OUTDATED_THRESHOLD_MS * 1.5
+  )
+    return 'critical';
+  if ((rymSyncLifetime() as number) > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS)
+    return 'warning';
   return false;
 });
 const rymSyncStatus = $derived(() => {
@@ -617,8 +622,8 @@ onMount(() => {
           Profile and Collection pages when you visit them, adding new records
           to its internal database. Keep in mind that the RateYourMusic database
           is <em>constantly changing</em> — some releases may be updated or even
-          removed. To ensure your data stays accurate, it’s recommended to run RYM
-          Sync periodically (<strong>at least once a month</strong>).
+          removed. To ensure your data stays accurate, it’s recommended to run
+          RYM Sync periodically (<strong>at least once a month</strong>).
         </p>
       </blockquote>
     {/if}

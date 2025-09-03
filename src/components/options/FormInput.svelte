@@ -1,8 +1,9 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-import type { Snippet } from 'svelte';
 import FormItem from './FormItem.svelte';
+
+import type { Snippet } from 'svelte';
 
 interface Props {
   value: string;

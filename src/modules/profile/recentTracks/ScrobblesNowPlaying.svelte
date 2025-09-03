@@ -1,15 +1,14 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-import browser from 'webextension-polyfill';
 import { formatDistanceToNow } from 'date-fns';
 
 import DialogBase from '@/components/svelte/DialogBase.svelte';
 import TextEffect from '@/components/svelte/TextEffect.svelte';
 import * as constants from '@/helpers/constants';
-import * as utils from '@/helpers/utils';
 import { updateProfileOptions } from '@/helpers/storageUtils';
 import { generateSearchUrl, generateSearchHint } from '@/helpers/string';
+import * as utils from '@/helpers/utils';
 import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 
 import type { Writable } from 'svelte/store';
@@ -67,7 +66,9 @@ const isRymSyncOutdated = $derived(() => {
   if (!rymSyncTimestamp) return false;
   const date = new Date(rymSyncTimestamp);
   const now = new Date();
-  return now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS;
+  return (
+    now.getTime() - date.getTime() > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS
+  );
 });
 
 const pollingProgressAngle = $derived(() => {
@@ -243,10 +244,8 @@ $effect(() => {
 
       <div class="flex justify-between items-center pt-4">
         <div>
-          <button
-            type="button"
-            class="link-alike"
-            onclick={openAddonOptions}>Go to Addon options</button
+          <button type="button" class="link-alike" onclick={openAddonOptions}
+            >Go to Addon options</button
           >
         </div>
         <div class="flex gap-4">
