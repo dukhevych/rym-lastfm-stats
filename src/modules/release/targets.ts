@@ -1,5 +1,6 @@
 import { getDirectInnerText } from '@/helpers/dom';
 import { extractNumbers } from '@/helpers/string';
+import { generateStorageKey } from '@/helpers/storageUtils';
 
 export const PARENT_SELECTOR = '#column_container_right .section_main_info';
 export const INFO_TABLE_SELECTOR = '.album_info tbody';
@@ -16,8 +17,20 @@ export function getReleaseYear(parentEl: HTMLElement): number | '' {
   return match ? Number(match[0]) : '';
 }
 
+const cache = new Map<string, HTMLAnchorElement[]>();
+
 export function getArtistNames(parentEl: HTMLElement): RYMArtistNames {
-  const artistLinks: HTMLAnchorElement[] = Array.from(parentEl.querySelectorAll(INFO_ARTISTS_SELECTOR));
+  const cacheKey = generateStorageKey('artistParent', parentEl.outerHTML);
+  const cacheData = cache.get(cacheKey);
+
+  let artistLinks: HTMLAnchorElement[] = [];
+
+  if (cacheData) {
+    artistLinks = cacheData;
+  } else {
+    artistLinks = Array.from(parentEl.querySelectorAll(INFO_ARTISTS_SELECTOR));
+    cache.set(cacheKey, artistLinks);
+  }
 
   return Array.from(artistLinks)
     .map((artistLink) => {
@@ -31,6 +44,21 @@ export function getArtistNames(parentEl: HTMLElement): RYMArtistNames {
         artistId: extractNumbers(artistLink.title),
       };
     });
+}
+
+export function getArtistIds(parentEl: HTMLElement): string[] {
+  const cacheKey = generateStorageKey('artistParent', parentEl.outerHTML);
+  const cacheData = cache.get(cacheKey);
+
+  let artistLinks: HTMLAnchorElement[] = [];
+
+  if (cacheData) {
+    artistLinks = cacheData;
+  } else {
+    artistLinks = Array.from(parentEl.querySelectorAll(INFO_ARTISTS_SELECTOR));
+    cache.set(cacheKey, artistLinks);
+  }
+  return Array.from(artistLinks).map((artistLink) => extractNumbers(artistLink.title));
 }
 
 export function getReleaseTitle(parentEl: HTMLElement): { title: string, titleLocalized: string } {

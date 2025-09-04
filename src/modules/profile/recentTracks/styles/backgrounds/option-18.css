@@ -1,3 +1,5 @@
+/* Option 18: EQ LG + Scrolling */
+
 @keyframes bg-option-18-animation-before {
   from { background-position-y: calc(-50cqw + 50cqh); }
   to   { background-position-y: calc(50cqw + 50cqh); }

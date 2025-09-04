@@ -1,3 +1,5 @@
+/* Option 5: Rotating Star */
+
 @keyframes bg-option-5-animation {
   0% {
     --angle-360: 0deg;

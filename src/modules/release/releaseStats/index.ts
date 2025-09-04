@@ -9,6 +9,7 @@ import {
   PARENT_SELECTOR,
   INFO_TABLE_SELECTOR,
   getArtistNames,
+  getArtistIds,
   getReleaseTitle,
   getReleaseType,
   getReleaseId,
@@ -38,7 +39,7 @@ async function render(settings: RenderSettings) {
   }
 
   const artistNames = getArtistNames(parent);
-  const artistIds = artistNames.map((artist) => artist.artistId);
+  const artistIds = getArtistIds(parent);
   const additionalArtistNames: string[] = Object.values(await storageGet(artistIds.map(id => generateStorageKey('artistNames', id)), 'local')).flat();
 
   const entityType = getReleaseType(parent) ?? ERYMReleaseType.Album;

@@ -1,3 +1,5 @@
+/* Option 11: Diagonal #2 */
+
 [data-element="rymstats-track-panel"] {
   &.bg-option-11:after {
     --track-panel-gradient-stripe-width: 120px;

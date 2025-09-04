@@ -1,3 +1,5 @@
+/* Option 1: Diagonal */
+
 [data-element="rymstats-track-panel"] {
   &.bg-option-1:after {
     background-image:

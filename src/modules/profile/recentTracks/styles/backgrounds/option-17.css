@@ -1,3 +1,5 @@
+/* Option 17: Scrolling */
+
 @keyframes bg-option-17-animation {
   from { background-position-y: calc(50cqw + 50cqh); }
   to   { background-position-y: calc(-50cqw + 50cqh); }

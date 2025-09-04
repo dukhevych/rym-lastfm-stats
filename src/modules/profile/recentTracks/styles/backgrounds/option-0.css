@@ -1,3 +1,5 @@
+/* Option 0: Clean */
+
 [data-element="rymstats-track-panel"] {
   &.bg-option-0:after {}
 }

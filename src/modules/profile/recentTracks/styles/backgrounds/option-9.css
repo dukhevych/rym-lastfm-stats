@@ -1,3 +1,5 @@
+/* Option 9: Plaid */
+
 @keyframes bg-option-9-diagonal {
   from { background-position: 0 0, 0 0; }
   to   { background-position: -20px -20px, -20px -20px; }

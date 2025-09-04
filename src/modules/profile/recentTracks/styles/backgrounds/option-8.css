@@ -1,3 +1,14 @@
+/* Option 8: Glitch */
+
+@keyframes bg-option-8-animation {
+  0% {
+    --angle-360: 0deg;
+  }
+  100% {
+    --angle-360: 360deg;
+  }
+}
+
 @keyframes bg-option-8-animation {
   0% {
     --angle-360: 0deg;
