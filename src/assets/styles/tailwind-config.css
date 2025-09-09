@@ -1,0 +1,12 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@config "../../../tailwind.config.mjs";
+@theme {
+  --color-lastfm: #d92323;
+  --color-lastfm-light: color-mix(in srgb, var(--color-lastfm), white 30%);
+  --color-lastfm-dark: color-mix(in srgb, var(--color-lastfm), black 30%);
+
+  --color-rym-user: #383;
+  --color-rym-primary: #006ED1;
+}

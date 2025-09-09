@@ -102,7 +102,7 @@ export const TOP_ALBUMS_PERIOD_DEFAULT = '1month';
 
 // TOP ARTISTS
 export const TOP_ARTISTS_PERIOD_DEFAULT = '12month';
-export const TOP_ARTISTS_LIMIT_MIN = 5;
+export const TOP_ARTISTS_LIMIT_MIN = 1;
 export const TOP_ARTISTS_LIMIT_MAX = 10;
 export const TOP_ARTISTS_LIMIT_DEFAULT = 5;
 

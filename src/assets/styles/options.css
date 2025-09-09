@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@config "../../../tailwind.config.mjs";
+@import "./tailwind-config.css";
+@import "tailwindcss/preflight.css" layer(base);
 
 :root {
   color-scheme: dark;
