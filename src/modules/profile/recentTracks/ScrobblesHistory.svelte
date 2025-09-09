@@ -62,7 +62,7 @@ const scrobblesEnriched = $derived(scrobbles.map((scrobble: TrackDataNormalized)
           title="{scrobble.searchAlbumHint}"
         >
           <img
-            src="{scrobble.coverLargeUrl}"
+            src="{scrobble.covers[2]}"
             alt="{scrobble.artistName} - {scrobble.albumName}"
           />
         </a>

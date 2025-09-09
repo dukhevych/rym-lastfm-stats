@@ -341,7 +341,7 @@ html[data-scheme="light"] {
     transform: translate(-50%, -50%);
     aspect-ratio: 1 / 1;
     height: 100%;
-    color: var(--clr-lastfm);
+    color: var(--color-lastfm);
 
     svg {
       width: 100%;
@@ -421,7 +421,7 @@ html[data-scheme="dark"] {
 
 .btn.btn-lastfm,
 .btn.btn-profile {
-  --bg-color: var(--clr-lastfm);
+  --bg-color: var(--color-lastfm);
   --bg-color-hover: color-mix(in lab, var(--bg-color) 90%, white);
   --bg-color-active: color-mix(in lab, var(--bg-color) 80%, black);
   --color: #fff;

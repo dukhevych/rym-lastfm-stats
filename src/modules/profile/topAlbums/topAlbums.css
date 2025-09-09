@@ -22,7 +22,7 @@
   }
 
   & > .loader {
-    color: var(--clr-lastfm);
+    color: var(--color-lastfm);
     width: 182px;
     aspect-ratio: 1 / 1;
   }
@@ -91,7 +91,7 @@
       svg {
         height: 60%;
         width: 60%;
-        color: var(--clr-lastfm);
+        color: var(--color-lastfm);
       }
     }
 

@@ -31,9 +31,7 @@ export interface UIRecentTracks {
 export interface TrackDataNormalized {
   albumName: string;
   artistName: string;
-  coverExtraLargeUrl: string;
-  coverLargeUrl: string;
-  coverUrl: string;
+  covers: string[];
   nowPlaying: boolean;
   timestamp: number | null;
   trackName: string;

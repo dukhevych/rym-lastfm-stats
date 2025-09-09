@@ -63,7 +63,7 @@ export function focus(): void {
     {#if clearable}
       <button
         type="button"
-        class="text-zinc-400 hover-fine:hover:text-zinc-500 shrink-0"
+        class="text-zinc-400 hoverable:hover:text-zinc-500 shrink-0"
         onclick={handleClear}
         disabled={value.length === 0}
       >

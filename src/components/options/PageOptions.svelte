@@ -27,12 +27,12 @@ import * as utils from '@/helpers/utils';
 
 import AppHeader from './AppHeader.svelte';
 import AppStatusCard from './AppStatusCard.svelte';
+import FormGroup from './FormGroup.svelte';
 import FormInput from './FormInput.svelte';
 import FormItem from './FormItem.svelte';
 import FormSelect from './FormSelect.svelte';
-import FormSlider2 from './FormSlider2.svelte';
+import FormSlider from './FormSlider.svelte';
 import FormToggle from './FormToggle.svelte';
-import FormToggleGroup from './FormToggleGroup.svelte';
 import TabContent from './TabContent.svelte';
 
 import type { Snippet } from 'svelte';
@@ -125,16 +125,16 @@ const formCustomizationChanged = $derived(() => {
  * ──────────────────────────────────────────────────────────────────────────── */
 const tabs: () => Tab[] = $derived(() => [
   {
-    id: 'modules',
-    label: 'Modules',
-    icon: iconSwitch,
-    modified: formModulesChanged(),
-  },
-  {
     id: 'customization',
     label: 'Customization',
     icon: iconSettings,
     modified: formCustomizationChanged(),
+  },
+  {
+    id: 'modules',
+    label: 'Modules',
+    icon: iconSwitch,
+    modified: formModulesChanged(),
   },
   {
     id: 'api-auth',
@@ -145,8 +145,8 @@ const tabs: () => Tab[] = $derived(() => [
 
 function getInitialTab() {
   if (hashValue)
-    return tabs().find((tab) => tab.id === hashValue)?.id || 'modules';
-  return 'modules';
+    return tabs().find((tab) => tab.id === hashValue)?.id || 'customization';
+  return 'customization';
 }
 
 let activeTab = $state(getInitialTab());
@@ -555,7 +555,7 @@ onMount(() => {
         title="Last.fm"
         validStatus="Connected"
         invalidStatus="Not connected"
-        note={userData?.name ? ['Usernames:', userData.name] : 'Guest'}
+        note={userData?.name ? ['Username:', userData.name] : 'Guest'}
         action={identityApiSupported ? openAuthPage : fallbackLogin}
         loading={signinInProgress}
       />
@@ -587,9 +587,10 @@ onMount(() => {
         class="text-sm text-zinc-500 text-center text-balance flex flex-col gap-4"
       >
         <p class="font-bold text-white font-bold">
-          Keep your data fresh and up to date.
+          Keep your data fresh and up to date!
         </p>
-        <p>
+        <p class="font-bold font-mono">
+          &gt;
           <a
             href="https://rateyourmusic.com/music_export?sync"
             target="_blank"
@@ -604,17 +605,19 @@ onMount(() => {
               text-white
               inline-flex
               items-center
-              bg-orange-700
-              hover-fine:hover:bg-orange-800
+              bg-lastfm
+              hoverable:hover:bg-lastfm-light
               focus-visible:ring-4
               focus-visible:outline-none
               focus-visible:ring-orange-300
               rounded-lg
               text-center
+              animate-[periodic-shake-rotate_5s_ease-in-out_infinite]
             "
           >
             Re-run RYM Sync
           </a>
+          &lt;
         </p>
         <p>
           RYM Last.fm Stats <strong>automatically</strong> tracks your RYM
@@ -684,7 +687,7 @@ onMount(() => {
                 max-md:*:rounded-none
                 {activeTab === tab.id
                 ? '*:bg-orange-800 pointer-events-none'
-                : '*:opacity-50 hover-fine:*:hover:opacity-100'}
+                : '*:opacity-50 hoverable:*:hover:opacity-100'}
               "
             >
               {@render tabLink({
@@ -702,6 +705,125 @@ onMount(() => {
       <!-- TAB CONTENT -->
       <div>
         <TabContent
+          active={activeTab === 'customization'}
+          icon={iconSettings}
+          title="Customization"
+          description="Profile modules customization"
+        >
+          <div
+            class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10"
+          >
+            <FormGroup title="Global">
+              <FormInput
+                label="Last.fm link label"
+                bind:value={formCustomization.mainHeaderLastfmLinkLabel}
+                placeholder="Last.fm"
+                name="mainHeaderLastfmLinkLabel"
+              >
+                {#snippet description()}
+                  Use <code class="px-0.5 py-0.5 bg-zinc-700 rounded-md"
+                    >$username</code
+                  > to display your Last.fm username
+                {/snippet}
+              </FormInput>
+            </FormGroup>
+
+            <FormGroup
+              title={`Top Artists Widget ${!formModulesSaved.profileTopArtists ? '(Disabled)' : ''}`}
+            >
+              <FormSlider
+                label="How many artists to show?"
+                description="Change the number of top artists to show on profile"
+                bind:value={formCustomization.profileTopArtistsLimit}
+                min={constants.TOP_ARTISTS_LIMIT_MIN}
+                max={constants.TOP_ARTISTS_LIMIT_MAX}
+                name="profileTopArtistsLimit"
+                disabled={!formModulesSaved.profileTopArtists}
+              />
+
+              <FormSelect
+                label="Time period"
+                description="Filter top artists by specific time period"
+                bind:value={formCustomization.profileTopArtistsPeriod}
+                name="profileTopArtistsPeriod"
+                options={constants.PERIOD_OPTIONS}
+                disabled={!formModulesSaved.profileTopArtists}
+              />
+            </FormGroup>
+
+            <FormGroup
+              title={`Top Albums Widget ${!formModulesSaved.profileTopAlbums ? '(Disabled)' : ''}`}
+            >
+              <FormSelect
+                label="Time period"
+                description="Filter top albums by specific time period"
+                bind:value={formCustomization.profileTopAlbumsPeriod}
+                name="profileTopAlbumsPeriod"
+                options={constants.PERIOD_OPTIONS}
+                disabled={!formModulesSaved.profileTopAlbums}
+              />
+            </FormGroup>
+
+            <FormGroup
+              title={`Recent Tracks Widget ${!formModulesSaved.profileRecentTracks ? '(Disabled)' : ''}`}
+            >
+              <FormToggle
+                label="Show on load"
+                description="Pre-open the list of recent tracks on profile load"
+                bind:checked={formCustomization.profileRecentTracksShowOnLoad}
+                name="profileRecentTracksShowOnLoad"
+                disabled={!formModulesSaved.profileRecentTracks}
+              />
+
+              <FormToggle
+                label="Periodic updates"
+                description="Update recent tracks list periodically"
+                bind:checked={formCustomization.profileRecentTracksPolling}
+                name="profileRecentTracksPolling"
+                disabled={!formModulesSaved.profileRecentTracks}
+              />
+
+              <FormToggle
+                label="Hide RYM history"
+                description="Hides the default RYM Play History widget on user profiles"
+                bind:checked={
+                  formCustomization.profileRecentTracksRymHistoryHide
+                }
+                name="profileRecentTracksRymHistoryHide"
+                disabled={!formModulesSaved.profileRecentTracks}
+              />
+
+              <FormSlider
+                label="Tracks limit"
+                description="Select how many of recent scrobbles to fetch"
+                bind:value={formCustomization.profileRecentTracksLimit}
+                min={constants.RECENT_TRACKS_LIMIT_MIN}
+                max={constants.RECENT_TRACKS_LIMIT_MAX}
+                name="profileRecentTracksLimit"
+                disabled={!formModulesSaved.profileRecentTracks}
+              />
+
+              <FormSelect
+                label="Disc rotation animation"
+                description="Toggle the animation of the disc rotation"
+                bind:value={formCustomization.profileRecentTracksAnimation}
+                name="profileRecentTracksAnimation"
+                options={constants.NOW_PLAYING_ANIMATION_OPTIONS}
+                disabled={!formModulesSaved.profileRecentTracks}
+              />
+
+              <FormSelect
+                label="Background style"
+                bind:value={formCustomization.profileRecentTracksBackground}
+                name="profileRecentTracksBackground"
+                options={constants.RECENT_TRACK_BACKGROUND_OPTIONS}
+                disabled={!formModulesSaved.profileRecentTracks}
+              />
+            </FormGroup>
+          </div>
+        </TabContent>
+
+        <TabContent
           active={activeTab === 'modules'}
           icon={iconSwitch}
           title="Modules"
@@ -709,7 +831,7 @@ onMount(() => {
         >
           <div class="flex gap-3">
             <aside class="flex flex-col gap-8 w-1/3">
-              <FormToggleGroup>
+              <FormGroup>
                 <FormToggle
                   label="Last.fm profile Link"
                   description="Adds link to the header of all RYM pages"
@@ -717,9 +839,9 @@ onMount(() => {
                   name="mainHeaderLastfmLink"
                   newOption
                 />
-              </FormToggleGroup>
+              </FormGroup>
 
-              <FormToggleGroup title="Last.fm Stats">
+              <FormGroup title="Last.fm Stats">
                 {#snippet note()}
                   Updates once in &lt; <strong
                     >{utils.msToHuman(
@@ -768,9 +890,9 @@ onMount(() => {
                   name="songSongStats"
                   newOption
                 />
-              </FormToggleGroup>
+              </FormGroup>
 
-              <FormToggleGroup title="Profile">
+              <FormGroup title="Profile">
                 {#snippet note()}
                   {#if !isLoading && !lastfmApiKeySaved}
                     <span class="text-orange-200 not-italic">
@@ -807,9 +929,9 @@ onMount(() => {
                   disabled={!lastfmApiKeySaved}
                   name="searchStrictResults"
                 />
-              </FormToggleGroup>
+              </FormGroup>
 
-              <FormToggleGroup title="RYM Ratings">
+              <FormGroup title="RYM Ratings">
                 {#snippet note()}
                   {#if !isLoading && hasRymSyncWarning()}
                     <span class="text-orange-200 not-italic">
@@ -835,7 +957,7 @@ onMount(() => {
                   name="chartsUserRating"
                   newOption
                 />
-              </FormToggleGroup>
+              </FormGroup>
             </aside>
 
             <!-- Visual preview -->
@@ -898,125 +1020,6 @@ onMount(() => {
         </TabContent>
 
         <TabContent
-          active={activeTab === 'customization'}
-          icon={iconSettings}
-          title="Customization"
-          description="Profile modules customization"
-        >
-          <div
-            class="max-md:flex max-md:flex-col md:columns-2 max-md:gap-4 md:*:break-inside-avoid md:*:mb-10"
-          >
-            <FormToggleGroup title="Global">
-              <FormInput
-                label="Last.fm link label"
-                bind:value={formCustomization.mainHeaderLastfmLinkLabel}
-                placeholder="Last.fm"
-                name="mainHeaderLastfmLinkLabel"
-              >
-                {#snippet description()}
-                  Use <code class="px-0.5 py-0.5 bg-zinc-700 rounded-md"
-                    >$username</code
-                  > to display your Last.fm username
-                {/snippet}
-              </FormInput>
-            </FormToggleGroup>
-
-            <FormToggleGroup
-              title={`Top Artists Widget ${!formModulesSaved.profileTopArtists ? '(Disabled)' : ''}`}
-            >
-              <FormSlider2
-                label="Limit"
-                description="Change the number of top artists to show"
-                bind:value={formCustomization.profileTopArtistsLimit}
-                min={constants.TOP_ARTISTS_LIMIT_MIN}
-                max={constants.TOP_ARTISTS_LIMIT_MAX}
-                name="profileTopArtistsLimit"
-                disabled={!formModulesSaved.profileTopArtists}
-              />
-
-              <FormSelect
-                label="Time period"
-                description="Filter top artists by specific time period"
-                bind:value={formCustomization.profileTopArtistsPeriod}
-                name="profileTopArtistsPeriod"
-                options={constants.PERIOD_OPTIONS}
-                disabled={!formModulesSaved.profileTopArtists}
-              />
-            </FormToggleGroup>
-
-            <FormToggleGroup
-              title={`Top Albums Widget ${!formModulesSaved.profileTopAlbums ? '(Disabled)' : ''}`}
-            >
-              <FormSelect
-                label="Time period"
-                description="Filter top albums by specific time period"
-                bind:value={formCustomization.profileTopAlbumsPeriod}
-                name="profileTopAlbumsPeriod"
-                options={constants.PERIOD_OPTIONS}
-                disabled={!formModulesSaved.profileTopAlbums}
-              />
-            </FormToggleGroup>
-
-            <FormToggleGroup
-              title={`Recent Tracks Widget ${!formModulesSaved.profileRecentTracks ? '(Disabled)' : ''}`}
-            >
-              <FormToggle
-                label="Show on load"
-                description="Pre-open the list of recent tracks on profile load"
-                bind:checked={formCustomization.profileRecentTracksShowOnLoad}
-                name="profileRecentTracksShowOnLoad"
-                disabled={!formModulesSaved.profileRecentTracks}
-              />
-
-              <FormToggle
-                label="Periodic updates"
-                description="Update recent tracks list periodically"
-                bind:checked={formCustomization.profileRecentTracksPolling}
-                name="profileRecentTracksPolling"
-                disabled={!formModulesSaved.profileRecentTracks}
-              />
-
-              <FormToggle
-                label="Hide RYM history"
-                description="Hides the default RYM Play History widget on user profiles"
-                bind:checked={
-                  formCustomization.profileRecentTracksRymHistoryHide
-                }
-                name="profileRecentTracksRymHistoryHide"
-                disabled={!formModulesSaved.profileRecentTracks}
-              />
-
-              <FormSlider2
-                label="Tracks limit"
-                description="Select how many of recent scrobbles to fetch"
-                bind:value={formCustomization.profileRecentTracksLimit}
-                min={constants.RECENT_TRACKS_LIMIT_MIN}
-                max={constants.RECENT_TRACKS_LIMIT_MAX}
-                name="profileRecentTracksLimit"
-                disabled={!formModulesSaved.profileRecentTracks}
-              />
-
-              <FormSelect
-                label="Disc rotation animation"
-                description="Toggle the animation of the disc rotation"
-                bind:value={formCustomization.profileRecentTracksAnimation}
-                name="profileRecentTracksAnimation"
-                options={constants.NOW_PLAYING_ANIMATION_OPTIONS}
-                disabled={!formModulesSaved.profileRecentTracks}
-              />
-
-              <FormSelect
-                label="Background style"
-                bind:value={formCustomization.profileRecentTracksBackground}
-                name="profileRecentTracksBackground"
-                options={constants.RECENT_TRACK_BACKGROUND_OPTIONS}
-                disabled={!formModulesSaved.profileRecentTracks}
-              />
-            </FormToggleGroup>
-          </div>
-        </TabContent>
-
-        <TabContent
           active={activeTab === 'api-auth'}
           icon={iconKey}
           title="API & Auth"
@@ -1070,7 +1073,7 @@ onMount(() => {
                         border-1
                         bg-yellow-900/50
                         border-yellow-800
-                        hover-fine:hover:bg-yellow-800/50
+                        hoverable:hover:bg-yellow-800/50
                         disabled:opacity-50
                         disabled:pointer-events-none
                         focus-visible:ring-2
@@ -1097,11 +1100,11 @@ onMount(() => {
                         text-sm
                         font-medium
                         items-center
-                        hover-fine:hover:text-red-400
+                        hoverable:hover:text-red-400
                         focus-visible:ring-2
                         focus-visible:outline-none
                         focus-visible:ring-blue-300
-                        hover-fine:hover:underline
+                        hoverable:hover:underline
                       "
                     >
                       Remove API Key
@@ -1112,7 +1115,7 @@ onMount(() => {
                       <a
                         href="https://www.last.fm/api/account/create"
                         target="_blank"
-                        class="text-zinc-400 text-xs hover-fine:hover:text-zinc-300 flex items-center gap-2"
+                        class="text-zinc-400 text-xs hoverable:hover:text-zinc-300 flex items-center gap-2"
                       >
                         <svg
                           width="800px"
@@ -1159,7 +1162,7 @@ onMount(() => {
                       <a
                         href="https://www.last.fm/api/accounts"
                         target="_blank"
-                        class="text-zinc-400 text-xs hover-fine:hover:text-zinc-300 flex items-center gap-2"
+                        class="text-zinc-400 text-xs hoverable:hover:text-zinc-300 flex items-center gap-2"
                       >
                         <svg
                           width="800px"
@@ -1246,8 +1249,8 @@ onMount(() => {
                         text-white
                         inline-flex
                         items-center
-                        bg-clr-lastfm
-                        hover-fine:hover:bg-clr-lastfm-light
+                        bg-lastfm
+                        hoverable:hover:bg-lastfm-light
                         focus-visible:ring-4
                         focus-visible:outline-none
                         focus-visible:ring-blue-300
@@ -1276,7 +1279,7 @@ onMount(() => {
                       text-sm
                       rounded-lg
                       text-zinc-300
-                      hover-fine:hover:underline
+                      hoverable:hover:underline
                       font-bold
                     "
                   >
@@ -1298,10 +1301,10 @@ onMount(() => {
                       pr-2.5
                       rounded-r-lg
                       rounded-l-[2.5rem]
-                      hover-fine:hover:bg-zinc-700/70
+                      hoverable:hover:bg-zinc-700/70
                       transition-colors
                       text-zinc-400
-                      hover-fine:hover:text-white
+                      hoverable:hover:text-white
                     "
                   >
                     <span class="flex items-center gap-2 h-full">
@@ -1322,8 +1325,8 @@ onMount(() => {
                       onclick={logout}
                       class="
                         inline-flex ml-auto gap-2 cursor-pointer p-0 text-sm font-medium items-center
-                        hover-fine:hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
-                        hover-fine:hover:underline
+                        hoverable:hover:text-red-400 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-300
+                        hoverable:hover:underline
                       "
                     >
                       Logout
@@ -1356,8 +1359,8 @@ onMount(() => {
           <button
             class="
               text-sm p-2 border-2 border-orange-700/50 rounded-lg relative
-              hover-fine:hover:[&_.button-label]:opacity-100 cursor-pointer hover-fine:hover:bg-orange-700/20
-              hover-fine:hover:[&_.unsaved-changes]:opacity-0
+              hoverable:hover:[&_.button-label]:opacity-100 cursor-pointer hoverable:hover:bg-orange-700/20
+              hoverable:hover:[&_.unsaved-changes]:opacity-0
             "
             onclick={reset}
           >
@@ -1390,7 +1393,7 @@ onMount(() => {
               disabled:opacity-50 disabled:pointer-events-none
               border-1 bg-yellow-900/50
               border-yellow-800
-              hover-fine:hover:bg-yellow-800/50
+              hoverable:hover:bg-yellow-800/50
               relative
               active:t-[2px]
             "
@@ -1413,7 +1416,7 @@ onMount(() => {
         </div>
         <div class="text-white">
           <a
-            class="hover-fine:hover:underline"
+            class="hoverable:hover:underline"
             href="mailto:landenmetal@gmail.com">Contact developer</a
           >&nbsp;&nbsp;|&nbsp;&nbsp;<span
             >RYM Last.fm Stats © {new Date().getFullYear()}</span

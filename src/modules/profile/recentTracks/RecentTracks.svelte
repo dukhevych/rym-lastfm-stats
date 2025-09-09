@@ -15,7 +15,6 @@ import { storageGet, storageSet, storageRemove, updateProfileOptions } from '@/h
 import { cleanupReleaseEdition } from '@/helpers/string';
 import * as utils from '@/helpers/utils';
 
-import errorMessages from './errorMessages.json';
 import ScrobblesHistory from './ScrobblesHistory.svelte';
 import ScrobblesNowPlaying from './ScrobblesNowPlaying.svelte';
 
@@ -130,8 +129,12 @@ async function processData(data: RecentTrack[]) {
   result.latestTrack = normalizedData[0];
   result.scrobbles = result.latestTrack.nowPlaying ? normalizedData.slice(1) : normalizedData.slice(0);
 
-  const colors = await trySetColorsFromTrack(result.latestTrack);
-  result.latestTrackColors = colors ? getColorsMap(colors) : null;
+  if (result.latestTrack.covers.length > 0) {
+    const colors = await getImageColors(result.latestTrack.covers.at(1)!);
+    if (colors) {
+      result.latestTrackColors = getColorsMap(colors);
+    }
+  }
 
   if (context.isMyProfile) {
     const albumNameFallback = result.latestTrack?.albumName ? cleanupReleaseEdition(result.latestTrack.albumName) : '';
@@ -178,17 +181,6 @@ async function processData(data: RecentTrack[]) {
 onDestroy(() => {
   polling.cleanup();
 });
-
-async function trySetColorsFromTrack(track: TrackDataNormalized | undefined) {
-  const coverUrl = track?.coverExtraLargeUrl;
-  if (!coverUrl) return null;
-  try {
-    return await getImageColors(coverUrl);
-  } catch {
-    console.warn(errorMessages.failedToFetchColors);
-    return null;
-  }
-}
 
 async function loadRecentTracks() {
   abortController?.abort();

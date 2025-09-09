@@ -246,7 +246,7 @@
       />
       <span class="separator" aria-hidden="true">|</span>
       <a
-        class="lastfm-link clr-lastfm"
+        class="lastfm-link text-lastfm hover:text-lastfm-light"
         target="_blank"
         title={`View "${artistQuery}" on Last.fm`}
         aria-label={`View "${artistQuery}" on Last.fm`}
@@ -265,7 +265,7 @@
       <span class="separator" aria-hidden="true">|</span>
       <button
         type="button"
-        class="btn-icon clr-lastfm"
+        class="btn-icon text-lastfm hover:text-lastfm-light"
         aria-label="Metadata settings"
         title="Metadata settings"
         onclick={() => dialogVisible = true}

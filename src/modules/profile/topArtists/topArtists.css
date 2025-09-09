@@ -48,7 +48,7 @@
   }
 
   & > .loader {
-    color: var(--clr-lastfm);
+    color: var(--color-lastfm);
     width: 182px;
     min-height: calc(38px * var(--config-top-artists-limit));
     align-self: center;

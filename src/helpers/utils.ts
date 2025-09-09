@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import MD5 from 'crypto-js/md5';
 import * as constants from './constants';
-import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
+import type { TrackDataNormalized, TrackCovers } from '@/modules/profile/recentTracks/types';
 import type { RecentTrack } from '@/api/getRecentTracks';
 import { formatDuration, intervalToDuration } from 'date-fns';
 
@@ -335,9 +335,7 @@ export async function restartBackground() {
 export function normalizeLastFmTrack(track: RecentTrack): TrackDataNormalized {
   return {
     nowPlaying: track["@attr"]?.nowplaying === 'true',
-    coverUrl: track.image[0]['#text'],
-    coverLargeUrl: track.image[3]['#text'],
-    coverExtraLargeUrl: track.image[track.image.length - 1]['#text'],
+    covers: track.image.map((image) => image['#text']).filter(Boolean),
     trackName: track.name,
     timestamp: track.date?.uts ? Number(track.date.uts) : null,
     albumName: track.album['#text'],

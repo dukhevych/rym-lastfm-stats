@@ -1,3 +1,7 @@
+function colorMix(color1, color2, color2Amount = 20) {
+  return `color-mix(in lab, ${color1}, ${color2} ${color2Amount}%)`;
+}
+
 export default {
   important: true,
   content: [
@@ -13,16 +17,31 @@ export default {
         'rym-gradient': 'linear-gradient(to bottom, #33519f, #2480c4)',
       },
       colors: {
-        'clr-rym': '#006ED1',
-        'clr-lastfm': '#d92323',
-        'clr-lastfm-light': '#f71414'
+        rymUser: '#383',
+        rymPrimary: '#006ED1',
+
+        lastfm: '#d92323',
+        lastfmLight: 'var(--color-lastfm-light)',
+        lastfmDark: 'var(--color-lastfm-dark)',
       },
+    },
+    cssVariables: {
+      theme: true,
     },
   },
   plugins: [
     function ({ addVariant }) {
-      addVariant('hover-fine', '@media (hover: hover) and (pointer: fine)');
-      addVariant('hover-none', '@media (hover: none), (pointer: coarse)');
+      addVariant('hoverable', '@media (hover: hover) and (pointer: fine)');
+      addVariant('non-hoverable', '@media (hover: none), (pointer: coarse)');
+    },
+    ({ addBase }) => {
+      addBase({
+        ':root': {
+          '--color-lastfm': '#d92323',
+          '--color-lastfm-light': colorMix('var(--color-lastfm)', 'white'),
+          '--color-lastfm-dark': colorMix('var(--color-lastfm)', 'black'),
+        },
+      });
     },
   ]
 }

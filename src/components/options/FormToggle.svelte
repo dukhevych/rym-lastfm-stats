@@ -46,7 +46,7 @@ let {
       flex items-center justify-between gap-2
       cursor-pointer
       bg-zinc-800
-      hover-fine:not-peer-disabled:hover:bg-zinc-700
+      hoverable:not-peer-disabled:hover:bg-zinc-700
       py-3 px-4 rounded-xl
       peer-focus-visible:ring-1 peer-focus-visible:ring-zinc-400/50
       peer-disabled:opacity-50 peer-disabled:pointer-events-none

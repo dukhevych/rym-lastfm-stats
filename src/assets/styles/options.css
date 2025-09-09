@@ -10,3 +10,21 @@ body {
   color: #e5e5e5 !important;
   min-width: 360px;
 }
+
+@keyframes periodic-shake-rotate {
+  0%, 90%, 100% {
+    transform: translateX(0) rotate(0);
+  }
+  92% {
+    transform: translateX(-5px) rotate(-3deg);
+  }
+  94% {
+    transform: translateX(5px) rotate(3deg);
+  }
+  96% {
+    transform: translateX(-5px) rotate(-3deg);
+  }
+  98% {
+    transform: translateX(5px) rotate(3deg);
+  }
+}

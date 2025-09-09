@@ -50,8 +50,8 @@ const {
     status === 'invalid' && 'bg-zinc-900 border-zinc-700',
     status === 'warning' && 'bg-orange-900/50 border-orange-700/50',
     ['invalid', 'warning'].includes(status) && action && 'cursor-pointer',
-    ['invalid'].includes(status) && action && 'hover-fine:hover:bg-zinc-800',
-    ['warning'].includes(status) && action && 'hover-fine:hover:bg-orange-800/50',
+    ['invalid'].includes(status) && action && 'hoverable:hover:bg-zinc-800',
+    ['warning'].includes(status) && action && 'hoverable:hover:bg-orange-800/50',
   ]
     .filter(Boolean)
     .join(' ')}

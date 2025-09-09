@@ -41,7 +41,7 @@
 
     <li title={`${scrobbles} scrobbles (${timestampFormatted()})`}>
       <strong>My scrobbles:</strong>
-      <strong class="clr-user">{getFormattedValue(scrobbles)}</strong>
+      <strong class="text-rym-user">{getFormattedValue(scrobbles)}</strong>
     </li>
   {/if}
 </ul>

@@ -39,136 +39,60 @@ function handleLegendClick(_value: number): void {
 
 <div
   class="
-    flex flex-col gap-1
+    flex flex-col gap-2
     bg-zinc-800 rounded-xl py-3 px-4
-    [--range-track:theme(colors.zinc.600)]
-    [--range-fill:theme(colors.teal.700)]
-    [--range-thumb:theme(colors.teal.600)]
   "
 >
   <div class="flex flex-col gap-1">
-    <label for={name} class="text-sm font-bold">{label}: {value}</label>
-    {#if description}
-      <p class="text-xs text-zinc-400">{description}</p>
-    {/if}
+    <label for={name} class="text-sm font-bold">{label}</label>
   </div>
-  <div>
-    <div class="flex items-center gap-2">
-      <div class="w-full">
-        <input
-          id={name}
-          type="range"
-          {name}
-          class="block w-full {disabled ? '' : 'cursor-pointer'}"
-          {value}
-          {min}
-          {max}
-          {disabled}
-          {...restProps}
-          oninput={handleInput}
-        />
-        <div class="relative mt-0.5">
-          <div
+  <div class="flex items-center gap-4">
+    <div class="relative">
+      <div class="flex">
+        {#each legendRange() as n}
+          <button
             class="
-              flex justify-between text-sm text-gray-500 relative h-5
+              border-2 cursor-pointer relative
+              not-first:-ml-[2px]
+              aspect-square w-8 h-8
+              text-center
+              hoverable:hover:[z-15 bg-teal-600 border-teal-400]
+              {+n > +value ?
+                'bg-zinc-800 border-zinc-600 *:opacity-50' :
+                ''}
+              {+n <= +value ?
+                'z-10'
+                : ''
+              }
+              {+n === +value ?
+                'bg-teal-600 border-teal-400 font-bold' :
+                ''}
+              {+n < +value ?
+                'bg-teal-800 border-teal-600' :
+                ''}
             "
-            style="margin-inline: calc(var(--range-thumb-width, 16px) / 2)"
+            type="button"
+            onclick={() => handleLegendClick(n)}
           >
-            {#each legendRange() as n, i}
-              <span
-                class="
-                  absolute top-0 text-center
-                  translate-x-[-50%]
-                  {+n === +value ? 'font-bold text-gray-100' : 'text-gray-500'}
-                "
-                style="left: {i * 100 / (+max - +min)}%;"
-              >
-                <button
-                  type="button"
-                  class="inline-flex cursor-pointer px-1 {disabled
-                    ? 'pointer-events-none'
-                    : ''}"
-                  onclick={() => handleLegendClick(n)}
-                >
-                  {n}
-                </button>
-              </span>
-            {/each}
-          </div>
-        </div>
+            <span class="font-mono absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">{n}</span>
+          </button>
+        {/each}
       </div>
+      <input
+        id={name}
+        type="range"
+        {name}
+        class="absolute inset-0 {disabled ? '' : 'cursor-pointer'} opacity-0 z-100"
+        {value}
+        {min}
+        {max}
+        {disabled}
+        {...restProps}
+        oninput={handleInput}
+      />
     </div>
   </div>
+  {#if description}
+    <p class="text-xs text-zinc-400">{description}</p>
+  {/if}
 </div>
-
-<style>
-input[type="range"] {
-  width: 100%;
-  accent-color: var(--range-fill); /* fallback */
-}
-
-/* --- WebKit (Chrome, Safari, Edge) --- */
-input[type="range"]::-webkit-slider-runnable-track {
-  height: 6px;
-  background: var(--range-track);
-  border-radius: 3px;
-}
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  margin-top: -6px;
-  width: var(--range-thumb-width, 16px);
-  height: var(--range-thumb-height, 16px);
-  background: var(--range-thumb);
-  border-radius: 50%;
-  cursor: pointer;
-}
-input[type="range"]::-webkit-slider-runnable-track {
-  background: linear-gradient(
-    to right,
-    var(--range-fill) 0%,
-    var(--range-fill) calc(var(--value, 0) * 1%),
-    var(--range-track) calc(var(--value, 0) * 1%),
-    var(--range-track) 100%
-  );
-}
-
-/* --- Firefox --- */
-input[type="range"]::-moz-range-track {
-  height: 6px;
-  background: var(--range-track);
-  border-radius: 3px;
-}
-input[type="range"]::-moz-range-progress {
-  background: var(--range-fill);
-  height: 6px;
-  border-radius: 3px;
-}
-input[type="range"]::-moz-range-thumb {
-  width: var(--range-thumb-width, 16px);
-  height: var(--range-thumb-height, 16px);
-  background: var(--range-thumb);
-  border-radius: 50%;
-  border-color: white;
-  cursor: pointer;
-}
-
-/* --- IE/old Edge --- */
-input[type="range"]::-ms-track {
-  height: 6px;
-  background: transparent;
-  border-color: transparent;
-  color: transparent;
-}
-input[type="range"]::-ms-fill-lower {
-  background: var(--range-fill);
-}
-input[type="range"]::-ms-fill-upper {
-  background: var(--range-track);
-}
-input[type="range"]::-ms-thumb {
-  background: var(--range-thumb);
-  border-radius: 50%;
-}
-
-</style>

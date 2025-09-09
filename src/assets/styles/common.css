@@ -5,12 +5,11 @@
 @config "../../../tailwind.config.mjs";
 
 :root {
-  --clr-lastfm: #f71414;
-  --clr-user: #383;
+  /* --color-lastfm: #f71414; */
 }
 
 :not(a).clr-lastfm {
-  color: var(--clr-lastfm);
+  color: var(--color-lastfm);
 }
 
 .clr-current {
@@ -18,17 +17,17 @@
 }
 
 a.clr-lastfm {
-  --link-text-default: var(--clr-lastfm);
-  --link-text-hover: color-mix(in srgb, var(--clr-lastfm), white 30%);
+  --link-text-default: var(--color-lastfm);
+  --link-text-hover: var(--color-lastfm-light);
 }
 
 :not(a).clr-user {
-  color: var(--clr-user);
+  color: var(--color-rym-user);
 }
 
 a.clr-user {
-  --link-text-default: var(--clr-user);
-  --link-text-hover: color-mix(in srgb, var(--clr-user), white 30%);
+  --link-text-default: var(--color-rym-user);
+  --link-text-hover: color-mix(in srgb, var(--color-rym-user), white 30%);
 }
 
 .btn-icon {

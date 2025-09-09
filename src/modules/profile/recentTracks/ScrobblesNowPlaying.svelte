@@ -179,10 +179,10 @@ let isCoverTransitioning = $state(false);
 
 $effect(() => {
   if (!currentCoverSrc) {
-    currentCoverSrc = track?.coverLargeUrl || '';
-  } else if (track?.coverLargeUrl !== currentCoverSrc) {
+    currentCoverSrc = track?.covers[2] || '';
+  } else if (track?.covers[2] !== currentCoverSrc) {
     isCoverTransitioning = true;
-    currentCoverSrc = track?.coverLargeUrl || '';
+    currentCoverSrc = track?.covers[2] || '';
 
     setTimeout(() => {
       isCoverTransitioning = false;
@@ -193,17 +193,7 @@ $effect(() => {
 
 {#if track}
   <DialogBase bind:visible={settingsDialogVisible} title="Widget settings">
-    <form onsubmit={handleSettingsSubmit} class="flex flex-col gap-4 p-6">
-      <label class="flex gap-2">
-        <input
-          type="checkbox"
-          id="rym-play-history-hide"
-          name="rym-play-history-hide"
-          bind:checked={innerConfig.profileRecentTracksRymHistoryHide}
-        />
-        <strong>Hide original RYM's "Play History"</strong>
-      </label>
-
+    <form onsubmit={handleSettingsSubmit} class="flex flex-col gap-6 p-6">
       <label class="flex gap-2">
         <input
           type="checkbox"
@@ -216,35 +206,47 @@ $effect(() => {
         >
       </label>
 
-      <label class="flex flex-col gap-2">
-        <strong>"Disc rotation" animation</strong>
+      <div class="flex gap-6 *:grow *:basis-0">
+        <label class="flex flex-col gap-2">
+          <strong>"Disc rotation" animation</strong>
 
-        <select
-          class="rounded-md border border-gray-300 p-2"
-          bind:value={innerConfig.profileRecentTracksAnimation}
-        >
-          {#each constants.NOW_PLAYING_ANIMATION_OPTIONS as option}
-            <option value={option.value}>{option.label}</option>
-          {/each}
-        </select>
-      </label>
+          <select
+            class="rounded-md border border-gray-300 p-2"
+            bind:value={innerConfig.profileRecentTracksAnimation}
+          >
+            {#each constants.NOW_PLAYING_ANIMATION_OPTIONS as option}
+              <option value={option.value}>{option.label}</option>
+            {/each}
+          </select>
+        </label>
 
-      <label class="flex flex-col gap-2">
-        <strong>Background style</strong>
+        <label class="flex flex-col gap-2">
+          <strong>Background style</strong>
 
-        <select
-          class="rounded-md border border-gray-300 p-2"
-          bind:value={innerConfig.profileRecentTracksBackground}
-        >
-          {#each settingsBackgroundOptions() as title}
-            <option value={title.value}>{title.label}</option>
-          {/each}
-        </select>
+          <select
+            class="rounded-md border border-gray-300 p-2"
+            bind:value={innerConfig.profileRecentTracksBackground}
+          >
+            {#each settingsBackgroundOptions() as title}
+              <option value={title.value}>{title.label}</option>
+            {/each}
+          </select>
+        </label>
+      </div>
+
+      <label class="flex gap-2">
+        <input
+          type="checkbox"
+          id="rym-play-history-hide"
+          name="rym-play-history-hide"
+          bind:checked={innerConfig.profileRecentTracksRymHistoryHide}
+        />
+        <strong>Hide original RYM's "Play History"</strong>
       </label>
 
       <div class="flex justify-between items-center pt-4">
         <div>
-          <button type="button" class="link-alike" onclick={openAddonOptions}
+          <button type="button" class="link-alike text-rym-user hoverable:hover:underline" onclick={openAddonOptions}
             >Go to Addon options</button
           >
         </div>
@@ -263,8 +265,7 @@ $effect(() => {
 
 <div
   class={containerClasses()}
-  style={track?.coverExtraLargeUrl &&
-    `--bg-image: url(${track.coverExtraLargeUrl})`}
+  style={track?.covers.at(-1) && `--bg-image: url(${track.covers.at(-1)})`}
   data-element="rymstats-track-panel"
 >
   {#if track}
