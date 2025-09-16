@@ -57,6 +57,7 @@ const {
     .join(' ')}
   onclick={['invalid', 'warning'].includes(status) && action ? action : undefined}
   role={['invalid', 'warning'].includes(status) && action ? 'button' : undefined}
+  tabindex={['invalid', 'warning'].includes(status) && action ? 0 : -1}
 >
   <div data-slot="card-content" class="p-2 md:p-3 lg:p-4">
     <div class="flex items-center gap-2">

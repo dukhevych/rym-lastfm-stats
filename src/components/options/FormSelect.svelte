@@ -35,9 +35,10 @@ let {
       font-bold
       h-10
       leading-none
-      outline-none
-      focus:ring-zinc-400/50
-      focus:ring-1
+      focus-visible:outline
+      focus-visible:outline-2
+      focus-visible:outline-zinc-400/50
+      focus-visible:outline-offset-2
       placeholder-zinc-400
       text-white
       bg-zinc-700

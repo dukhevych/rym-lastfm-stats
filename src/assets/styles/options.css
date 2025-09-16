@@ -5,10 +5,19 @@
   color-scheme: dark;
 }
 
-body {
-  background: #0f0f0f !important;
-  color: #e5e5e5 !important;
-  min-width: 360px;
+@layer base {
+  body {
+    background: #0f0f0f !important;
+    color: #e5e5e5 !important;
+    min-width: 360px;
+  }
+
+  *:focus-visible {
+    outline-color: color-mix(in srgb, var(--color-teal-400), transparent 60%);
+    outline-width: 2px;
+    outline-offset: 2px;
+    outline-style: solid;
+  }
 }
 
 @keyframes periodic-shake-rotate {

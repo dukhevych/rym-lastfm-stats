@@ -43,7 +43,6 @@ export function focus(): void {
     <input
       type="text"
       class="
-        outline-none
         grow
         border-b-2
         h-10
@@ -51,7 +50,10 @@ export function focus(): void {
         border-teal-700
         text-sm p-2
         bg-zinc-700 placeholder-zinc-400 text-white
-        focus:ring-zinc-500
+        focus-visible:outline
+        focus-visible:outline-2
+        focus-visible:outline-zinc-400/50
+        focus-visible:outline-offset-2
         {inputClasses}
       "
       name={restProps.name}
