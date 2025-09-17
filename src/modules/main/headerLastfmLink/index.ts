@@ -14,8 +14,6 @@ async function render(settings: RenderSettings) {
     return;
   }
 
-  console.log(config.mainHeaderLastfmLinkLabel);
-
   let label = config.mainHeaderLastfmLinkLabel;
 
   if (label.indexOf('$username') !== -1) {

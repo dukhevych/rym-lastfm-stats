@@ -48,6 +48,7 @@ const {
 let innerConfig = $state({ ...$configStore });
 let bgOption = $derived(() => $configStore.profileRecentTracksBackground);
 let settingsDialogVisible = $state(false);
+let coverDialogVisible = $state(false);
 
 $effect(() => {
   if (settingsDialogVisible) {
@@ -175,14 +176,17 @@ const isNowPlaying = $derived(() => {
 });
 
 let currentCoverSrc = $state('');
+let currentCoverLargeSrc = $state('');
 let isCoverTransitioning = $state(false);
 
 $effect(() => {
   if (!currentCoverSrc) {
     currentCoverSrc = track?.covers[2] || '';
+    currentCoverLargeSrc = track?.covers.at(-1) || '';
   } else if (track?.covers[2] !== currentCoverSrc) {
     isCoverTransitioning = true;
     currentCoverSrc = track?.covers[2] || '';
+    currentCoverLargeSrc = track?.covers.at(-1) || '';
 
     setTimeout(() => {
       isCoverTransitioning = false;
@@ -246,8 +250,10 @@ $effect(() => {
 
       <div class="flex justify-between items-center pt-4">
         <div>
-          <button type="button" class="link-alike text-rym-user hoverable:hover:underline" onclick={openAddonOptions}
-            >Go to Addon options</button
+          <button
+            type="button"
+            class="link-alike hoverable:hover:underline"
+            onclick={openAddonOptions}>Go to Addon options</button
           >
         </div>
         <div class="flex gap-4">
@@ -261,8 +267,17 @@ $effect(() => {
       </div>
     </form>
   </DialogBase>
+
+  <DialogBase bind:visible={coverDialogVisible} size="large">
+    <img
+      src={track.albumMbid ? `https://coverartarchive.org/release/${track.albumMbid}/front` : track.covers.at(-1)}
+      alt="Cover"
+      class="w-full h-full aspect-square object-contain block"
+    />
+  </DialogBase>
 {/if}
 
+<!-- <pre>{JSON.stringify(track, null, 2)}</pre> -->
 <div
   class={containerClasses()}
   style={track?.covers.at(-1) && `--bg-image: url(${track.covers.at(-1)})`}
@@ -280,10 +295,15 @@ $effect(() => {
           data-element="rymstats-track-artbox"
           class:is-transitioning={isCoverTransitioning}
         >
+          <!-- <button type="button" class="w-10 h-10 z-10 rounded-full absolute top-0 left-1/2 -translate-x-1/2 bg-zinc-700 text-zinc-400 flex items-center justify-center" onclick={() => coverDialogVisible = true}>+</button> -->
           <a
             href={coverSearchUrl()}
             title={coverSearchHint()}
             aria-label={coverSearchHint()}
+            onclick={(e) => {
+              e.preventDefault();
+              coverDialogVisible = true;
+            }}
           >
             <img
               class="play_history_item_art"

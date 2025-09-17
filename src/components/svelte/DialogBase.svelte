@@ -1,57 +1,91 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { onMount } from 'svelte';
+import { onMount } from 'svelte';
+import type { Snippet } from 'svelte';
 
-  interface Props {
-    title: string;
-    visible: boolean;
+interface Props {
+  title?: string;
+  visible: boolean;
+  size?: 'small' | 'medium' | 'large';
+  children: Snippet;
+}
+
+let {
+  title,
+  visible = $bindable(),
+  children,
+  size = 'medium',
+}: Props = $props();
+
+let dialog = $state<HTMLDialogElement>();
+
+function onBackdropPointerDown(e: PointerEvent) {
+  if (!dialog) return;
+  const r = dialog.getBoundingClientRect();
+  const outside =
+    e.clientX < r.left ||
+    e.clientX > r.right ||
+    e.clientY < r.top ||
+    e.clientY > r.bottom;
+
+  if (outside) {
+    // prevent text selection flicker on quick clicks
+    e.preventDefault();
+    visible = false; // triggers .close() via the effect below
   }
+}
 
-  let {
-    title,
-    visible = $bindable(),
-    children,
-  }: Props & { children?: () => any } = $props();
+onMount(() => {
+  if (!dialog) return;
 
-  let dialog = $state<HTMLDialogElement>();
-
-  onMount(() => {
-    if (!dialog) return;
-
-    dialog.addEventListener('close', () => {
-      visible = false;
-    });
-
-    if (visible) dialog.showModal();
+  dialog.addEventListener('close', () => {
+    visible = false;
   });
 
-  $effect(() => {
-    if (!dialog) return;
+  if (visible) dialog.showModal();
+});
 
-    if (visible && !dialog.open) {
-      dialog.showModal();
-    } else if (!visible && dialog.open) {
-      dialog.close();
-    }
-  });
+$effect(() => {
+  if (!dialog) return;
+
+  if (visible && !dialog.open) {
+    dialog.showModal();
+  } else if (!visible && dialog.open) {
+    dialog.close();
+  }
+});
 </script>
 
-<dialog class="dialog-base" bind:this={dialog}>
-  <h2 class="dialog-title">
-    {title}
-    <button
-      type="button"
-      class="dialog-close-btn"
-      aria-label="Close"
-      onclick={() => (visible = false)}
-    >
-      <svg viewBox="0 0 24 24"><use xlink:href="#svg-close-symbol"></use></svg>
-    </button>
-  </h2>
+{#snippet closeButton()}
+  <button
+    type="button"
+    class="dialog-close-btn"
+    aria-label="Close"
+    onclick={() => (visible = false)}
+  >
+    <svg viewBox="0 0 24 24"><use xlink:href="#svg-close-symbol"></use></svg>
+  </button>
+{/snippet}
+
+<dialog
+  class={`dialog-base size-${size}`}
+  bind:this={dialog}
+  onpointerdown={onBackdropPointerDown}
+>
+  {#if title}
+    <h2 class="dialog-title">
+      {title}
+      {@render closeButton()}
+    </h2>
+  {/if}
+
+  {#if !title}
+    {@render closeButton()}
+  {/if}
 
   <div class="dialog-content">
-    {@render children?.()}
+    {@render children()}
   </div>
 </dialog>
 
@@ -60,7 +94,7 @@ dialog.dialog-base {
   top: 50%;
   left: 50%;
   width: 90%;
-  max-width: 500px;
+  max-height: 90dvh;
   font-size: 14px;
   line-height: 20px;
   background: var(--mono-f);
@@ -78,6 +112,18 @@ dialog.dialog-base {
 
   --vertical-shift: 5vh;
   translate: 0 var(--vertical-shift);
+
+  &.size-medium {
+    max-width: 500px;
+  }
+
+  &.size-large {
+    max-width: 800px;
+  }
+
+  &.size-small {
+    max-width: 300px;
+  }
 
   &[open] {
     opacity: 1;
@@ -111,20 +157,22 @@ dialog.dialog-base[open]::backdrop {
 
 .dialog-close-btn {
   position: absolute;
+  width: 40px;
+  height: 40px;
   aspect-ratio: 1 / 1;
-  height: 100%;
-  top: 50%;
+  top: 0;
   right: 0;
   line-height: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translateY(-50%);
-  background: transparent;
+  background: rgba(255 255 255 / 0.1);
   border: none;
   color: #666;
   cursor: pointer;
   outline: none;
+  transition: all 0.2s ease-in-out;
+  transition-property: color, background;
 
   svg {
     width: 80%;
@@ -134,7 +182,15 @@ dialog.dialog-base[open]::backdrop {
 
   &:hover {
     color: #f0f0f0;
+    background: rgba(255 255 255 / 0.3);
   }
+}
+
+.dialog-title .dialog-close-btn {
+  top: 50%;
+  transform: translateY(-50%);
+  height: 100%;
+  width: auto;
 }
 
 .dialog-title {

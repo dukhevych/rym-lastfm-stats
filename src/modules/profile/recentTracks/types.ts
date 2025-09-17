@@ -35,4 +35,7 @@ export interface TrackDataNormalized {
   nowPlaying: boolean;
   timestamp: number | null;
   trackName: string;
+  albumMbid: string;
+  artistMbid: string;
+  trackMbid: string;
 }

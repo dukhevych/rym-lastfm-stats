@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import MD5 from 'crypto-js/md5';
 import * as constants from './constants';
-import type { TrackDataNormalized, TrackCovers } from '@/modules/profile/recentTracks/types';
+import type { TrackDataNormalized } from '@/modules/profile/recentTracks/types';
 import type { RecentTrack } from '@/api/getRecentTracks';
 import { formatDuration, intervalToDuration } from 'date-fns';
 
@@ -340,6 +340,9 @@ export function normalizeLastFmTrack(track: RecentTrack): TrackDataNormalized {
     timestamp: track.date?.uts ? Number(track.date.uts) : null,
     albumName: track.album['#text'],
     artistName: track.artist['#text'],
+    albumMbid: track.album.mbid,
+    artistMbid: track.artist.mbid,
+    trackMbid: track.mbid,
   }
 }
 

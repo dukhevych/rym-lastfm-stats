@@ -196,8 +196,6 @@ async function loadRecentTracks() {
       signal: abortController.signal,
     });
 
-    // await utils.wait(500000);
-
     const { recenttracks: { track: data } } = recentTracksResponse;
 
     const {
@@ -211,8 +209,15 @@ async function loadRecentTracks() {
     latestTrackMetadata = latestTrackMetadataData;
     latestTrackColors = latestTrackColorsData;
     scrobbles = scrobblesData;
-    const newTimestamp = Date.now();
-    timestamp = newTimestamp;
+    timestamp = Date.now();
+
+    if (latestTrack?.albumMbid) {
+      const response = await fetch(`https://coverartarchive.org/release/${latestTrack.albumMbid}/front`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+      }
+    }
 
     await storageSet({
       recentTracksCache: {
@@ -220,12 +225,10 @@ async function loadRecentTracks() {
         latestTrackMetadata: latestTrackMetadataData,
         latestTrackColors: latestTrackColorsData,
         scrobbles: scrobblesData,
-        timestamp: newTimestamp,
+        timestamp,
         userName: context.userName,
       }
     }, 'local');
-
-    console.log('written to cache');
 
     failedToFetch = false;
   } catch (error: unknown) {
