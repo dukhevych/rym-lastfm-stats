@@ -686,7 +686,7 @@ onMount(() => {
                 *:text-sm
                 max-md:*:rounded-none
                 {activeTab === tab.id
-                ? '*:bg-orange-800 pointer-events-none'
+                ? '*:bg-zinc-600 pointer-events-none'
                 : '*:opacity-50 hoverable:*:hover:opacity-100'}
               "
             >
