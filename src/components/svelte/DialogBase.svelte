@@ -181,7 +181,6 @@ dialog.dialog-base[open]::backdrop {
   }
 
   &:hover {
-    color: #f0f0f0;
     background: rgba(255 255 255 / 0.3);
   }
 }
@@ -198,7 +197,7 @@ dialog.dialog-base[open]::backdrop {
   text-align: center;
   font-weight: bold;
   background-color: color-mix(in srgb, var(--text-primary), transparent 75%);
-  padding-block: 1.25rem;
+  padding-block: 1.2rem;
   margin: 0;
   position: relative;
 }

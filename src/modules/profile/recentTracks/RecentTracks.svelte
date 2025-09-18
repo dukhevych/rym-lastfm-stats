@@ -211,14 +211,6 @@ async function loadRecentTracks() {
     scrobbles = scrobblesData;
     timestamp = Date.now();
 
-    if (latestTrack?.albumMbid) {
-      const response = await fetch(`https://coverartarchive.org/release/${latestTrack.albumMbid}/front`);
-      if (response.ok) {
-        const data = await response.json();
-        console.log(data);
-      }
-    }
-
     await storageSet({
       recentTracksCache: {
         latestTrack: latestTrackData,

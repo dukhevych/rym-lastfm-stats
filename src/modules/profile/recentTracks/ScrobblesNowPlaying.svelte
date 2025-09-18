@@ -176,22 +176,18 @@ const isNowPlaying = $derived(() => {
 });
 
 let currentCoverSrc = $state('');
-let currentCoverLargeSrc = $state('');
 let isCoverTransitioning = $state(false);
 
 $effect(() => {
-  if (!currentCoverSrc) {
-    currentCoverSrc = track?.covers[2] || '';
-    currentCoverLargeSrc = track?.covers.at(-1) || '';
-  } else if (track?.covers[2] !== currentCoverSrc) {
+  if (currentCoverSrc && track?.covers[2] !== currentCoverSrc) {
     isCoverTransitioning = true;
-    currentCoverSrc = track?.covers[2] || '';
-    currentCoverLargeSrc = track?.covers.at(-1) || '';
 
     setTimeout(() => {
       isCoverTransitioning = false;
     }, 300);
   }
+
+  currentCoverSrc = track?.covers[2] || '';
 });
 </script>
 
