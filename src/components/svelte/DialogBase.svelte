@@ -9,6 +9,7 @@ interface Props {
   visible: boolean;
   size?: 'small' | 'medium' | 'large';
   children: Snippet;
+  square?: boolean;
 }
 
 let {
@@ -16,6 +17,7 @@ let {
   visible = $bindable(),
   children,
   size = 'medium',
+  square = false,
 }: Props = $props();
 
 let dialog = $state<HTMLDialogElement>();
@@ -69,7 +71,7 @@ $effect(() => {
 {/snippet}
 
 <dialog
-  class={`dialog-base size-${size}`}
+  class={`dialog-base ${square ? 'is-square' : ''} size-${size}`}
   bind:this={dialog}
   onpointerdown={onBackdropPointerDown}
 >
@@ -84,7 +86,7 @@ $effect(() => {
     {@render closeButton()}
   {/if}
 
-  <div class="dialog-content">
+  <div class="dialog-content h-full w-full">
     {@render children()}
   </div>
 </dialog>
@@ -93,7 +95,6 @@ $effect(() => {
 dialog.dialog-base {
   top: 50%;
   left: 50%;
-  width: 90%;
   max-height: 90dvh;
   font-size: 14px;
   line-height: 20px;
@@ -110,8 +111,13 @@ dialog.dialog-base {
   transition-duration: 0.3s;
   transition-behavior: allow-discrete;
 
+
   --vertical-shift: 5vh;
   translate: 0 var(--vertical-shift);
+
+  &:not(.is-square) {
+    width: 90%;
+  }
 
   &.size-medium {
     max-width: 500px;
@@ -123,6 +129,10 @@ dialog.dialog-base {
 
   &.size-small {
     max-width: 300px;
+  }
+
+  &.is-square {
+    aspect-ratio: 1 / 1;
   }
 
   &[open] {
@@ -209,6 +219,10 @@ dialog.dialog-base[open]::backdrop {
 
   body:has(dialog[open]) {
    overflow: hidden;
+  }
+
+  body {
+    color: red !important;
   }
 }
 </style>

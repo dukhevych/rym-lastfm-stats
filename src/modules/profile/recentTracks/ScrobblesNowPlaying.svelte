@@ -264,7 +264,7 @@ $effect(() => {
     </form>
   </DialogBase>
 
-  <DialogBase bind:visible={coverDialogVisible} size="large">
+  <DialogBase bind:visible={coverDialogVisible} square size="large">
     <img
       src={track.albumMbid ? `https://coverartarchive.org/release/${track.albumMbid}/front` : track.covers.at(-1)}
       alt="Cover"
