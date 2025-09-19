@@ -212,17 +212,11 @@ dialog.dialog-base[open]::backdrop {
   position: relative;
 }
 
-:global {
-  html {
-   scrollbar-gutter: stable;
-  }
+:global(html) {
+  scrollbar-gutter: stable;
+}
 
-  body:has(dialog[open]) {
-   overflow: hidden;
-  }
-
-  body {
-    color: red !important;
-  }
+:global(body:has(dialog[open])) {
+  overflow: hidden;
 }
 </style>
