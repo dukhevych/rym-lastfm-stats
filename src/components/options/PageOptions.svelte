@@ -13,6 +13,7 @@ import iconKeySvg from '@/assets/icons/iconKey.svg';
 import iconSettingsSvg from '@/assets/icons/iconSettings.svg';
 import iconSuccessSvg from '@/assets/icons/iconSuccess.svg';
 import iconSwitchSvg from '@/assets/icons/iconSwitch.svg';
+import DialogBase from '@/components/svelte/DialogBase.svelte';
 import * as api from '@/helpers/api';
 import * as constants from '@/helpers/constants';
 import {
@@ -25,7 +26,6 @@ import {
 import { withSvgClass } from '@/helpers/svg';
 import * as utils from '@/helpers/utils';
 
-import DialogBase from '@/components/svelte/DialogBase.svelte';
 
 import AppHeader from './AppHeader.svelte';
 import AppStatusCard from './AppStatusCard.svelte';
