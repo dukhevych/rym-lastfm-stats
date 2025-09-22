@@ -192,6 +192,7 @@ async function loadRecentTracks() {
       params: {
         username: context.userName,
         limit: $configStore.profileRecentTracksLimit,
+        extended: true,
       },
       signal: abortController.signal,
     });

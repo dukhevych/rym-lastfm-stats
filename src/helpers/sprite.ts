@@ -12,6 +12,7 @@ import swapSvg from '@/assets/icons/swap.svg';
 import playSvg from '@/assets/icons/play.svg';
 import peopleSvg from '@/assets/icons/people.svg';
 import settingsSvg from '@/assets/icons/settings.svg';
+import loveSvg from '@/assets/icons/love.svg';
 
 const svgSpriteId = 'svg-sprite';
 
@@ -38,6 +39,7 @@ export const createSVGSprite = function() {
   addIconToSVGSprite(playSvg, 'svg-play-symbol');
   addIconToSVGSprite(peopleSvg, 'svg-people-symbol');
   addIconToSVGSprite(settingsSvg, 'svg-settings-symbol');
+  addIconToSVGSprite(loveSvg, 'svg-love-symbol');
 
   return svgSprite;
 }

@@ -38,4 +38,5 @@ export interface TrackDataNormalized {
   albumMbid: string;
   artistMbid: string;
   trackMbid: string;
+  loved: boolean;
 }

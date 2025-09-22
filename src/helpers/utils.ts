@@ -343,6 +343,7 @@ export function normalizeLastFmTrack(track: RecentTrack): TrackDataNormalized {
     albumMbid: track.album.mbid,
     artistMbid: track.artist.mbid,
     trackMbid: track.mbid,
+    loved: track.loved === '1',
   }
 }
 

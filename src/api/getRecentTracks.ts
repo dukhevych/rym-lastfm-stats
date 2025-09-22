@@ -10,6 +10,7 @@ export interface RecentTrack {
   image: Array<{ size: string; '#text': string }>;
   date?: { uts: string; '#text': string }; // Missing if now playing
   '@attr'?: { nowplaying: 'true' };
+  loved?: '0' | '1';
 }
 
 export interface RecentTracksResponse {
@@ -31,6 +32,7 @@ interface GetRecentTracksParams {
   page?: number;
   from?: number; // UNIX timestamp
   to?: number;   // UNIX timestamp
+  extended?: boolean;
 }
 
 interface GetRecentTracksOptions {
@@ -55,6 +57,7 @@ export async function getRecentTracks({
   if (params.page) searchParams.set('page', params.page.toString());
   if (params.from) searchParams.set('from', params.from.toString());
   if (params.to) searchParams.set('to', params.to.toString());
+  if (params.extended) searchParams.set('extended', '1');
 
   const url = `${BASE_URL}?${searchParams.toString()}`;
   const res = await fetch(url, { signal });
