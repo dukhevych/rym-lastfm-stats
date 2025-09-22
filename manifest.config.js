@@ -19,7 +19,10 @@ const browserSpecificConfigs = {
     },
     "browser_specific_settings": {
       "gecko": {
-        "id": "rymlastfmstats@rateyourmusic.com"
+        "id": "rymlastfmstats@rateyourmusic.com",
+        "data_collection_permissions": {
+          "required": ["none"]
+        }
       }
     }
   }
