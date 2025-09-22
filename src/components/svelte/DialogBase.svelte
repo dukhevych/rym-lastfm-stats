@@ -7,7 +7,7 @@ import type { Snippet } from 'svelte';
 interface Props {
   title?: string;
   visible: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'dynamic';
   children: Snippet;
   square?: boolean;
 }
@@ -32,9 +32,8 @@ function onBackdropPointerDown(e: PointerEvent) {
     e.clientY > r.bottom;
 
   if (outside) {
-    // prevent text selection flicker on quick clicks
     e.preventDefault();
-    visible = false; // triggers .close() via the effect below
+    visible = false;
   }
 }
 
@@ -66,7 +65,10 @@ $effect(() => {
     aria-label="Close"
     onclick={() => (visible = false)}
   >
-    <svg viewBox="0 0 24 24"><use xlink:href="#svg-close-symbol"></use></svg>
+    <span class="relative inline-block align-middle w-6 h-6" aria-hidden="true">
+      <span class="absolute left-1/2 top-1/2 w-7 h-0.5 bg-current rounded transform -translate-x-1/2 -translate-y-1/2 rotate-45"></span>
+      <span class="absolute left-1/2 top-1/2 w-7 h-0.5 bg-current rounded transform -translate-x-1/2 -translate-y-1/2 -rotate-45"></span>
+    </span>
   </button>
 {/snippet}
 
@@ -86,7 +88,7 @@ $effect(() => {
     {@render closeButton()}
   {/if}
 
-  <div class="dialog-content h-full w-full">
+  <div class="dialog-content">
     {@render children()}
   </div>
 </dialog>
@@ -111,7 +113,6 @@ dialog.dialog-base {
   transition-duration: 0.3s;
   transition-behavior: allow-discrete;
 
-
   --vertical-shift: 5vh;
   translate: 0 var(--vertical-shift);
 
@@ -129,6 +130,10 @@ dialog.dialog-base {
 
   &.size-small {
     max-width: 300px;
+  }
+
+  &.size-dynamic {
+    width: fit-content;
   }
 
   &.is-square {
@@ -184,14 +189,9 @@ dialog.dialog-base[open]::backdrop {
   transition: all 0.2s ease-in-out;
   transition-property: color, background;
 
-  svg {
-    width: 80%;
-    height: 80%;
-    fill: currentColor;
-  }
-
   &:hover {
     background: rgba(255 255 255 / 0.3);
+    color: #000;
   }
 }
 

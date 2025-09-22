@@ -2,6 +2,7 @@ import browser from 'webextension-polyfill';
 import { Index } from 'flexsearch';
 import * as db from '@/helpers/db';
 import * as constants from '@/helpers/constants';
+import { getRymSyncTimestamp } from '@/helpers/storageUtils';
 import getWindowDataInjected from '@/background/getWindowDataInjected';
 import { checkPartialStringsMatch, normalizeForSearch } from '@/helpers/string';
 
@@ -483,3 +484,40 @@ browser.runtime.onMessage.addListener(
     }
   }
 );
+
+async function updateBadge() {
+  const rymSyncTimestamp = await getRymSyncTimestamp();
+  if (!rymSyncTimestamp) return;
+
+  const rymSyncLifetime = new Date().getTime() - new Date(rymSyncTimestamp).getTime();
+
+  let rymSyncOutdatedSeverity;
+
+  if (rymSyncLifetime > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS * 1.5) {
+    rymSyncOutdatedSeverity = 'critical';
+  } else if (rymSyncLifetime > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS) {
+    rymSyncOutdatedSeverity = 'warning';
+  } else {
+    rymSyncOutdatedSeverity = false;
+  }
+
+  if (!rymSyncOutdatedSeverity) return;
+
+  browser.action.setBadgeText({ text: '!' });
+
+  if (rymSyncOutdatedSeverity === 'critical') {
+    browser.action.setBadgeBackgroundColor({ color: '#ff0000' });
+    if (browser.action.setBadgeTextColor) {
+      browser.action.setBadgeTextColor({ color: '#fff' });
+    }
+  }
+
+  if (rymSyncOutdatedSeverity === 'warning') {
+    browser.action.setBadgeBackgroundColor({ color: '#F59E0B' });
+    if (browser.action.setBadgeTextColor) {
+      browser.action.setBadgeTextColor({ color: '#000000' });
+    }
+  }
+}
+
+browser.runtime.onStartup.addListener(updateBadge);

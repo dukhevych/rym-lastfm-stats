@@ -25,6 +25,8 @@ import {
 import { withSvgClass } from '@/helpers/svg';
 import * as utils from '@/helpers/utils';
 
+import DialogBase from '@/components/svelte/DialogBase.svelte';
+
 import AppHeader from './AppHeader.svelte';
 import AppStatusCard from './AppStatusCard.svelte';
 import FormGroup from './FormGroup.svelte';
@@ -79,6 +81,8 @@ const SYSTEM_API_KEY = process.env.LASTFM_API_KEY!;
 let isLoading = $state(true);
 let signinInProgress = $state(false);
 let submitInProgress = $state(false);
+let imagePreviewVisible = $state(false);
+let imagePreviewSrc = $state('');
 
 type ApiKeyInputComponent = {
   focus: () => void;
@@ -166,42 +170,56 @@ const dbRecordsQtyLabel = $derived(() => {
 });
 
 let rymSyncTimestamp = $state<number | null>(props.rymSyncTimestamp);
+
 const rymSyncTimestampLabel = $derived(() => {
   if (!rymSyncTimestamp) return 'No sync performed yet';
   return `Last sync ${formatDistanceToNow(rymSyncTimestamp, { addSuffix: true })}`;
 });
+
 const rymSyncLifetime = $derived(() => {
-  if (!rymSyncTimestamp) return;
+  if (!rymSyncTimestamp) return null;
   const date = new Date(rymSyncTimestamp);
   const now = new Date();
   return now.getTime() - date.getTime();
 });
+
 const rymSyncOutdatedSeverity = $derived(() => {
-  if (!rymSyncTimestamp) return false;
-  if (!rymSyncLifetime()) return false;
+  if (!rymSyncLifetime()) return null;
+
   if (
     (rymSyncLifetime() as number) >
     constants.RYM_SYNC_OUTDATED_THRESHOLD_MS * 1.5
-  )
-    return 'critical';
+  ) return 'critical';
+
   if ((rymSyncLifetime() as number) > constants.RYM_SYNC_OUTDATED_THRESHOLD_MS)
     return 'warning';
-  return false;
+
+  return null;
 });
 const rymSyncStatus = $derived(() => {
+  if (!rymSyncLifetime()) return 'invalid';
   if (rymSyncOutdatedSeverity() === 'critical') return 'invalid';
   if (rymSyncOutdatedSeverity() === 'warning') return 'warning';
   if (!rymSyncOutdatedSeverity()) return 'valid';
   return 'invalid';
 });
 const isRymSyncOutdated = $derived(() => {
-  if (!rymSyncTimestamp) return;
-  if (!rymSyncLifetime()) return;
-  return rymSyncOutdatedSeverity();
+  if (!rymSyncTimestamp) return false;
+  if (!rymSyncLifetime()) return false;
+  return !!rymSyncOutdatedSeverity();
 });
 const hasRymSyncWarning = $derived(() => {
   if (!rymSyncTimestamp) return true;
   return isRymSyncOutdated();
+});
+const rymSyncStatusMessage = $derived(() => {
+  if (rymSyncStatus() === 'invalid') {
+    if (!rymSyncLifetime()) return 'Not completed';
+    return 'Needs re-run';
+  }
+  if (rymSyncStatus() === 'warning') return 'Slightly outdated';
+  if (rymSyncStatus() === 'valid') return 'Completed';
+  return 'Not completed';
 });
 
 const setupProgress = $derived(
@@ -553,8 +571,7 @@ onMount(() => {
       <AppStatusCard
         status={isLoggedIn() ? 'valid' : 'invalid'}
         title="Last.fm"
-        validStatus="Connected"
-        invalidStatus="Not connected"
+        statusMessage={isLoggedIn() ? 'Connected' : 'Not connected'}
         note={userData?.name ? ['Username:', userData.name] : 'Guest'}
         action={identityApiSupported ? openAuthPage : fallbackLogin}
         loading={signinInProgress}
@@ -562,8 +579,7 @@ onMount(() => {
       <AppStatusCard
         status={lastfmApiKeySaved ? 'valid' : 'invalid'}
         title="Last.fm API Key"
-        validStatus="Configured"
-        invalidStatus="Not configured"
+        statusMessage={lastfmApiKeySaved ? 'Configured' : 'Not configured'}
         action={() => {
           activeTab = 'api-auth';
           tick().then(() => {
@@ -574,9 +590,7 @@ onMount(() => {
       <AppStatusCard
         status={rymSyncStatus()}
         title="RYM Sync"
-        validStatus="Completed"
-        invalidStatus={isRymSyncOutdated() ? 'Needs re-run' : 'Not completed'}
-        warningStatus="Slightly outdated"
+        statusMessage={rymSyncStatusMessage()}
         note={[rymSyncTimestampLabel(), dbRecordsQtyLabel()]}
         action={openRymSync}
       />
@@ -743,7 +757,7 @@ onMount(() => {
 
               <FormSelect
                 label="Time period"
-                description="Filter top artists by specific time period"
+                description="Default value for filter by specific time period"
                 bind:value={formCustomization.profileTopArtistsPeriod}
                 name="profileTopArtistsPeriod"
                 options={constants.PERIOD_OPTIONS}
@@ -756,7 +770,7 @@ onMount(() => {
             >
               <FormSelect
                 label="Time period"
-                description="Filter top albums by specific time period"
+                description="Default value for filter by specific time period"
                 bind:value={formCustomization.profileTopAlbumsPeriod}
                 name="profileTopAlbumsPeriod"
                 options={constants.PERIOD_OPTIONS}
@@ -768,7 +782,7 @@ onMount(() => {
               title={`Recent Tracks Widget ${!formModulesSaved.profileRecentTracks ? '(Disabled)' : ''}`}
             >
               <FormToggle
-                label="Show on load"
+                label="Open tracks list on load"
                 description="Pre-open the list of recent tracks on profile load"
                 bind:checked={formCustomization.profileRecentTracksShowOnLoad}
                 name="profileRecentTracksShowOnLoad"
@@ -776,7 +790,7 @@ onMount(() => {
               />
 
               <FormToggle
-                label="Periodic updates"
+                label="Real-time updates"
                 description="Update recent tracks list periodically"
                 bind:checked={formCustomization.profileRecentTracksPolling}
                 name="profileRecentTracksPolling"
@@ -829,99 +843,226 @@ onMount(() => {
           title="Modules"
           description="Enable or disable specific enhancement modules."
         >
-          <div class="flex gap-3">
-            <aside class="flex flex-col gap-8 w-1/3">
-              <FormGroup>
-                <FormToggle
-                  label="Last.fm profile Link"
-                  description="Adds link to the header of all RYM pages"
-                  bind:checked={formModules.mainHeaderLastfmLink}
-                  name="mainHeaderLastfmLink"
-                  newOption
-                />
-              </FormGroup>
+          <DialogBase bind:visible={imagePreviewVisible} size="dynamic">
+            <img
+              src={imagePreviewSrc}
+              class="block max-w-[90vw] max-h-[90vh]"
+              alt="Module visual preview"
+            />
+          </DialogBase>
 
-              <FormGroup title="Last.fm Stats">
-                {#snippet note()}
-                  Updates once in &lt; <strong
-                    >{utils.msToHuman(
-                      constants.getStatsCacheLifetime(
-                        userData?.name,
-                        lastfmApiKeySaved,
-                      ),
-                    )}</strong
-                  > &gt;
-                {/snippet}
-                {#snippet warning()}
-                  {#if !isLoading && (!lastfmApiKeySaved || !isLoggedIn())}
-                    <div class="text-xs text-orange-200 flex flex-col gap-1">
-                      {#if !lastfmApiKeySaved}
-                        <p>Add a Last.fm API key to increase rate limit</p>
-                      {/if}
-                      {#if !isLoggedIn()}
-                        <p>
-                          Connect to Last.fm to <strong
-                            >enable personal scrobbling</strong
-                          > stats
-                        </p>
-                      {/if}
-                    </div>
-                  {/if}
-                {/snippet}
+          <div class="flex flex-col gap-8">
+            <FormGroup>
+              {#snippet title()}
+                Global modules <span class="text-zinc-400 text-xs">(rendered on all pages)</span>
+              {/snippet}
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <FormToggle
+                    label="Last.fm profile Link"
+                    description="Adds link to the header of all RYM pages"
+                    bind:checked={formModules.mainHeaderLastfmLink}
+                    name="mainHeaderLastfmLink"
+                    newOption
+                  />
+                </div>
+              </div>
+            </FormGroup>
 
-                <FormToggle
-                  label="Artist Statistics"
-                  description="Show Last.fm stats on artist pages"
-                  bind:checked={formModules.artistArtistStats}
-                  name="artistArtistStats"
-                />
+            <FormGroup title="Last.fm Stats (core functionality)">
+              {#snippet note()}
+                Updates once in &lt; <strong>{utils.msToHuman(
+                  constants.getStatsCacheLifetime(
+                    userData?.name,
+                    lastfmApiKeySaved,
+                  ),
+                )}</strong> &gt;
+              {/snippet}
+              {#snippet warning()}
+                {#if !isLoading && (!lastfmApiKeySaved || !isLoggedIn())}
+                  <div class="text-xs text-orange-200 flex flex-col gap-1">
+                    {#if !lastfmApiKeySaved}
+                      <p>Add a Last.fm API key to increase rate limit</p>
+                    {/if}
+                    {#if !isLoggedIn()}
+                      <p>
+                        Connect to Last.fm to <strong
+                          >enable personal scrobbling</strong
+                        > stats
+                      </p>
+                    {/if}
+                  </div>
+                {/if}
+              {/snippet}
 
-                <FormToggle
-                  label="Release Statistics"
-                  description="Show Last.fm stats on release pages"
-                  bind:checked={formModules.releaseReleaseStats}
-                  name="releaseReleaseStats"
-                />
+              <div class="grid grid-cols-3 items-stretch gap-3">
+                <div class="flex flex-col gap-2 p-2 bg-zinc-800 rounded-xl">
+                  <button
+                    type="button"
+                    class={[
+                      'cursor-zoom-in border border-zinc-700 rounded-xl grow overflow-hidden flex items-center',
+                      formModules.artistArtistStats ? '' : 'grayscale opacity-50'
+                    ]}
+                    onclick={() => {
+                      imagePreviewSrc = '/images/options/artist-stats-on.jpg';
+                      imagePreviewVisible = true;
+                    }}
+                  >
+                    <img
+                      src="/images/options/artist-stats-on.jpg"
+                      alt="Artist Statistics"
+                    >
+                  </button>
 
-                <FormToggle
-                  label="Song Statistics"
-                  description="Show Last.fm stats on song pages"
-                  bind:checked={formModules.songSongStats}
-                  name="songSongStats"
-                  newOption
-                />
-              </FormGroup>
+                  <FormToggle
+                    label="Artist Statistics"
+                    description="Show Last.fm stats on artist pages"
+                    bind:checked={formModules.artistArtistStats}
+                    name="artistArtistStats"
+                  />
+                </div>
 
-              <FormGroup title="Profile">
-                {#snippet note()}
-                  {#if !isLoading && !lastfmApiKeySaved}
-                    <span class="text-orange-200 not-italic">
-                      ⚠️ Last.fm API key is required
-                    </span>
-                  {/if}
-                {/snippet}
+                <div class="flex flex-col gap-2 p-2 bg-zinc-800 rounded-xl">
+                  <button
+                    type="button"
+                    class={[
+                      'cursor-zoom-in border border-zinc-700 rounded-xl grow overflow-hidden flex items-center',
+                      formModules.releaseReleaseStats ? '' : 'grayscale opacity-50'
+                    ]}
+                    onclick={() => {
+                      imagePreviewSrc = '/images/options/release-stats-on.jpg';
+                      imagePreviewVisible = true;
+                    }}
+                  >
+                    <img
+                      src="/images/options/release-stats-on.jpg"
+                      alt="Release Statistics"
+                    >
+                  </button>
+                  <FormToggle
+                    label="Release Statistics"
+                    description="Show Last.fm stats on release pages"
+                    bind:checked={formModules.releaseReleaseStats}
+                    name="releaseReleaseStats"
+                  />
+                </div>
 
-                <FormToggle
-                  label="Recent Tracks Widget"
-                  description="Show recent tracks on profile"
-                  bind:checked={formModules.profileRecentTracks}
-                  disabled={!lastfmApiKeySaved}
-                  name="profileRecentTracks"
-                />
-                <FormToggle
-                  label="Top Albums Widget"
-                  description="Show top albums on profile"
-                  bind:checked={formModules.profileTopAlbums}
-                  disabled={!lastfmApiKeySaved}
-                  name="profileTopAlbums"
-                />
-                <FormToggle
-                  label="Top Artists Widget"
-                  description="Show top artists on profile"
-                  bind:checked={formModules.profileTopArtists}
-                  disabled={!lastfmApiKeySaved}
-                  name="profileTopArtists"
-                />
+                <div class="flex flex-col gap-2 p-2 bg-zinc-800 rounded-xl">
+                  <button
+                    type="button"
+                    class={[
+                      'cursor-zoom-in border border-zinc-700 rounded-xl grow overflow-hidden flex items-center',
+                      formModules.songSongStats ? '' : 'grayscale opacity-50'
+                    ]}
+                    onclick={() => {
+                      imagePreviewSrc = '/images/options/song-stats-on.jpg';
+                      imagePreviewVisible = true;
+                    }}
+                  >
+                    <img
+                      src="/images/options/song-stats-on.jpg"
+                      alt="Song Statistics"
+                    >
+                  </button>
+                  <FormToggle
+                    label="Song Statistics"
+                    description="Show Last.fm stats on song pages"
+                    bind:checked={formModules.songSongStats}
+                    name="songSongStats"
+                    newOption
+                  />
+                </div>
+              </div>
+            </FormGroup>
+
+            <FormGroup title="Profile widgets">
+              {#snippet note()}
+                {#if !isLoading && !lastfmApiKeySaved}
+                  <span class="text-orange-200 not-italic">
+                    ⚠️ Last.fm API key is required
+                  </span>
+                {/if}
+              {/snippet}
+
+              <div class="grid grid-cols-3 gap-3">
+                <div class="flex flex-col gap-2 p-2 bg-zinc-800 rounded-xl">
+                  <button
+                    type="button"
+                    class={[
+                      'cursor-zoom-in border border-zinc-700 rounded-xl grow overflow-hidden flex items-center',
+                      formModules.profileRecentTracks ? '' : 'grayscale opacity-50'
+                    ]}
+                    onclick={() => {
+                      imagePreviewSrc = '/images/options/recent-tracks-1-playing.jpg';
+                      imagePreviewVisible = true;
+                    }}
+                  >
+                    <img
+                      src="/images/options/recent-tracks-1-playing.jpg"
+                      alt="Recent Tracks"
+                    >
+                  </button>
+                  <FormToggle
+                    label="Recent Tracks Widget"
+                    description="Show recent tracks on profile"
+                    bind:checked={formModules.profileRecentTracks}
+                    disabled={!lastfmApiKeySaved}
+                    name="profileRecentTracks"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-2 p-2 bg-zinc-800 rounded-xl">
+                  <button
+                    type="button"
+                    class={[
+                      'cursor-zoom-in border border-zinc-700 rounded-xl grow overflow-hidden flex items-center',
+                      formModules.profileTopAlbums ? '' : 'grayscale opacity-50'
+                    ]}
+                    onclick={() => {
+                      imagePreviewSrc = '/images/options/top-albums.jpg';
+                      imagePreviewVisible = true;
+                    }}
+                  >
+                    <img
+                      src="/images/options/top-albums.jpg"
+                      alt="Top Albums"
+                    >
+                  </button>
+                  <FormToggle
+                    label="Top Albums Widget"
+                    description="Show top albums on profile"
+                    bind:checked={formModules.profileTopAlbums}
+                    disabled={!lastfmApiKeySaved}
+                    name="profileTopAlbums"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-2 p-2 bg-zinc-800 rounded-xl">
+                  <button
+                    type="button"
+                    class={[
+                      'cursor-zoom-in border border-zinc-700 rounded-xl grow overflow-hidden flex items-center',
+                      formModules.profileTopArtists ? '' : 'grayscale opacity-50'
+                    ]}
+                    onclick={() => {
+                      imagePreviewSrc = '/images/options/top-artists.jpg';
+                      imagePreviewVisible = true;
+                    }}
+                  >
+                    <img
+                      src="/images/options/top-artists.jpg"
+                      alt="Top Artists"
+                    >
+                  </button>
+                  <FormToggle
+                    label="Top Artists Widget"
+                    description="Show top artists on profile"
+                    bind:checked={formModules.profileTopArtists}
+                    disabled={!lastfmApiKeySaved}
+                    name="profileTopArtists"
+                  />
+                </div>
+
                 <FormToggle
                   label="Strict Search Results"
                   description="Enhanced search filtering"
@@ -929,19 +1070,21 @@ onMount(() => {
                   disabled={!lastfmApiKeySaved}
                   name="searchStrictResults"
                 />
-              </FormGroup>
+              </div>
+            </FormGroup>
 
-              <FormGroup title="RYM Ratings">
-                {#snippet note()}
-                  {#if !isLoading && hasRymSyncWarning()}
-                    <span class="text-orange-200 not-italic">
-                      ⚠️
-                      {#if !rymSyncTimestamp}RYM Sync is required{/if}
-                      {#if isRymSyncOutdated()}RYM Sync is outdated{/if}
-                    </span>
-                  {/if}
-                {/snippet}
+            <FormGroup title="RYM Ratings">
+              {#snippet note()}
+                {#if !isLoading && hasRymSyncWarning()}
+                  <span class="text-orange-200 not-italic">
+                    ⚠️
+                    {#if !rymSyncTimestamp}RYM Sync is required{/if}
+                    {#if isRymSyncOutdated()}RYM Sync is outdated{/if}
+                  </span>
+                {/if}
+              {/snippet}
 
+              <div class="grid grid-cols-3 gap-3">
                 <FormToggle
                   label="List User Ratings"
                   description="Show user ratings in lists"
@@ -957,65 +1100,8 @@ onMount(() => {
                   name="chartsUserRating"
                   newOption
                 />
-              </FormGroup>
-            </aside>
-
-            <!-- Visual preview -->
-            <div class="w-2/3 *:w-full flex items-center flex-col gap-3">
-              {#if !activePreviewKey}
-                <div
-                  class="
-                    h-full
-                    flex
-                    items-center
-                    justify-center
-                    text-zinc-400
-                    text-center
-                    text-xl
-                    font-medium
-                    p-4
-                    rounded-lg
-                    bg-zinc-800
-                    cursor-default
-                  "
-                >
-                  Hover over a module in sidebar to see it's visual preview
-                </div>
-              {:else}
-                <div class="flex flex-col gap-3">
-                  <h3 class="text-lg font-semibold">Visual Preview</h3>
-                  {#each Object.entries(moduleSettingsPreviews) as [key, previews]}
-                    <div
-                      data-preview-key={key}
-                      class:hidden={activePreviewKey !== key}
-                    >
-                      {#each previews as preview}
-                        {#if typeof preview === 'string'}
-                          <img
-                            src={preview}
-                            alt={`Visual preview for ${key}`}
-                          />
-                        {/if}
-                        {#if typeof preview === 'object' && preview.type === 'animation'}
-                          <div class="grid relative">
-                            <img
-                              src={preview.on}
-                              alt=""
-                              class="[grid-area:1/1] animate-fadeA will-change-opacity"
-                            />
-                            <img
-                              src={preview.off}
-                              alt=""
-                              class="[grid-area:1/1] animate-fadeB pointer-events-none will-change-opacity"
-                            />
-                          </div>
-                        {/if}
-                      {/each}
-                    </div>
-                  {/each}
-                </div>
-              {/if}
-            </div>
+              </div>
+            </FormGroup>
           </div>
         </TabContent>
 
