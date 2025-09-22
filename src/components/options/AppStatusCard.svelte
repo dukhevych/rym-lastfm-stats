@@ -10,9 +10,7 @@ interface AppStatusCardProps {
   loading?: boolean;
   title: string;
   note?: string | string[];
-  validStatus: string;
-  invalidStatus: string;
-  warningStatus?: string;
+  statusMessage: string;
   action?: () => void;
 }
 
@@ -21,9 +19,7 @@ const {
   loading = false,
   title,
   note,
-  validStatus,
-  invalidStatus,
-  warningStatus,
+  statusMessage,
   action,
 }: AppStatusCardProps = $props();
 </script>
@@ -73,13 +69,7 @@ const {
         <div>
           <h3 class="font-bold">{title}</h3>
           <div class="text-sm text-zinc-400">
-            {#if status === 'valid'}
-              {validStatus}
-            {:else if status === 'invalid'}
-              {invalidStatus}
-            {:else if status === 'warning' && warningStatus}
-              {warningStatus}
-            {/if}
+            {statusMessage}
           </div>
         </div>
         {#if note && note.length > 0}

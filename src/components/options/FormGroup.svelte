@@ -4,7 +4,7 @@
 import type { Snippet } from 'svelte';
 
 interface Props {
-  title?: string;
+  title?: string | Snippet;
   note?: Snippet;
   warning?: Snippet;
   children: Snippet;
@@ -24,7 +24,13 @@ const {
   {#if title}
     <header class="flex flex-col px-4 gap-2">
       <h4 class="flex items-baseline justify-between -mr-4">
-        <strong>{title}</strong>
+        <strong>
+          {#if typeof title === 'string'}
+            {title}
+          {:else}
+            {@render title()}
+          {/if}
+        </strong>
         {#if note}
           <span class="text-xs italic text-zinc-200">
             {@render note()}
