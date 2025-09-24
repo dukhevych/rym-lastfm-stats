@@ -67,16 +67,57 @@ const scrobblesEnriched = $derived(scrobbles.map((scrobble: TrackDataNormalized)
           />
         </a>
       </div>
-      <a
-        class="track-title"
-        href="{scrobble.searchTrackUrl}"
-        title="{scrobble.searchTrackHint}"
-      >{scrobble.trackName}</a>
-      <div class="track-artist">
+      <div class="w-[60%] relative">
+        <a
+          href="{scrobble.searchTrackUrl}"
+          title="{scrobble.searchTrackHint}"
+          class="absolute inset-0 z-1 hover:bg-white/5 transition-colors duration-200"
+        >
+          <span class="sr-only">{scrobble.searchTrackHint}</span>
+        </a>
+        <div class="flex items-center gap-4 relative">
+          <strong>{scrobble.trackName}</strong>
+          <button
+            type="button"
+            class="
+              cursor-pointer
+              p-1
+              inline-flex
+              appearance-none
+              z-2
+              border-none
+              bg-transparent
+              m-0
+              p-0
+              opacity-50
+              hover:opacity-100
+              transition-opacity
+              duration-200
+              hover:*:fill-lastfm
+            "
+            onclick={() => {
+              alert(1);
+            }}
+          >
+            <span class="sr-only">
+              {scrobble.loved ? 'Remove from loved tracks' : 'Add to loved tracks'}
+            </span>
+            <svg class={[
+              'w-6 h-6 text-lastfm',
+              scrobble.loved ? 'fill-lastfm' : 'fill-transparent',
+            ]}>
+              <use href="#svg-love-symbol" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="w-[40%]">
         <a
           href="{scrobble.searchArtistUrl}"
           title="{scrobble.searchArtistHint}"
-        >{scrobble.artistName}</a>
+        >
+          <strong>{scrobble.artistName}</strong>
+        </a>
       </div>
       <span class="track-date" title="{scrobble.timestampFormatted}">{scrobble.timestampRelative}</span>
     </li>

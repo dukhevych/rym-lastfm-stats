@@ -1,8 +1,8 @@
 import { ERYMReleaseType } from '@/helpers/enums';
 
 interface ReleaseGetInfoParams {
-  artist: string;
-  title: string;
+  artist?: string;
+  title?: string;
   mbid?: string;
   autocorrect?: 0 | 1;
   lang?: string;
@@ -16,6 +16,7 @@ export const RYMEntityLastfmMap: Record<ERYMReleaseType, string> = {
   [ERYMReleaseType.MusicVideo]: 'track',
   [ERYMReleaseType.EP]: 'album',
 }
+
 interface getReleaseInfoOptions {
   apiKey: string;
   params: ReleaseGetInfoParams;
@@ -39,7 +40,7 @@ export async function getReleaseInfo({
 
   if ('mbid' in params && params.mbid) {
     url.searchParams.set('mbid', params.mbid);
-  } else {
+  } else if ('artist' in params && params.artist && 'title' in params && params.title) {
     url.searchParams.set('artist', params.artist);
     url.searchParams.set(method.split('.')[0], params.title);
   }

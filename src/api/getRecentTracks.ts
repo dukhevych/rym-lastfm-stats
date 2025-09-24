@@ -1,8 +1,16 @@
 const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
 export interface RecentTrack {
-  artist: { '#text': string; mbid: string };
-  album: { '#text': string; mbid: string };
+  artist: {
+    url: string;
+    mbid: string;
+    name?: string;
+    '#text'?: string
+  };
+  album: {
+    '#text': string;
+    mbid: string;
+  };
   name: string;
   streamable: string;
   mbid: string;

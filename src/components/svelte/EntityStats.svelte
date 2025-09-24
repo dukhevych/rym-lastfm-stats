@@ -2,6 +2,7 @@
 
 <script lang="ts">
   import { getReleaseInfo, RYMEntityLastfmMap } from '@/api/getReleaseInfo';
+  import { findReleaseMBID } from '@/api/findReleaseMBID';
   import DialogBase from '@/components/svelte/DialogBase.svelte';
   import ListStats from '@/components/svelte/ListStats.svelte';
   import * as constants from '@/helpers/constants';
@@ -103,11 +104,11 @@
   let isLoaded = $state(false);
   let isLoading = $state(false);
   let artistQuery = $state<string>('');
+  let entityMBID = $state<string | null>(null);
   let entityTitleQuery = $state<string>('');
   let dialogVisible = $state(false);
   let isArtistQueryCached = $state(false);
   let isEntityTitleQueryCached = $state(false);
-  // let allFailed = $state(false);
 
   const shouldShowDialog = $derived(() => {
     if (artistNamesFlat().length > 1) {
@@ -151,6 +152,7 @@
       entityTitleQuery,
     );
   });
+  const entityMBIDCacheKey = $derived(() => generateStorageKey(moduleName, 'entityMBIDCache', entityId));
   const artistQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'artistQueryCache', entityId));
   const entityTitleQueryCacheKey = $derived(() => generateStorageKey(moduleName, 'entityTitleQueryCache', entityId));
 
@@ -180,7 +182,10 @@
       timestamp = entityStatsCache.timestamp;
     } else {
       const entityInfoResponse = await getReleaseInfo({
-        params: {
+        params: entityMBID ? {
+          mbid: entityMBID,
+          username: userName,
+        } : {
           artist,
           title,
           username: userName,
@@ -227,6 +232,12 @@
     );
   }
 
+  async function saveEntityMBID(mbid: string) {
+    await storageSet({
+      [entityMBIDCacheKey()]: mbid,
+    }, 'local');
+  }
+
   async function updateEntityStatsCache(value: EntityStatsCache) {
     await storageSet({
       [entityStatsCacheKey()]: value,
@@ -243,6 +254,29 @@
     await storageSet({
       [entityTitleQueryCacheKey()]: value,
     }, 'local');
+  }
+
+  async function initEntityMBID() {
+    // const entityMBIDCache: string | null = await storageGet(entityMBIDCacheKey(), 'local');
+    const entityMBIDCache: string | null = null;
+    if (entityMBIDCache) {
+      entityMBID = entityMBIDCache;
+    } else {
+      const { mbid } = await findReleaseMBID({
+        params: {
+          artist: artistNamesFlat()[0],
+          title: entityTitlesOptions()[0].value,
+        },
+        entityType,
+      });
+
+      console.log('mbid', mbid);
+
+      if (mbid && mbid.length > 0) {
+        entityMBID = mbid[0];
+        await saveEntityMBID(entityMBID);
+      }
+    }
   }
 
   async function initArtistQuery() {
@@ -292,6 +326,7 @@
       getLastfmUserName(),
       initArtistQuery(),
       initEntityTitleQuery(),
+      initEntityMBID(),
     ]);
 
     userName = _userName;
@@ -450,6 +485,11 @@
     </form>
   </DialogBase>
 {/if}
+
+<pre>{entityMBID || 'no mbid'}</pre>
+<pre>{JSON.stringify(entityTitles, null, 2)}</pre>
+<pre>{JSON.stringify(artistNamesFlat(), null, 2)}</pre>
+
 
 <style>
 .stats-wrapper {

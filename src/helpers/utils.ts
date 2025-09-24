@@ -339,7 +339,7 @@ export function normalizeLastFmTrack(track: RecentTrack): TrackDataNormalized {
     trackName: track.name,
     timestamp: track.date?.uts ? Number(track.date.uts) : null,
     albumName: track.album['#text'],
-    artistName: track.artist['#text'],
+    artistName: track.artist['#text'] || track.artist.name || '',
     albumMbid: track.album.mbid,
     artistMbid: track.artist.mbid,
     trackMbid: track.mbid,

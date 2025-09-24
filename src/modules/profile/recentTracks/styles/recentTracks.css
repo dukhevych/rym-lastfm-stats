@@ -600,16 +600,6 @@ html[data-scheme="dark"] {
     }
   }
 
-  .track-title {
-    font-weight: bold;
-    width: 60%;
-  }
-
-  .track-artist {
-    width: 40%;
-    font-weight: bold;
-  }
-
   .track-date {
     text-align: right;
 

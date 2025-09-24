@@ -390,7 +390,7 @@ $effect(() => {
             data-element="rymstats-track-infobox-lower"
           >
             <div
-              class="play_history_item_release"
+              class="play_history_item_release flex items-center"
               data-element="rymstats-track-release"
             >
               <span
@@ -410,8 +410,14 @@ $effect(() => {
                 data-element="rymstats-track-link"
                 href={searchLinks().searchTrackUrl}
                 title={searchLinks().searchTrackHint}
-                ><TextEffect text={track.trackName} animationType="rotate" /></a
               >
+                <TextEffect text={track.trackName} animationType="rotate" />
+              </a>
+              {#if track.loved}
+                <svg class="w-6 h-6 text-lastfm fill-lastfm ml-3">
+                  <use href="#svg-love-symbol" />
+                </svg>
+              {/if}
             </div>
           </div>
           <div class="custom-from-album" data-element="rymstats-from-album">
